@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/looplab/fsm"
-	"gerrit.opencord.org/bbsim/api"
+	"gerrit.opencord.org/bbsim/api/openolt"
 )
 
 // Devices
