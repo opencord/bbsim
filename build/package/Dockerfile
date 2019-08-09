@@ -68,4 +68,4 @@ RUN mv /usr/sbin/dhcpd /usr/local/bin/ \
 WORKDIR /app
 COPY --from=builder /go/src/gerrit.opencord.org/bbsim/cmd/bbsim /app/bbsim
 RUN chmod a+x /app/bbsim
-CMD [ '/app/bbsim' ]
+ENTRYPOINT [ '/app/bbsim' ]
