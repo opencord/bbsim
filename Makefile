@@ -30,18 +30,22 @@ DOCKER_LABEL_BUILD_DATE  ?= $(shell date -u "+%Y-%m-%dT%H:%M:%SZ")
 
 all: help
 
-protos: api/openolt.pb.go # @HELP Build proto files
+protos: api/openolt/openolt.pb.go api/bbsim/bbsim.pb.go # @HELP Build proto files
 
 build: protos # @HELP Build the binary
-	GO111MODULE=on go build -i -v -o ./cmd/bbsim ./internal/bbsim
+	GO111MODULE=on go build -i -v \
+	-ldflags "-X main.buildTime=$(shell date +”%Y.%m.%d.%H%M%S”) \
+		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
+		-X main.version=${VERSION}" \
+	-o ./cmd/bbsim ./internal/bbsim
 
 test: protos # @HELP Execute unit tests
 	GO111MODULE=on go test ./internal/bbsim
 
-docker-build:
+docker-build: # @HELP Build a docker container
 	docker build -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} -f build/package/Dockerfile .
 
-docker-push:
+docker-push: # @HELP Push a docker container to a registry
 	docker push ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG}
 
 help: # @HELP Print the command options
@@ -61,7 +65,14 @@ help: # @HELP Print the command options
 
 # Internals
 
-api/openolt.pb.go: api/openolt.proto
+api/openolt/openolt.pb.go: api/openolt/openolt.proto
+	@protoc -I . \
+    	-I${GOPATH}/src \
+    	-I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+    	--go_out=plugins=grpc:./ \
+    	$<
+
+api/bbsim/bbsim.pb.go: api/bbsim/bbsim.proto
 	@protoc -I . \
     	-I${GOPATH}/src \
     	-I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
