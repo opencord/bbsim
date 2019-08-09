@@ -3,7 +3,10 @@ package main
 import (
 	"flag"
 	"gerrit.opencord.org/bbsim/internal/bbsim/devices"
+	"gerrit.opencord.org/bbsim/api/bbsim"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
+	"net"
 	"sync"
 )
 
@@ -25,6 +28,20 @@ func getOpts() *CliOptions {
 	return o
 }
 
+func startApiServer()  {
+	// TODO make configurable
+	address :=  "0.0.0.0:50070"
+	log.Debugf("APIServer Listening on: %v", address)
+	lis, err := net.Listen("tcp", address)
+	if err != nil {
+		log.Fatalf("APIServer failed to listen: %v", err)
+	}
+	grpcServer := grpc.NewServer()
+	bbsim.RegisterBBSimServer(grpcServer, BBSimServer{})
+
+	go grpcServer.Serve(lis)
+}
+
 func init() {
 	log.SetLevel(log.DebugLevel)
 	//log.SetReportCaller(true)
@@ -42,11 +59,12 @@ func main() {
 	}).Info("BroadBand Simulator is on")
 
 	wg := sync.WaitGroup{}
-	wg.Add(1)
+	wg.Add(2)
 
 
 	go devices.CreateOLT(options.OltID, options.NumNniPerOlt, options.NumPonPerOlt, options.NumOnuPerPon)
 	log.Debugf("Created OLT with id: %d", options.OltID)
+	go startApiServer()
 
 	wg.Wait()
 
