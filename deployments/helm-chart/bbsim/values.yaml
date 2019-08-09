@@ -21,8 +21,9 @@ nni: 1
 pon: 1
 onu: 1
 
-# TODO read this value in the config
+# TODO read this values in the config
 olt_tcp_port: 50060
+bbsim_api_port: 50070
 
 images:
   bbsim:

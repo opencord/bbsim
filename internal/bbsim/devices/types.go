@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/looplab/fsm"
-	"gerrit.opencord.org/bbsim/api"
+	"gerrit.opencord.org/bbsim/api/openolt"
 )
 
 // Devices
@@ -65,8 +65,7 @@ type OltDevice struct {
 	Nnis []NniPort
 
 	// OLT Attributes
-	OperState int
-	AdminState int
+	OperState OperState
 }
 
 // BBSim Internals
@@ -128,10 +127,8 @@ type OnuIndicationMessage struct {
 type OperState int
 
 const (
-	UP OperState = 0
-
-	// The device has been discovered, but not yet activated
-	DOWN OperState = 1
+	UP OperState = iota
+	DOWN // The device has been discovered, but not yet activated
 )
 
 func (m OperState) String() string {

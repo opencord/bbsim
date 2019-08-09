@@ -13,35 +13,35 @@
 # limitations under the License.
 
 VERSION     ?= $(shell cat ./VERSION)
+DIFF		?= $(git diff --shortstat 2> /dev/null | tail -n1)
+GIT_STATUS	?= $(shell [[ $DIFF != "" ]] && echo "Dirty" || echo "Clean")
 
 ## Docker related
 DOCKER_TAG  			?= ${VERSION}
 DOCKER_REPOSITORY  		?= voltha/
 DOCKER_REGISTRY 		?= ""
-DOCKER_BUILD_ARGS       ?=
-
-## Docker labels. Only set ref and commit date if committed
-DOCKER_LABEL_VCS_URL     ?= $(shell git remote get-url $(shell git remote))
-DOCKER_LABEL_VCS_REF     ?= $(shell git diff-index --quiet HEAD -- && git rev-parse HEAD || echo "unknown")
-DOCKER_LABEL_COMMIT_DATE ?= $(shell git diff-index --quiet HEAD -- && git show -s --format=%cd --date=iso-strict HEAD || echo "unknown" )
-DOCKER_LABEL_BUILD_DATE  ?= $(shell date -u "+%Y-%m-%dT%H:%M:%SZ")
 
 # Public targets
 
 all: help
 
-protos: api/openolt.pb.go # @HELP Build proto files
+protos: api/openolt/openolt.pb.go api/bbsim/bbsim.pb.go # @HELP Build proto files
 
 build: protos # @HELP Build the binary
-	GO111MODULE=on go build -i -v -o ./cmd/bbsim ./internal/bbsim
+	GO111MODULE=on go build -i -v \
+	-ldflags "-X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
+		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
+		-X main.gitStatus=${GIT_STATUS} \
+		-X main.version=${VERSION}" \
+	-o ./cmd/bbsim ./internal/bbsim
 
 test: protos # @HELP Execute unit tests
 	GO111MODULE=on go test ./internal/bbsim
 
-docker-build:
-	docker build -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} -f build/package/Dockerfile .
+docker-build: # @HELP Build a docker container
+	docker build --build-arg GIT_STATUS=${GIT_STATUS} -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} -f build/package/Dockerfile .
 
-docker-push:
+docker-push: # @HELP Push a docker container to a registry
 	docker push ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG}
 
 help: # @HELP Print the command options
@@ -61,7 +61,14 @@ help: # @HELP Print the command options
 
 # Internals
 
-api/openolt.pb.go: api/openolt.proto
+api/openolt/openolt.pb.go: api/openolt/openolt.proto
+	@protoc -I . \
+    	-I${GOPATH}/src \
+    	-I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+    	--go_out=plugins=grpc:./ \
+    	$<
+
+api/bbsim/bbsim.pb.go: api/bbsim/bbsim.proto
 	@protoc -I . \
     	-I${GOPATH}/src \
     	-I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
