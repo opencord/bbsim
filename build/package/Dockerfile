@@ -46,7 +46,13 @@ RUN make protos
 
 # copy and build
 COPY . ./
-RUN GO111MODULE=on go build -o ./cmd/bbsim ./internal/bbsim
+ARG GIT_STATUS=Clean
+RUN GO111MODULE=on go build \
+    -ldflags "-X main.buildTime=$(date +”%Y/%m/%d-%H:%M:%S”) \
+    		-X main.commitHash=$(git log --pretty=format:%H -n 1) \
+    		-X main.gitStatus=${GIT_STATUS}\
+    		-X main.version=$(cat VERSION)" \
+    -o ./cmd/bbsim ./internal/bbsim
 
 # runtime parent
 FROM golang:1.12-stretch
@@ -68,4 +74,4 @@ RUN mv /usr/sbin/dhcpd /usr/local/bin/ \
 WORKDIR /app
 COPY --from=builder /go/src/gerrit.opencord.org/bbsim/cmd/bbsim /app/bbsim
 RUN chmod a+x /app/bbsim
-CMD [ '/app/bbsim' ]
+ENTRYPOINT [ '/app/bbsim' ]
