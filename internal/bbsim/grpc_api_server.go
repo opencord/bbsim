@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"gerrit.opencord.org/bbsim/api/bbsim"
 	"gerrit.opencord.org/bbsim/internal/bbsim/devices"
 	log "github.com/sirupsen/logrus"
@@ -40,7 +39,7 @@ func (s BBSimServer) GetOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Olt, 
 	for _, nni := range olt.Nnis {
 		n := bbsim.NNIPort{
 			ID: int32(nni.ID),
-			OperState: fmt.Sprintf("%s", nni.OperState),
+			OperState: nni.OperState.Current(),
 		}
 		nnis = append(nnis, &n)
 	}
@@ -48,16 +47,38 @@ func (s BBSimServer) GetOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Olt, 
 	for _, pon := range olt.Pons {
 		p := bbsim.PONPort{
 			ID: int32(pon.ID),
-			OperState: fmt.Sprintf("%s", pon.OperState),
+			OperState: pon.OperState.Current(),
 		}
 		pons = append(pons, &p)
 	}
 
 	res := bbsim.Olt{
 		ID: int32(olt.ID),
-		OperState: fmt.Sprintf("%s", olt.OperState),
+		OperState: olt.OperState.Current(),
+		InternalState: olt.InternalState.Current(),
 		NNIPorts: nnis,
 		PONPorts: pons,
 	}
 	return &res, nil
+}
+
+func (s BBSimServer) GetONUs(ctx context.Context, req *bbsim.Empty) (*bbsim.ONUs, error){
+	olt := devices.GetOLT()
+	onus := bbsim.ONUs{
+		Items: []*bbsim.ONU{},
+	}
+
+	for _, pon := range olt.Pons {
+		for _, o := range pon.Onus {
+			onu := bbsim.ONU{
+				ID: int32(o.ID),
+				SerialNumber: o.SerialNumber.String(),
+				OperState: o.OperState.Current(),
+				InternalState: o.InternalState.Current(),
+				PonPortID: int32(o.PonPortID),
+			}
+			onus.Items = append(onus.Items, &onu)
+		}
+	}
+	return &onus, nil
 }

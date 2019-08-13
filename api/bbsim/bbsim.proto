@@ -28,8 +28,21 @@ message NNIPort {
 message Olt {
     int32 ID = 1;
     string OperState = 2;
-    repeated NNIPort NNIPorts = 3;
-    repeated PONPort PONPorts = 4;
+    string InternalState = 3;
+    repeated NNIPort NNIPorts = 4;
+    repeated PONPort PONPorts = 5;
+}
+
+message ONU {
+    int32 ID = 1;
+    string SerialNumber = 2;
+    string OperState = 3;
+    string InternalState = 4;
+    int32 PonPortID = 5;
+}
+
+message ONUs {
+    repeated ONU items = 1;
 }
 
 message VersionNumber {
@@ -44,4 +57,5 @@ message Empty {}
 service BBSim {
     rpc Version(Empty) returns (VersionNumber) {}
     rpc GetOlt(Empty) returns (Olt) {}
+    rpc GetONUs(Empty) returns (ONUs) {}
 }

@@ -55,7 +55,7 @@ BBSim comes with a gRPC interface to control the internal state.
 We plan to provide a `bbsimctl` at certain point, meanwhile you can use `grpcurl`:
 
 ```
-$ export BBSIM_IP="$(kubectl get -n voltha service/bbsim -o go-template='{{.spec.clusterIP}}')"
+$ export BBSIM_IP="$(kubectl get svc -n voltha bbsim-olt-id-0 -o go-template='{{.spec.clusterIP}}')"
 $ grpcurl -plaintext $BBSIM_IP:50070 bbsim.BBSim/Version
 {
   "version": "0.0.1-alpha",

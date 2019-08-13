@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/looplab/fsm"
 	"gerrit.opencord.org/bbsim/api/openolt"
+	"github.com/looplab/fsm"
 )
 
 // Devices
@@ -15,8 +15,10 @@ type Onu struct {
 	PonPort PonPort
 	InternalState *fsm.FSM
 
-	OperState OperState
+	OperState *fsm.FSM
 	SerialNumber *openolt.SerialNumber
+
+	channel chan Message
 }
 
 
@@ -26,7 +28,7 @@ type NniPort struct {
 	ID uint32
 
 	// PON Attributes
-	OperState OperState
+	OperState *fsm.FSM
 	Type string
 }
 
@@ -37,7 +39,7 @@ type PonPort struct {
 	Onus []Onu
 
 	// PON Attributes
-	OperState OperState
+	OperState *fsm.FSM
 	Type string
 
 	// NOTE do we need a state machine for the PON Ports?
@@ -52,6 +54,15 @@ func (p PonPort) getOnuBySn(sn *openolt.SerialNumber) (*Onu, error) {
 	return nil, errors.New(fmt.Sprintf("Cannot find Onu with serial number %d in PonPort %d", sn, p.ID))
 }
 
+func (p PonPort) getOnuById(id uint32) (*Onu, error) {
+	for _, onu := range p.Onus {
+		if onu.ID == id {
+			return &onu, nil
+		}
+	}
+	return nil, errors.New(fmt.Sprintf("Cannot find Onu with id %d in PonPort %d", id, p.ID))
+}
+
 type OltDevice struct {
 	// BBSIM Internals
 	ID int
@@ -59,13 +70,13 @@ type OltDevice struct {
 	NumPon int
 	NumOnuPerPon int
 	InternalState *fsm.FSM
-	channel chan interface{}
+	channel chan Message
 
 	Pons []PonPort
 	Nnis []NniPort
 
 	// OLT Attributes
-	OperState OperState
+	OperState *fsm.FSM
 }
 
 // BBSim Internals
@@ -121,6 +132,12 @@ type OnuIndicationMessage struct {
 	PonPortID uint32
 	OnuID     uint32
 	OnuSN     *openolt.SerialNumber
+}
+
+type OmciMessage struct {
+	OnuSN     *openolt.SerialNumber
+	OnuId 	uint32
+	msg 	*openolt.OmciMsg
 }
 
 
