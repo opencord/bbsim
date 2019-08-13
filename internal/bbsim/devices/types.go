@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"gerrit.opencord.org/bbsim/api/openolt"
+	"github.com/opencord/voltha-protos/go/openolt"
 	"github.com/looplab/fsm"
 )
 

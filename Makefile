@@ -25,7 +25,7 @@ DOCKER_REGISTRY 		?= ""
 
 all: help
 
-protos: api/openolt/openolt.pb.go api/bbsim/bbsim.pb.go # @HELP Build proto files
+protos: api/bbsim/bbsim.pb.go # @HELP Build proto files
 
 build: protos # @HELP Build the binary
 	GO111MODULE=on go build -i -v \

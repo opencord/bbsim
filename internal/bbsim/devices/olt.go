@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"gerrit.opencord.org/bbsim/api/openolt"
+	"github.com/opencord/voltha-protos/go/openolt"
 	"github.com/looplab/fsm"
+	"github.com/opencord/voltha-protos/go/tech_profile"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"net"
@@ -442,16 +443,6 @@ func (o OltDevice) CollectStatistics(context.Context, *openolt.Empty) (*openolt.
 	return new(openolt.Empty) , nil
 }
 
-func (o OltDevice) CreateTconts(context context.Context, packet *openolt.Tconts) (*openolt.Empty, error) {
-	oltLogger.Error("CreateTconts not implemented")
-	return new(openolt.Empty) , nil
-}
-
-func (o OltDevice) RemoveTconts(context context.Context, packet *openolt.Tconts) (*openolt.Empty, error) {
-	oltLogger.Error("RemoveTconts not implemented")
-	return new(openolt.Empty) , nil
-}
-
 func (o OltDevice) GetOnuInfo(context context.Context, packet *openolt.Onu) (*openolt.OnuIndication, error) {
 	oltLogger.Error("GetOnuInfo not implemented")
 	return new(openolt.OnuIndication) , nil
@@ -460,4 +451,24 @@ func (o OltDevice) GetOnuInfo(context context.Context, packet *openolt.Onu) (*op
 func (o OltDevice) GetPonIf(context context.Context, packet *openolt.Interface) (*openolt.IntfIndication, error) {
 	oltLogger.Error("GetPonIf not implemented")
 	return new(openolt.IntfIndication) , nil
+}
+
+func (s OltDevice) CreateTrafficQueues(context.Context, *tech_profile.TrafficQueues) (*openolt.Empty, error) {
+	oltLogger.Error("CreateTrafficQueues not implemented")
+	return new(openolt.Empty), nil
+}
+
+func (s OltDevice) RemoveTrafficQueues(context.Context, *tech_profile.TrafficQueues) (*openolt.Empty, error) {
+	oltLogger.Error("RemoveTrafficQueues not implemented")
+	return new(openolt.Empty), nil
+}
+
+func (s OltDevice) CreateTrafficSchedulers(context.Context, *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
+	oltLogger.Error("CreateTrafficSchedulers not implemented")
+	return new(openolt.Empty), nil
+}
+
+func (s OltDevice) RemoveTrafficSchedulers(context.Context, *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
+	oltLogger.Error("RemoveTrafficSchedulers not implemented")
+	return new(openolt.Empty), nil
 }

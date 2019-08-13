@@ -1,7 +1,7 @@
 package devices
 
 import (
-	"gerrit.opencord.org/bbsim/api/openolt"
+	"github.com/opencord/voltha-protos/go/openolt"
 	"github.com/looplab/fsm"
 	log "github.com/sirupsen/logrus"
 )
