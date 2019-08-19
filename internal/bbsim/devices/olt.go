@@ -76,6 +76,7 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int) OltDevice {
 	olt.Nnis = append(olt.Nnis, nniPort)
 
 	// create PON ports
+	onuId := 1
 	for i := 0; i < pon; i++ {
 		p := PonPort{
 			NumOnu: olt.NumOnuPerPon,
@@ -90,8 +91,9 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int) OltDevice {
 
 		// create ONU devices
 		for j := 0; j < onuPerPon; j++ {
-			o := CreateONU(olt, p, uint32(j + 1))
+			o := CreateONU(olt, p, uint32(onuId))
 			p.Onus = append(p.Onus, o)
+			onuId = onuId + 1
 		}
 
 		olt.Pons = append(olt.Pons, p)
@@ -380,14 +382,17 @@ func (o OltDevice) HeartbeatCheck(context.Context, *openolt.Empty) (*openolt.Hea
 
 func (o OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.DeviceInfo, error)  {
 
-	oltLogger.WithField("oltId", o.ID).Info("OLT receives GetDeviceInfo call from VOLTHA")
+	oltLogger.WithFields(log.Fields{
+		"oltId": o.ID,
+		"PonPorts": o.NumPon,
+	}).Info("OLT receives GetDeviceInfo call from VOLTHA")
 	devinfo := new(openolt.DeviceInfo)
 	devinfo.Vendor = "BBSim"
 	devinfo.Model = "asfvolt16"
 	devinfo.HardwareVersion = "emulated"
 	devinfo.FirmwareVersion = ""
 	devinfo.Technology = "xgspon"
-	devinfo.PonPorts = 1
+	devinfo.PonPorts = uint32(o.NumPon)
 	devinfo.OnuIdStart = 1
 	devinfo.OnuIdEnd = 255
 	devinfo.AllocIdStart = 1024
