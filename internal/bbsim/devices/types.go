@@ -22,7 +22,13 @@ import (
 	"fmt"
 	"github.com/opencord/voltha-protos/go/openolt"
 	"github.com/looplab/fsm"
+	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 )
+
+// TODO get rid of this file
+// - move ONU and OLT struct in their respective file
+// - create files for PonPorts and NniPorts
+// - move messages in the `types` package
 
 // Devices
 type Onu struct {
@@ -35,6 +41,7 @@ type Onu struct {
 	SerialNumber *openolt.SerialNumber
 
 	channel chan Message
+	eapolPktOutCh chan *bbsim.ByteMsg
 }
 
 
@@ -96,6 +103,7 @@ type OltDevice struct {
 }
 
 // BBSim Internals
+
 type MessageType int
 
 const (
@@ -105,6 +113,8 @@ const (
 	OnuDiscIndication MessageType = 3
 	OnuIndication     MessageType = 4
 	OMCI              MessageType = 5
+	FlowUpdate		  MessageType = 6
+	StartEAPOL		  MessageType = 7
 )
 
 func (m MessageType) String() string {
@@ -115,6 +125,8 @@ func (m MessageType) String() string {
 		"OnuDiscIndication",
 		"OnuIndication",
 		"OMCI",
+		"FlowUpdate",
+		"StartEAPOL",
 	}
 	return names[m]
 }
@@ -154,6 +166,17 @@ type OmciMessage struct {
 	OnuSN     *openolt.SerialNumber
 	OnuID 	  uint32
 	omciMsg   *openolt.OmciMsg
+}
+
+type OnuFlowUpdateMessage struct {
+	PonPortID uint32
+	OnuID     uint32
+	Flow      *openolt.Flow
+}
+
+type EapStartMessage struct {
+	PonPortID uint32
+	OnuID     uint32
 }
 
 

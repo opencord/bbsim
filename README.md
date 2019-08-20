@@ -49,6 +49,15 @@ preprovision_olt -t openolt -H voltha.svc.bbsim-olt-id-0:50060
 enable
 ```
 
+#### VOLTHA 2.X
+
+_This assumes `voltctl` is installed an configured_
+
+```
+voltctl device create -t openolt -H $(kubectl get -n voltha service/bbsim -o go-template='{{.spec.clusterIP}}'):50060
+voltctl device enable $(voltctl device list --filter Type~openolt -q)
+```
+
 ## Control API
 
 BBSim comes with a gRPC interface to control the internal state.
@@ -76,6 +85,38 @@ $ grpcurl -plaintext $BBSIM_IP:50070 bbsim.BBSim/GetOlt
   "PONPorts": [
     {
       "OperState": "down"
+    }
+  ]
+}
+
+$ grpcurl -plaintext 127.0.0.1:50070 bbsim.BBSim/GetONUs
+{
+  "items": [
+    {
+      "ID": 1,
+      "SerialNumber": "vendor_id:\"BBSM\" vendor_specific:\"\\000\\000\\000\\001\" ",
+      "OperState": "up",
+      "InternalState": "auth_started"
+    },
+    {
+      "ID": 2,
+      "SerialNumber": "vendor_id:\"BBSM\" vendor_specific:\"\\000\\000\\000\\002\" ",
+      "OperState": "up",
+      "InternalState": "auth_started"
+    },
+    {
+      "ID": 1,
+      "SerialNumber": "vendor_id:\"BBSM\" vendor_specific:\"\\000\\000\\001\\001\" ",
+      "OperState": "up",
+      "InternalState": "auth_started",
+      "PonPortID": 1
+    },
+    {
+      "ID": 2,
+      "SerialNumber": "vendor_id:\"BBSM\" vendor_specific:\"\\000\\000\\001\\002\" ",
+      "OperState": "up",
+      "InternalState": "auth_started",
+      "PonPortID": 1
     }
   ]
 }

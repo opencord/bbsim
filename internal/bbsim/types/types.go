@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-package main
+package types
 
-// General
-
-type CliOptions struct {
-	OltID 	 	 int
-	NumNniPerOlt int
-	NumPonPerOlt int
-	NumOnuPerPon int
+type ByteMsg struct {
+	IntfId uint32
+	OnuId  uint32
+	Byte   []byte
 }

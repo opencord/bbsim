@@ -92,7 +92,7 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int) OltDevice {
 	olt.Nnis = append(olt.Nnis, nniPort)
 
 	// create PON ports
-	onuId := 1
+	//onuId := 1
 	for i := 0; i < pon; i++ {
 		p := PonPort{
 			NumOnu: olt.NumOnuPerPon,
@@ -107,9 +107,10 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int) OltDevice {
 
 		// create ONU devices
 		for j := 0; j < onuPerPon; j++ {
-			o := CreateONU(olt, p, uint32(onuId))
+			//o := CreateONU(olt, p, uint32(onuId))
+			o := CreateONU(olt, p, uint32(j + 1))
 			p.Onus = append(p.Onus, o)
-			onuId = onuId + 1
+			//onuId = onuId + 1
 		}
 
 		olt.Pons = append(olt.Pons, p)
@@ -185,6 +186,7 @@ func (o OltDevice) Enable (stream openolt.Openolt_EnableIndicationServer) error 
 
 		for _, onu := range pon.Onus {
 			go onu.processOnuMessages(stream)
+			go onu.processOmciMessages(stream)
 			msg := Message{
 				Type:      OnuDiscIndication,
 				Data: OnuDiscIndicationMessage{
@@ -381,9 +383,39 @@ func (o OltDevice) EnablePonIf(context.Context, *openolt.Interface) (*openolt.Em
 	return new(openolt.Empty) , nil
 }
 
-func (o OltDevice) FlowAdd(context.Context, *openolt.Flow) (*openolt.Empty, error)  {
-	oltLogger.Info("received FlowAdd")
-	// TODO store flows somewhere
+func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Empty, error)  {
+	oltLogger.WithFields(log.Fields{
+		"IntfId": flow.AccessIntfId,
+		"OnuId": flow.OnuId,
+		"EthType": fmt.Sprintf("%x", flow.Classifier.EthType),
+		"InnerVlan": flow.Classifier.IVid,
+		"OuterVlan": flow.Classifier.OVid,
+		"FlowType": flow.FlowType,
+		"FlowId": flow.FlowId,
+		"UniID": flow.UniId,
+		"PortNo": flow.PortNo,
+	}).Infof("OLT receives Flow")
+	// TODO optionally store flows somewhere
+
+	if flow.AccessIntfId == -1 {
+		oltLogger.WithFields(log.Fields{
+			"FlowId": flow.FlowId,
+		}).Debugf("This is an OLT flow")
+	} else {
+		pon, _ := o.getPonById(uint32(flow.AccessIntfId))
+		onu, _ := pon.getOnuById(uint32(flow.OnuId))
+
+		msg := Message{
+			Type:      FlowUpdate,
+			Data:      OnuFlowUpdateMessage{
+				PonPortID:  pon.ID,
+				OnuID: 	onu.ID,
+				Flow: 	flow,
+			},
+		}
+		onu.channel <- msg
+	}
+
 	return new(openolt.Empty) , nil
 }
 
