@@ -1,10 +1,15 @@
 package devices
 
 import (
-	"github.com/opencord/voltha-protos/go/openolt"
+	"fmt"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
 	omci "github.com/opencord/omci-sim"
+	"github.com/opencord/voltha-protos/go/openolt"
 	log "github.com/sirupsen/logrus"
+	"net"
+	"time"
 )
 
 var onuLogger = log.WithFields(log.Fields{
@@ -34,13 +39,34 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32) Onu {
 			fsm.Events{
 				{Name: "discover", Src: []string{"created"}, Dst: "discovered"},
 				{Name: "enable", Src: []string{"discovered"}, Dst: "enabled"},
-				{Name: "start_omci", Src: []string{"enabled"}, Dst: "starting_openomci"},
+				{Name: "receive_eapol_flow", Src: []string{"enabled"}, Dst: "eapol_flow_received"},
 			},
 			fsm.Callbacks{
 				"enter_state": func(e *fsm.Event) {
 					onuLogger.WithFields(log.Fields{
-						"ID": o.ID,
+						"OnuId": o.ID,
+						"IntfId": o.PonPortID,
+						"OnuSn": o.SerialNumber,
 					}).Debugf("Changing ONU InternalState from %s to %s", e.Src, e.Dst)
+				},
+				"enter_eapol_flow_received": func(e *fsm.Event) {
+					msg := Message{
+						Type:      StartEAPOL,
+						Data: EapStartMessage{
+							PonPortID: o.PonPortID,
+							OnuID: o.ID,
+						},
+					}
+
+					onuLogger.WithFields(log.Fields{
+						"channel": o.channel,
+					}).Infof("Starting Auth")
+
+					go func(msg Message){
+						// you can only send a value on an unbuffered channel without blocking
+						o.channel <- msg
+					}(msg)
+
 				},
 			},
 		)
@@ -58,7 +84,7 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer)  
 			"onuID": o.ID,
 			"onuSN": o.SerialNumber,
 			"messageType": message.Type,
-		}).Trace("Received message")
+		}).Tracef("Received message on ONU Channel")
 
 		switch message.Type {
 		case OnuDiscIndication:
@@ -69,8 +95,18 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer)  
 			o.sendOnuIndication(msg, stream)
 		case OMCI:
 			msg, _ := message.Data.(OmciMessage)
-			o.InternalState.Event("start_omci")
 			o.handleOmciMessage(msg, stream)
+		case FlowUpdate:
+			msg, _ := message.Data.(OnuFlowUpdateMessage)
+			o.handleFlowUpdate(msg, stream)
+		case StartEAPOL:
+			log.Infof("Receive StartEAPOL message on ONU channel")
+			// FIXME instead of a timeout wait for onu.InternalState to be eapol_flow_received
+			// FIXME and onu.OmciState to be gem_port_created
+			go func() {
+				time.Sleep(60 * time.Second)
+				o.startWpaSupplicant(stream)
+			}()
 		default:
 			onuLogger.Warnf("Received unknown message data %v for type %v in OLT channel", message.Data, message.Type)
 		}
@@ -157,6 +193,79 @@ func (o Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableInd
 		"SerialNumber": o.SerialNumber,
 		"omciPacket": omciInd.Pkt,
 	}).Tracef("Sent OMCI message")
+}
+
+func (o Onu) handleFlowUpdate(msg OnuFlowUpdateMessage, stream openolt.Openolt_EnableIndicationServer) {
+	onuLogger.WithFields(log.Fields{
+		"IntfId": msg.Flow.AccessIntfId,
+		"OnuId": msg.Flow.OnuId,
+		"EthType": fmt.Sprintf("%x", msg.Flow.Classifier.EthType),
+		"InnerVlan": msg.Flow.Classifier.IVid,
+		"OuterVlan": msg.Flow.Classifier.OVid,
+		"FlowType": msg.Flow.FlowType,
+		"FlowId": msg.Flow.FlowId,
+		"UniID": msg.Flow.UniId,
+		"PortNo": msg.Flow.PortNo,
+	}).Infof("ONU receives Flow")
+	if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeEAPOL) && msg.Flow.Classifier.OVid == 4091 {
+		if o.InternalState.Is("enabled") {
+			if err := o.InternalState.Event("receive_eapol_flow"); err != nil {
+				onuLogger.WithFields(log.Fields{
+					"onuID": o.ID,
+					"onuSN": o.SerialNumber,
+				}).Errorf("Can't change the ONU state: %v", err)
+			}
+		}
+	}
+}
+
+func (o Onu) startWpaSupplicant(stream openolt.Openolt_EnableIndicationServer) {
+
+	onuLogger.WithFields(log.Fields{
+		"OnuId": o.ID,
+		"IntfId": o.PonPortID,
+		"OnuSn": o.SerialNumber,
+	}).Infof("EAPOL State Machine starting")
+
+	// send the packet (hacked together)
+	gemid, err := omci.GetGemPortId(o.PonPortID, o.ID)
+	if err != nil {
+		onuLogger.WithFields(log.Fields{
+			"OnuId": o.ID,
+			"IntfId": o.PonPortID,
+			"OnuSn": o.SerialNumber,
+		}).Errorf("Can't retrieve GemPortId: %s", err)
+		return
+	}
+
+	buffer := gopacket.NewSerializeBuffer()
+	options := gopacket.SerializeOptions{}
+
+	ethernetLayer := &layers.Ethernet{
+		SrcMAC:       net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, 0x07, byte(o.ID)},
+		DstMAC:       net.HardwareAddr{0x01, 0x80, 0xC2, 0x00, 0x00, 0x03},
+		EthernetType: layers.EthernetTypeEAPOL,
+	}
+
+	gopacket.SerializeLayers(buffer, options,
+		ethernetLayer,
+		&layers.EAPOL{Version: 1, Type: 1, Length: 0},
+	)
+
+	msg := buffer.Bytes()
+
+	data := &openolt.Indication_PktInd{
+		PktInd: &openolt.PacketIndication{
+			IntfType: "pon",
+			IntfId: o.PonPortID,
+			GemportId: uint32(gemid),
+			Pkt: msg,
+		},
+	}
+	// end of hacked (move in an EAPOL state machine)
+	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
+		onuLogger.Error("Fail to send EAPOL PktInd indication. %v", err)
+	}
 }
 
 // HexDecode converts the hex encoding to binary
