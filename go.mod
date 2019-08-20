@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/golang/protobuf v1.3.2
+	github.com/google/gopacket v1.1.17
 	github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024 // indirect
 	github.com/looplab/fsm v0.1.0
 	github.com/opencord/omci-sim v0.0.0-20190826212842-203314beba7e

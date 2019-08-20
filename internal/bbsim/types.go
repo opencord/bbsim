@@ -24,5 +24,3 @@ type CliOptions struct {
 	NumPonPerOlt int
 	NumOnuPerPon int
 }
-
-
