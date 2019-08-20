@@ -89,6 +89,8 @@ const (
 	OnuDiscIndication MessageType = 3
 	OnuIndication     MessageType = 4
 	OMCI              MessageType = 5
+	FlowUpdate		  MessageType = 6
+	StartEAPOL		  MessageType = 7
 )
 
 func (m MessageType) String() string {
@@ -99,6 +101,8 @@ func (m MessageType) String() string {
 		"OnuDiscIndication",
 		"OnuIndication",
 		"OMCI",
+		"FlowUpdate",
+		"StartEAPOL",
 	}
 	return names[m]
 }
@@ -138,6 +142,17 @@ type OmciMessage struct {
 	OnuSN     *openolt.SerialNumber
 	OnuID 	  uint32
 	omciMsg   *openolt.OmciMsg
+}
+
+type OnuFlowUpdateMessage struct {
+	PonPortID uint32
+	OnuID     uint32
+	Flow      *openolt.Flow
+}
+
+type EapStartMessage struct {
+	PonPortID uint32
+	OnuID     uint32
 }
 
 
