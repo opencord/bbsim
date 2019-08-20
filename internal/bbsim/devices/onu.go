@@ -1,6 +1,7 @@
 package devices
 
 import (
+	"github.com/google/gopacket/layers"
 	"github.com/opencord/voltha-protos/go/openolt"
 	"github.com/looplab/fsm"
 	omci "github.com/opencord/omci-sim"
@@ -35,6 +36,7 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32) Onu {
 				{Name: "discover", Src: []string{"created"}, Dst: "discovered"},
 				{Name: "enable", Src: []string{"discovered"}, Dst: "enabled"},
 				{Name: "start_omci", Src: []string{"enabled"}, Dst: "starting_openomci"},
+				{Name: "start_auth", Src: []string{"starting_openomci"}, Dst: "starting_auth"},
 			},
 			fsm.Callbacks{
 				"enter_state": func(e *fsm.Event) {
@@ -70,7 +72,11 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer)  
 		case OMCI:
 			msg, _ := message.Data.(OmciMessage)
 			o.InternalState.Event("start_omci")
+			// TODO track when OMCI is done
 			o.handleOmciMessage(msg, stream)
+		case FlowUpdate:
+			msg, _ := message.Data.(OnuFlowUpdateMessage)
+			o.handleFlowUpdate(msg, stream)
 		default:
 			onuLogger.Warnf("Received unknown message data %v for type %v in OLT channel", message.Data, message.Type)
 		}
@@ -157,6 +163,12 @@ func (o Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableInd
 		"SerialNumber": o.SerialNumber,
 		"omciPacket": omciInd.Pkt,
 	}).Tracef("Sent OMCI message")
+}
+
+func (o Onu) handleFlowUpdate(msg OnuFlowUpdateMessage, stream openolt.Openolt_EnableIndicationServer) {
+	if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeEAPOL) && msg.Flow.Classifier.OVid == 4091 {
+		o.InternalState.Event("start_auth")
+	}
 }
 
 // HexDecode converts the hex encoding to binary
