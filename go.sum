@@ -15,6 +15,8 @@ github.com/konsorten/go-windows-terminal-sequences v1.0.1 h1:mweAR1A6xJ3oS2pRaGi
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/looplab/fsm v0.1.0 h1:Qte7Zdn/5hBNbXzP7yxVU4OIFHWXBovyTT2LaBTyC20=
 github.com/looplab/fsm v0.1.0/go.mod h1:m2VaOfDHxqXBBMgc26m6yUOwkFn8H2AlJDE+jd/uafI=
+github.com/opencord/omci-sim v0.0.0-20190717165025-5ff7bb17f1e9 h1:qUbCkEFUDEtOBeG6JfI2oMD6dmUa/zJldvBR59RhRdM=
+github.com/opencord/omci-sim v0.0.0-20190717165025-5ff7bb17f1e9/go.mod h1:W10NTwE0xK9Kh++wrflXPfkknMCaNKkb7Io/ihO4y3k=
 github.com/opencord/voltha-protos v0.0.0-20190813191205-792553b747df h1:j/gaZts38ij2uVVikbXGqlm6n3hts1s0zWzUnBI96C4=
 github.com/opencord/voltha-protos v0.0.0-20190813191205-792553b747df/go.mod h1:MDGL9ai3XOPbiZ0tA8U7k4twK/T/P0Hh4gtjNxNk/qY=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

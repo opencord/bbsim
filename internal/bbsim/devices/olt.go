@@ -366,12 +366,14 @@ func (o OltDevice) EnablePonIf(context.Context, *openolt.Interface) (*openolt.Em
 }
 
 func (o OltDevice) FlowAdd(context.Context, *openolt.Flow) (*openolt.Empty, error)  {
-	oltLogger.Error("FlowAdd not implemented")
+	oltLogger.Info("received FlowAdd")
+	// TODO store flows somewhere
 	return new(openolt.Empty) , nil
 }
 
 func (o OltDevice) FlowRemove(context.Context, *openolt.Flow) (*openolt.Empty, error)  {
-	oltLogger.Error("FlowRemove not implemented")
+	oltLogger.Info("received FlowRemove")
+	// TODO store flows somewhere
 	return new(openolt.Empty) , nil
 }
 
@@ -407,15 +409,14 @@ func (o OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.Devi
 }
 
 func (o OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*openolt.Empty, error)  {
-	oltLogger.Debugf("Recevied OmciMsgOut - IntfId: %d OnuId: %d", omci_msg.IntfId, omci_msg.OnuId)
 	pon, _ := o.getPonById(omci_msg.IntfId)
 	onu, _ := pon.getOnuById(omci_msg.OnuId)
 	msg := Message{
 		Type:      OMCI,
 		Data:      OmciMessage{
 			OnuSN:  onu.SerialNumber,
-			OnuId: 	onu.ID,
-			msg: 	omci_msg,
+			OnuID: 	onu.ID,
+			omciMsg: 	omci_msg,
 		},
 	}
 	onu.channel <- msg
@@ -439,7 +440,7 @@ func (o OltDevice) ReenableOlt(context.Context, *openolt.Empty) (*openolt.Empty,
 }
 
 func (o OltDevice) UplinkPacketOut(context context.Context, packet *openolt.UplinkPacket) (*openolt.Empty, error) {
-	oltLogger.Error("UplinkPacketOut not implemented")
+	oltLogger.Warn("UplinkPacketOut not implemented")
 	return new(openolt.Empty) , nil
 }
 
@@ -459,21 +460,21 @@ func (o OltDevice) GetPonIf(context context.Context, packet *openolt.Interface) 
 }
 
 func (s OltDevice) CreateTrafficQueues(context.Context, *tech_profile.TrafficQueues) (*openolt.Empty, error) {
-	oltLogger.Error("CreateTrafficQueues not implemented")
+	oltLogger.Info("received CreateTrafficQueues")
 	return new(openolt.Empty), nil
 }
 
 func (s OltDevice) RemoveTrafficQueues(context.Context, *tech_profile.TrafficQueues) (*openolt.Empty, error) {
-	oltLogger.Error("RemoveTrafficQueues not implemented")
+	oltLogger.Info("received RemoveTrafficQueues")
 	return new(openolt.Empty), nil
 }
 
 func (s OltDevice) CreateTrafficSchedulers(context.Context, *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
-	oltLogger.Error("CreateTrafficSchedulers not implemented")
+	oltLogger.Info("received CreateTrafficSchedulers")
 	return new(openolt.Empty), nil
 }
 
 func (s OltDevice) RemoveTrafficSchedulers(context.Context, *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
-	oltLogger.Error("RemoveTrafficSchedulers not implemented")
+	oltLogger.Info("received RemoveTrafficSchedulers")
 	return new(openolt.Empty), nil
 }

@@ -3,6 +3,7 @@ package devices
 import (
 	"github.com/opencord/voltha-protos/go/openolt"
 	"github.com/looplab/fsm"
+	omci "github.com/opencord/omci-sim"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -67,8 +68,9 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer)  
 			msg, _ := message.Data.(OnuIndicationMessage)
 			o.sendOnuIndication(msg, stream)
 		case OMCI:
+			msg, _ := message.Data.(OmciMessage)
 			o.InternalState.Event("start_omci")
-			onuLogger.Warn("Don't know how to handle OMCI Messages yet...")
+			o.handleOmciMessage(msg, stream)
 		default:
 			onuLogger.Warnf("Received unknown message data %v for type %v in OLT channel", message.Data, message.Type)
 		}
@@ -126,4 +128,46 @@ func (o Onu) sendOnuIndication(msg OnuIndicationMessage, stream openolt.Openolt_
 		"AdminState": msg.OperState.String(),
 		"SerialNumber": o.SerialNumber,
 	}).Debug("Sent Indication_OnuInd")
+}
+
+func (o Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableIndicationServer) {
+
+	onuLogger.WithFields(log.Fields{
+		"IntfId": o.PonPortID,
+		"SerialNumber": o.SerialNumber,
+		"omciPacket": msg.omciMsg.Pkt,
+	}).Tracef("Received OMCI message")
+
+	var omciInd openolt.OmciIndication
+	respPkt, err := omci.OmciSim(o.PonPortID, o.ID, HexDecode(msg.omciMsg.Pkt))
+	if err != nil {
+		onuLogger.Errorf("Error handling OMCI message %v", msg)
+	}
+
+	omciInd.IntfId = o.PonPortID
+	omciInd.OnuId = o.ID
+	omciInd.Pkt = respPkt
+
+	omci := &openolt.Indication_OmciInd{OmciInd: &omciInd}
+	if err := stream.Send(&openolt.Indication{Data: omci}); err != nil {
+		onuLogger.Error("send omci indication failed: %v", err)
+	}
+	onuLogger.WithFields(log.Fields{
+		"IntfId": o.PonPortID,
+		"SerialNumber": o.SerialNumber,
+		"omciPacket": omciInd.Pkt,
+	}).Tracef("Sent OMCI message")
+}
+
+// HexDecode converts the hex encoding to binary
+func HexDecode(pkt []byte) []byte {
+	p := make([]byte, len(pkt)/2)
+	for i, j := 0, 0; i < len(pkt); i, j = i+2, j+1 {
+		// Go figure this ;)
+		u := (pkt[i] & 15) + (pkt[i]>>6)*9
+		l := (pkt[i+1] & 15) + (pkt[i+1]>>6)*9
+		p[j] = u<<4 + l
+	}
+	onuLogger.Tracef("Omci decoded: %x.", p)
+	return p
 }

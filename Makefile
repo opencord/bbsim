@@ -28,7 +28,7 @@ all: help
 protos: api/bbsim/bbsim.pb.go # @HELP Build proto files
 
 build: protos # @HELP Build the binary
-	GO111MODULE=on go build -i -v \
+	GO111MODULE=on go build -i -v -mod vendor \
 	-ldflags "-X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
 		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
 		-X main.gitStatus=${GIT_STATUS} \

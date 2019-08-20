@@ -37,7 +37,8 @@ ENV GOPROXY=https://proxy.golang.org
 
 # get dependencies
 COPY go.mod go.sum ./
-RUN go mod download
+COPY vendor ./vendor
+RUN go mod vendor
 
 # build the protos
 COPY Makefile ./
@@ -47,7 +48,7 @@ RUN make protos
 # copy and build
 COPY . ./
 ARG GIT_STATUS=Clean
-RUN GO111MODULE=on go build \
+RUN GO111MODULE=on go build -mod vendor\
     -ldflags "-X main.buildTime=$(date +”%Y/%m/%d-%H:%M:%S”) \
     		-X main.commitHash=$(git log --pretty=format:%H -n 1) \
     		-X main.gitStatus=${GIT_STATUS}\

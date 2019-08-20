@@ -136,8 +136,8 @@ type OnuIndicationMessage struct {
 
 type OmciMessage struct {
 	OnuSN     *openolt.SerialNumber
-	OnuId 	uint32
-	msg 	*openolt.OmciMsg
+	OnuID 	  uint32
+	omciMsg   *openolt.OmciMsg
 }
 
 
