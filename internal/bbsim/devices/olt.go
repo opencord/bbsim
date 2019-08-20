@@ -365,9 +365,41 @@ func (o OltDevice) EnablePonIf(context.Context, *openolt.Interface) (*openolt.Em
 	return new(openolt.Empty) , nil
 }
 
-func (o OltDevice) FlowAdd(context.Context, *openolt.Flow) (*openolt.Empty, error)  {
-	oltLogger.Info("received FlowAdd")
+func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Empty, error)  {
+	oltLogger.WithFields(log.Fields{
+		"IntfId": flow.AccessIntfId,
+		"OnuId": flow.OnuId,
+		"EthType": fmt.Sprintf("%x", flow.Classifier.EthType),
+		"InnerVlan": flow.Classifier.IVid,
+		"OuterVlan": flow.Classifier.OVid,
+		"FlowType": flow.FlowType,
+		"FlowId": flow.FlowId,
+		"UniID": flow.UniId,
+		"PortNo": flow.PortNo,
+	}).Infof("OLT receives Flow")
 	// TODO store flows somewhere
+	// TODO if this is an ONU flow, send it to the ONU channel
+	// NOTE 34958 is EAPOL
+
+	if flow.AccessIntfId == -1 {
+		oltLogger.WithFields(log.Fields{
+			"FlowId": flow.FlowId,
+		}).Debugf("This is an OLT flow")
+	} else {
+		pon, _ := o.getPonById(uint32(flow.AccessIntfId))
+		onu, _ := pon.getOnuById(uint32(flow.OnuId))
+
+		msg := Message{
+			Type:      FlowUpdate,
+			Data:      OnuFlowUpdateMessage{
+				PonPortID:  pon.ID,
+				OnuID: 	onu.ID,
+				Flow: 	flow,
+			},
+		}
+		onu.channel <- msg
+	}
+
 	return new(openolt.Empty) , nil
 }
 
