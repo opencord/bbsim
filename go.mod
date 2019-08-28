@@ -7,8 +7,11 @@ require (
 	github.com/looplab/fsm v0.1.0
 	github.com/opencord/omci-sim v0.0.0-20190717165025-5ff7bb17f1e9
 	github.com/opencord/voltha-protos v0.0.0-20190813191205-792553b747df
+	github.com/pkg/errors v0.8.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
+	github.com/stretchr/testify v1.4.0 // indirect
 	google.golang.org/grpc v1.22.1
+	gotest.tools v2.2.0+incompatible
 )
 
 replace github.com/opencord/omci-sim v0.0.0-20190717165025-5ff7bb17f1e9 => ./vendor/github.com/opencord/omci-sim

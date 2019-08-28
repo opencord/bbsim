@@ -2,8 +2,10 @@ package devices
 
 import "github.com/looplab/fsm"
 
+var newFSM = fsm.NewFSM
+
 func getOperStateFSM(cb fsm.Callback) *fsm.FSM {
-	return fsm.NewFSM(
+	return newFSM(
 		"down",
 		fsm.Events{
 			{Name: "enable", Src: []string{"down"}, Dst: "up"},

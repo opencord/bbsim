@@ -94,7 +94,7 @@ func (o Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt.
 		SerialNumber: msg.Onu.SerialNumber,
 	}}
 	if err := stream.Send(&openolt.Indication{Data: discoverData}); err != nil {
-		log.Error("Failed to send Indication_OnuDiscInd: %v", err)
+		log.Errorf("Failed to send Indication_OnuDiscInd: %v", err)
 	}
 	o.InternalState.Event("discover")
 	onuLogger.WithFields(log.Fields{
@@ -118,7 +118,7 @@ func (o Onu) sendOnuIndication(msg OnuIndicationMessage, stream openolt.Openolt_
 		SerialNumber: o.SerialNumber,
 	}}
 	if err := stream.Send(&openolt.Indication{Data: indData}); err != nil {
-		log.Error("Failed to send Indication_OnuInd: %v", err)
+		log.Errorf("Failed to send Indication_OnuInd: %v", err)
 	}
 	o.InternalState.Event("enable")
 	onuLogger.WithFields(log.Fields{
@@ -150,7 +150,7 @@ func (o Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableInd
 
 	omci := &openolt.Indication_OmciInd{OmciInd: &omciInd}
 	if err := stream.Send(&openolt.Indication{Data: omci}); err != nil {
-		onuLogger.Error("send omci indication failed: %v", err)
+		onuLogger.Errorf("send omci indication failed: %v", err)
 	}
 	onuLogger.WithFields(log.Fields{
 		"IntfId": o.PonPortID,
