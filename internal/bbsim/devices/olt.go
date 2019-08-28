@@ -1,16 +1,34 @@
+/*
+ * Copyright 2018-present Open Networking Foundation
+
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+
+ * http://www.apache.org/licenses/LICENSE-2.0
+
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package devices
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/opencord/voltha-protos/go/openolt"
+	bbsim "gerrit.opencord.org/bbsim/internal/bbsim/types"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
+	"github.com/opencord/voltha-protos/go/openolt"
 	"github.com/opencord/voltha-protos/go/tech_profile"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"net"
-	"os"
 	"sync"
 )
 
@@ -29,7 +47,7 @@ func GetOLT() OltDevice  {
 	return olt
 }
 
-func CreateOLT(seq int, nni int, pon int, onuPerPon int) OltDevice {
+func CreateOLT(seq int, nni int, pon int, onuPerPon int, oltDoneChannel *chan bool, apiDoneChannel *chan bool, group *sync.WaitGroup) OltDevice {
 	oltLogger.WithFields(log.Fields{
 		"ID": seq,
 		"NumNni":nni,
@@ -48,6 +66,8 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int) OltDevice {
 		Pons: []PonPort{},
 		Nnis: []NniPort{},
 		channel: make(chan Message),
+		oltDoneChannel: oltDoneChannel,
+		apiDoneChannel: apiDoneChannel,
 	}
 
 	// OLT State machine
@@ -100,11 +120,9 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int) OltDevice {
 		olt.Pons = append(olt.Pons, p)
 	}
 
-	wg := sync.WaitGroup{}
+	newOltServer(olt)
 
-	wg.Add(1)
-	go newOltServer(olt)
-	wg.Wait()
+	group.Done()
 	return olt
 }
 
@@ -118,8 +136,24 @@ func newOltServer(o OltDevice) error {
 	grpcServer := grpc.NewServer()
 	openolt.RegisterOpenoltServer(grpcServer, o)
 
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
 	go grpcServer.Serve(lis)
 	oltLogger.Debugf("OLT Listening on: %v", address)
+
+	for {
+		_, ok := <- *o.oltDoneChannel
+		if !ok {
+			// if the olt channel is closed, stop the gRPC server
+			log.Warnf("Stopping OLT gRPC server")
+			grpcServer.Stop()
+			wg.Done()
+			break
+		}
+	}
+
+	wg.Wait()
 
 	return nil
 }
@@ -455,14 +489,26 @@ func (o OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*
 	return new(openolt.Empty) , nil
 }
 
-func (o OltDevice) OnuPacketOut(context.Context, *openolt.OnuPacket) (*openolt.Empty, error)  {
-	oltLogger.Error("OnuPacketOut not implemented")
+func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) (*openolt.Empty, error)  {
+	pon, _ := o.getPonById(onuPkt.IntfId)
+	onu, _ := pon.getOnuById(onuPkt.OnuId)
+
+	rawpkt := gopacket.NewPacket(onuPkt.Pkt, layers.LayerTypeEthernet, gopacket.Default)
+
+	// NOTE is this the best way to the to the ethertype?
+	etherType := rawpkt.Layer(layers.LayerTypeEthernet).(*layers.Ethernet).EthernetType
+
+	if etherType == layers.EthernetTypeEAPOL {
+		eapolPkt := bbsim.ByteMsg{IntfId: onuPkt.IntfId, OnuId: onuPkt.OnuId, Bytes: rawpkt.Data()}
+		onu.eapolPktOutCh <- &eapolPkt
+	}
 	return new(openolt.Empty) , nil
 }
 
 func (o OltDevice) Reboot(context.Context, *openolt.Empty) (*openolt.Empty, error)  {
-	oltLogger.Info("Shutting Down, hope you're running in K8s...")
-	os.Exit(0)
+	oltLogger.Info("Shutting Down")
+	close(*o.oltDoneChannel)
+	close(*o.apiDoneChannel)
 	return new(openolt.Empty) , nil
 }
 

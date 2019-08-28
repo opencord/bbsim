@@ -6,7 +6,7 @@ require (
 	github.com/golang/protobuf v1.3.2
 	github.com/google/gopacket v1.1.17
 	github.com/looplab/fsm v0.1.0
-	github.com/opencord/omci-sim v0.0.0-20190823184906-9943bb7930e6
+	github.com/opencord/omci-sim v0.0.0-20190826212842-203314beba7e
 	github.com/opencord/voltha-protos v0.0.0-20190813191205-792553b747df
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
