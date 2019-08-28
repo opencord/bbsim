@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	bbsim "gerrit.opencord.org/bbsim/internal/bbsim/types"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 	"github.com/opencord/voltha-protos/go/openolt"
 	"github.com/looplab/fsm"
 	"github.com/opencord/voltha-protos/go/tech_profile"
@@ -455,8 +458,19 @@ func (o OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*
 	return new(openolt.Empty) , nil
 }
 
-func (o OltDevice) OnuPacketOut(context.Context, *openolt.OnuPacket) (*openolt.Empty, error)  {
-	oltLogger.Error("OnuPacketOut not implemented")
+func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) (*openolt.Empty, error)  {
+	pon, _ := o.getPonById(onuPkt.IntfId)
+	onu, _ := pon.getOnuById(onuPkt.OnuId)
+
+	rawpkt := gopacket.NewPacket(onuPkt.Pkt, layers.LayerTypeEthernet, gopacket.Default)
+
+	// NOTE is this the best way to the to the ethertype?
+	etherType := rawpkt.Layer(layers.LayerTypeEthernet).(*layers.Ethernet).EthernetType
+
+	if etherType == layers.EthernetTypeEAPOL {
+		eapolPkt := bbsim.ByteMsg{IntfId: onuPkt.IntfId, OnuId: onuPkt.OnuId, Bytes: rawpkt.Data()}
+		onu.eapolPktOutCh <- &eapolPkt
+	}
 	return new(openolt.Empty) , nil
 }
 
