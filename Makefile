@@ -36,7 +36,7 @@ build: protos # @HELP Build the binary
 	-o ./cmd/bbsim ./internal/bbsim
 
 test: protos # @HELP Execute unit tests
-	GO111MODULE=on go test ./internal/bbsim
+	GO111MODULE=on go test -v -mod vendor ./internal/bbsim
 
 docker-build: # @HELP Build a docker container
 	docker build --build-arg GIT_STATUS=${GIT_STATUS} -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} -f build/package/Dockerfile .
