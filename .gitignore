@@ -1,1 +1,4 @@
 vendor/
+coverage.out
+coverage.xml
+results.xml
