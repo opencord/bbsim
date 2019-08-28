@@ -27,7 +27,10 @@ all: help
 
 protos: api/bbsim/bbsim.pb.go # @HELP Build proto files
 
-build: protos # @HELP Build the binary
+dep: # @HELP Download the dependencies to the vendor folder
+	GO111MODULE=on go mod vendor
+
+build: dep protos # @HELP Build the binary
 	GO111MODULE=on go build -i -v -mod vendor \
 	-ldflags "-X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
 		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
@@ -35,8 +38,10 @@ build: protos # @HELP Build the binary
 		-X main.version=${VERSION}" \
 	-o ./cmd/bbsim ./internal/bbsim
 
-test: protos # @HELP Execute unit tests
-	GO111MODULE=on go test ./internal/bbsim
+test: dep protos # @HELP Execute unit tests
+	GO111MODULE=on go test -v -mod vendor ./internal/bbsim/... -covermode count -coverprofile ./tests/results/go-test-coverage.out 2>&1 | tee ./tests/results/go-test-results.out
+	go-junit-report < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml
+	gocover-cobertura < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml
 
 docker-build: # @HELP Build a docker container
 	docker build --build-arg GIT_STATUS=${GIT_STATUS} -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} -f build/package/Dockerfile .
