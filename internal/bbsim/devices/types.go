@@ -94,6 +94,8 @@ type OltDevice struct {
 	NumOnuPerPon int
 	InternalState *fsm.FSM
 	channel chan Message
+	oltDoneChannel *chan bool
+	apiDoneChannel *chan bool
 
 	Pons []PonPort
 	Nnis []NniPort

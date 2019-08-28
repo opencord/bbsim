@@ -24,15 +24,19 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"net"
+	"os"
+	"runtime/pprof"
 	"sync"
 )
 
 func getOpts() *CliOptions {
 
-	olt_id := flag.Int("olt_id", 0, "Number of OLT devices to be emulated (default is 1)")
-	nni := flag.Int("nni", 1, "Number of NNI ports per OLT device to be emulated (default is 1)")
-	pon := flag.Int("pon", 1, "Number of PON ports per OLT device to be emulated (default is 1)")
-	onu := flag.Int("onu", 1, "Number of ONU devices per PON port to be emulated (default is 1)")
+	olt_id 		:= flag.Int("olt_id", 0, "Number of OLT devices to be emulated (default is 1)")
+	nni 		:= flag.Int("nni", 1, "Number of NNI ports per OLT device to be emulated (default is 1)")
+	pon 		:= flag.Int("pon", 1, "Number of PON ports per OLT device to be emulated (default is 1)")
+	onu 		:= flag.Int("onu", 1, "Number of ONU devices per PON port to be emulated (default is 1)")
+	profileCpu 	:= flag.String("cpuprofile", "", "write cpu profile to file")
+
 	flag.Parse()
 
 	o := new(CliOptions)
@@ -41,11 +45,12 @@ func getOpts() *CliOptions {
 	o.NumNniPerOlt = int(*nni)
 	o.NumPonPerOlt = int(*pon)
 	o.NumOnuPerPon = int(*onu)
+	o.profileCpu = profileCpu
 
 	return o
 }
 
-func startApiServer()  {
+func startApiServer(channel chan bool, group *sync.WaitGroup)  {
 	// TODO make configurable
 	address :=  "0.0.0.0:50070"
 	log.Debugf("APIServer Listening on: %v", address)
@@ -58,18 +63,46 @@ func startApiServer()  {
 
 	reflection.Register(grpcServer)
 
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
 	go grpcServer.Serve(lis)
+
+	for {
+		_, ok := <- channel
+		if !ok {
+			// if the olt channel is closed, stop the gRPC server
+			log.Warnf("Stopping API gRPC server")
+			grpcServer.Stop()
+			wg.Done()
+			break
+		}
+	}
+
+	wg.Wait()
+	group.Done()
+	return
 }
 
 func init() {
+	// TODO make configurable both via CLI and via ENV (for the tests)
 	log.SetLevel(log.DebugLevel)
 	//log.SetLevel(log.TraceLevel)
 	//log.SetReportCaller(true)
 }
 
 func main() {
-
 	options := getOpts()
+
+	if *options.profileCpu != "" {
+		// start profiling
+		log.Infof("Creating profile file at: %s", *options.profileCpu)
+		f, err := os.Create(*options.profileCpu)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+	}
 
 	log.WithFields(log.Fields{
 		"OltID": options.OltID,
@@ -78,18 +111,26 @@ func main() {
 		"NumOnuPerPon": options.NumOnuPerPon,
 	}).Info("BroadBand Simulator is on")
 
+	// control channels, they are only closed when the goroutine needs to be terminated
+	oltDoneChannel := make(chan bool)
+	apiDoneChannel := make(chan bool)
+
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 
 
-	go devices.CreateOLT(options.OltID, options.NumNniPerOlt, options.NumPonPerOlt, options.NumOnuPerPon)
+	go devices.CreateOLT(options.OltID, options.NumNniPerOlt, options.NumPonPerOlt, options.NumOnuPerPon, &oltDoneChannel, &apiDoneChannel, &wg)
 	log.Debugf("Created OLT with id: %d", options.OltID)
-	go startApiServer()
+	go startApiServer(apiDoneChannel, &wg)
 	log.Debugf("Started APIService")
 
 	wg.Wait()
 
 	defer func() {
 		log.Info("BroadBand Simulator is off")
+		if *options.profileCpu != "" {
+			log.Info("Stopping profiler")
+			pprof.StopCPUProfile()
+		}
 	}()
 }

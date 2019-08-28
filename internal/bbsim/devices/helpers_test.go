@@ -19,6 +19,7 @@ package devices
 import (
 	"github.com/looplab/fsm"
 	"gotest.tools/assert"
+	"os"
 	"testing"
 )
 
@@ -26,13 +27,20 @@ var (
 	originalNewFSM func(initial string, events []fsm.EventDesc, callbacks map[string]fsm.Callback) *fsm.FSM
 )
 
-func setUp(t *testing.T)  {
+func setUp()  {
 	originalNewFSM = newFSM
 }
 
 
 func tearDown()  {
 	newFSM = originalNewFSM
+}
+
+func TestMain(m *testing.M) {
+	setUp()
+	code := m.Run()
+	tearDown()
+	os.Exit(code)
 }
 
 func Test_Helpers(t *testing.T) {

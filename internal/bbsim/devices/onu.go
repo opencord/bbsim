@@ -18,7 +18,7 @@ package devices
 
 import (
 	"fmt"
-	"github.com/opencord/bbsim/internal/bbsim/responders"
+	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
 	omci "github.com/opencord/omci-sim"
@@ -59,6 +59,11 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32) Onu {
 				{Name: "receive_eapol_flow", Src: []string{"enabled", "gem_port_added"}, Dst: "eapol_flow_received"},
 				{Name: "add_gem_port", Src: []string{"enabled", "eapol_flow_received"}, Dst: "gem_port_added"},
 				{Name: "start_auth", Src: []string{"eapol_flow_received", "gem_port_added"}, Dst: "auth_started"},
+				{Name: "eap_start_sent", Src: []string{"auth_started"}, Dst: "eap_start_sent"},
+				{Name: "eap_resonse_identity_sent", Src: []string{"eap_start_sent"}, Dst: "eap_resonse_identity_sent"},
+				{Name: "eap_resonse_challenge_sent", Src: []string{"eap_resonse_identity_sent"}, Dst: "eap_resonse_challenge_sent"},
+				{Name: "eap_resonse_success_received", Src: []string{"eap_resonse_challenge_sent"}, Dst: "eap_resonse_success_received"},
+				{Name: "auth_failed", Src: []string{"auth_started", "eap_start_sent", "eap_resonse_identity_sent", "eap_resonse_challenge_sent"}, Dst: "auth_failed"},
 			},
 			fsm.Callbacks{
 				"enter_state": func(e *fsm.Event) {
@@ -105,6 +110,14 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32) Onu {
 					}(msg)
 
 				},
+				"enter_eap_resonse_success_received": func(e *fsm.Event) {
+					o.logStateChange(e.Src, e.Dst)
+					onuLogger.WithFields(log.Fields{
+						"OnuId": o.ID,
+						"IntfId": o.PonPortID,
+						"OnuSn": o.SerialNumber,
+					}).Warnf("TODO start DHCP request")
+				},
 			},
 		)
 		return o
@@ -147,8 +160,8 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer)  
 		case StartEAPOL:
 			log.Infof("Receive StartEAPOL message on ONU channel")
 			go func() {
-
-				responders.StartWPASupplicant(o.ID, o.PonPortID, o.SerialNumber, stream, o.eapolPktOutCh)
+				// TODO kill this thread
+				eapol.CreateWPASupplicant(o.ID, o.PonPortID, o.SerialNumber, o.InternalState, stream, o.eapolPktOutCh)
 			}()
 		default:
 			onuLogger.Warnf("Received unknown message data %v for type %v in OLT channel", message.Data, message.Type)
@@ -191,7 +204,7 @@ func (o Onu) NewSN(oltid int, intfid uint32, onuid uint32) *openolt.SerialNumber
 
 	sn := new(openolt.SerialNumber)
 
-	sn = new(openolt.SerialNumber)
+	//sn = new(openolt.SerialNumber)
 	sn.VendorId = []byte("BBSM")
 	sn.VendorSpecific = []byte{0, byte(oltid % 256), byte(intfid), byte(onuid)}
 
