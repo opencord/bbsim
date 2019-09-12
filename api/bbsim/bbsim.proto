@@ -27,10 +27,11 @@ message NNIPort {
 
 message Olt {
     int32 ID = 1;
-    string OperState = 2;
-    string InternalState = 3;
-    repeated NNIPort NNIPorts = 4;
-    repeated PONPort PONPorts = 5;
+    string SerialNumber = 2;
+    string OperState = 3;
+    string InternalState = 4;
+    repeated NNIPort NNIPorts = 5;
+    repeated PONPort PONPorts = 6;
 }
 
 message ONU {

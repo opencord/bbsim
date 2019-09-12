@@ -57,6 +57,7 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int, oltDoneChannel *chan bo
 
 	olt = OltDevice{
 		ID: seq,
+		SerialNumber: fmt.Sprintf("BBSIM_OLT_%d", seq),
 		OperState: getOperStateFSM(func(e *fsm.Event) {
 			oltLogger.Debugf("Changing OLT OperState from %s to %s", e.Src, e.Dst)
 		}),
@@ -469,7 +470,7 @@ func (o OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.Devi
 	devinfo.GemportIdEnd = 65535
 	devinfo.FlowIdStart = 1
 	devinfo.FlowIdEnd = 16383
-	devinfo.DeviceSerialNumber = fmt.Sprintf("BBSIM_OLT_%d", o.ID)
+	devinfo.DeviceSerialNumber = o.SerialNumber
 
 	return devinfo, nil
 }
