@@ -89,6 +89,7 @@ func (p PonPort) getOnuById(id uint32) (*Onu, error) {
 type OltDevice struct {
 	// BBSIM Internals
 	ID int
+	SerialNumber string
 	NumNni int
 	NumPon int
 	NumOnuPerPon int
