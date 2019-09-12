@@ -28,22 +28,22 @@ var logger = log.WithFields(log.Fields{
 })
 
 var (
-	version 	string
-	buildTime  	string
-	commitHash 	string
-	gitStatus	string
+	version    string
+	buildTime  string
+	commitHash string
+	gitStatus  string
 )
 
 type BBSimServer struct {
 }
 
-func (s BBSimServer) Version(ctx context.Context, req *bbsim.Empty) (*bbsim.VersionNumber, error)  {
+func (s BBSimServer) Version(ctx context.Context, req *bbsim.Empty) (*bbsim.VersionNumber, error) {
 	// TODO add a flag to specofy whether the tree was clean at this commit or not
 	return &bbsim.VersionNumber{
-		Version: version,
-		BuildTime: buildTime,
+		Version:    version,
+		BuildTime:  buildTime,
 		CommitHash: commitHash,
-		GitStatus: gitStatus,
+		GitStatus:  gitStatus,
 	}, nil
 }
 
@@ -54,7 +54,7 @@ func (s BBSimServer) GetOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Olt, 
 
 	for _, nni := range olt.Nnis {
 		n := bbsim.NNIPort{
-			ID: int32(nni.ID),
+			ID:        int32(nni.ID),
 			OperState: nni.OperState.Current(),
 		}
 		nnis = append(nnis, &n)
@@ -62,23 +62,24 @@ func (s BBSimServer) GetOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Olt, 
 
 	for _, pon := range olt.Pons {
 		p := bbsim.PONPort{
-			ID: int32(pon.ID),
+			ID:        int32(pon.ID),
 			OperState: pon.OperState.Current(),
 		}
 		pons = append(pons, &p)
 	}
 
 	res := bbsim.Olt{
-		ID: int32(olt.ID),
-		OperState: olt.OperState.Current(),
+		ID:            int32(olt.ID),
+		SerialNumber:  olt.SerialNumber,
+		OperState:     olt.OperState.Current(),
 		InternalState: olt.InternalState.Current(),
-		NNIPorts: nnis,
-		PONPorts: pons,
+		NNIPorts:      nnis,
+		PONPorts:      pons,
 	}
 	return &res, nil
 }
 
-func (s BBSimServer) GetONUs(ctx context.Context, req *bbsim.Empty) (*bbsim.ONUs, error){
+func (s BBSimServer) GetONUs(ctx context.Context, req *bbsim.Empty) (*bbsim.ONUs, error) {
 	olt := devices.GetOLT()
 	onus := bbsim.ONUs{
 		Items: []*bbsim.ONU{},
@@ -87,11 +88,11 @@ func (s BBSimServer) GetONUs(ctx context.Context, req *bbsim.Empty) (*bbsim.ONUs
 	for _, pon := range olt.Pons {
 		for _, o := range pon.Onus {
 			onu := bbsim.ONU{
-				ID: int32(o.ID),
-				SerialNumber: o.SerialNumber.String(),
-				OperState: o.OperState.Current(),
+				ID:            int32(o.ID),
+				SerialNumber:  o.SerialNumber.String(),
+				OperState:     o.OperState.Current(),
 				InternalState: o.InternalState.Current(),
-				PonPortID: int32(o.PonPortID),
+				PonPortID:     int32(o.PonPortID),
 			}
 			onus.Items = append(onus.Items, &onu)
 		}

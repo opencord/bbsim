@@ -30,13 +30,7 @@ protos: api/bbsim/bbsim.pb.go # @HELP Build proto files
 dep: # @HELP Download the dependencies to the vendor folder
 	GO111MODULE=on go mod vendor
 
-build: dep protos # @HELP Build the binary
-	GO111MODULE=on go build -i -v -mod vendor \
-	-ldflags "-X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
-		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
-		-X main.gitStatus=${GIT_STATUS} \
-		-X main.version=${VERSION}" \
-	-o ./cmd/bbsim ./internal/bbsim
+build: dep protos build-bbsim build-bbsimctl# @HELP Build the binary
 
 test: dep protos # @HELP Execute unit tests
 	GO111MODULE=on go test -v -mod vendor ./internal/bbsim/... -covermode count -coverprofile ./tests/results/go-test-coverage.out 2>&1 | tee ./tests/results/go-test-results.out
@@ -65,6 +59,21 @@ help: # @HELP Print the command options
 
 
 # Internals
+build-bbsim:
+	GO111MODULE=on go build -i -v -mod vendor \
+    	-ldflags "-X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
+    		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
+    		-X main.gitStatus=${GIT_STATUS} \
+    		-X main.version=${VERSION}" \
+    	-o ./cmd/bbsim ./internal/bbsim
+
+build-bbsimctl:
+	GO111MODULE=on go build -i -v -mod vendor \
+        	-ldflags "-X github.com/opencord/bbsim/internal/bbsimctl/config.BuildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
+        		-X github.com/opencord/bbsim/internal/bbsimctl/config.CommitHash=$(shell git log --pretty=format:%H -n 1) \
+        		-X github.com/opencord/bbsim/internal/bbsimctl/config.GitStatus=${GIT_STATUS} \
+        		-X github.com/opencord/bbsim/internal/bbsimctl/config.Version=${VERSION}" \
+        	./cmd/bbsimctl
 
 api/openolt/openolt.pb.go: api/openolt/openolt.proto
 	@protoc -I . \
