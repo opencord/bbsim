@@ -43,6 +43,9 @@ docker-build: # @HELP Build a docker container
 docker-push: # @HELP Push a docker container to a registry
 	docker push ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG}
 
+docker-run: # @HELP Run the container locally (intended for development purposes)
+	docker run -p 50070:50070 -p 50060:50060 --privileged --rm --name bbsim ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} /app/bbsim
+
 help: # @HELP Print the command options
 	@echo
 	@echo "\033[0;31m    BroadBand Simulator (BBSim) \033[0m"
