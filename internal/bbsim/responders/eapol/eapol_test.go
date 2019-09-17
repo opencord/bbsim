@@ -17,8 +17,8 @@
 package eapol
 
 import (
-	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/looplab/fsm"
+	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/go/openolt"
 	"google.golang.org/grpc"
 	"gotest.tools/assert"
@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	originalSendEapStart func(onuId uint32, ponPortId uint32, serialNumber *openolt.SerialNumber, stream openolt.Openolt_EnableIndicationServer) error
+	originalSendEapStart func(onuId uint32, ponPortId uint32, serialNumber string, stream openolt.Openolt_EnableIndicationServer) error
 )
 
 type fakeStream struct {
@@ -42,12 +42,11 @@ func (s fakeStream) Send(flow *openolt.Indication) error {
 	return nil
 }
 
-func setUp()  {
+func setUp() {
 	originalSendEapStart = sendEapStart
 }
 
-
-func tearDown()  {
+func tearDown() {
 	sendEapStart = originalSendEapStart
 }
 
@@ -63,12 +62,12 @@ func TestCreateWPASupplicant(t *testing.T) {
 	// mocks
 	mockSendEapStartCalled := 0
 	mockSendEapStartArgs := struct {
-		onuId uint32
-		ponPortId uint32
+		onuId        uint32
+		ponPortId    uint32
 		serialNumber *openolt.SerialNumber
-		stream openolt.Openolt_EnableIndicationServer
+		stream       openolt.Openolt_EnableIndicationServer
 	}{}
-	mockSendEapStart := func(onuId uint32, ponPortId uint32, serialNumber *openolt.SerialNumber, stream openolt.Openolt_EnableIndicationServer) error {
+	mockSendEapStart := func(onuId uint32, ponPortId uint32, serialNumber string, stream openolt.Openolt_EnableIndicationServer) error {
 		mockSendEapStartCalled++
 		mockSendEapStartArgs.onuId = onuId
 		mockSendEapStartArgs.ponPortId = ponPortId
@@ -79,20 +78,17 @@ func TestCreateWPASupplicant(t *testing.T) {
 	// params for the function under test
 	var onuId uint32 = 1
 	var ponPortId uint32 = 0
-	var serialNumber = new(openolt.SerialNumber)
-
-	serialNumber.VendorId = []byte("BBSM")
-	serialNumber.VendorSpecific = []byte{0, byte(0 % 256), byte(ponPortId), byte(onuId)}
+	var serialNumber string = "BBSM00000001"
 
 	eapolStateMachine := fsm.NewFSM(
-	"auth_started",
-	fsm.Events{
-		{Name: "eap_start_sent", Src: []string{"auth_started"}, Dst: "eap_start_sent"},
-		{Name: "eap_resonse_identity_sent", Src: []string{"eap_start_sent"}, Dst: "eap_resonse_identity_sent"},
-		{Name: "eap_resonse_challenge_sent", Src: []string{"eap_resonse_identity_sent"}, Dst: "eap_resonse_challenge_sent"},
-		{Name: "eap_resonse_success_received", Src: []string{"eap_resonse_challenge_sent"}, Dst: "eap_resonse_success_received"},
-	},
-	fsm.Callbacks{},
+		"auth_started",
+		fsm.Events{
+			{Name: "eap_start_sent", Src: []string{"auth_started"}, Dst: "eap_start_sent"},
+			{Name: "eap_response_identity_sent", Src: []string{"eap_start_sent"}, Dst: "eap_response_identity_sent"},
+			{Name: "eap_response_challenge_sent", Src: []string{"eap_response_identity_sent"}, Dst: "eap_response_challenge_sent"},
+			{Name: "eap_response_success_received", Src: []string{"eap_response_challenge_sent"}, Dst: "eap_response_success_received"},
+		},
+		fsm.Callbacks{},
 	)
 
 	pktOutCh := make(chan *bbsim.ByteMsg, 1024)
@@ -103,7 +99,7 @@ func TestCreateWPASupplicant(t *testing.T) {
 	wg.Add(1)
 
 	go CreateWPASupplicant(onuId, ponPortId, serialNumber, eapolStateMachine, stream, pktOutCh)
-	go func(){
+	go func() {
 		time.Sleep(1 * time.Second)
 		close(pktOutCh)
 		wg.Done()
