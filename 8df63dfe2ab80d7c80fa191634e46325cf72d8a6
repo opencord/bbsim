@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46cf5e19_3f398930",
+        "filename": "internal/bbsimctl/commands/olt.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-09-17T22:05:30Z",
+      "side": 1,
+      "message": "Assuming we eventually move to supporting json and yaml format output in parity with voltctl/cordctl, this header may become inconvenient. I wonder if it\u0027s possible to fold it into the template.",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 47
+      },
+      "revId": "8df63dfe2ab80d7c80fa191634e46325cf72d8a6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
