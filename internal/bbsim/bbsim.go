@@ -31,11 +31,13 @@ import (
 
 func getOpts() *CliOptions {
 
-	olt_id 		:= flag.Int("olt_id", 0, "Number of OLT devices to be emulated (default is 1)")
-	nni 		:= flag.Int("nni", 1, "Number of NNI ports per OLT device to be emulated (default is 1)")
-	pon 		:= flag.Int("pon", 1, "Number of PON ports per OLT device to be emulated (default is 1)")
-	onu 		:= flag.Int("onu", 1, "Number of ONU devices per PON port to be emulated (default is 1)")
-	profileCpu 	:= flag.String("cpuprofile", "", "write cpu profile to file")
+	olt_id := flag.Int("olt_id", 0, "Number of OLT devices to be emulated (default is 1)")
+	nni := flag.Int("nni", 1, "Number of NNI ports per OLT device to be emulated (default is 1)")
+	pon := flag.Int("pon", 1, "Number of PON ports per OLT device to be emulated (default is 1)")
+	onu := flag.Int("onu", 1, "Number of ONU devices per PON port to be emulated (default is 1)")
+	s_tag := flag.Int("s_tag", 900, "S-Tag value (default is 900)")
+	c_tag_init := flag.Int("c_tag", 900, "C-Tag starting value (default is 900), each ONU will get a sequentail one (targeting 1024 ONUs per BBSim instance the range is bug enough)")
+	profileCpu := flag.String("cpuprofile", "", "write cpu profile to file")
 
 	flag.Parse()
 
@@ -45,14 +47,16 @@ func getOpts() *CliOptions {
 	o.NumNniPerOlt = int(*nni)
 	o.NumPonPerOlt = int(*pon)
 	o.NumOnuPerPon = int(*onu)
+	o.STag = int(*s_tag)
+	o.CTagInit = int(*c_tag_init)
 	o.profileCpu = profileCpu
 
 	return o
 }
 
-func startApiServer(channel chan bool, group *sync.WaitGroup)  {
+func startApiServer(channel chan bool, group *sync.WaitGroup) {
 	// TODO make configurable
-	address :=  "0.0.0.0:50070"
+	address := "0.0.0.0:50070"
 	log.Debugf("APIServer Listening on: %v", address)
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
@@ -69,7 +73,7 @@ func startApiServer(channel chan bool, group *sync.WaitGroup)  {
 	go grpcServer.Serve(lis)
 
 	for {
-		_, ok := <- channel
+		_, ok := <-channel
 		if !ok {
 			// if the olt channel is closed, stop the gRPC server
 			log.Warnf("Stopping API gRPC server")
@@ -105,7 +109,7 @@ func main() {
 	}
 
 	log.WithFields(log.Fields{
-		"OltID": options.OltID,
+		"OltID":        options.OltID,
 		"NumNniPerOlt": options.NumNniPerOlt,
 		"NumPonPerOlt": options.NumPonPerOlt,
 		"NumOnuPerPon": options.NumOnuPerPon,
@@ -118,8 +122,7 @@ func main() {
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 
-
-	go devices.CreateOLT(options.OltID, options.NumNniPerOlt, options.NumPonPerOlt, options.NumOnuPerPon, &oltDoneChannel, &apiDoneChannel, &wg)
+	go devices.CreateOLT(options.OltID, options.NumNniPerOlt, options.NumPonPerOlt, options.NumOnuPerPon, options.STag, options.CTagInit, &oltDoneChannel, &apiDoneChannel, &wg)
 	log.Debugf("Created OLT with id: %d", options.OltID)
 	go startApiServer(apiDoneChannel, &wg)
 	log.Debugf("Started APIService")

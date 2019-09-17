@@ -11,8 +11,8 @@
       "entries": [
         {
           "id": "BBSM00000001",
-          "cTag": 101,
-          "sTag": 99,
+          "cTag": 900,
+          "sTag": 900,
           "nasPortId": "BBSM00000001",
           "technologyProfileId": 64,
           "upstreamBandwidthProfile": "High-Speed-Internet",
@@ -20,8 +20,8 @@
         },
         {
           "id": "BBSM00000002",
-          "cTag": 102,
-          "sTag": 99,
+          "cTag": 901,
+          "sTag": 900,
           "nasPortId": "BBSM00000002",
           "technologyProfileId": 64,
           "upstreamBandwidthProfile": "High-Speed-Internet",
@@ -29,8 +29,8 @@
         },
         {
           "id": "BBSM00000101",
-          "cTag": 111,
-          "sTag": 99,
+          "cTag": 902,
+          "sTag": 900,
           "nasPortId": "BBSM00000101",
           "technologyProfileId": 64,
           "upstreamBandwidthProfile": "High-Speed-Internet",
@@ -38,8 +38,8 @@
         },
         {
           "id": "BBSM00000102",
-          "cTag": 112,
-          "sTag": 99,
+          "cTag": 903,
+          "sTag": 900,
           "nasPortId": "BBSM00000102",
           "technologyProfileId": 64,
           "upstreamBandwidthProfile": "High-Speed-Internet",

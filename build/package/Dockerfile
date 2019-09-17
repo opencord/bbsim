@@ -63,7 +63,7 @@ FROM golang:1.12-stretch
 # debian symlinks it to 0.8 for historical reasons:
 # https://packages.debian.org/stretch/libpcap0.8-dev
 RUN apt-get update \
- && apt-get install -y libpcap-dev isc-dhcp-server network-manager\
+ && apt-get install -y libpcap-dev isc-dhcp-server network-manager tcpdump\
  && ln -s /usr/lib/libpcap.so.1.8.1 /usr/lib/libpcap.so.0.8
 
 COPY ./configs/isc-dhcp-server /etc/default/
@@ -75,4 +75,4 @@ RUN mv /usr/sbin/dhcpd /usr/local/bin/ \
 WORKDIR /app
 COPY --from=builder /go/src/github.com/opencord/bbsim/cmd/bbsim /app/bbsim
 RUN chmod a+x /app/bbsim
-ENTRYPOINT [ '/app/bbsim' ]
+CMD [ '/app/bbsim' ]

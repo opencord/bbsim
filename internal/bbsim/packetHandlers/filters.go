@@ -14,35 +14,30 @@
  * limitations under the License.
  */
 
-package devices
+package packetHandlers
 
 import (
-	"github.com/looplab/fsm"
-	"github.com/opencord/voltha-protos/go/openolt"
-	"strconv"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"net"
 )
 
-var newFSM = fsm.NewFSM
-
-func getOperStateFSM(cb fsm.Callback) *fsm.FSM {
-	return newFSM(
-		"down",
-		fsm.Events{
-			{Name: "enable", Src: []string{"down"}, Dst: "up"},
-			{Name: "disable", Src: []string{"up"}, Dst: "down"},
-		},
-		fsm.Callbacks{
-			"enter_state": func(e *fsm.Event) {
-				cb(e)
-			},
-		},
-	)
+func IsDhcpPacket(pkt gopacket.Packet) bool {
+	if layerDHCP := pkt.Layer(layers.LayerTypeDHCPv4); layerDHCP != nil {
+		return true
+	}
+	return false
 }
 
-func onuSnToString(sn *openolt.SerialNumber) string {
-	s := string(sn.VendorId)
-	for _, i := range sn.VendorSpecific {
-		s = s + strconv.FormatInt(int64(i/16), 16) + strconv.FormatInt(int64(i%16), 16)
+func IsIncomingPacket(packet gopacket.Packet) bool {
+	if ipLayer := packet.Layer(layers.LayerTypeIPv4); ipLayer != nil {
+
+		ip, _ := ipLayer.(*layers.IPv4)
+
+		// FIXME find a better way to filter outgoing packets
+		if ip.SrcIP.Equal(net.ParseIP("182.21.0.128")) {
+			return true
+		}
 	}
-	return s
+	return false
 }

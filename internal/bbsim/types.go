@@ -19,10 +19,11 @@ package main
 // General
 
 type CliOptions struct {
-	OltID 	 	 	int
-	NumNniPerOlt 	int
-	NumPonPerOlt 	int
-	NumOnuPerPon 	int
-	profileCpu		*string
+	OltID        int
+	NumNniPerOlt int
+	NumPonPerOlt int
+	NumOnuPerPon int
+	STag         int
+	CTagInit     int
+	profileCpu   *string
 }
-
