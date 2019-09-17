@@ -20,10 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
+	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/go/openolt"
 	"github.com/opencord/voltha-protos/go/tech_profile"
 	log "github.com/sirupsen/logrus"
@@ -43,16 +43,16 @@ func init() {
 
 var olt = OltDevice{}
 
-func GetOLT() OltDevice  {
+func GetOLT() OltDevice {
 	return olt
 }
 
 func CreateOLT(seq int, nni int, pon int, onuPerPon int, oltDoneChannel *chan bool, apiDoneChannel *chan bool, group *sync.WaitGroup) OltDevice {
 	oltLogger.WithFields(log.Fields{
-		"ID": seq,
-		"NumNni":nni,
-		"NumPon":pon,
-		"NumOnuPerPon":onuPerPon,
+		"ID":           seq,
+		"NumNni":       nni,
+		"NumPon":       pon,
+		"NumOnuPerPon": onuPerPon,
 	}).Debug("CreateOLT")
 
 	olt = OltDevice{
@@ -60,12 +60,12 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int, oltDoneChannel *chan bo
 		OperState: getOperStateFSM(func(e *fsm.Event) {
 			oltLogger.Debugf("Changing OLT OperState from %s to %s", e.Src, e.Dst)
 		}),
-		NumNni:nni,
-		NumPon:pon,
-		NumOnuPerPon:onuPerPon,
-		Pons: []PonPort{},
-		Nnis: []NniPort{},
-		channel: make(chan Message),
+		NumNni:         nni,
+		NumPon:         pon,
+		NumOnuPerPon:   onuPerPon,
+		Pons:           []PonPort{},
+		Nnis:           []NniPort{},
+		channel:        make(chan Message),
 		oltDoneChannel: oltDoneChannel,
 		apiDoneChannel: apiDoneChannel,
 	}
@@ -100,8 +100,8 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int, oltDoneChannel *chan bo
 	for i := 0; i < pon; i++ {
 		p := PonPort{
 			NumOnu: olt.NumOnuPerPon,
-			ID: uint32(i),
-			Type: "pon",
+			ID:     uint32(i),
+			Type:   "pon",
 		}
 		p.OperState = getOperStateFSM(func(e *fsm.Event) {
 			oltLogger.WithFields(log.Fields{
@@ -112,7 +112,7 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int, oltDoneChannel *chan bo
 		// create ONU devices
 		for j := 0; j < onuPerPon; j++ {
 			//o := CreateONU(olt, p, uint32(onuId))
-			o := CreateONU(olt, p, uint32(j + 1))
+			o := CreateONU(olt, p, uint32(j+1))
 			p.Onus = append(p.Onus, o)
 			//onuId = onuId + 1
 		}
@@ -128,7 +128,7 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int, oltDoneChannel *chan bo
 
 func newOltServer(o OltDevice) error {
 	// TODO make configurable
-	address :=  "0.0.0.0:50060"
+	address := "0.0.0.0:50060"
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		oltLogger.Fatalf("OLT failed to listen: %v", err)
@@ -143,7 +143,7 @@ func newOltServer(o OltDevice) error {
 	oltLogger.Debugf("OLT Listening on: %v", address)
 
 	for {
-		_, ok := <- *o.oltDoneChannel
+		_, ok := <-*o.oltDoneChannel
 		if !ok {
 			// if the olt channel is closed, stop the gRPC server
 			log.Warnf("Stopping OLT gRPC server")
@@ -160,7 +160,7 @@ func newOltServer(o OltDevice) error {
 
 // Device Methods
 
-func (o OltDevice) Enable (stream openolt.Openolt_EnableIndicationServer) error {
+func (o OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error {
 
 	oltLogger.Debug("Enable OLT called")
 
@@ -206,9 +206,9 @@ func (o OltDevice) Enable (stream openolt.Openolt_EnableIndicationServer) error 
 			go onu.processOnuMessages(stream)
 			go onu.processOmciMessages(stream)
 			msg := Message{
-				Type:      OnuDiscIndication,
+				Type: OnuDiscIndication,
 				Data: OnuDiscIndicationMessage{
-					Onu:     onu,
+					Onu:       onu,
 					OperState: UP,
 				},
 			}
@@ -256,8 +256,8 @@ func (o OltDevice) sendNniIndication(msg NniIndicationMessage, stream openolt.Op
 	nni.OperState.Event("enable")
 	// NOTE Operstate may need to be an integer
 	operData := &openolt.Indication_IntfOperInd{IntfOperInd: &openolt.IntfOperIndication{
-		Type: nni.Type,
-		IntfId: nni.ID,
+		Type:      nni.Type,
+		IntfId:    nni.ID,
 		OperState: nni.OperState.Current(),
 	}}
 
@@ -266,8 +266,8 @@ func (o OltDevice) sendNniIndication(msg NniIndicationMessage, stream openolt.Op
 	}
 
 	oltLogger.WithFields(log.Fields{
-		"Type": nni.Type,
-		"IntfId": nni.ID,
+		"Type":      nni.Type,
+		"IntfId":    nni.ID,
 		"OperState": nni.OperState.Current(),
 	}).Debug("Sent Indication_IntfOperInd for NNI")
 }
@@ -276,7 +276,7 @@ func (o OltDevice) sendPonIndication(msg PonIndicationMessage, stream openolt.Op
 	pon, _ := o.getPonById(msg.PonPortID)
 	pon.OperState.Event("enable")
 	discoverData := &openolt.Indication_IntfInd{IntfInd: &openolt.IntfIndication{
-		IntfId: pon.ID,
+		IntfId:    pon.ID,
 		OperState: pon.OperState.Current(),
 	}}
 
@@ -285,13 +285,13 @@ func (o OltDevice) sendPonIndication(msg PonIndicationMessage, stream openolt.Op
 	}
 
 	oltLogger.WithFields(log.Fields{
-		"IntfId": pon.ID,
+		"IntfId":    pon.ID,
 		"OperState": pon.OperState.Current(),
 	}).Debug("Sent Indication_IntfInd")
 
 	operData := &openolt.Indication_IntfOperInd{IntfOperInd: &openolt.IntfOperIndication{
-		Type: pon.Type,
-		IntfId: pon.ID,
+		Type:      pon.Type,
+		IntfId:    pon.ID,
 		OperState: pon.OperState.Current(),
 	}}
 
@@ -300,8 +300,8 @@ func (o OltDevice) sendPonIndication(msg PonIndicationMessage, stream openolt.Op
 	}
 
 	oltLogger.WithFields(log.Fields{
-		"Type": pon.Type,
-		"IntfId": pon.ID,
+		"Type":      pon.Type,
+		"IntfId":    pon.ID,
 		"OperState": pon.OperState.Current(),
 	}).Debug("Sent Indication_IntfOperInd for PON")
 }
@@ -310,9 +310,8 @@ func (o OltDevice) processOltMessages(stream openolt.Openolt_EnableIndicationSer
 	oltLogger.Debug("Started OLT Indication Channel")
 	for message := range o.channel {
 
-
 		oltLogger.WithFields(log.Fields{
-			"oltId": o.ID,
+			"oltId":       o.ID,
 			"messageType": message.Type,
 		}).Trace("Received message")
 
@@ -342,7 +341,7 @@ func (o OltDevice) processOltMessages(stream openolt.Openolt_EnableIndicationSer
 
 // GRPC Endpoints
 
-func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*openolt.Empty, error)  {
+func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*openolt.Empty, error) {
 	oltLogger.WithFields(log.Fields{
 		"onuSerialNumber": onu.SerialNumber,
 	}).Info("Received ActivateOnu call from VOLTHA")
@@ -352,28 +351,28 @@ func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*open
 
 	// NOTE we need to immediately activate the ONU or the OMCI state machine won't start
 	msg := Message{
-		Type:      OnuIndication,
-		Data:      OnuIndicationMessage{
+		Type: OnuIndication,
+		Data: OnuIndicationMessage{
 			OnuSN:     onu.SerialNumber,
 			PonPortID: onu.IntfId,
 			OperState: UP,
 		},
 	}
 	_onu.channel <- msg
-	return new(openolt.Empty) , nil
+	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) DeactivateOnu(context.Context, *openolt.Onu) (*openolt.Empty, error)  {
+func (o OltDevice) DeactivateOnu(context.Context, *openolt.Onu) (*openolt.Empty, error) {
 	oltLogger.Error("DeactivateOnu not implemented")
-	return new(openolt.Empty) , nil
+	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) DeleteOnu(context.Context, *openolt.Onu) (*openolt.Empty, error)  {
+func (o OltDevice) DeleteOnu(context.Context, *openolt.Onu) (*openolt.Empty, error) {
 	oltLogger.Error("DeleteOnu not implemented")
-	return new(openolt.Empty) , nil
+	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) DisableOlt(context.Context, *openolt.Empty) (*openolt.Empty, error)  {
+func (o OltDevice) DisableOlt(context.Context, *openolt.Empty) (*openolt.Empty, error) {
 	// NOTE when we disable the OLT should we disable NNI, PONs and ONUs altogether?
 	olt_msg := Message{
 		Type: OltIndication,
@@ -382,36 +381,36 @@ func (o OltDevice) DisableOlt(context.Context, *openolt.Empty) (*openolt.Empty, 
 		},
 	}
 	o.channel <- olt_msg
-	return new(openolt.Empty) , nil
+	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) DisablePonIf(context.Context, *openolt.Interface) (*openolt.Empty, error)  {
+func (o OltDevice) DisablePonIf(context.Context, *openolt.Interface) (*openolt.Empty, error) {
 	oltLogger.Error("DisablePonIf not implemented")
-	return new(openolt.Empty) , nil
+	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) EnableIndication(_ *openolt.Empty, stream openolt.Openolt_EnableIndicationServer) error  {
+func (o OltDevice) EnableIndication(_ *openolt.Empty, stream openolt.Openolt_EnableIndicationServer) error {
 	oltLogger.WithField("oltId", o.ID).Info("OLT receives EnableIndication call from VOLTHA")
 	o.Enable(stream)
 	return nil
 }
 
-func (o OltDevice) EnablePonIf(context.Context, *openolt.Interface) (*openolt.Empty, error)  {
+func (o OltDevice) EnablePonIf(context.Context, *openolt.Interface) (*openolt.Empty, error) {
 	oltLogger.Error("EnablePonIf not implemented")
-	return new(openolt.Empty) , nil
+	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Empty, error)  {
+func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Empty, error) {
 	oltLogger.WithFields(log.Fields{
-		"IntfId": flow.AccessIntfId,
-		"OnuId": flow.OnuId,
-		"EthType": fmt.Sprintf("%x", flow.Classifier.EthType),
+		"IntfId":    flow.AccessIntfId,
+		"OnuId":     flow.OnuId,
+		"EthType":   fmt.Sprintf("%x", flow.Classifier.EthType),
 		"InnerVlan": flow.Classifier.IVid,
 		"OuterVlan": flow.Classifier.OVid,
-		"FlowType": flow.FlowType,
-		"FlowId": flow.FlowId,
-		"UniID": flow.UniId,
-		"PortNo": flow.PortNo,
+		"FlowType":  flow.FlowType,
+		"FlowId":    flow.FlowId,
+		"UniID":     flow.UniId,
+		"PortNo":    flow.PortNo,
 	}).Infof("OLT receives Flow")
 	// TODO optionally store flows somewhere
 
@@ -424,34 +423,34 @@ func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Em
 		onu, _ := pon.getOnuById(uint32(flow.OnuId))
 
 		msg := Message{
-			Type:      FlowUpdate,
-			Data:      OnuFlowUpdateMessage{
-				PonPortID:  pon.ID,
-				OnuID: 	onu.ID,
-				Flow: 	flow,
+			Type: FlowUpdate,
+			Data: OnuFlowUpdateMessage{
+				PonPortID: pon.ID,
+				OnuID:     onu.ID,
+				Flow:      flow,
 			},
 		}
 		onu.channel <- msg
 	}
 
-	return new(openolt.Empty) , nil
+	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) FlowRemove(context.Context, *openolt.Flow) (*openolt.Empty, error)  {
+func (o OltDevice) FlowRemove(context.Context, *openolt.Flow) (*openolt.Empty, error) {
 	oltLogger.Info("received FlowRemove")
 	// TODO store flows somewhere
-	return new(openolt.Empty) , nil
+	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) HeartbeatCheck(context.Context, *openolt.Empty) (*openolt.Heartbeat, error)  {
+func (o OltDevice) HeartbeatCheck(context.Context, *openolt.Empty) (*openolt.Heartbeat, error) {
 	oltLogger.Error("HeartbeatCheck not implemented")
-	return new(openolt.Heartbeat) , nil
+	return new(openolt.Heartbeat), nil
 }
 
-func (o OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.DeviceInfo, error)  {
+func (o OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.DeviceInfo, error) {
 
 	oltLogger.WithFields(log.Fields{
-		"oltId": o.ID,
+		"oltId":    o.ID,
 		"PonPorts": o.NumPon,
 	}).Info("OLT receives GetDeviceInfo call from VOLTHA")
 	devinfo := new(openolt.DeviceInfo)
@@ -474,22 +473,22 @@ func (o OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.Devi
 	return devinfo, nil
 }
 
-func (o OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*openolt.Empty, error)  {
+func (o OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*openolt.Empty, error) {
 	pon, _ := o.getPonById(omci_msg.IntfId)
 	onu, _ := pon.getOnuById(omci_msg.OnuId)
 	msg := Message{
-		Type:      OMCI,
-		Data:      OmciMessage{
-			OnuSN:  onu.SerialNumber,
-			OnuID: 	onu.ID,
-			omciMsg: 	omci_msg,
+		Type: OMCI,
+		Data: OmciMessage{
+			OnuSN:   onu.SerialNumber,
+			OnuID:   onu.ID,
+			omciMsg: omci_msg,
 		},
 	}
 	onu.channel <- msg
-	return new(openolt.Empty) , nil
+	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) (*openolt.Empty, error)  {
+func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) (*openolt.Empty, error) {
 	pon, _ := o.getPonById(onuPkt.IntfId)
 	onu, _ := pon.getOnuById(onuPkt.OnuId)
 
@@ -501,40 +500,45 @@ func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) 
 	if etherType == layers.EthernetTypeEAPOL {
 		eapolPkt := bbsim.ByteMsg{IntfId: onuPkt.IntfId, OnuId: onuPkt.OnuId, Bytes: rawpkt.Data()}
 		onu.eapolPktOutCh <- &eapolPkt
+	} else if layerDHCP := rawpkt.Layer(layers.LayerTypeDHCPv4); layerDHCP != nil {
+		// TODO we need to untag the packets
+		dhcpPkt := bbsim.ByteMsg{IntfId: onuPkt.IntfId, OnuId: onuPkt.OnuId, Bytes: rawpkt.Data()}
+		onu.dhcpPktOutCh <- &dhcpPkt
 	}
-	return new(openolt.Empty) , nil
+	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) Reboot(context.Context, *openolt.Empty) (*openolt.Empty, error)  {
+func (o OltDevice) Reboot(context.Context, *openolt.Empty) (*openolt.Empty, error) {
 	oltLogger.Info("Shutting Down")
 	close(*o.oltDoneChannel)
 	close(*o.apiDoneChannel)
-	return new(openolt.Empty) , nil
+	return new(openolt.Empty), nil
 }
 
 func (o OltDevice) ReenableOlt(context.Context, *openolt.Empty) (*openolt.Empty, error) {
 	oltLogger.Error("ReenableOlt not implemented")
-	return new(openolt.Empty) , nil
+	return new(openolt.Empty), nil
 }
 
 func (o OltDevice) UplinkPacketOut(context context.Context, packet *openolt.UplinkPacket) (*openolt.Empty, error) {
 	oltLogger.Warn("UplinkPacketOut not implemented")
-	return new(openolt.Empty) , nil
+	// TODO send the packet to the correct ONU!!
+	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) CollectStatistics(context.Context, *openolt.Empty) (*openolt.Empty, error)  {
+func (o OltDevice) CollectStatistics(context.Context, *openolt.Empty) (*openolt.Empty, error) {
 	oltLogger.Error("CollectStatistics not implemented")
-	return new(openolt.Empty) , nil
+	return new(openolt.Empty), nil
 }
 
 func (o OltDevice) GetOnuInfo(context context.Context, packet *openolt.Onu) (*openolt.OnuIndication, error) {
 	oltLogger.Error("GetOnuInfo not implemented")
-	return new(openolt.OnuIndication) , nil
+	return new(openolt.OnuIndication), nil
 }
 
 func (o OltDevice) GetPonIf(context context.Context, packet *openolt.Interface) (*openolt.IntfIndication, error) {
 	oltLogger.Error("GetPonIf not implemented")
-	return new(openolt.IntfIndication) , nil
+	return new(openolt.IntfIndication), nil
 }
 
 func (s OltDevice) CreateTrafficQueues(context.Context, *tech_profile.TrafficQueues) (*openolt.Empty, error) {

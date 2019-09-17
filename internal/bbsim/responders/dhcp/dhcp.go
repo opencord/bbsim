@@ -1,0 +1,201 @@
+package dhcp
+
+import (
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/looplab/fsm"
+	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
+	omci "github.com/opencord/omci-sim"
+	"github.com/opencord/voltha-protos/go/openolt"
+	log "github.com/sirupsen/logrus"
+	"net"
+	"sync"
+)
+
+var dhcpLogger = log.WithFields(log.Fields{
+	"module": "EAPOL",
+})
+
+var defaultParamsRequestList = []layers.DHCPOpt{
+	layers.DHCPOptSubnetMask,
+	layers.DHCPOptBroadcastAddr,
+	layers.DHCPOptTimeOffset,
+	layers.DHCPOptRouter,
+	layers.DHCPOptDomainName,
+	layers.DHCPOptDNS,
+	layers.DHCPOptDomainSearch,
+	layers.DHCPOptHostname,
+	layers.DHCPOptNetBIOSTCPNS,
+	layers.DHCPOptNetBIOSTCPScope,
+	layers.DHCPOptInterfaceMTU,
+	layers.DHCPOptClasslessStaticRoute,
+	layers.DHCPOptNTPServers,
+}
+
+func createDefaultDHCPReq(intfId uint32, onuId uint32) layers.DHCPv4 {
+	return layers.DHCPv4{
+		Operation:    layers.DHCPOpRequest,
+		HardwareType: layers.LinkTypeEthernet,
+		HardwareLen:  6,
+		HardwareOpts: 0,
+		Xid:          onuId,
+		ClientHWAddr: net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(intfId), byte(onuId)},
+	}
+}
+
+func createDefaultOpts() []layers.DHCPOption {
+	hostname := []byte("bbsim.onf.org")
+	opts := []layers.DHCPOption{}
+	opts = append(opts, layers.DHCPOption{
+		Type:   layers.DHCPOptHostname,
+		Data:   hostname,
+		Length: uint8(len(hostname)),
+	})
+
+	bytes := []byte{}
+	for _, option := range defaultParamsRequestList {
+		bytes = append(bytes, byte(option))
+	}
+
+	opts = append(opts, layers.DHCPOption{
+		Type:   layers.DHCPOptParamsRequest,
+		Data:   bytes,
+		Length: uint8(len(bytes)),
+	})
+	return opts
+}
+
+func createDHCPDisc(intfId uint32, onuId uint32) *layers.DHCPv4 {
+	dhcpLayer := createDefaultDHCPReq(intfId, onuId)
+	defaultOpts := createDefaultOpts()
+	dhcpLayer.Options = append([]layers.DHCPOption{layers.DHCPOption{
+		Type:   layers.DHCPOptMessageType,
+		Data:   []byte{byte(layers.DHCPMsgTypeDiscover)},
+		Length: 1,
+	}}, defaultOpts...)
+
+	return &dhcpLayer
+}
+
+func serializeDHCPPacket(intfId uint32, onuId uint32, dhcp *layers.DHCPv4) ([]byte, error) {
+	buffer := gopacket.NewSerializeBuffer()
+	options := gopacket.SerializeOptions{
+		ComputeChecksums: true,
+		FixLengths:       true,
+	}
+	ethernetLayer := &layers.Ethernet{
+		SrcMAC:       net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(intfId), byte(onuId)},
+		DstMAC:       net.HardwareAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+		EthernetType: layers.EthernetTypeIPv4,
+	}
+
+	ipLayer := &layers.IPv4{
+		Version:  4,
+		TOS:      0x10,
+		TTL:      128,
+		SrcIP:    []byte{0, 0, 0, 0},
+		DstIP:    []byte{255, 255, 255, 255},
+		Protocol: layers.IPProtocolUDP,
+	}
+
+	udpLayer := &layers.UDP{
+		SrcPort: 68,
+		DstPort: 67,
+	}
+
+	udpLayer.SetNetworkLayerForChecksum(ipLayer)
+	if err := gopacket.SerializeLayers(buffer, options, ethernetLayer, ipLayer, udpLayer, dhcp); err != nil {
+		return nil, err
+	}
+
+	bytes := buffer.Bytes()
+	return bytes, nil
+}
+
+func sendDHCPPktIn(msg bbsim.ByteMsg, stream openolt.Openolt_EnableIndicationServer) error {
+	// FIXME unify sendDHCPPktIn and sendEapolPktIn methods
+	gemid, err := omci.GetGemPortId(msg.IntfId, msg.OnuId)
+	if err != nil {
+		dhcpLogger.WithFields(log.Fields{
+			"OnuId":  msg.OnuId,
+			"IntfId": msg.IntfId,
+		}).Errorf("Can't retrieve GemPortId: %s", err)
+		return err
+	}
+	data := &openolt.Indication_PktInd{PktInd: &openolt.PacketIndication{
+		IntfType: "pon", IntfId: msg.IntfId, GemportId: uint32(gemid), Pkt: msg.Bytes,
+	}}
+
+	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
+		dhcpLogger.Errorf("Fail to send DHCP PktInd indication. %v", err)
+		return err
+	}
+	return nil
+}
+
+func sendDHCPDiscovery(ponPortId uint32, onuId uint32, serialNumber *openolt.SerialNumber, stream openolt.Openolt_EnableIndicationServer) error {
+	dhcp := createDHCPDisc(ponPortId, onuId)
+	pkt, err := serializeDHCPPacket(ponPortId, onuId, dhcp)
+	if err != nil {
+		dhcpLogger.Errorf("Cannot serializeDHCPPacket: %s", err)
+		return err
+	}
+
+	msg := bbsim.ByteMsg{
+		IntfId: ponPortId,
+		OnuId:  onuId,
+		Bytes:  pkt,
+	}
+
+	if err := sendDHCPPktIn(msg, stream); err != nil {
+		return err
+	}
+	dhcpLogger.WithFields(log.Fields{
+		"OnuId":  onuId,
+		"IntfId": ponPortId,
+		"OnuSn":  serialNumber,
+	}).Infof("DHCPDiscovery Sent")
+	return nil
+}
+
+func CreateDHCPClient(onuId uint32, ponPortId uint32, serialNumber *openolt.SerialNumber, onuStateMachine *fsm.FSM, stream openolt.Openolt_EnableIndicationServer, pktOutCh chan *bbsim.ByteMsg) {
+	// NOTE pckOutCh is channel to listen on for packets received by VOLTHA
+	// the OLT device will publish messages on that channel
+
+	dhcpLogger.WithFields(log.Fields{
+		"OnuId":  onuId,
+		"IntfId": ponPortId,
+		"OnuSn":  serialNumber,
+	}).Infof("DHCP State Machine starting")
+
+	// Send DHCP Discovery packet
+	if err := sendDHCPDiscovery(ponPortId, onuId, serialNumber, stream); err != nil {
+		dhcpLogger.WithFields(log.Fields{
+			"OnuId":  onuId,
+			"IntfId": ponPortId,
+			"OnuSn":  serialNumber,
+		}).Errorf("Can't send DHCP Discovery: %s", err)
+		if err := onuStateMachine.Event("dhcp_failed"); err != nil {
+			dhcpLogger.WithFields(log.Fields{
+				"OnuId":  onuId,
+				"IntfId": ponPortId,
+				"OnuSn":  serialNumber,
+			}).Errorf("Error while transitioning ONU State %v", err)
+		}
+		return
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		dhcpLogger.WithFields(log.Fields{
+			"OnuId":  onuId,
+			"IntfId": ponPortId,
+			"OnuSn":  serialNumber,
+		}).Infof("Listening on dhcpPktOutCh")
+		for msg := range pktOutCh {
+			dhcpLogger.Warnf("Received message", msg)
+		}
+	}()
+}

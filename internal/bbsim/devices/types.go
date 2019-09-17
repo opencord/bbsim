@@ -20,9 +20,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/opencord/voltha-protos/go/openolt"
 	"github.com/looplab/fsm"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
+	"github.com/opencord/voltha-protos/go/openolt"
 )
 
 // TODO get rid of this file
@@ -32,19 +32,18 @@ import (
 
 // Devices
 type Onu struct {
-	ID uint32
-	PonPortID uint32
-	PonPort PonPort
+	ID            uint32
+	PonPortID     uint32
+	PonPort       PonPort
 	InternalState *fsm.FSM
 
-	OperState *fsm.FSM
+	OperState    *fsm.FSM
 	SerialNumber *openolt.SerialNumber
 
-	channel chan Message
-	eapolPktOutCh chan *bbsim.ByteMsg
+	channel       chan Message        // this channel is to track state changes and OMCI messages
+	eapolPktOutCh chan *bbsim.ByteMsg // this channel is for EAPOL Packet Outs (coming from the controller)
+	dhcpPktOutCh  chan *bbsim.ByteMsg // this channel is for DHCP Packet Outs (coming from the controller)
 }
-
-
 
 type NniPort struct {
 	// BBSIM Internals
@@ -52,18 +51,18 @@ type NniPort struct {
 
 	// PON Attributes
 	OperState *fsm.FSM
-	Type string
+	Type      string
 }
 
 type PonPort struct {
 	// BBSIM Internals
-	ID uint32
+	ID     uint32
 	NumOnu int
-	Onus []Onu
+	Onus   []Onu
 
 	// PON Attributes
 	OperState *fsm.FSM
-	Type string
+	Type      string
 
 	// NOTE do we need a state machine for the PON Ports?
 }
@@ -88,12 +87,12 @@ func (p PonPort) getOnuById(id uint32) (*Onu, error) {
 
 type OltDevice struct {
 	// BBSIM Internals
-	ID int
-	NumNni int
-	NumPon int
-	NumOnuPerPon int
-	InternalState *fsm.FSM
-	channel chan Message
+	ID             int
+	NumNni         int
+	NumPon         int
+	NumOnuPerPon   int
+	InternalState  *fsm.FSM
+	channel        chan Message
 	oltDoneChannel *chan bool
 	apiDoneChannel *chan bool
 
@@ -115,8 +114,9 @@ const (
 	OnuDiscIndication MessageType = 3
 	OnuIndication     MessageType = 4
 	OMCI              MessageType = 5
-	FlowUpdate		  MessageType = 6
-	StartEAPOL		  MessageType = 7
+	FlowUpdate        MessageType = 6
+	StartEAPOL        MessageType = 7
+	StartDHCP         MessageType = 8
 )
 
 func (m MessageType) String() string {
@@ -129,13 +129,14 @@ func (m MessageType) String() string {
 		"OMCI",
 		"FlowUpdate",
 		"StartEAPOL",
+		"StartDHCP",
 	}
 	return names[m]
 }
 
 type Message struct {
-	Type      MessageType
-	Data 	  interface{}
+	Type MessageType
+	Data interface{}
 }
 
 type OltIndicationMessage struct {
@@ -165,9 +166,9 @@ type OnuIndicationMessage struct {
 }
 
 type OmciMessage struct {
-	OnuSN     *openolt.SerialNumber
-	OnuID 	  uint32
-	omciMsg   *openolt.OmciMsg
+	OnuSN   *openolt.SerialNumber
+	OnuID   uint32
+	omciMsg *openolt.OmciMsg
 }
 
 type OnuFlowUpdateMessage struct {
@@ -181,12 +182,11 @@ type EapStartMessage struct {
 	OnuID     uint32
 }
 
-
 type OperState int
 
 const (
-	UP OperState = iota
-	DOWN // The device has been discovered, but not yet activated
+	UP   OperState = iota
+	DOWN           // The device has been discovered, but not yet activated
 )
 
 func (m OperState) String() string {
