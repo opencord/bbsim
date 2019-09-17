@@ -27,15 +27,16 @@ Once `BBSim` is up and running you can provision the OLT in VOLTHA.
 When you install the `BBSim` helm chart you'll notice that the last line of the output
 prints the service name and port:
 
-```
+```bash
+...
 NOTES:
 BBSim deployed with release name: bbsim
 
 OLT ID: 0
 # of NNI Ports: 1
-# of PON Ports: 1
-# of ONU Ports: 1
-Total ONUs: (total: 1)
+# of PON Ports: 2
+# of ONU Ports: 2
+Total ONUs: (total: 4)
 
 OLT is listening on: "voltha.svc.bbsim-olt-id-0:50060"
 ```
@@ -44,7 +45,7 @@ OLT is listening on: "voltha.svc.bbsim-olt-id-0:50060"
 
 Connect to the voltha CLI and execute this commands:
 
-```
+```bash
 preprovision_olt -t openolt -H voltha.svc.bbsim-olt-id-0:50060
 enable
 ```
@@ -53,95 +54,94 @@ enable
 
 _This assumes `voltctl` is installed an configured_
 
-```
-voltctl device create -t openolt -H $(kubectl get -n voltha service/bbsim -o go-template='{{.spec.clusterIP}}'):50060
+```bash
+voltctl device create -t openolt -H bbsim-olt-id-0:50060
 voltctl device enable $(voltctl device list --filter Type~openolt -q)
 ```
 
 ## Control API
 
 BBSim comes with a gRPC interface to control the internal state.
-We plan to provide a `bbsimctl` at certain point, meanwhile you can use `grpcurl`:
-
-```
-$ export BBSIM_IP="$(kubectl get svc -n voltha bbsim-olt-id-0 -o go-template='{{.spec.clusterIP}}')"
-$ grpcurl -plaintext $BBSIM_IP:50070 bbsim.BBSim/Version
-{
-  "version": "0.0.1-alpha",
-  "buildTime": "”2019.08.09.084157”",
-  "commitHash": "9ef7241b07a83c326ef152320428f204f7eff43d"
-}
-
-
-$ grpcurl -plaintext $BBSIM_IP:50070 bbsim.BBSim/GetOlt
-{
-  "ID": 22,
-  "OperState": "up",
-  "NNIPorts": [
-    {
-      "OperState": "down"
-    }
-  ],
-  "PONPorts": [
-    {
-      "OperState": "down"
-    }
-  ]
-}
-
-$ grpcurl -plaintext 127.0.0.1:50070 bbsim.BBSim/GetONUs
-{
-  "items": [
-    {
-      "ID": 1,
-      "SerialNumber": "vendor_id:\"BBSM\" vendor_specific:\"\\000\\000\\000\\001\" ",
-      "OperState": "up",
-      "InternalState": "auth_started"
-    },
-    {
-      "ID": 2,
-      "SerialNumber": "vendor_id:\"BBSM\" vendor_specific:\"\\000\\000\\000\\002\" ",
-      "OperState": "up",
-      "InternalState": "auth_started"
-    },
-    {
-      "ID": 1,
-      "SerialNumber": "vendor_id:\"BBSM\" vendor_specific:\"\\000\\000\\001\\001\" ",
-      "OperState": "up",
-      "InternalState": "auth_started",
-      "PonPortID": 1
-    },
-    {
-      "ID": 2,
-      "SerialNumber": "vendor_id:\"BBSM\" vendor_specific:\"\\000\\000\\001\\002\" ",
-      "OperState": "up",
-      "InternalState": "auth_started",
-      "PonPortID": 1
-    }
-  ]
-}
-```
-
-## Development
-
-To use a patched version of the `omci-sim` library:
+This interface can be queried using `bbsimctl` (the tool can be build with `make build`):
 
 ```bash
-make dep
-cd vendor/github.com/opencord/
-rm -rf omci-sim/
-git clone https://gerrit.opencord.org/omci-sim
-cd omci-sim
+$ ./bbsimctl --help
+Usage:
+  bbsimctl [OPTIONS] <config | olt | onus>
+
+Global Options:
+  -c, --config=FILE           Location of client config file [$BBSIMCTL_CONFIG]
+  -s, --server=SERVER:PORT    IP/Host and port of XOS
+  -d, --debug                 Enable debug mode
+
+Help Options:
+  -h, --help                  Show this help message
+
+Available commands:
+  config  generate bbsimctl configuration
+  olt     OLT Commands
+  onus    List ONU Devices
 ```
 
-Once done, go to `gerrit.opencord.org` and locate the patch you want to get. Click on the download URL and copy the `Checkout` command.
+`bbsimctl` can be configured via a config file such as:
 
-It should look something like:
-
+``` bash
+$ cat ~/.bbsim/config
+apiVersion: v1
+server: 127.0.0.1:50070
+grpc:
+  timeout: 10s
 ```
-git fetch ssh://teone@gerrit.opencord.org:29418/omci-sim refs/changes/67/15067/1 && git checkout FETCH_HEAD
+
+Some example commands:
+
+```bash
+$ ./bbsimctl olt get
+ID    SERIALNUMBER    OPERSTATE    INTERNALSTATE
+0     BBSIM_OLT_0     up           enabled
+
+
+$ ./bbsimctl olt pons
+PON Ports for : BBSIM_OLT_0
+
+ID    OPERSTATE
+0     up
+1     up
+2     up
+3     up
+
+
+$ ./bbsimctl onus
+PONPORTID    ID    SERIALNUMBER    STAG    CTAG    OPERSTATE    INTERNALSTATE
+0            1     BBSM00000001    900     900     up           eap_response_identity_sent
+0            2     BBSM00000002    900     901     up           eap_start_sent
+0            3     BBSM00000003    900     902     up           auth_failed
+0            4     BBSM00000004    900     903     up           auth_failed
+1            1     BBSM00000101    900     904     up           eap_response_success_received
+1            2     BBSM00000102    900     905     up           eap_response_success_received
+1            3     BBSM00000103    900     906     up           eap_response_challenge_sent
+1            4     BBSM00000104    900     907     up           auth_failed
+2            1     BBSM00000201    900     908     up           auth_failed
+2            2     BBSM00000202    900     909     up           eap_start_sent
+2            3     BBSM00000203    900     910     up           eap_response_identity_sent
+2            4     BBSM00000204    900     911     up           eap_start_sent
+3            1     BBSM00000301    900     912     up           eap_response_identity_sent
+3            2     BBSM00000302    900     913     up           auth_failed
+3            3     BBSM00000303    900     914     up           auth_failed
+3            4     BBSM00000304    900     915     up           auth_failed
 ```
 
-Then just execute that command in the `omci-sim` folder inside the vendored dependencies.
+## Documentation
+
+More advanced documentation lives in the [here](./docs/README.md)
+
+## Know Issues
+
+In some runs, EAPOL fails with:
+```
+time="2019-09-20T21:24:31Z" level=error msg="Can't send EapStart Message: ONU {intfid:1, onuid:2} - Not DONE (GemportID is not set)" IntfId=1 OnuId=2 OnuSn=BBSM00000102 module=EAPOL
+time="2019-09-20T21:24:31Z" level=error msg="ONU failed to authenticate!" IntfId=1 OnuId=2 OnuSn=BBSM00000102 module=ONU
+```
+Investigate why this happens (we believe the source to be in the OMCI library)
 
 > This project structure is based on [golang-standards/project-layout](https://github.com/golang-standards/project-layout).
