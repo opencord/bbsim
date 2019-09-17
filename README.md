@@ -28,14 +28,15 @@ When you install the `BBSim` helm chart you'll notice that the last line of the 
 prints the service name and port:
 
 ```
+...
 NOTES:
 BBSim deployed with release name: bbsim
 
 OLT ID: 0
 # of NNI Ports: 1
-# of PON Ports: 1
-# of ONU Ports: 1
-Total ONUs: (total: 1)
+# of PON Ports: 2
+# of ONU Ports: 2
+Total ONUs: (total: 4)
 
 OLT is listening on: "voltha.svc.bbsim-olt-id-0:50060"
 ```
@@ -54,7 +55,7 @@ enable
 _This assumes `voltctl` is installed an configured_
 
 ```
-voltctl device create -t openolt -H $(kubectl get -n voltha service/bbsim -o go-template='{{.spec.clusterIP}}'):50060
+voltctl device create -t openolt -H bbsim-olt-id-0:50060
 voltctl device enable $(voltctl device list --filter Type~openolt -q)
 ```
 
@@ -145,3 +146,12 @@ git fetch ssh://teone@gerrit.opencord.org:29418/omci-sim refs/changes/67/15067/1
 Then just execute that command in the `omci-sim` folder inside the vendored dependencies.
 
 > This project structure is based on [golang-standards/project-layout](https://github.com/golang-standards/project-layout).
+
+## Know Issues
+
+In some runs, EAPOL fails with:
+```
+time="2019-09-20T21:24:31Z" level=error msg="Can't send EapStart Message: ONU {intfid:1, onuid:2} - Not DONE (GemportID is not set)" IntfId=1 OnuId=2 OnuSn=BBSM00000102 module=EAPOL
+time="2019-09-20T21:24:31Z" level=error msg="ONU failed to authenticate!" IntfId=1 OnuId=2 OnuSn=BBSM00000102 module=ONU
+```
+Investigate why this happens (we believe the source to be in the OMCI library)
