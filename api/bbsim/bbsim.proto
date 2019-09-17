@@ -40,6 +40,9 @@ message ONU {
     string OperState = 3;
     string InternalState = 4;
     int32 PonPortID = 5;
+    int32 STag = 6;
+    int32 CTag = 7;
+    string HwAddress = 8;
 }
 
 message ONUs {

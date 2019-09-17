@@ -16,8 +16,14 @@
 
 package types
 
+import "github.com/google/gopacket"
+
 type ByteMsg struct {
 	IntfId uint32
 	OnuId  uint32
-	Bytes   []byte
+	Bytes  []byte
+}
+
+type PacketMsg struct {
+	Pkt gopacket.Packet
 }
