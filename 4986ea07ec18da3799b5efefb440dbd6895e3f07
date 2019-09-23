@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a417aec4_a6f571f7",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-23T18:14:33Z",
+      "side": 1,
+      "message": "minor nitpick. Should this be event: eap_response_identity_sent though typo is consistent with event triggers for all",
+      "revId": "4986ea07ec18da3799b5efefb440dbd6895e3f07",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ccdd9625_a1b538cf",
+        "filename": "internal/bbsim/responders/dhcp/dhcp.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-23T18:14:33Z",
+      "side": 1,
+      "message": "No need to have a go routine to receive dhcp responses from server to onu as dhcp client started as a go routine from the fsm start event like eapol. So waitgroup can be also removed",
+      "revId": "4986ea07ec18da3799b5efefb440dbd6895e3f07",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4700a52_d45cbe50",
+        "filename": "internal/bbsim/responders/eapol/eapol.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1000015
+      },
+      "writtenOn": "2019-09-23T18:14:33Z",
+      "side": 1,
+      "message": "This thread and wait group for receiving eapol packet out responses is not needed as auth_started triggers the create of supplicant in a go func. Could be just receiving from pkt out channel",
+      "revId": "4986ea07ec18da3799b5efefb440dbd6895e3f07",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
