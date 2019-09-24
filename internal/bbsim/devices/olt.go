@@ -103,6 +103,7 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int, sTag int, cTagInit int,
 			NumOnu: olt.NumOnuPerPon,
 			ID:     uint32(i),
 			Type:   "pon",
+			Olt:    olt,
 		}
 		p.OperState = getOperStateFSM(func(e *fsm.Event) {
 			oltLogger.WithFields(log.Fields{
@@ -146,7 +147,7 @@ func newOltServer(o OltDevice) error {
 	for {
 		_, ok := <-*o.oltDoneChannel
 		if !ok {
-			// if the olt channel is closed, stop the gRPC server
+			// if the olt Channel is closed, stop the gRPC server
 			log.Warnf("Stopping OLT gRPC server")
 			grpcServer.Stop()
 			wg.Done()
@@ -168,7 +169,7 @@ func (o OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error {
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 
-	// create a channel for all the OLT events
+	// create a Channel for all the OLT events
 	go o.processOltMessages(stream)
 	go o.processNniPacketIns(stream)
 
@@ -207,6 +208,8 @@ func (o OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error {
 		for _, onu := range pon.Onus {
 			go onu.processOnuMessages(stream)
 			go onu.processOmciMessages(stream)
+			// FIXME move the message generation in the state transition
+			// from here only invoke the state transition
 			msg := Message{
 				Type: OnuDiscIndication,
 				Data: OnuDiscIndicationMessage{
@@ -214,7 +217,7 @@ func (o OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error {
 					OperState: UP,
 				},
 			}
-			onu.channel <- msg
+			onu.Channel <- msg
 		}
 	}
 
@@ -335,7 +338,7 @@ func (o OltDevice) processOltMessages(stream openolt.Openolt_EnableIndicationSer
 			msg, _ := message.Data.(PonIndicationMessage)
 			o.sendPonIndication(msg, stream)
 		default:
-			oltLogger.Warnf("Received unknown message data %v for type %v in OLT channel", message.Data, message.Type)
+			oltLogger.Warnf("Received unknown message data %v for type %v in OLT Channel", message.Data, message.Type)
 		}
 
 	}
@@ -362,6 +365,19 @@ func (o OltDevice) processNniPacketIns(stream openolt.Openolt_EnableIndicationSe
 	}
 }
 
+func (o OltDevice) FindOnu(serialNumber string) (*Onu, error) {
+
+	for _, pon := range o.Pons {
+		for _, onu := range pon.Onus {
+			if onu.Sn() == serialNumber {
+				return &onu, nil
+			}
+		}
+	}
+
+	return &Onu{}, errors.New(fmt.Sprintf("cannot-find-onu-%s", serialNumber))
+}
+
 // GRPC Endpoints
 
 func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*openolt.Empty, error) {
@@ -372,16 +388,23 @@ func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*open
 	pon, _ := o.getPonById(onu.IntfId)
 	_onu, _ := pon.getOnuBySn(onu.SerialNumber)
 
-	// NOTE we need to immediately activate the ONU or the OMCI state machine won't start
-	msg := Message{
-		Type: OnuIndication,
-		Data: OnuIndicationMessage{
-			OnuSN:     onu.SerialNumber,
-			PonPortID: onu.IntfId,
-			OperState: UP,
-		},
+	if err := _onu.OperState.Event("enable"); err != nil {
+		oltLogger.WithFields(log.Fields{
+			"IntfId": _onu.PonPortID,
+			"OnuSn":  _onu.Sn(),
+			"OnuId":  _onu.ID,
+		}).Infof("Failed to transition ONU.OperState to enabled state: %s", err.Error())
 	}
-	_onu.channel <- msg
+	if err := _onu.InternalState.Event("enable"); err != nil {
+		oltLogger.WithFields(log.Fields{
+			"IntfId": _onu.PonPortID,
+			"OnuSn":  _onu.Sn(),
+			"OnuId":  _onu.ID,
+		}).Infof("Failed to transition ONU to enabled state: %s", err.Error())
+	}
+
+	// NOTE we need to immediately activate the ONU or the OMCI state machine won't start
+
 	return new(openolt.Empty), nil
 }
 
@@ -453,7 +476,7 @@ func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Em
 				Flow:      flow,
 			},
 		}
-		onu.channel <- msg
+		onu.Channel <- msg
 	}
 
 	return new(openolt.Empty), nil
@@ -499,6 +522,11 @@ func (o OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.Devi
 func (o OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*openolt.Empty, error) {
 	pon, _ := o.getPonById(omci_msg.IntfId)
 	onu, _ := pon.getOnuById(omci_msg.OnuId)
+	oltLogger.WithFields(log.Fields{
+		"IntfId": onu.PonPortID,
+		"OnuId":  onu.ID,
+		"OnuSn":  onu.Sn(),
+	}).Tracef("Received OmciMsgOut")
 	msg := Message{
 		Type: OMCI,
 		Data: OmciMessage{
@@ -507,7 +535,7 @@ func (o OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*
 			omciMsg: omci_msg,
 		},
 	}
-	onu.channel <- msg
+	onu.Channel <- msg
 	return new(openolt.Empty), nil
 }
 

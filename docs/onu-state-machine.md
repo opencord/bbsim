@@ -4,13 +4,11 @@ In `BBSim` the device state is createdtained using a state machine library: [fsm
 
 Here is a list of possible state transitions in BBSim:
 
-
-
 |Transition|Starting States|End State| Notes |
 | --- | --- | --- | --- |
 | - | - | created |
 | discover | created | discovered |
-| enable | discovered | enabled |
+| enable | discovered, disabled | enabled |
 | receive_eapol_flow | enabled, gem_port_added | eapol_flow_received |
 | add_gem_port | enabled, eapol_flow_received | gem_port_added | We need to wait for both the flow and the gem port to come before moving to `auth_started` |
 | start_auth | eapol_flow_received, gem_port_added | auth_started |
@@ -24,4 +22,10 @@ Here is a list of possible state transitions in BBSim:
 | dhcp_request_sent | dhcp_discovery_sent | dhcp_request_sent |
 | dhcp_ack_received | dhcp_request_sent | dhcp_ack_received |
 | dhcp_failed | dhcp_started, dhcp_discovery_sent, dhcp_request_sent | dhcp_failed |
- 
+
+
+In addition some transition can be forced via the API:
+
+|Transition|Starting States|End State| Notes |
+| --- | --- | --- | --- |
+| disable | eap_response_success_received, auth_failed, dhcp_ack_received, dhcp_failed | disabled | Emulates a devide mulfunction. Sends a `DyingGaspInd` and then an `OnuIndication{OperState: 'down'}`|

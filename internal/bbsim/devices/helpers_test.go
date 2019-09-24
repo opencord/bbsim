@@ -19,7 +19,6 @@ package devices
 import (
 	"github.com/looplab/fsm"
 	"gotest.tools/assert"
-	"os"
 	"testing"
 )
 
@@ -27,34 +26,28 @@ var (
 	originalNewFSM func(initial string, events []fsm.EventDesc, callbacks map[string]fsm.Callback) *fsm.FSM
 )
 
-func setUp()  {
+func setUpHelpers() {
 	originalNewFSM = newFSM
 }
 
-
-func tearDown()  {
+func tearDownHelpers() {
 	newFSM = originalNewFSM
-}
-
-func TestMain(m *testing.M) {
-	setUp()
-	code := m.Run()
-	tearDown()
-	os.Exit(code)
 }
 
 func Test_Helpers(t *testing.T) {
 
+	setUpHelpers()
+
 	// feedback values for the mock
 	called := 0
 	args := struct {
-		initial string
-		events []fsm.EventDesc
+		initial   string
+		events    []fsm.EventDesc
 		callbacks map[string]fsm.Callback
 	}{}
 
 	// creating the mock function
-	mockFSM := func(initial string, events []fsm.EventDesc, callbacks map[string]fsm.Callback) *fsm.FSM  {
+	mockFSM := func(initial string, events []fsm.EventDesc, callbacks map[string]fsm.Callback) *fsm.FSM {
 		called++
 		args.initial = initial
 		args.events = events
@@ -88,5 +81,7 @@ func Test_Helpers(t *testing.T) {
 	// this is to test that the callback is called when the state change
 	sm.Event("enable")
 	assert.Equal(t, cb_called, 1)
+
+	tearDownHelpers()
 
 }

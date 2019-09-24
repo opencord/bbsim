@@ -42,8 +42,8 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) Onu {
 		STag:      sTag,
 		CTag:      cTag,
 		HwAddress: net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(id)},
-		// NOTE can we combine everything in a single channel?
-		channel:       make(chan Message, 2048),
+		// NOTE can we combine everything in a single Channel?
+		Channel:       make(chan Message, 2048),
 		eapolPktOutCh: make(chan *bbsim.ByteMsg, 1024),
 		dhcpPktOutCh:  make(chan *bbsim.ByteMsg, 1024),
 	}
@@ -61,11 +61,13 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) Onu {
 	o.InternalState = fsm.NewFSM(
 		"created",
 		fsm.Events{
-			// DEVICE Activation
+			// DEVICE Lifecycle
 			{Name: "discover", Src: []string{"created"}, Dst: "discovered"},
-			{Name: "enable", Src: []string{"discovered"}, Dst: "enabled"},
+			{Name: "enable", Src: []string{"discovered", "disabled"}, Dst: "enabled"},
 			{Name: "receive_eapol_flow", Src: []string{"enabled", "gem_port_added"}, Dst: "eapol_flow_received"},
 			{Name: "add_gem_port", Src: []string{"enabled", "eapol_flow_received"}, Dst: "gem_port_added"},
+			// NOTE should disabled state be diffente for oper_disabled (emulating an error) and admin_disabled (received a disabled call via VOLTHA)?
+			{Name: "disable", Src: []string{"eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "disabled"},
 			// EAPOL
 			{Name: "start_auth", Src: []string{"eapol_flow_received", "gem_port_added"}, Dst: "auth_started"},
 			{Name: "eap_start_sent", Src: []string{"auth_started"}, Dst: "eap_start_sent"},
@@ -84,6 +86,28 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) Onu {
 			"enter_state": func(e *fsm.Event) {
 				o.logStateChange(e.Src, e.Dst)
 			},
+			"enter_enabled": func(event *fsm.Event) {
+				msg := Message{
+					Type: OnuIndication,
+					Data: OnuIndicationMessage{
+						OnuSN:     o.SerialNumber,
+						PonPortID: o.PonPortID,
+						OperState: UP,
+					},
+				}
+				o.Channel <- msg
+			},
+			"enter_disabled": func(event *fsm.Event) {
+				msg := Message{
+					Type: OnuIndication,
+					Data: OnuIndicationMessage{
+						OnuSN:     o.SerialNumber,
+						PonPortID: o.PonPortID,
+						OperState: DOWN,
+					},
+				}
+				o.Channel <- msg
+			},
 			"enter_auth_started": func(e *fsm.Event) {
 				o.logStateChange(e.Src, e.Dst)
 				msg := Message{
@@ -93,7 +117,7 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) Onu {
 						OnuID:     o.ID,
 					},
 				}
-				o.channel <- msg
+				o.Channel <- msg
 			},
 			"enter_auth_failed": func(e *fsm.Event) {
 				onuLogger.WithFields(log.Fields{
@@ -110,7 +134,7 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) Onu {
 						OnuID:     o.ID,
 					},
 				}
-				o.channel <- msg
+				o.Channel <- msg
 			},
 			"enter_dhcp_failed": func(e *fsm.Event) {
 				onuLogger.WithFields(log.Fields{
@@ -138,10 +162,10 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer) {
 		"onuSN": o.Sn(),
 	}).Debug("Started ONU Indication Channel")
 
-	for message := range o.channel {
+	for message := range o.Channel {
 		onuLogger.WithFields(log.Fields{
 			"onuID":       o.ID,
-			"onuSN":       o.SerialNumber,
+			"onuSN":       o.Sn(),
 			"messageType": message.Type,
 		}).Tracef("Received message on ONU Channel")
 
@@ -159,7 +183,7 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer) {
 			msg, _ := message.Data.(OnuFlowUpdateMessage)
 			o.handleFlowUpdate(msg, stream)
 		case StartEAPOL:
-			log.Infof("Receive StartEAPOL message on ONU channel")
+			log.Infof("Receive StartEAPOL message on ONU Channel")
 			go func() {
 				// TODO kill this thread
 				eapol.CreateWPASupplicant(
@@ -172,7 +196,7 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer) {
 				)
 			}()
 		case StartDHCP:
-			log.Infof("Receive StartDHCP message on ONU channel")
+			log.Infof("Receive StartDHCP message on ONU Channel")
 			go func() {
 				// TODO kill this thread
 				dhcp.CreateDHCPClient(
@@ -186,8 +210,12 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer) {
 					o.dhcpPktOutCh,
 				)
 			}()
+
+		case DyingGaspIndication:
+			msg, _ := message.Data.(DyingGaspIndicationMessage)
+			o.sendDyingGaspInd(msg, stream)
 		default:
-			onuLogger.Warnf("Received unknown message data %v for type %v in OLT channel", message.Data, message.Type)
+			onuLogger.Warnf("Received unknown message data %v for type %v in OLT Channel", message.Data, message.Type)
 		}
 	}
 }
@@ -234,15 +262,49 @@ func (o Onu) NewSN(oltid int, intfid uint32, onuid uint32) *openolt.SerialNumber
 	return sn
 }
 
+// NOTE handle_/process methods can change the ONU internal state as they are receiving messages
+// send method should not change the ONU state
+
+func (o Onu) sendDyingGaspInd(msg DyingGaspIndicationMessage, stream openolt.Openolt_EnableIndicationServer) error {
+	alarmData := &openolt.AlarmIndication_DyingGaspInd{
+		DyingGaspInd: &openolt.DyingGaspIndication{
+			IntfId: msg.PonPortID,
+			OnuId:  msg.OnuID,
+			Status: "on",
+		},
+	}
+	data := &openolt.Indication_AlarmInd{AlarmInd: &openolt.AlarmIndication{Data: alarmData}}
+
+	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
+		onuLogger.Errorf("Failed to send DyingGaspInd : %v", err)
+		return err
+	}
+	onuLogger.WithFields(log.Fields{
+		"IntfId": msg.PonPortID,
+		"OnuSn":  o.Sn(),
+		"OnuId":  msg.OnuID,
+	}).Info("sendDyingGaspInd")
+	return nil
+}
+
 func (o Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
 	discoverData := &openolt.Indication_OnuDiscInd{OnuDiscInd: &openolt.OnuDiscIndication{
 		IntfId:       msg.Onu.PonPortID,
 		SerialNumber: msg.Onu.SerialNumber,
 	}}
+
 	if err := stream.Send(&openolt.Indication{Data: discoverData}); err != nil {
 		log.Errorf("Failed to send Indication_OnuDiscInd: %v", err)
 	}
-	o.InternalState.Event("discover")
+
+	if err := o.InternalState.Event("discover"); err != nil {
+		oltLogger.WithFields(log.Fields{
+			"IntfId": o.PonPortID,
+			"OnuSn":  o.Sn(),
+			"OnuId":  o.ID,
+		}).Infof("Failed to transition ONU to discovered state: %s", err.Error())
+	}
+
 	onuLogger.WithFields(log.Fields{
 		"IntfId": msg.Onu.PonPortID,
 		"OnuSn":  msg.Onu.Sn(),
@@ -255,19 +317,18 @@ func (o Onu) sendOnuIndication(msg OnuIndicationMessage, stream openolt.Openolt_
 	// expected_onu_id: 1, received_onu_id: 1024, event: ONU-id-mismatch, can happen if both voltha and the olt rebooted
 	// so we're using the internal ID that is 1
 	// o.ID = msg.OnuID
-	o.OperState.Event("enable")
 
 	indData := &openolt.Indication_OnuInd{OnuInd: &openolt.OnuIndication{
 		IntfId:       o.PonPortID,
 		OnuId:        o.ID,
-		OperState:    o.OperState.Current(),
+		OperState:    msg.OperState.String(),
 		AdminState:   o.OperState.Current(),
 		SerialNumber: o.SerialNumber,
 	}}
 	if err := stream.Send(&openolt.Indication{Data: indData}); err != nil {
+		// TODO do we need to transition to a broken state?
 		log.Errorf("Failed to send Indication_OnuInd: %v", err)
 	}
-	o.InternalState.Event("enable")
 	onuLogger.WithFields(log.Fields{
 		"IntfId":     o.PonPortID,
 		"OnuId":      o.ID,
@@ -275,6 +336,7 @@ func (o Onu) sendOnuIndication(msg OnuIndicationMessage, stream openolt.Openolt_
 		"AdminState": msg.OperState.String(),
 		"OnuSn":      o.Sn(),
 	}).Debug("Sent Indication_OnuInd")
+
 }
 
 func (o Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableIndicationServer) {

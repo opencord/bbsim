@@ -44,9 +44,9 @@ type Onu struct {
 	OperState    *fsm.FSM
 	SerialNumber *openolt.SerialNumber
 
-	channel       chan Message        // this channel is to track state changes and OMCI messages
-	eapolPktOutCh chan *bbsim.ByteMsg // this channel is for EAPOL Packet Outs (coming from the controller)
-	dhcpPktOutCh  chan *bbsim.ByteMsg // this channel is for DHCP Packet Outs (coming from the controller)
+	Channel       chan Message        // this Channel is to track state changes and OMCI messages
+	eapolPktOutCh chan *bbsim.ByteMsg // this Channel is for EAPOL Packet Outs (coming from the controller)
+	dhcpPktOutCh  chan *bbsim.ByteMsg // this Channel is for DHCP Packet Outs (coming from the controller)
 }
 
 func (o Onu) Sn() string {
@@ -67,6 +67,7 @@ type PonPort struct {
 	ID     uint32
 	NumOnu int
 	Onus   []Onu
+	Olt    OltDevice
 
 	// PON Attributes
 	OperState *fsm.FSM
@@ -118,16 +119,16 @@ type OltDevice struct {
 type MessageType int
 
 const (
-	OltIndication     MessageType = 0
-	NniIndication     MessageType = 1
-	PonIndication     MessageType = 2
-	OnuDiscIndication MessageType = 3
-	OnuIndication     MessageType = 4
-	OMCI              MessageType = 5
-	FlowUpdate        MessageType = 6
-	StartEAPOL        MessageType = 7
-	DoneEAPOL         MessageType = 8
-	StartDHCP         MessageType = 9
+	OltIndication       MessageType = 0
+	NniIndication       MessageType = 1
+	PonIndication       MessageType = 2
+	OnuDiscIndication   MessageType = 3
+	OnuIndication       MessageType = 4
+	OMCI                MessageType = 5
+	FlowUpdate          MessageType = 6
+	StartEAPOL          MessageType = 7
+	StartDHCP           MessageType = 8
+	DyingGaspIndication MessageType = 9
 )
 
 func (m MessageType) String() string {
@@ -140,8 +141,8 @@ func (m MessageType) String() string {
 		"OMCI",
 		"FlowUpdate",
 		"StartEAPOL",
-		"DoneEAPOL",
 		"StartDHCP",
+		"DyingGaspIndication",
 	}
 	return names[m]
 }
@@ -192,6 +193,12 @@ type OnuFlowUpdateMessage struct {
 type PacketMessage struct {
 	PonPortID uint32
 	OnuID     uint32
+}
+
+type DyingGaspIndicationMessage struct {
+	PonPortID uint32
+	OnuID     uint32
+	Status    string
 }
 
 type OperState int
