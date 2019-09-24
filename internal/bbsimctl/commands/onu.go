@@ -19,6 +19,7 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"github.com/jessevdk/go-flags"
 	pb "github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
@@ -32,35 +33,50 @@ const (
 	DEFAULT_ONU_DEVICE_HEADER_FORMAT = "table{{ .PonPortID }}\t{{ .ID }}\t{{ .SerialNumber }}\t{{ .STag }}\t{{ .CTag }}\t{{ .OperState }}\t{{ .InternalState }}"
 )
 
-type ONUOptions struct{}
-
-func RegisterONUCommands(parser *flags.Parser) {
-	parser.AddCommand("onus", "List ONU Devices", "Commands to list the ONU devices and their internal state", &ONUOptions{})
+type ONUList struct{}
+type ONUDisable struct {
+	Args struct {
+		OnuSn string
+	} `positional-args:"yes" required:"yes"`
 }
 
-func getONUs() *pb.ONUs {
+type ONUOptions struct {
+	List    ONUList    `command:"list"`
+	Disable ONUDisable `command:"disable"`
+}
+
+func RegisterONUCommands(parser *flags.Parser) {
+	parser.AddCommand("onu", "ONU Commands", "Commands to query and manipulate ONU devices", &ONUOptions{})
+}
+
+func connect() (pb.BBSimClient, *grpc.ClientConn) {
 	conn, err := grpc.Dial(config.GlobalConfig.Server, grpc.WithInsecure())
 
 	if err != nil {
 		log.Fatal("did not connect: %v", err)
-		return nil
+		return nil, conn
 	}
+	return pb.NewBBSimClient(conn), conn
+}
+
+func getONUs() *pb.ONUs {
+
+	client, conn := connect()
 	defer conn.Close()
-	c := pb.NewBBSimClient(conn)
 
 	// Contact the server and print out its response.
-
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
-	onus, err := c.GetONUs(ctx, &pb.Empty{})
+
+	onus, err := client.GetONUs(ctx, &pb.Empty{})
 	if err != nil {
-		log.Fatal("could not get OLT: %v", err)
+		log.Fatal("could not get ONUs: %v", err)
 		return nil
 	}
 	return onus
 }
 
-func (options *ONUOptions) Execute(args []string) error {
+func (options *ONUList) Execute(args []string) error {
 	onus := getONUs()
 
 	// print out
@@ -68,6 +84,29 @@ func (options *ONUOptions) Execute(args []string) error {
 	if err := tableFormat.Execute(os.Stdout, true, onus.Items); err != nil {
 		log.Fatalf("Error while formatting ONUs table: %s", err)
 	}
+
+	return nil
+}
+
+func (options *ONUDisable) Execute(args []string) error {
+	fmt.Println(options.Args.OnuSn)
+
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+	req := pb.ONURequest{
+		SerialNumber: options.Args.OnuSn,
+	}
+	res, err := client.DisableONU(ctx, &req)
+
+	if err != nil {
+		log.Fatalf("Cannot not disable ONU %s: %v", options.Args.OnuSn, err)
+		return err
+	}
+
+	fmt.Println(res.StatusCode, res.Message)
 
 	return nil
 }
