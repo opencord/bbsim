@@ -80,30 +80,6 @@ func (s BBSimServer) GetOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Olt, 
 	return &res, nil
 }
 
-func (s BBSimServer) GetONUs(ctx context.Context, req *bbsim.Empty) (*bbsim.ONUs, error) {
-	olt := devices.GetOLT()
-	onus := bbsim.ONUs{
-		Items: []*bbsim.ONU{},
-	}
-
-	for _, pon := range olt.Pons {
-		for _, o := range pon.Onus {
-			onu := bbsim.ONU{
-				ID:            int32(o.ID),
-				SerialNumber:  o.Sn(),
-				OperState:     o.OperState.Current(),
-				InternalState: o.InternalState.Current(),
-				PonPortID:     int32(o.PonPortID),
-				STag:          int32(o.STag),
-				CTag:          int32(o.CTag),
-				HwAddress:     o.HwAddress.String(),
-			}
-			onus.Items = append(onus.Items, &onu)
-		}
-	}
-	return &onus, nil
-}
-
 func (s BBSimServer) SetLogLevel(ctx context.Context, req *bbsim.LogLevel) (*bbsim.LogLevel, error) {
 
 	bbsimLogger.SetLogLevel(log.StandardLogger(), req.Level, req.Caller)
