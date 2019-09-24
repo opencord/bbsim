@@ -38,7 +38,6 @@ ENV GOPROXY=https://proxy.golang.org
 # get dependencies
 COPY go.mod go.sum ./
 COPY vendor ./vendor
-RUN go mod vendor
 
 # build the protos
 COPY Makefile ./
@@ -47,6 +46,7 @@ RUN make protos
 
 # copy and build
 COPY . ./
+RUN go mod vendor -v  # we can't vendor dependencies unless the code is there
 ARG GIT_STATUS=Clean
 RUN GO111MODULE=on go build -mod vendor\
     -ldflags "-X main.buildTime=$(date +”%Y/%m/%d-%H:%M:%S”) \
