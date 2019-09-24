@@ -47,13 +47,7 @@ RUN make protos
 # copy and build
 COPY . ./
 RUN go mod vendor -v  # we can't vendor dependencies unless the code is there
-ARG GIT_STATUS=Clean
-RUN GO111MODULE=on go build -mod vendor\
-    -ldflags "-X main.buildTime=$(date +”%Y/%m/%d-%H:%M:%S”) \
-    		-X main.commitHash=$(git log --pretty=format:%H -n 1) \
-    		-X main.gitStatus=${GIT_STATUS}\
-    		-X main.version=$(cat VERSION)" \
-    -o ./cmd/bbsim ./internal/bbsim
+RUN make build
 
 # runtime parent
 FROM golang:1.12-stretch
@@ -73,6 +67,8 @@ RUN mv /usr/sbin/dhcpd /usr/local/bin/ \
 && touch /var/lib/dhcp/dhcpd.leases
 
 WORKDIR /app
-COPY --from=builder /go/src/github.com/opencord/bbsim/cmd/bbsim /app/bbsim
+COPY --from=builder /go/src/github.com/opencord/bbsim/bbsim /app/bbsim
+COPY --from=builder /go/src/github.com/opencord/bbsim/bbsimctl /usr/bin/bbsimctl
 RUN chmod a+x /app/bbsim
+RUN chmod a+x /usr/bin/bbsimctl
 CMD [ '/app/bbsim' ]

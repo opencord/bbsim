@@ -62,7 +62,8 @@ voltctl device enable $(voltctl device list --filter Type~openolt -q)
 ## Control API
 
 BBSim comes with a gRPC interface to control the internal state.
-This interface can be queried using `bbsimctl` (the tool can be build with `make build`):
+This interface can be queried using `bbsimctl` (the tool can be build with `make build`
+and it's available inside the `bbsim` container):
 
 ```bash
 $ ./bbsimctl --help
