@@ -39,7 +39,7 @@ test: dep protos # @HELP Execute unit tests
 	gocover-cobertura < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml
 
 docker-build: # @HELP Build a docker container
-	docker build --build-arg GIT_STATUS=${GIT_STATUS} -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} -f build/package/Dockerfile .
+	docker build -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} -f build/package/Dockerfile .
 
 docker-push: # @HELP Push a docker container to a registry
 	docker push ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG}
@@ -69,15 +69,15 @@ build-bbsim:
     		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
     		-X main.gitStatus=${GIT_STATUS} \
     		-X main.version=${VERSION}" \
-    	-o ./cmd/bbsim ./internal/bbsim
+    	./cmd/bbsim
 
 build-bbsimctl:
 	GO111MODULE=on go build -i -v -mod vendor \
-        	-ldflags "-X github.com/opencord/bbsim/internal/bbsimctl/config.BuildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
-        		-X github.com/opencord/bbsim/internal/bbsimctl/config.CommitHash=$(shell git log --pretty=format:%H -n 1) \
-        		-X github.com/opencord/bbsim/internal/bbsimctl/config.GitStatus=${GIT_STATUS} \
-        		-X github.com/opencord/bbsim/internal/bbsimctl/config.Version=${VERSION}" \
-        	./cmd/bbsimctl
+		-ldflags "-X github.com/opencord/bbsim/internal/bbsimctl/config.BuildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
+			-X github.com/opencord/bbsim/internal/bbsimctl/config.CommitHash=$(shell git log --pretty=format:%H -n 1) \
+			-X github.com/opencord/bbsim/internal/bbsimctl/config.GitStatus=${GIT_STATUS} \
+			-X github.com/opencord/bbsim/internal/bbsimctl/config.Version=${VERSION}" \
+		./cmd/bbsimctl
 
 api/openolt/openolt.pb.go: api/openolt/openolt.proto
 	@protoc -I . \

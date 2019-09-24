@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"github.com/opencord/bbsim/api/bbsim"
+	"github.com/opencord/bbsim/internal/bbsim/api"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -28,6 +29,16 @@ import (
 	"runtime/pprof"
 	"sync"
 )
+
+type CliOptions struct {
+	OltID        int
+	NumNniPerOlt int
+	NumPonPerOlt int
+	NumOnuPerPon int
+	STag         int
+	CTagInit     int
+	profileCpu   *string
+}
 
 func getOpts() *CliOptions {
 
@@ -63,7 +74,7 @@ func startApiServer(channel chan bool, group *sync.WaitGroup) {
 		log.Fatalf("APIServer failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer()
-	bbsim.RegisterBBSimServer(grpcServer, BBSimServer{})
+	bbsim.RegisterBBSimServer(grpcServer, api.BBSimServer{})
 
 	reflection.Register(grpcServer)
 
