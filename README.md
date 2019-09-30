@@ -132,6 +132,14 @@ PONPORTID    ID    SERIALNUMBER    STAG    CTAG    OPERSTATE    INTERNALSTATE
 3            4     BBSM00000304    900     915     up           auth_failed
 ```
 
+### Autocomplete
+
+`bbsimctl` comes with autocomplete, just run:
+
+```bash
+source <(bbsimctl completion bash)
+```
+
 ## Documentation
 
 More advanced documentation lives in the [here](./docs/README.md)

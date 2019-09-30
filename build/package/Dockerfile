@@ -71,4 +71,5 @@ COPY --from=builder /go/src/github.com/opencord/bbsim/bbsim /app/bbsim
 COPY --from=builder /go/src/github.com/opencord/bbsim/bbsimctl /usr/bin/bbsimctl
 RUN chmod a+x /app/bbsim
 RUN chmod a+x /usr/bin/bbsimctl
+RUN bbsimctl completion bash >> $HOME/.bashrc
 CMD [ '/app/bbsim' ]
