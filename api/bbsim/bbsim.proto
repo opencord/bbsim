@@ -56,10 +56,16 @@ message VersionNumber {
     string gitStatus = 4;
 }
 
+message LogLevel {
+    string level = 1;
+    bool caller = 2;
+}
+
 message Empty {}
 
 service BBSim {
     rpc Version(Empty) returns (VersionNumber) {}
     rpc GetOlt(Empty) returns (Olt) {}
     rpc GetONUs(Empty) returns (ONUs) {}
+    rpc SetLogLevel(LogLevel) returns (LogLevel) {}
 }

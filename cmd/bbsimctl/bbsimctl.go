@@ -38,6 +38,7 @@ func main() {
 	commands.RegisterOltCommands(parser)
 	commands.RegisterONUCommands(parser)
 	commands.RegisterCompletionCommands(parser)
+	commands.RegisterLoggingCommands(parser)
 
 	_, err = parser.ParseArgs(os.Args[1:])
 	if err != nil {

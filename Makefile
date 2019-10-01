@@ -34,7 +34,7 @@ dep: # @HELP Download the dependencies to the vendor folder
 build: dep protos build-bbsim build-bbsimctl# @HELP Build the binary
 
 test: dep protos # @HELP Execute unit tests
-	GO111MODULE=on go test -v -mod vendor ./internal/bbsim/... -covermode count -coverprofile ./tests/results/go-test-coverage.out 2>&1 | tee ./tests/results/go-test-results.out
+	GO111MODULE=on go test -v -mod vendor ./... -covermode count -coverprofile ./tests/results/go-test-coverage.out 2>&1 | tee ./tests/results/go-test-results.out
 	go-junit-report < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml
 	gocover-cobertura < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml
 

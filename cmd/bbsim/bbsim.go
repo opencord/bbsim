@@ -21,6 +21,7 @@ import (
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/api"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
+	bbsimLogger "github.com/opencord/bbsim/internal/bbsim/logger"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -38,6 +39,8 @@ type CliOptions struct {
 	STag         int
 	CTagInit     int
 	profileCpu   *string
+	logLevel     string
+	logCaller    bool
 }
 
 func getOpts() *CliOptions {
@@ -46,9 +49,14 @@ func getOpts() *CliOptions {
 	nni := flag.Int("nni", 1, "Number of NNI ports per OLT device to be emulated (default is 1)")
 	pon := flag.Int("pon", 1, "Number of PON ports per OLT device to be emulated (default is 1)")
 	onu := flag.Int("onu", 1, "Number of ONU devices per PON port to be emulated (default is 1)")
+
 	s_tag := flag.Int("s_tag", 900, "S-Tag value (default is 900)")
 	c_tag_init := flag.Int("c_tag", 900, "C-Tag starting value (default is 900), each ONU will get a sequentail one (targeting 1024 ONUs per BBSim instance the range is bug enough)")
+
 	profileCpu := flag.String("cpuprofile", "", "write cpu profile to file")
+
+	logLevel := flag.String("logLevel", "debug", "Set the log level (trace, debug, info, warn, error)")
+	logCaller := flag.Bool("logCaller", false, "Whether to print the caller filename or not")
 
 	flag.Parse()
 
@@ -61,6 +69,8 @@ func getOpts() *CliOptions {
 	o.STag = int(*s_tag)
 	o.CTagInit = int(*c_tag_init)
 	o.profileCpu = profileCpu
+	o.logLevel = *logLevel
+	o.logCaller = *logCaller
 
 	return o
 }
@@ -99,15 +109,10 @@ func startApiServer(channel chan bool, group *sync.WaitGroup) {
 	return
 }
 
-func init() {
-	// TODO make configurable both via CLI and via ENV (for the tests)
-	log.SetLevel(log.DebugLevel)
-	//log.SetLevel(log.TraceLevel)
-	//log.SetReportCaller(true)
-}
-
 func main() {
 	options := getOpts()
+
+	bbsimLogger.SetLogLevel(log.StandardLogger(), options.logLevel, options.logCaller)
 
 	if *options.profileCpu != "" {
 		// start profiling

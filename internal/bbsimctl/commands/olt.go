@@ -54,7 +54,7 @@ func RegisterOltCommands(parser *flags.Parser) {
 func getOLT() *pb.Olt {
 	conn, err := grpc.Dial(config.GlobalConfig.Server, grpc.WithInsecure())
 	if err != nil {
-		log.Fatal("did not connect: %v", err)
+		log.Fatalf("did not connect: %v", err)
 		return nil
 	}
 	defer conn.Close()
@@ -66,7 +66,7 @@ func getOLT() *pb.Olt {
 	defer cancel()
 	olt, err := c.GetOlt(ctx, &pb.Empty{})
 	if err != nil {
-		log.Fatal("could not get OLT: %v", err)
+		log.Fatalf("could not get OLT: %v", err)
 		return nil
 	}
 	return olt

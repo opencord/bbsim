@@ -20,6 +20,7 @@ import (
 	"context"
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
+	bbsimLogger "github.com/opencord/bbsim/internal/bbsim/logger"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -101,4 +102,14 @@ func (s BBSimServer) GetONUs(ctx context.Context, req *bbsim.Empty) (*bbsim.ONUs
 		}
 	}
 	return &onus, nil
+}
+
+func (s BBSimServer) SetLogLevel(ctx context.Context, req *bbsim.LogLevel) (*bbsim.LogLevel, error) {
+
+	bbsimLogger.SetLogLevel(log.StandardLogger(), req.Level, req.Caller)
+
+	return &bbsim.LogLevel{
+		Level:  log.StandardLogger().Level.String(),
+		Caller: log.StandardLogger().ReportCaller,
+	}, nil
 }
