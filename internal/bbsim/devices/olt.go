@@ -24,6 +24,7 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
+	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/voltha-protos/go/openolt"
 	"github.com/opencord/voltha-protos/go/tech_profile"
 	log "github.com/sirupsen/logrus"
@@ -382,7 +383,7 @@ func (o OltDevice) FindOnu(serialNumber string) (*Onu, error) {
 
 func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*openolt.Empty, error) {
 	oltLogger.WithFields(log.Fields{
-		"OnuSn": onuSnToString(onu.SerialNumber),
+		"OnuSn": common.OnuSnToString(onu.SerialNumber),
 	}).Info("Received ActivateOnu call from VOLTHA")
 
 	pon, _ := o.getPonById(onu.IntfId)
@@ -532,16 +533,32 @@ func (o OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*
 		Data: OmciMessage{
 			OnuSN:   onu.SerialNumber,
 			OnuID:   onu.ID,
-			omciMsg: omci_msg,
+			OmciMsg: omci_msg,
 		},
 	}
 	onu.Channel <- msg
+	// FIXME how do we report errors here?
 	return new(openolt.Empty), nil
 }
 
 func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) (*openolt.Empty, error) {
-	pon, _ := o.getPonById(onuPkt.IntfId)
-	onu, _ := pon.getOnuById(onuPkt.OnuId)
+	pon, err := o.getPonById(onuPkt.IntfId)
+	if err != nil {
+		oltLogger.WithFields(log.Fields{
+			"IntfId": onuPkt.IntfId,
+			"OnuId":  onuPkt.OnuId,
+		}).Error("PonPort not found, not handling OnuPacketOut")
+		return new(openolt.Empty), errors.New("interface-not-found")
+	}
+	onu, err := pon.getOnuById(onuPkt.OnuId)
+
+	if err != nil {
+		oltLogger.WithFields(log.Fields{
+			"IntfId": onuPkt.IntfId,
+			"OnuId":  onuPkt.OnuId,
+		}).Error("ONU not found, not handling OnuPacketOut")
+		return new(openolt.Empty), errors.New("onu-not-found")
+	}
 
 	oltLogger.WithFields(log.Fields{
 		"IntfId": onu.PonPortID,

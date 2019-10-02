@@ -36,7 +36,8 @@ var eapolLogger = log.WithFields(log.Fields{
 var eapolVersion uint8 = 1
 var GetGemPortId = omci.GetGemPortId
 
-func sendEapolPktIn(msg bbsim.ByteMsg, stream openolt.Openolt_EnableIndicationServer) {
+// FIXME once we handle multiple UNIs. start EAPOL on all of them
+func sendEapolPktIn(msg bbsim.ByteMsg, portNo uint32, stream openolt.Openolt_EnableIndicationServer) {
 	// FIXME unify sendDHCPPktIn and sendEapolPktIn methods
 	gemid, err := omci.GetGemPortId(msg.IntfId, msg.OnuId)
 	if err != nil {
@@ -47,7 +48,11 @@ func sendEapolPktIn(msg bbsim.ByteMsg, stream openolt.Openolt_EnableIndicationSe
 		return
 	}
 	data := &openolt.Indication_PktInd{PktInd: &openolt.PacketIndication{
-		IntfType: "pon", IntfId: msg.IntfId, GemportId: uint32(gemid), Pkt: msg.Bytes,
+		IntfType:  "pon",
+		IntfId:    msg.IntfId,
+		GemportId: uint32(gemid),
+		Pkt:       msg.Bytes,
+		PortNo:    portNo,
 	}}
 
 	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
@@ -129,7 +134,7 @@ func updateAuthFailed(onuId uint32, ponPortId uint32, serialNumber string, onuSt
 	return nil
 }
 
-func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, onuStateMachine *fsm.FSM, stream openolt.Openolt_EnableIndicationServer) error {
+func SendEapStart(onuId uint32, ponPortId uint32, portNo uint32, serialNumber string, onuStateMachine *fsm.FSM, stream openolt.Openolt_EnableIndicationServer) error {
 
 	// send the packet (hacked together)
 	gemId, err := GetGemPortId(ponPortId, onuId)
@@ -170,6 +175,7 @@ func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, onuStateM
 			IntfId:    ponPortId,
 			GemportId: uint32(gemId),
 			Pkt:       msg,
+			PortNo:    portNo,
 		},
 	}
 
@@ -187,9 +193,12 @@ func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, onuStateM
 		return err
 	}
 
-	if err != nil {
-
-	}
+	eapolLogger.WithFields(log.Fields{
+		"OnuId":  onuId,
+		"IntfId": ponPortId,
+		"OnuSn":  serialNumber,
+		"PortNo": portNo,
+	}).Debugf("EapStart packet indication sent")
 
 	if err := onuStateMachine.Event("eap_start_sent"); err != nil {
 		eapolLogger.WithFields(log.Fields{
@@ -202,7 +211,7 @@ func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, onuStateM
 	return nil
 }
 
-func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, onuStateMachine *fsm.FSM, recvpkt gopacket.Packet, stream openolt.Openolt_EnableIndicationServer) {
+func HandleNextPacket(onuId uint32, ponPortId uint32, portNo uint32, serialNumber string, onuStateMachine *fsm.FSM, recvpkt gopacket.Packet, stream openolt.Openolt_EnableIndicationServer) {
 	eap, err := extractEAP(recvpkt)
 	if err != nil {
 		eapolLogger.Errorf("%s", err)
@@ -218,7 +227,7 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, onuSt
 			Bytes:  pkt,
 		}
 
-		sendEapolPktIn(msg, stream)
+		sendEapolPktIn(msg, portNo, stream)
 		eapolLogger.WithFields(log.Fields{
 			"OnuId":  onuId,
 			"IntfId": ponPortId,
@@ -244,7 +253,7 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, onuSt
 			Bytes:  pkt,
 		}
 
-		sendEapolPktIn(msg, stream)
+		sendEapolPktIn(msg, portNo, stream)
 		eapolLogger.WithFields(log.Fields{
 			"OnuId":  onuId,
 			"IntfId": ponPortId,
