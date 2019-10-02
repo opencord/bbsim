@@ -23,6 +23,7 @@ import (
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
+	"github.com/opencord/bbsim/internal/common"
 	omci "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/go/openolt"
 	log "github.com/sirupsen/logrus"
@@ -53,7 +54,7 @@ type Onu struct {
 }
 
 func (o Onu) Sn() string {
-	return onuSnToString(o.SerialNumber)
+	return common.OnuSnToString(o.SerialNumber)
 }
 
 func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) *Onu {
@@ -74,7 +75,9 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) *Onu {
 	// state as requested by VOLTHA
 	o.OperState = getOperStateFSM(func(e *fsm.Event) {
 		onuLogger.WithFields(log.Fields{
-			"ID": o.ID,
+			"OnuId":  o.ID,
+			"IntfId": o.PonPortID,
+			"OnuSn":  o.Sn(),
 		}).Debugf("Changing ONU OperState from %s to %s", e.Src, e.Dst)
 	})
 
@@ -204,16 +207,18 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer) {
 			msg, _ := message.Data.(OnuFlowUpdateMessage)
 			o.handleFlowUpdate(msg, stream)
 		case StartEAPOL:
-			log.Infof("Receive StartEAPOL message on ONU Channel")
 			eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, stream)
 		case StartDHCP:
-			log.Infof("Receive StartDHCP message on ONU Channel")
-			// FIXME use id, ponId as SendEapStart
+			// FIXME use id, ponId (reverse the order to be consistent with SendEapStart)
 			dhcp.SendDHCPDiscovery(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
 		case OnuPacketOut:
 			msg, _ := message.Data.(OnuPacketOutMessage)
 			pkt := msg.Packet
 			etherType := pkt.Layer(layers.LayerTypeEthernet).(*layers.Ethernet).EthernetType
+
+			onuLogger.WithFields(log.Fields{
+				"etherType": etherType,
+			}).Tracef("OnuPacketOut")
 
 			if etherType == layers.EthernetTypeEAPOL {
 				eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream)
@@ -245,7 +250,8 @@ func (o Onu) processOmciMessages(stream openolt.Openolt_EnableIndicationServer) 
 			log.WithFields(log.Fields{
 				"OnuId":  message.Data.OnuId,
 				"IntfId": message.Data.IntfId,
-			}).Infof("GemPort Added")
+				"OnuSn":  o.Sn(),
+			}).Debugf("GemPort Added")
 
 			// NOTE if we receive the GemPort but we don't have EAPOL flows
 			// go an intermediate state, otherwise start auth
@@ -355,18 +361,18 @@ func (o Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableInd
 	onuLogger.WithFields(log.Fields{
 		"IntfId":       o.PonPortID,
 		"SerialNumber": o.Sn(),
-		"omciPacket":   msg.omciMsg.Pkt,
+		"omciPacket":   msg.OmciMsg.Pkt,
 	}).Tracef("Received OMCI message")
 
 	var omciInd openolt.OmciIndication
-	respPkt, err := omci.OmciSim(o.PonPortID, o.ID, HexDecode(msg.omciMsg.Pkt))
+	respPkt, err := omci.OmciSim(o.PonPortID, o.ID, HexDecode(msg.OmciMsg.Pkt))
 	if err != nil {
 		onuLogger.WithFields(log.Fields{
 			"IntfId":       o.PonPortID,
 			"SerialNumber": o.Sn(),
 			"omciPacket":   omciInd.Pkt,
 			"msg":          msg,
-		}).Errorf("Error handling OMCI message %v", msg)
+		}).Error("Error handling OMCI message")
 		return
 	}
 
@@ -381,7 +387,8 @@ func (o Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableInd
 			"SerialNumber": o.Sn(),
 			"omciPacket":   omciInd.Pkt,
 			"msg":          msg,
-		}).Errorf("send omci indication failed: %v", err)
+			"err":          err,
+		}).Error("send omci indication failed")
 		return
 	}
 	onuLogger.WithFields(log.Fields{
@@ -398,7 +405,7 @@ func (o *Onu) storePortNumber(portNo uint32) {
 	// - refactor the omci-sim library to use https://github.com/cboling/omci instead of canned messages
 	// - change the library so that it reports a single UNI and remove this workaroung
 	// - add support for multiple UNIs in BBSim
-	if portNo < o.PortNo {
+	if o.PortNo == 0 || portNo < o.PortNo {
 		o.PortNo = portNo
 	}
 }
@@ -430,11 +437,21 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage, stream openolt.Openolt_
 		// go an intermediate state, otherwise start auth
 		if o.InternalState.Is("enabled") {
 			if err := o.InternalState.Event("receive_eapol_flow"); err != nil {
-				log.Warnf("Can't go to eapol_flow_received: %v", err)
+				log.WithFields(log.Fields{
+					"IntfId": o.PonPortID,
+					"OnuId":  o.ID,
+					"OnuSn":  o.Sn(),
+					"err":    err.Error(),
+				}).Error("Can't go to eapol_flow_received")
 			}
 		} else if o.InternalState.Is("gem_port_added") {
 			if err := o.InternalState.Event("start_auth"); err != nil {
-				log.Warnf("Can't go to auth_started: %v", err)
+				log.WithFields(log.Fields{
+					"IntfId": o.PonPortID,
+					"OnuId":  o.ID,
+					"OnuSn":  o.Sn(),
+					"err":    err.Error(),
+				}).Error("Can't go to auth_started")
 			}
 		}
 	} else if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeIPv4) &&
@@ -442,7 +459,12 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage, stream openolt.Openolt_
 		msg.Flow.Classifier.DstPort == uint32(67) {
 		// NOTE we are receiving mulitple DHCP flows but we shouldn't call the transition multiple times
 		if err := o.InternalState.Event("start_dhcp"); err != nil {
-			log.Warnf("Can't go to dhcp_started: %v", err)
+			log.WithFields(log.Fields{
+				"IntfId": o.PonPortID,
+				"OnuId":  o.ID,
+				"OnuSn":  o.Sn(),
+				"err":    err.Error(),
+			}).Error("Can't go to dhcp_started")
 		}
 	}
 }
