@@ -20,7 +20,7 @@ import (
 	"context"
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
-	bbsimLogger "github.com/opencord/bbsim/internal/bbsim/logger"
+	bbsimLogger "github.com/opencord/bbsim/internal/common"
 	log "github.com/sirupsen/logrus"
 )
 
