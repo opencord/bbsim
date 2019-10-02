@@ -47,7 +47,8 @@ RUN make protos
 # copy and build
 COPY . ./
 RUN go mod vendor -v  # we can't vendor dependencies unless the code is there
-RUN make build
+RUN make build-bbsim
+RUN make build-bbsimctl
 
 # runtime parent
 FROM golang:1.12-stretch

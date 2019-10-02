@@ -23,7 +23,9 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
+	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
+	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/voltha-protos/go/openolt"
 	"github.com/opencord/voltha-protos/go/tech_profile"
 	log "github.com/sirupsen/logrus"
@@ -350,16 +352,51 @@ func (o OltDevice) processNniPacketIns(stream openolt.Openolt_EnableIndicationSe
 	}).Debug("Started NNI Channel")
 	nniId := o.Nnis[0].ID // FIXME we are assuming we have only one NNI
 	for message := range o.nniPktInChannel {
+
+		// TODO double tag the packet,
+		// - use the DstMacAddress to lookup the ONU
+		onuMac, err := packetHandlers.GetDstMacAddressFromPacket(message.Pkt)
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"IntfType": "nni",
+				"IntfId":   nniId,
+				"Pkt":      message.Pkt.Data(),
+			}).Info("Can't find Dst MacAddress in packet")
+			return
+		}
+
+		onu, err := o.FindOnuByMacAddress(onuMac)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"IntfType":   "nni",
+				"IntfId":     nniId,
+				"Pkt":        message.Pkt.Data(),
+				"MacAddress": onuMac.String(),
+			}).Info("Can't find ONU with MacAddress")
+			return
+		}
+
+		// FIXME create PushDoubleTagMethod
+		singleTaggedPkt, err := packetHandlers.PushSingleTag(onu.CTag, message.Pkt)
+		if err != nil {
+			log.Error("Failt to add single tag to packet")
+		}
+		doubleTaggedPkt, err := packetHandlers.PushSingleTag(onu.STag, singleTaggedPkt)
+		if err != nil {
+			log.Error("Failt to add double tag to packet")
+		}
+
 		oltLogger.Debug("Received packets on NNI Channel")
 		data := &openolt.Indication_PktInd{PktInd: &openolt.PacketIndication{
 			IntfType: "nni",
 			IntfId:   nniId,
-			Pkt:      message.Pkt.Data()}}
+			Pkt:      doubleTaggedPkt.Data()}}
 		if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
 			oltLogger.WithFields(log.Fields{
 				"IntfType": data.PktInd.IntfType,
 				"IntfId":   nniId,
-				"Pkt":      message.Pkt.Data(),
+				"Pkt":      doubleTaggedPkt.Data(),
 			}).Errorf("Fail to send PktInd indication: %v", err)
 		}
 	}
@@ -378,11 +415,24 @@ func (o OltDevice) FindOnu(serialNumber string) (*Onu, error) {
 	return &Onu{}, errors.New(fmt.Sprintf("cannot-find-onu-%s", serialNumber))
 }
 
+func (o OltDevice) FindOnuByMacAddress(mac net.HardwareAddr) (*Onu, error) {
+
+	for _, pon := range o.Pons {
+		for _, onu := range pon.Onus {
+			if onu.HwAddress.String() == mac.String() {
+				return &onu, nil
+			}
+		}
+	}
+
+	return &Onu{}, errors.New(fmt.Sprintf("cannot-find-onu-%s", mac))
+}
+
 // GRPC Endpoints
 
 func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*openolt.Empty, error) {
 	oltLogger.WithFields(log.Fields{
-		"OnuSn": onuSnToString(onu.SerialNumber),
+		"OnuSn": common.OnuSnToString(onu.SerialNumber),
 	}).Info("Received ActivateOnu call from VOLTHA")
 
 	pon, _ := o.getPonById(onu.IntfId)
@@ -532,22 +582,38 @@ func (o OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*
 		Data: OmciMessage{
 			OnuSN:   onu.SerialNumber,
 			OnuID:   onu.ID,
-			omciMsg: omci_msg,
+			OmciMsg: omci_msg,
 		},
 	}
 	onu.Channel <- msg
+	// FIXME how do we report errors here?
 	return new(openolt.Empty), nil
 }
 
 func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) (*openolt.Empty, error) {
-	pon, _ := o.getPonById(onuPkt.IntfId)
-	onu, _ := pon.getOnuById(onuPkt.OnuId)
+	pon, err := o.getPonById(onuPkt.IntfId)
+	if err != nil {
+		oltLogger.WithFields(log.Fields{
+			"IntfId": onuPkt.IntfId,
+			"OnuId":  onuPkt.OnuId,
+		}).Error("PonPort not found, not handling OnuPacketOut")
+		return new(openolt.Empty), errors.New("interface-not-found")
+	}
+	onu, err := pon.getOnuById(onuPkt.OnuId)
+
+	if err != nil {
+		oltLogger.WithFields(log.Fields{
+			"IntfId": onuPkt.IntfId,
+			"OnuId":  onuPkt.OnuId,
+		}).Error("ONU not found, not handling OnuPacketOut")
+		return new(openolt.Empty), errors.New("onu-not-found")
+	}
 
 	oltLogger.WithFields(log.Fields{
 		"IntfId": onu.PonPortID,
 		"OnuId":  onu.ID,
 		"OnuSn":  onu.Sn(),
-	}).Tracef("Received OnuPacketOut")
+	}).Warnf("Received OnuPacketOut")
 
 	rawpkt := gopacket.NewPacket(onuPkt.Pkt, layers.LayerTypeEthernet, gopacket.Default)
 

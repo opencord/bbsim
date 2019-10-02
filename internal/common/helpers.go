@@ -14,30 +14,17 @@
  * limitations under the License.
  */
 
-package logger
+package common
 
-import log "github.com/sirupsen/logrus"
+import (
+	"github.com/opencord/voltha-protos/go/openolt"
+	"strconv"
+)
 
-func SetLogLevel(logger *log.Logger, level string, caller bool) {
-
-	logger.SetReportCaller(caller)
-
-	switch level {
-	case "trace":
-		logger.SetLevel(log.TraceLevel)
-	case "debug":
-		logger.SetLevel(log.DebugLevel)
-	case "info":
-		logger.SetLevel(log.InfoLevel)
-	case "warn":
-		logger.SetLevel(log.WarnLevel)
-	case "error":
-		logger.SetLevel(log.ErrorLevel)
-	default:
-		logger.SetLevel(log.DebugLevel)
-		logger.WithFields(log.Fields{
-			"level": level,
-		}).Warn("The provided level is unknown. Defaulting to 'debug'")
+func OnuSnToString(sn *openolt.SerialNumber) string {
+	s := string(sn.VendorId)
+	for _, i := range sn.VendorSpecific {
+		s = s + strconv.FormatInt(int64(i/16), 16) + strconv.FormatInt(int64(i%16), 16)
 	}
-
+	return s
 }

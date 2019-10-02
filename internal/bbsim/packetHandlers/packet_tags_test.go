@@ -70,7 +70,7 @@ func TestPushSingleTag(t *testing.T) {
 		t.Logf("Error in PushSingleTag: %v", err)
 	}
 
-	vlan, _ := getVlanTag(taggedPkt)
+	vlan, _ := GetVlanTag(taggedPkt)
 	assert.Equal(t, vlan, uint16(111))
 }
 
@@ -108,7 +108,7 @@ func TestPopSingleTag(t *testing.T) {
 		t.Logf("Error in PushSingleTag: %v", err)
 	}
 
-	vlan, err := getVlanTag(taggedPkt)
+	vlan, err := GetVlanTag(taggedPkt)
 	assert.Equal(t, vlan, uint16(2580)) // FIXME where dows 2056 comes from??
 }
 
@@ -146,7 +146,7 @@ func TestPopDoubleTag(t *testing.T) {
 		t.Logf("Error in PushSingleTag: %v", err)
 	}
 
-	vlan, err := getVlanTag(taggedPkt)
+	vlan, err := GetVlanTag(taggedPkt)
 	assert.Equal(t, vlan, uint16(0))
 	assert.Equal(t, err.Error(), "no-dot1q-layer-in-packet")
 }

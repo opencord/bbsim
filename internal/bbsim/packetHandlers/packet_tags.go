@@ -114,7 +114,7 @@ func getDot1QLayer(pkt gopacket.Packet) (*layers.Dot1Q, error) {
 	return nil, errors.New("no-dot1q-layer-in-packet")
 }
 
-func getVlanTag(pkt gopacket.Packet) (uint16, error) {
+func GetVlanTag(pkt gopacket.Packet) (uint16, error) {
 	dot1q, err := getDot1QLayer(pkt)
 	if err != nil {
 		return 0, err

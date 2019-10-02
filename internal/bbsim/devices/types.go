@@ -23,6 +23,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/looplab/fsm"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
+	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/voltha-protos/go/openolt"
 	"net"
 )
@@ -41,17 +42,17 @@ type Onu struct {
 	CTag          int
 	HwAddress     net.HardwareAddr
 	InternalState *fsm.FSM
+	PortNo        uint32 // FIXME we need to handle multiple UNIs
+	//FlowIdToPortNoMap map[uint32]uint32
 
 	OperState    *fsm.FSM
 	SerialNumber *openolt.SerialNumber
 
-	Channel       chan Message        // this Channel is to track state changes and OMCI messages
-	eapolPktOutCh chan *bbsim.ByteMsg // this Channel is for EAPOL Packet Outs (coming from the controller)
-	dhcpPktOutCh  chan *bbsim.ByteMsg // this Channel is for DHCP Packet Outs (coming from the controller)
+	Channel chan Message // this Channel is to track state changes and OMCI messages
 }
 
 func (o Onu) Sn() string {
-	return onuSnToString(o.SerialNumber)
+	return common.OnuSnToString(o.SerialNumber)
 }
 
 type NniPort struct {
@@ -184,7 +185,7 @@ type OnuIndicationMessage struct {
 type OmciMessage struct {
 	OnuSN   *openolt.SerialNumber
 	OnuID   uint32
-	omciMsg *openolt.OmciMsg
+	OmciMsg *openolt.OmciMsg
 }
 
 type OnuFlowUpdateMessage struct {

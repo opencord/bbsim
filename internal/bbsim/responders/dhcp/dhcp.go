@@ -167,7 +167,7 @@ func serializeDHCPPacket(intfId uint32, onuId uint32, srcMac net.HardwareAddr, d
 	return bytes, nil
 }
 
-func getDhcpLayer(pkt gopacket.Packet) (*layers.DHCPv4, error) {
+func GetDhcpLayer(pkt gopacket.Packet) (*layers.DHCPv4, error) {
 	layerDHCP := pkt.Layer(layers.LayerTypeDHCPv4)
 	dhcp, _ := layerDHCP.(*layers.DHCPv4)
 	if dhcp == nil {
@@ -176,7 +176,7 @@ func getDhcpLayer(pkt gopacket.Packet) (*layers.DHCPv4, error) {
 	return dhcp, nil
 }
 
-func getDhcpMessageType(dhcp *layers.DHCPv4) (layers.DHCPMsgType, error) {
+func GetDhcpMessageType(dhcp *layers.DHCPv4) (layers.DHCPMsgType, error) {
 	for _, option := range dhcp.Options {
 		if option.Type == layers.DHCPOptMessageType {
 			if reflect.DeepEqual(option.Data, []byte{byte(layers.DHCPMsgTypeOffer)}) {
@@ -194,7 +194,7 @@ func getDhcpMessageType(dhcp *layers.DHCPv4) (layers.DHCPMsgType, error) {
 	return 0, errors.New("Failed to extract MsgType from dhcp")
 }
 
-func sendDHCPPktIn(msg bbsim.ByteMsg, stream openolt.Openolt_EnableIndicationServer) error {
+func sendDHCPPktIn(msg bbsim.ByteMsg, portNo uint32, stream openolt.Openolt_EnableIndicationServer) error {
 	// FIXME unify sendDHCPPktIn and sendEapolPktIn methods
 	gemid, err := GetGemPortId(msg.IntfId, msg.OnuId)
 	if err != nil {
@@ -205,7 +205,11 @@ func sendDHCPPktIn(msg bbsim.ByteMsg, stream openolt.Openolt_EnableIndicationSer
 		return err
 	}
 	data := &openolt.Indication_PktInd{PktInd: &openolt.PacketIndication{
-		IntfType: "pon", IntfId: msg.IntfId, GemportId: uint32(gemid), Pkt: msg.Bytes,
+		IntfType:  "pon",
+		IntfId:    msg.IntfId,
+		GemportId: uint32(gemid),
+		PortNo:    portNo,
+		Pkt:       msg.Bytes,
 	}}
 
 	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
@@ -215,7 +219,7 @@ func sendDHCPPktIn(msg bbsim.ByteMsg, stream openolt.Openolt_EnableIndicationSer
 	return nil
 }
 
-func sendDHCPRequest(ponPortId uint32, onuId uint32, serialNumber string, onuHwAddress net.HardwareAddr, cTag int, stream openolt.Openolt_EnableIndicationServer) error {
+func sendDHCPRequest(ponPortId uint32, onuId uint32, portNo uint32, serialNumber string, onuHwAddress net.HardwareAddr, cTag int, stream openolt.Openolt_EnableIndicationServer) error {
 	dhcp := createDHCPReq(ponPortId, onuId)
 	pkt, err := serializeDHCPPacket(ponPortId, onuId, onuHwAddress, dhcp)
 
@@ -232,7 +236,7 @@ func sendDHCPRequest(ponPortId uint32, onuId uint32, serialNumber string, onuHwA
 		Bytes:  pkt,
 	}
 
-	if err := sendDHCPPktIn(msg, stream); err != nil {
+	if err := sendDHCPPktIn(msg, portNo, stream); err != nil {
 		return err
 	}
 	dhcpLogger.WithFields(log.Fields{
@@ -255,7 +259,7 @@ func updateDhcpFailed(onuId uint32, ponPortId uint32, serialNumber string, onuSt
 	return nil
 }
 
-func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serialNumber string, onuStateMachine *fsm.FSM, onuHwAddress net.HardwareAddr, cTag int, stream openolt.Openolt_EnableIndicationServer) error {
+func SendDHCPDiscovery(ponPortId uint32, onuId uint32, portNo uint32, serialNumber string, onuStateMachine *fsm.FSM, onuHwAddress net.HardwareAddr, cTag int, stream openolt.Openolt_EnableIndicationServer) error {
 	dhcp := createDHCPDisc(ponPortId, onuId)
 	pkt, err := serializeDHCPPacket(ponPortId, onuId, onuHwAddress, dhcp)
 	if err != nil {
@@ -271,7 +275,7 @@ func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serialNumber string, onuS
 		Bytes:  pkt,
 	}
 
-	if err := sendDHCPPktIn(msg, stream); err != nil {
+	if err := sendDHCPPktIn(msg, portNo, stream); err != nil {
 		if err := updateDhcpFailed(onuId, ponPortId, serialNumber, onuStateMachine); err != nil {
 			return err
 		}
@@ -293,9 +297,9 @@ func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serialNumber string, onuS
 	return nil
 }
 
-func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, onuHwAddress net.HardwareAddr, cTag int, onuStateMachine *fsm.FSM, pkt gopacket.Packet, stream openolt.Openolt_EnableIndicationServer) error {
+func HandleNextPacket(onuId uint32, ponPortId uint32, portNo uint32, serialNumber string, onuHwAddress net.HardwareAddr, cTag int, onuStateMachine *fsm.FSM, pkt gopacket.Packet, stream openolt.Openolt_EnableIndicationServer) error {
 
-	dhcpLayer, err := getDhcpLayer(pkt)
+	dhcpLayer, err := GetDhcpLayer(pkt)
 	if err != nil {
 		dhcpLogger.WithFields(log.Fields{
 			"OnuId":  onuId,
@@ -307,7 +311,7 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, onuHw
 		}
 		return err
 	}
-	dhcpMessageType, err := getDhcpMessageType(dhcpLayer)
+	dhcpMessageType, err := GetDhcpMessageType(dhcpLayer)
 	if err != nil {
 		dhcpLogger.WithFields(log.Fields{
 			"OnuId":  onuId,
@@ -322,7 +326,7 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, onuHw
 
 	if dhcpLayer.Operation == layers.DHCPOpReply {
 		if dhcpMessageType == layers.DHCPMsgTypeOffer {
-			if err := sendDHCPRequest(ponPortId, onuId, serialNumber, onuHwAddress, cTag, stream); err != nil {
+			if err := sendDHCPRequest(ponPortId, onuId, portNo, serialNumber, onuHwAddress, cTag, stream); err != nil {
 				dhcpLogger.WithFields(log.Fields{
 					"OnuId":  onuId,
 					"IntfId": ponPortId,
