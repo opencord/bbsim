@@ -23,6 +23,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/looplab/fsm"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
+	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/voltha-protos/go/openolt"
 	"net"
 )
@@ -51,7 +52,7 @@ type Onu struct {
 }
 
 func (o Onu) Sn() string {
-	return onuSnToString(o.SerialNumber)
+	return common.OnuSnToString(o.SerialNumber)
 }
 
 type NniPort struct {
@@ -184,7 +185,7 @@ type OnuIndicationMessage struct {
 type OmciMessage struct {
 	OnuSN   *openolt.SerialNumber
 	OnuID   uint32
-	omciMsg *openolt.OmciMsg
+	OmciMsg *openolt.OmciMsg
 }
 
 type OnuFlowUpdateMessage struct {
