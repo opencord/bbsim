@@ -71,6 +71,14 @@ build-bbsim:
     		-X main.version=${VERSION}" \
     	./cmd/bbsim
 
+build-bbr:
+	GO111MODULE=on go build -i -v -mod vendor \
+    	-ldflags "-X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
+    		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
+    		-X main.gitStatus=${GIT_STATUS} \
+    		-X main.version=${VERSION}" \
+    	./cmd/bbr
+
 build-bbsimctl:
 	GO111MODULE=on go build -i -v -mod vendor \
 		-ldflags "-X github.com/opencord/bbsim/internal/bbsimctl/config.BuildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
