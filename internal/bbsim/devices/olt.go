@@ -24,6 +24,7 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
+	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/voltha-protos/go/openolt"
 	"github.com/opencord/voltha-protos/go/tech_profile"
 	log "github.com/sirupsen/logrus"
@@ -366,7 +367,7 @@ func (o OltDevice) processNniPacketIns(stream openolt.Openolt_EnableIndicationSe
 
 func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*openolt.Empty, error) {
 	oltLogger.WithFields(log.Fields{
-		"OnuSn": onuSnToString(onu.SerialNumber),
+		"OnuSn": common.OnuSnToString(onu.SerialNumber),
 	}).Info("Received ActivateOnu call from VOLTHA")
 
 	pon, _ := o.getPonById(onu.IntfId)
