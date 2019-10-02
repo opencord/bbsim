@@ -25,6 +25,7 @@ import (
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
+	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/voltha-protos/go/openolt"
 	"github.com/opencord/voltha-protos/go/tech_profile"
 	log "github.com/sirupsen/logrus"
@@ -376,6 +377,7 @@ func (o OltDevice) processNniPacketIns(stream openolt.Openolt_EnableIndicationSe
 				"IntfId":   nniId,
 				"Pkt":      message.Pkt.Data(),
 			}).Error("Can't find Dst MacAddress in packet")
+
 			return
 		}
 
@@ -416,7 +418,7 @@ func (o OltDevice) processNniPacketIns(stream openolt.Openolt_EnableIndicationSe
 
 // returns an ONU with a given Serial Number
 func (o OltDevice) FindOnuBySn(serialNumber string) (*Onu, error) {
-	// TODO this function can be a perfoormance bottlenec when we have many ONUs,
+	// TODO this function can be a performance bottleneck when we have many ONUs,
 	// memoizing it will remove the bottleneck
 	for _, pon := range o.Pons {
 		for _, onu := range pon.Onus {
@@ -431,7 +433,7 @@ func (o OltDevice) FindOnuBySn(serialNumber string) (*Onu, error) {
 
 // returns an ONU with a given Mac Address
 func (o OltDevice) FindOnuByMacAddress(mac net.HardwareAddr) (*Onu, error) {
-	// TODO this function can be a perfoormance bottlenec when we have many ONUs,
+	// TODO this function can be a performance bottleneck when we have many ONUs,
 	// memoizing it will remove the bottleneck
 	for _, pon := range o.Pons {
 		for _, onu := range pon.Onus {
@@ -448,7 +450,7 @@ func (o OltDevice) FindOnuByMacAddress(mac net.HardwareAddr) (*Onu, error) {
 
 func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*openolt.Empty, error) {
 	oltLogger.WithFields(log.Fields{
-		"OnuSn": onuSnToString(onu.SerialNumber),
+		"OnuSn": common.OnuSnToString(onu.SerialNumber),
 	}).Info("Received ActivateOnu call from VOLTHA")
 
 	pon, _ := o.getPonById(onu.IntfId)
@@ -612,10 +614,11 @@ func (o OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*
 		Data: OmciMessage{
 			OnuSN:   onu.SerialNumber,
 			OnuID:   onu.ID,
-			omciMsg: omci_msg,
+			OmciMsg: omci_msg,
 		},
 	}
 	onu.Channel <- msg
+	// FIXME how do we report errors here?
 	return new(openolt.Empty), nil
 }
 
@@ -627,6 +630,7 @@ func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) 
 			"IntfId": onuPkt.IntfId,
 			"err":    err,
 		}).Error("Can't find PonPort")
+		return new(openolt.Empty), errors.New("interface-not-found")
 	}
 	onu, err := pon.getOnuById(onuPkt.OnuId)
 	if err != nil {
@@ -635,13 +639,14 @@ func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) 
 			"IntfId": onuPkt.IntfId,
 			"err":    err,
 		}).Error("Can't find Onu")
+		return new(openolt.Empty), errors.New("onu-not-found")
 	}
 
 	oltLogger.WithFields(log.Fields{
 		"IntfId": onu.PonPortID,
 		"OnuId":  onu.ID,
 		"OnuSn":  onu.Sn(),
-	}).Tracef("Received OnuPacketOut")
+	}).Warnf("Received OnuPacketOut")
 
 	rawpkt := gopacket.NewPacket(onuPkt.Pkt, layers.LayerTypeEthernet, gopacket.Default)
 

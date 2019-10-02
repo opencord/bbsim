@@ -31,7 +31,7 @@ protos: api/bbsim/bbsim.pb.go # @HELP Build proto files
 dep: # @HELP Download the dependencies to the vendor folder
 	GO111MODULE=on go mod vendor
 
-build: dep protos fmt build-bbsim build-bbsimctl# @HELP Build the binary
+build: dep protos fmt build-bbsim build-bbsimctl build-bbr # @HELP Build the binaries
 
 test: dep protos fmt # @HELP Execute unit tests
 	GO111MODULE=on go test -v -mod vendor ./... -covermode count -coverprofile ./tests/results/go-test-coverage.out 2>&1 | tee ./tests/results/go-test-results.out
@@ -73,6 +73,14 @@ build-bbsim:
     		-X main.gitStatus=${GIT_STATUS} \
     		-X main.version=${VERSION}" \
     	./cmd/bbsim
+
+build-bbr:
+	GO111MODULE=on go build -i -v -mod vendor \
+    	-ldflags "-X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
+    		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
+    		-X main.gitStatus=${GIT_STATUS} \
+    		-X main.version=${VERSION}" \
+    	./cmd/bbr
 
 build-bbsimctl:
 	GO111MODULE=on go build -i -v -mod vendor \

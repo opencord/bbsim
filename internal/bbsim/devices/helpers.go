@@ -18,8 +18,6 @@ package devices
 
 import (
 	"github.com/looplab/fsm"
-	"github.com/opencord/voltha-protos/go/openolt"
-	"strconv"
 )
 
 var newFSM = fsm.NewFSM
@@ -37,12 +35,4 @@ func getOperStateFSM(cb fsm.Callback) *fsm.FSM {
 			},
 		},
 	)
-}
-
-func onuSnToString(sn *openolt.SerialNumber) string {
-	s := string(sn.VendorId)
-	for _, i := range sn.VendorSpecific {
-		s = s + strconv.FormatInt(int64(i/16), 16) + strconv.FormatInt(int64(i%16), 16)
-	}
-	return s
 }

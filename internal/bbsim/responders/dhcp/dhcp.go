@@ -167,7 +167,7 @@ func serializeDHCPPacket(intfId uint32, onuId uint32, srcMac net.HardwareAddr, d
 	return bytes, nil
 }
 
-func getDhcpLayer(pkt gopacket.Packet) (*layers.DHCPv4, error) {
+func GetDhcpLayer(pkt gopacket.Packet) (*layers.DHCPv4, error) {
 	layerDHCP := pkt.Layer(layers.LayerTypeDHCPv4)
 	dhcp, _ := layerDHCP.(*layers.DHCPv4)
 	if dhcp == nil {
@@ -176,11 +176,15 @@ func getDhcpLayer(pkt gopacket.Packet) (*layers.DHCPv4, error) {
 	return dhcp, nil
 }
 
-func getDhcpMessageType(dhcp *layers.DHCPv4) (layers.DHCPMsgType, error) {
+func GetDhcpMessageType(dhcp *layers.DHCPv4) (layers.DHCPMsgType, error) {
 	for _, option := range dhcp.Options {
 		if option.Type == layers.DHCPOptMessageType {
-			if reflect.DeepEqual(option.Data, []byte{byte(layers.DHCPMsgTypeOffer)}) {
+			if reflect.DeepEqual(option.Data, []byte{byte(layers.DHCPMsgTypeDiscover)}) {
+				return layers.DHCPMsgTypeDiscover, nil
+			} else if reflect.DeepEqual(option.Data, []byte{byte(layers.DHCPMsgTypeOffer)}) {
 				return layers.DHCPMsgTypeOffer, nil
+			} else if reflect.DeepEqual(option.Data, []byte{byte(layers.DHCPMsgTypeRequest)}) {
+				return layers.DHCPMsgTypeRequest, nil
 			} else if reflect.DeepEqual(option.Data, []byte{byte(layers.DHCPMsgTypeAck)}) {
 				return layers.DHCPMsgTypeAck, nil
 			} else if reflect.DeepEqual(option.Data, []byte{byte(layers.DHCPMsgTypeRelease)}) {
@@ -298,8 +302,7 @@ func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serialNumber string, port
 }
 
 func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portNo uint32, onuHwAddress net.HardwareAddr, cTag int, onuStateMachine *fsm.FSM, pkt gopacket.Packet, stream openolt.Openolt_EnableIndicationServer) error {
-
-	dhcpLayer, err := getDhcpLayer(pkt)
+	dhcpLayer, err := GetDhcpLayer(pkt)
 	if err != nil {
 		dhcpLogger.WithFields(log.Fields{
 			"OnuId":  onuId,
@@ -311,7 +314,7 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portN
 		}
 		return err
 	}
-	dhcpMessageType, err := getDhcpMessageType(dhcpLayer)
+	dhcpMessageType, err := GetDhcpMessageType(dhcpLayer)
 	if err != nil {
 		dhcpLogger.WithFields(log.Fields{
 			"OnuId":  onuId,

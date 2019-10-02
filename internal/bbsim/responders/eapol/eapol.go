@@ -17,6 +17,7 @@
 package eapol
 
 import (
+	"context"
 	"crypto/md5"
 	"errors"
 	"github.com/google/gopacket"
@@ -36,6 +37,7 @@ var eapolLogger = log.WithFields(log.Fields{
 var eapolVersion uint8 = 1
 var GetGemPortId = omci.GetGemPortId
 
+// FIXME once we handle multiple UNIs. start EAPOL on all of them
 func sendEapolPktIn(msg bbsim.ByteMsg, portNo uint32, stream openolt.Openolt_EnableIndicationServer) {
 	// FIXME unify sendDHCPPktIn and sendEapolPktIn methods
 	gemid, err := omci.GetGemPortId(msg.IntfId, msg.OnuId)
@@ -60,7 +62,22 @@ func sendEapolPktIn(msg bbsim.ByteMsg, portNo uint32, stream openolt.Openolt_Ena
 	}
 }
 
-func getMD5Data(eap *layers.EAP) []byte {
+func SendEapolPktOut(client openolt.OpenoltClient, intfId uint32, onuId uint32, pkt []byte) error {
+	onuPacket := openolt.OnuPacket{
+		IntfId:    intfId,
+		OnuId:     onuId,
+		PortNo:    onuId,
+		GemportId: 1,
+		Pkt:       pkt,
+	}
+
+	if _, err := client.OnuPacketOut(context.Background(), &onuPacket); err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetMD5Data(eap *layers.EAP) []byte {
 	i := byte(eap.Id)
 	C := []byte(eap.BaseLayer.Contents)[6:]
 	P := []byte{i, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64} // "password"
@@ -70,6 +87,17 @@ func getMD5Data(eap *layers.EAP) []byte {
 		ret[j] = data[j]
 	}
 	return ret
+}
+
+func CreateEAPChallengeRequest(eapId uint8, payload []byte) *layers.EAP {
+	eap := layers.EAP{
+		Code:     layers.EAPCodeRequest,
+		Id:       eapId,
+		Length:   22,
+		Type:     layers.EAPTypeOTP,
+		TypeData: payload,
+	}
+	return &eap
 }
 
 func createEAPChallengeResponse(eapId uint8, payload []byte) *layers.EAP {
@@ -83,6 +111,15 @@ func createEAPChallengeResponse(eapId uint8, payload []byte) *layers.EAP {
 	return &eap
 }
 
+func CreateEAPIdentityRequest(eapId uint8) *layers.EAP {
+	eap := layers.EAP{Code: layers.EAPCodeRequest,
+		Id:       eapId,
+		Length:   9,
+		Type:     layers.EAPTypeIdentity,
+		TypeData: []byte{0x75, 0x73, 0x65, 0x72}}
+	return &eap
+}
+
 func createEAPIdentityResponse(eapId uint8) *layers.EAP {
 	eap := layers.EAP{Code: layers.EAPCodeResponse,
 		Id:       eapId,
@@ -92,7 +129,17 @@ func createEAPIdentityResponse(eapId uint8) *layers.EAP {
 	return &eap
 }
 
-func createEAPOLPkt(eap *layers.EAP, onuId uint32, intfId uint32) []byte {
+func CreateEAPSuccess(eapId uint8) *layers.EAP {
+	eap := layers.EAP{
+		Code:     layers.EAPCodeSuccess,
+		Id:       eapId,
+		Length:   9,
+		Type:     layers.EAPTypeNone,
+		TypeData: []byte{0x75, 0x73, 0x65, 0x72}}
+	return &eap
+}
+
+func CreateEAPOLPkt(eap *layers.EAP, onuId uint32, intfId uint32) []byte {
 	buffer := gopacket.NewSerializeBuffer()
 	options := gopacket.SerializeOptions{}
 
@@ -112,11 +159,20 @@ func createEAPOLPkt(eap *layers.EAP, onuId uint32, intfId uint32) []byte {
 	return bytes
 }
 
-func extractEAP(pkt gopacket.Packet) (*layers.EAP, error) {
+func ExtractEAP(pkt gopacket.Packet) (*layers.EAP, error) {
 	layerEAP := pkt.Layer(layers.LayerTypeEAP)
 	eap, _ := layerEAP.(*layers.EAP)
 	if eap == nil {
 		return nil, errors.New("Cannot extract EAP")
+	}
+	return eap, nil
+}
+
+func ExtractEAPOL(pkt gopacket.Packet) (*layers.EAPOL, error) {
+	layerEAPOL := pkt.Layer(layers.LayerTypeEAPOL)
+	eap, _ := layerEAPOL.(*layers.EAPOL)
+	if eap == nil {
+		return nil, errors.New("Cannot extract EAPOL")
 	}
 	return eap, nil
 }
@@ -134,7 +190,6 @@ func updateAuthFailed(onuId uint32, ponPortId uint32, serialNumber string, onuSt
 }
 
 func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, portNo uint32, macAddress net.HardwareAddr, onuStateMachine *fsm.FSM, stream bbsim.Stream) error {
-
 	// send the packet (hacked together)
 	gemId, err := GetGemPortId(ponPortId, onuId)
 	if err != nil {
@@ -150,7 +205,7 @@ func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, portNo ui
 		return err
 	}
 
-	// TODO use createEAPOLPkt
+	// TODO use CreateEAPOLPkt
 	buffer := gopacket.NewSerializeBuffer()
 	options := gopacket.SerializeOptions{}
 
@@ -166,7 +221,7 @@ func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, portNo ui
 	)
 
 	msg := buffer.Bytes()
-	// TODO end createEAPOLPkt
+	// TODO end CreateEAPOLPkt
 
 	data := &openolt.Indication_PktInd{
 		PktInd: &openolt.PacketIndication{
@@ -197,7 +252,7 @@ func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, portNo ui
 		"IntfId": ponPortId,
 		"OnuSn":  serialNumber,
 		"PortNo": portNo,
-	}).Debugf("Sent EapStart packet")
+	}).Debugf("EapStart packet indication sent")
 
 	if err := onuStateMachine.Event("eap_start_sent"); err != nil {
 		eapolLogger.WithFields(log.Fields{
@@ -212,7 +267,7 @@ func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, portNo ui
 
 func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portNo uint32, onuStateMachine *fsm.FSM, recvpkt gopacket.Packet, stream openolt.Openolt_EnableIndicationServer) {
 
-	eap, err := extractEAP(recvpkt)
+	eap, err := ExtractEAP(recvpkt)
 	if err != nil {
 		eapolLogger.Errorf("%s", err)
 	}
@@ -227,7 +282,7 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portN
 
 	if eap.Code == layers.EAPCodeRequest && eap.Type == layers.EAPTypeIdentity {
 		reseap := createEAPIdentityResponse(eap.Id)
-		pkt := createEAPOLPkt(reseap, onuId, ponPortId)
+		pkt := CreateEAPOLPkt(reseap, onuId, ponPortId)
 
 		msg := bbsim.ByteMsg{
 			IntfId: ponPortId,
@@ -251,10 +306,10 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portN
 		}
 
 	} else if eap.Code == layers.EAPCodeRequest && eap.Type == layers.EAPTypeOTP {
-		senddata := getMD5Data(eap)
+		senddata := GetMD5Data(eap)
 		senddata = append([]byte{0x10}, senddata...)
 		sendeap := createEAPChallengeResponse(eap.Id, senddata)
-		pkt := createEAPOLPkt(sendeap, onuId, ponPortId)
+		pkt := CreateEAPOLPkt(sendeap, onuId, ponPortId)
 
 		msg := bbsim.ByteMsg{
 			IntfId: ponPortId,
