@@ -333,14 +333,20 @@ func (o Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableInd
 
 	onuLogger.WithFields(log.Fields{
 		"IntfId":       o.PonPortID,
-		"SerialNumber": o.SerialNumber,
-		"omciPacket":   msg.omciMsg.Pkt,
+		"SerialNumber": o.Sn(),
+		"omciPacket":   msg.OmciMsg.Pkt,
 	}).Tracef("Received OMCI message")
 
 	var omciInd openolt.OmciIndication
-	respPkt, err := omci.OmciSim(o.PonPortID, o.ID, HexDecode(msg.omciMsg.Pkt))
+	respPkt, err := omci.OmciSim(o.PonPortID, o.ID, HexDecode(msg.OmciMsg.Pkt))
 	if err != nil {
-		onuLogger.Errorf("Error handling OMCI message %v", msg)
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"SerialNumber": o.Sn(),
+			"omciPacket":   omciInd.Pkt,
+			"msg":          msg,
+		}).Error("Error handling OMCI message")
+		return
 	}
 
 	omciInd.IntfId = o.PonPortID
@@ -350,10 +356,11 @@ func (o Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableInd
 	omci := &openolt.Indication_OmciInd{OmciInd: &omciInd}
 	if err := stream.Send(&openolt.Indication{Data: omci}); err != nil {
 		onuLogger.Errorf("send omci indication failed: %v", err)
+		return
 	}
 	onuLogger.WithFields(log.Fields{
 		"IntfId":       o.PonPortID,
-		"SerialNumber": o.SerialNumber,
+		"SerialNumber": o.Sn(),
 		"omciPacket":   omciInd.Pkt,
 	}).Tracef("Sent OMCI message")
 }
