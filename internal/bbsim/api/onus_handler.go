@@ -49,6 +49,29 @@ func (s BBSimServer) GetONUs(ctx context.Context, req *bbsim.Empty) (*bbsim.ONUs
 	return &onus, nil
 }
 
+func (s BBSimServer) GetONU(ctx context.Context, req *bbsim.ONURequest) (*bbsim.ONU, error) {
+	olt := devices.GetOLT()
+
+	onu, err := olt.FindOnu(req.SerialNumber)
+
+	if err != nil {
+		res := bbsim.ONU{}
+		return &res, err
+	}
+
+	res := bbsim.ONU{
+		ID:            int32(onu.ID),
+		SerialNumber:  onu.Sn(),
+		OperState:     onu.OperState.Current(),
+		InternalState: onu.InternalState.Current(),
+		PonPortID:     int32(onu.PonPortID),
+		STag:          int32(onu.STag),
+		CTag:          int32(onu.CTag),
+		HwAddress:     onu.HwAddress.String(),
+	}
+	return &res, nil
+}
+
 func (s BBSimServer) ShutdownONU(ctx context.Context, req *bbsim.ONURequest) (*bbsim.Response, error) {
 	// NOTE this method is now sendying a Dying Gasp and then disabling the device (operState: down, adminState: up),
 	// is this the only way to do? Should we address other cases?
