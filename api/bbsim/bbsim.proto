@@ -15,6 +15,8 @@
 syntax = "proto3";
 package bbsim;
 
+// Models
+
 message PONPort {
     int32 ID = 1;
     string OperState = 2;
@@ -49,6 +51,14 @@ message ONUs {
     repeated ONU items = 1;
 }
 
+// Inputs
+
+message ONURequest {
+    string SerialNumber = 1;
+}
+
+// Utils
+
 message VersionNumber {
     string version = 1;
     string buildTime = 2;
@@ -61,6 +71,11 @@ message LogLevel {
     bool caller = 2;
 }
 
+message Response {
+    int32 status_code = 1;
+    string message = 2;
+}
+
 message Empty {}
 
 service BBSim {
@@ -68,4 +83,6 @@ service BBSim {
     rpc GetOlt(Empty) returns (Olt) {}
     rpc GetONUs(Empty) returns (ONUs) {}
     rpc SetLogLevel(LogLevel) returns (LogLevel) {}
+    rpc ShutdownONU (ONURequest) returns (Response) {}
+    rpc PoweronONU (ONURequest) returns (Response) {}
 }
