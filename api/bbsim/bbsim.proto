@@ -82,6 +82,7 @@ service BBSim {
     rpc Version(Empty) returns (VersionNumber) {}
     rpc GetOlt(Empty) returns (Olt) {}
     rpc GetONUs(Empty) returns (ONUs) {}
+    rpc GetONU(ONURequest) returns (ONU) {}
     rpc SetLogLevel(LogLevel) returns (LogLevel) {}
     rpc ShutdownONU (ONURequest) returns (Response) {}
     rpc PoweronONU (ONURequest) returns (Response) {}
