@@ -16,7 +16,7 @@ make help
 Once VOLTHA is deployed you can deploy BBsim using the helm chart provided in the repo:
 
 ```
-cd deployments/helm-chart
+git clone https://github.com/opencord/helm-charts.git
 helm install -n bbsim bbsim
 ```
 
@@ -38,7 +38,7 @@ OLT ID: 0
 # of ONU Ports: 2
 Total ONUs: (total: 4)
 
-OLT is listening on: "voltha.svc.bbsim-olt-id-0:50060"
+OLT is listening on: "voltha.svc.bbsim:50060"
 ```
 
 #### VOLTHA 1.X
@@ -46,7 +46,7 @@ OLT is listening on: "voltha.svc.bbsim-olt-id-0:50060"
 Connect to the voltha CLI and execute this commands:
 
 ```bash
-preprovision_olt -t openolt -H voltha.svc.bbsim-olt-id-0:50060
+preprovision_olt -t openolt -H voltha.svc.bbsim:50060
 enable
 ```
 
@@ -55,7 +55,7 @@ enable
 _This assumes `voltctl` is installed an configured_
 
 ```bash
-voltctl device create -t openolt -H bbsim-olt-id-0:50060
+voltctl device create -t openolt -H bbsim:50060
 voltctl device enable $(voltctl device list --filter Type~openolt -q)
 ```
 
