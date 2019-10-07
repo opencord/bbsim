@@ -17,97 +17,169 @@
 package eapol
 
 import (
+	"errors"
 	"github.com/looplab/fsm"
-	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/go/openolt"
 	"google.golang.org/grpc"
 	"gotest.tools/assert"
-	"os"
-	"sync"
 	"testing"
-	"time"
 )
 
-var (
-	originalSendEapStart func(onuId uint32, ponPortId uint32, serialNumber string, stream openolt.Openolt_EnableIndicationServer) error
+// MOCKS
+var calledSend = 0
+
+var eapolStateMachine = fsm.NewFSM(
+	"auth_started",
+	fsm.Events{
+		{Name: "eap_start_sent", Src: []string{"auth_started"}, Dst: "eap_start_sent"},
+		{Name: "eap_response_identity_sent", Src: []string{"eap_start_sent"}, Dst: "eap_response_identity_sent"},
+		{Name: "eap_response_challenge_sent", Src: []string{"eap_response_identity_sent"}, Dst: "eap_response_challenge_sent"},
+		{Name: "eap_response_success_received", Src: []string{"eap_response_challenge_sent"}, Dst: "eap_response_success_received"},
+		{Name: "auth_failed", Src: []string{"auth_started", "eap_start_sent", "eap_response_identity_sent", "eap_response_challenge_sent"}, Dst: "auth_failed"},
+	},
+	fsm.Callbacks{},
 )
 
-type fakeStream struct {
-	calledSend int
+type mockStreamSuccess struct {
 	grpc.ServerStream
 }
 
-func (s fakeStream) Send(flow *openolt.Indication) error {
-	s.calledSend++
+func (s mockStreamSuccess) Send(ind *openolt.Indication) error {
+	calledSend++
 	return nil
 }
 
-func setUp() {
-	originalSendEapStart = sendEapStart
+type mockStreamError struct {
+	grpc.ServerStream
 }
 
-func tearDown() {
-	sendEapStart = originalSendEapStart
+func (s mockStreamError) Send(ind *openolt.Indication) error {
+	calledSend++
+	return errors.New("stream-error")
 }
 
-func TestMain(m *testing.M) {
-	setUp()
-	code := m.Run()
-	tearDown()
-	os.Exit(code)
-}
+// TESTS
 
-func TestCreateWPASupplicant(t *testing.T) {
+func TestSendEapStartSuccess(t *testing.T) {
+	calledSend = 0
+	eapolStateMachine.SetState("auth_started")
 
-	// mocks
-	mockSendEapStartCalled := 0
-	mockSendEapStartArgs := struct {
-		onuId        uint32
-		ponPortId    uint32
-		serialNumber *openolt.SerialNumber
-		stream       openolt.Openolt_EnableIndicationServer
-	}{}
-	mockSendEapStart := func(onuId uint32, ponPortId uint32, serialNumber string, stream openolt.Openolt_EnableIndicationServer) error {
-		mockSendEapStartCalled++
-		mockSendEapStartArgs.onuId = onuId
-		mockSendEapStartArgs.ponPortId = ponPortId
-		return nil
+	// Save current function and restore at the end:
+	old := GetGemPortId
+	defer func() { GetGemPortId = old }()
+
+	GetGemPortId = func(intfId uint32, onuId uint32) (uint16, error) {
+		return 1, nil
 	}
-	sendEapStart = mockSendEapStart
 
 	// params for the function under test
 	var onuId uint32 = 1
 	var ponPortId uint32 = 0
 	var serialNumber string = "BBSM00000001"
 
-	eapolStateMachine := fsm.NewFSM(
-		"auth_started",
-		fsm.Events{
-			{Name: "eap_start_sent", Src: []string{"auth_started"}, Dst: "eap_start_sent"},
-			{Name: "eap_response_identity_sent", Src: []string{"eap_start_sent"}, Dst: "eap_response_identity_sent"},
-			{Name: "eap_response_challenge_sent", Src: []string{"eap_response_identity_sent"}, Dst: "eap_response_challenge_sent"},
-			{Name: "eap_response_success_received", Src: []string{"eap_response_challenge_sent"}, Dst: "eap_response_success_received"},
-		},
-		fsm.Callbacks{},
-	)
+	stream := mockStreamSuccess{}
 
-	pktOutCh := make(chan *bbsim.ByteMsg, 1024)
+	if err := SendEapStart(onuId, ponPortId, serialNumber, eapolStateMachine, stream); err != nil {
+		t.Errorf("SendEapStart returned an error: %v", err)
+		t.Fail()
+	}
 
-	stream := fakeStream{}
+	assert.Equal(t, calledSend, 1)
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
+	assert.Equal(t, eapolStateMachine.Current(), "eap_start_sent")
 
-	go CreateWPASupplicant(onuId, ponPortId, serialNumber, eapolStateMachine, stream, pktOutCh)
-	go func() {
-		time.Sleep(1 * time.Second)
-		close(pktOutCh)
-		wg.Done()
-	}()
+}
 
-	wg.Wait()
+func TestSendEapStartFailNoGemPort(t *testing.T) {
+	calledSend = 0
+	eapolStateMachine.SetState("auth_started")
 
-	assert.Equal(t, mockSendEapStartCalled, 1)
-	assert.Equal(t, mockSendEapStartArgs.onuId, onuId)
-	assert.Equal(t, mockSendEapStartArgs.ponPortId, ponPortId)
+	// Save current function and restore at the end:
+	old := GetGemPortId
+	defer func() { GetGemPortId = old }()
+
+	GetGemPortId = func(intfId uint32, onuId uint32) (uint16, error) {
+		return 0, errors.New("no-gem-port")
+	}
+
+	// params for the function under test
+	var onuId uint32 = 1
+	var ponPortId uint32 = 0
+	var serialNumber string = "BBSM00000001"
+
+	stream := mockStreamSuccess{}
+
+	err := SendEapStart(onuId, ponPortId, serialNumber, eapolStateMachine, stream)
+	if err == nil {
+		t.Errorf("SendEapStart did not return an error")
+		t.Fail()
+	}
+
+	assert.Equal(t, err.Error(), "no-gem-port")
+
+	assert.Equal(t, eapolStateMachine.Current(), "auth_failed")
+}
+
+func TestSendEapStartFailStreamError(t *testing.T) {
+	calledSend = 0
+	eapolStateMachine.SetState("auth_started")
+
+	// Save current function and restore at the end:
+	old := GetGemPortId
+	defer func() { GetGemPortId = old }()
+
+	GetGemPortId = func(intfId uint32, onuId uint32) (uint16, error) {
+		return 1, nil
+	}
+
+	// params for the function under test
+	var onuId uint32 = 1
+	var ponPortId uint32 = 0
+	var serialNumber string = "BBSM00000001"
+
+	stream := mockStreamError{}
+
+	err := SendEapStart(onuId, ponPortId, serialNumber, eapolStateMachine, stream)
+	if err == nil {
+		t.Errorf("SendEapStart did not return an error")
+		t.Fail()
+	}
+
+	assert.Equal(t, err.Error(), "stream-error")
+
+	assert.Equal(t, eapolStateMachine.Current(), "auth_failed")
+}
+
+// TODO test eapol.HandleNextPacket
+
+func TestUpdateAuthFailed(t *testing.T) {
+
+	var onuId uint32 = 1
+	var ponPortId uint32 = 0
+	var serialNumber string = "BBSM00000001"
+
+	eapolStateMachine.SetState("auth_started")
+	updateAuthFailed(onuId, ponPortId, serialNumber, eapolStateMachine)
+	assert.Equal(t, eapolStateMachine.Current(), "auth_failed")
+
+	eapolStateMachine.SetState("eap_start_sent")
+	updateAuthFailed(onuId, ponPortId, serialNumber, eapolStateMachine)
+	assert.Equal(t, eapolStateMachine.Current(), "auth_failed")
+
+	eapolStateMachine.SetState("eap_response_identity_sent")
+	updateAuthFailed(onuId, ponPortId, serialNumber, eapolStateMachine)
+	assert.Equal(t, eapolStateMachine.Current(), "auth_failed")
+
+	eapolStateMachine.SetState("eap_response_challenge_sent")
+	updateAuthFailed(onuId, ponPortId, serialNumber, eapolStateMachine)
+	assert.Equal(t, eapolStateMachine.Current(), "auth_failed")
+
+	eapolStateMachine.SetState("eap_response_success_received")
+	err := updateAuthFailed(onuId, ponPortId, serialNumber, eapolStateMachine)
+	if err == nil {
+		t.Errorf("updateAuthFailed did not return an error")
+		t.Fail()
+	}
+	assert.Equal(t, err.Error(), "event auth_failed inappropriate in current state eap_response_success_received")
+
 }
