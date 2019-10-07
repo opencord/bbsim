@@ -1,9 +1,0 @@
-BBSim deployed with release name: {{ .Release.Name }}
-
-OLT ID: {{ .Values.olt_id }}
-# of NNI Ports: {{ .Values.nni }}
-# of PON Ports: {{ .Values.pon }}
-# of ONU Ports: {{ .Values.onu }}
-Total ONUs: (total: {{ mul .Values.pon .Values.onu}})
-
-OLT is listening on: "bbsim-olt-id-{{ .Values.olt_id }}:{{ .Values.olt_tcp_port }}"
