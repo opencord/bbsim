@@ -19,6 +19,7 @@ package eapol
 import (
 	"crypto/md5"
 	"errors"
+	"fmt"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
@@ -34,125 +35,6 @@ var eapolLogger = log.WithFields(log.Fields{
 })
 
 var eapolVersion uint8 = 1
-
-func CreateWPASupplicant(onuId uint32, ponPortId uint32, serialNumber string, onuStateMachine *fsm.FSM, stream openolt.Openolt_EnableIndicationServer, pktOutCh chan *bbsim.ByteMsg) {
-	// NOTE pckOutCh is channel to listen on for packets received by VOLTHA
-	// the OLT device will publish messages on that channel
-
-	eapolLogger.WithFields(log.Fields{
-		"OnuId":  onuId,
-		"IntfId": ponPortId,
-		"OnuSn":  serialNumber,
-	}).Infof("EAPOL State Machine starting")
-
-	defer eapolLogger.WithFields(log.Fields{
-		"OnuId":  onuId,
-		"IntfId": ponPortId,
-		"OnuSn":  serialNumber,
-	}).Infof("EAPOL State machine completed")
-
-	if err := sendEapStart(onuId, ponPortId, serialNumber, stream); err != nil {
-		eapolLogger.WithFields(log.Fields{
-			"OnuId":  onuId,
-			"IntfId": ponPortId,
-			"OnuSn":  serialNumber,
-		}).Errorf("Can't send EapStart Message: %s", err)
-		if err := onuStateMachine.Event("auth_failed"); err != nil {
-			eapolLogger.WithFields(log.Fields{
-				"OnuId":  onuId,
-				"IntfId": ponPortId,
-				"OnuSn":  serialNumber,
-			}).Errorf("Error while transitioning ONU State %v", err)
-		}
-		return
-	}
-	if err := onuStateMachine.Event("eap_start_sent"); err != nil {
-		eapolLogger.WithFields(log.Fields{
-			"OnuId":  onuId,
-			"IntfId": ponPortId,
-			"OnuSn":  serialNumber,
-		}).Errorf("Error while transitioning ONU State %v", err)
-	}
-
-	eapolLogger.WithFields(log.Fields{
-		"OnuId":  onuId,
-		"IntfId": ponPortId,
-		"OnuSn":  serialNumber,
-	}).Infof("Listening on eapolPktOutCh")
-
-	for msg := range pktOutCh {
-		recvpkt := gopacket.NewPacket(msg.Bytes, layers.LayerTypeEthernet, gopacket.Default)
-		eap, err := extractEAP(recvpkt)
-		if err != nil {
-			eapolLogger.Errorf("%s", err)
-		}
-
-		if eap.Code == layers.EAPCodeRequest && eap.Type == layers.EAPTypeIdentity {
-			reseap := createEAPIdentityResponse(eap.Id)
-			pkt := createEAPOLPkt(reseap, onuId, ponPortId)
-
-			msg := bbsim.ByteMsg{
-				IntfId: ponPortId,
-				OnuId:  onuId,
-				Bytes:  pkt,
-			}
-
-			sendEapolPktIn(msg, stream)
-			eapolLogger.WithFields(log.Fields{
-				"OnuId":  onuId,
-				"IntfId": ponPortId,
-				"OnuSn":  serialNumber,
-			}).Infof("Sent EAPIdentityResponse packet")
-			if err := onuStateMachine.Event("eap_response_identity_sent"); err != nil {
-				eapolLogger.WithFields(log.Fields{
-					"OnuId":  onuId,
-					"IntfId": ponPortId,
-					"OnuSn":  serialNumber,
-				}).Errorf("Error while transitioning ONU State %v", err)
-			}
-
-		} else if eap.Code == layers.EAPCodeRequest && eap.Type == layers.EAPTypeOTP {
-			senddata := getMD5Data(eap)
-			senddata = append([]byte{0x10}, senddata...)
-			sendeap := createEAPChallengeResponse(eap.Id, senddata)
-			pkt := createEAPOLPkt(sendeap, onuId, ponPortId)
-
-			msg := bbsim.ByteMsg{
-				IntfId: ponPortId,
-				OnuId:  onuId,
-				Bytes:  pkt,
-			}
-
-			sendEapolPktIn(msg, stream)
-			eapolLogger.WithFields(log.Fields{
-				"OnuId":  onuId,
-				"IntfId": ponPortId,
-				"OnuSn":  serialNumber,
-			}).Infof("Sent EAPChallengeResponse packet")
-			if err := onuStateMachine.Event("eap_response_challenge_sent"); err != nil {
-				eapolLogger.WithFields(log.Fields{
-					"OnuId":  onuId,
-					"IntfId": ponPortId,
-					"OnuSn":  serialNumber,
-				}).Errorf("Error while transitioning ONU State %v", err)
-			}
-		} else if eap.Code == layers.EAPCodeSuccess && eap.Type == layers.EAPTypeNone {
-			eapolLogger.WithFields(log.Fields{
-				"OnuId":  onuId,
-				"IntfId": ponPortId,
-				"OnuSn":  serialNumber,
-			}).Infof("Received EAPSuccess packet")
-			if err := onuStateMachine.Event("eap_response_success_received"); err != nil {
-				eapolLogger.WithFields(log.Fields{
-					"OnuId":  onuId,
-					"IntfId": ponPortId,
-					"OnuSn":  serialNumber,
-				}).Errorf("Error while transitioning ONU State %v", err)
-			}
-			return
-		}
-	}
-}
 
 func sendEapolPktIn(msg bbsim.ByteMsg, stream openolt.Openolt_EnableIndicationServer) {
 	// FIXME unify sendDHCPPktIn and sendEapolPktIn methods
@@ -235,7 +117,7 @@ func extractEAP(pkt gopacket.Packet) (*layers.EAP, error) {
 	return eap, nil
 }
 
-var sendEapStart = func(onuId uint32, ponPortId uint32, serialNumber string, stream openolt.Openolt_EnableIndicationServer) error {
+func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, onuStateMachine *fsm.FSM, stream openolt.Openolt_EnableIndicationServer) error {
 
 	// send the packet (hacked together)
 	gemid, err := omci.GetGemPortId(ponPortId, onuId)
@@ -269,10 +151,106 @@ var sendEapStart = func(onuId uint32, ponPortId uint32, serialNumber string, str
 			Pkt:       msg,
 		},
 	}
-	// end of hacked (move in an EAPOL state machine)
+
+	fmt.Println(fmt.Sprintf("here: %v", stream))
+
 	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
 		eapolLogger.Errorf("Fail to send EAPOL PktInd indication. %v", err)
+
+		eapolLogger.WithFields(log.Fields{
+			"OnuId":  onuId,
+			"IntfId": ponPortId,
+			"OnuSn":  serialNumber,
+		}).Errorf("Can't send EapStart Message: %s", err)
+		if err := onuStateMachine.Event("auth_failed"); err != nil {
+			eapolLogger.WithFields(log.Fields{
+				"OnuId":  onuId,
+				"IntfId": ponPortId,
+				"OnuSn":  serialNumber,
+			}).Errorf("Error while transitioning ONU State %v", err)
+		}
+
 		return err
 	}
+
+	if err := onuStateMachine.Event("eap_start_sent"); err != nil {
+		eapolLogger.WithFields(log.Fields{
+			"OnuId":  onuId,
+			"IntfId": ponPortId,
+			"OnuSn":  serialNumber,
+		}).Errorf("Error while transitioning ONU State %v", err)
+	}
 	return nil
+}
+
+func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, onuStateMachine *fsm.FSM, recvpkt gopacket.Packet, stream openolt.Openolt_EnableIndicationServer) {
+	eap, err := extractEAP(recvpkt)
+	if err != nil {
+		eapolLogger.Errorf("%s", err)
+	}
+
+	if eap.Code == layers.EAPCodeRequest && eap.Type == layers.EAPTypeIdentity {
+		reseap := createEAPIdentityResponse(eap.Id)
+		pkt := createEAPOLPkt(reseap, onuId, ponPortId)
+
+		msg := bbsim.ByteMsg{
+			IntfId: ponPortId,
+			OnuId:  onuId,
+			Bytes:  pkt,
+		}
+
+		sendEapolPktIn(msg, stream)
+		eapolLogger.WithFields(log.Fields{
+			"OnuId":  onuId,
+			"IntfId": ponPortId,
+			"OnuSn":  serialNumber,
+		}).Infof("Sent EAPIdentityResponse packet")
+		if err := onuStateMachine.Event("eap_response_identity_sent"); err != nil {
+			eapolLogger.WithFields(log.Fields{
+				"OnuId":  onuId,
+				"IntfId": ponPortId,
+				"OnuSn":  serialNumber,
+			}).Errorf("Error while transitioning ONU State %v", err)
+		}
+
+	} else if eap.Code == layers.EAPCodeRequest && eap.Type == layers.EAPTypeOTP {
+		senddata := getMD5Data(eap)
+		senddata = append([]byte{0x10}, senddata...)
+		sendeap := createEAPChallengeResponse(eap.Id, senddata)
+		pkt := createEAPOLPkt(sendeap, onuId, ponPortId)
+
+		msg := bbsim.ByteMsg{
+			IntfId: ponPortId,
+			OnuId:  onuId,
+			Bytes:  pkt,
+		}
+
+		sendEapolPktIn(msg, stream)
+		eapolLogger.WithFields(log.Fields{
+			"OnuId":  onuId,
+			"IntfId": ponPortId,
+			"OnuSn":  serialNumber,
+		}).Infof("Sent EAPChallengeResponse packet")
+		if err := onuStateMachine.Event("eap_response_challenge_sent"); err != nil {
+			eapolLogger.WithFields(log.Fields{
+				"OnuId":  onuId,
+				"IntfId": ponPortId,
+				"OnuSn":  serialNumber,
+			}).Errorf("Error while transitioning ONU State %v", err)
+		}
+	} else if eap.Code == layers.EAPCodeSuccess && eap.Type == layers.EAPTypeNone {
+		eapolLogger.WithFields(log.Fields{
+			"OnuId":  onuId,
+			"IntfId": ponPortId,
+			"OnuSn":  serialNumber,
+		}).Infof("Received EAPSuccess packet")
+		if err := onuStateMachine.Event("eap_response_success_received"); err != nil {
+			eapolLogger.WithFields(log.Fields{
+				"OnuId":  onuId,
+				"IntfId": ponPortId,
+				"OnuSn":  serialNumber,
+			}).Errorf("Error while transitioning ONU State %v", err)
+		}
+		return
+	}
 }

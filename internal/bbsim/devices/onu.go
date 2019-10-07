@@ -184,17 +184,7 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer) {
 			o.handleFlowUpdate(msg, stream)
 		case StartEAPOL:
 			log.Infof("Receive StartEAPOL message on ONU Channel")
-			go func() {
-				// TODO kill this thread
-				eapol.CreateWPASupplicant(
-					o.ID,
-					o.PonPortID,
-					o.Sn(),
-					o.InternalState,
-					stream,
-					o.eapolPktOutCh,
-				)
-			}()
+			eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.InternalState, stream)
 		case StartDHCP:
 			log.Infof("Receive StartDHCP message on ONU Channel")
 			go func() {
@@ -210,7 +200,21 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer) {
 					o.dhcpPktOutCh,
 				)
 			}()
+		case OnuPacketOut:
+			msg, _ := message.Data.(OnuPacketOutMessage)
+			pkt := msg.Packet
+			etherType := pkt.Layer(layers.LayerTypeEthernet).(*layers.Ethernet).EthernetType
 
+			if etherType == layers.EthernetTypeEAPOL {
+				eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.InternalState, msg.Packet, stream)
+			} else if layerDHCP := pkt.Layer(layers.LayerTypeDHCPv4); layerDHCP != nil {
+				// TODO use IsDhcpPacket
+				// TODO we need to untag the packets
+				// NOTE here we receive packets going from the DHCP Server to the ONU
+				// for now we expect them to be double-tagged, but ideally the should be single tagged
+				dhcpPkt := bbsim.ByteMsg{IntfId: msg.IntfId, OnuId: msg.OnuId, Bytes: pkt.Data()}
+				o.dhcpPktOutCh <- &dhcpPkt
+			}
 		case DyingGaspIndication:
 			msg, _ := message.Data.(DyingGaspIndicationMessage)
 			o.sendDyingGaspInd(msg, stream)
