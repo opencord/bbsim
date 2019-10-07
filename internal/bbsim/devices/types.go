@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/google/gopacket"
 	"github.com/looplab/fsm"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/go/openolt"
@@ -128,7 +129,8 @@ const (
 	FlowUpdate          MessageType = 6
 	StartEAPOL          MessageType = 7
 	StartDHCP           MessageType = 8
-	DyingGaspIndication MessageType = 9
+	OnuPacketOut        MessageType = 9
+	DyingGaspIndication MessageType = 10
 )
 
 func (m MessageType) String() string {
@@ -142,6 +144,7 @@ func (m MessageType) String() string {
 		"FlowUpdate",
 		"StartEAPOL",
 		"StartDHCP",
+		"OnuPacketOut",
 		"DyingGaspIndication",
 	}
 	return names[m]
@@ -199,6 +202,12 @@ type DyingGaspIndicationMessage struct {
 	PonPortID uint32
 	OnuID     uint32
 	Status    string
+}
+
+type OnuPacketOutMessage struct {
+	IntfId uint32
+	OnuId  uint32
+	Packet gopacket.Packet
 }
 
 type OperState int

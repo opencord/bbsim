@@ -18,6 +18,7 @@ package types
 
 import "github.com/google/gopacket"
 
+// deprecated
 type ByteMsg struct {
 	IntfId uint32
 	OnuId  uint32

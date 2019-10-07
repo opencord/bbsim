@@ -30,6 +30,8 @@ import (
 	"reflect"
 )
 
+var GetGemPortId = omci.GetGemPortId
+
 var dhcpLogger = log.WithFields(log.Fields{
 	"module": "DHCP",
 })
@@ -194,7 +196,7 @@ func getDhcpMessageType(dhcp *layers.DHCPv4) (layers.DHCPMsgType, error) {
 
 func sendDHCPPktIn(msg bbsim.ByteMsg, stream openolt.Openolt_EnableIndicationServer) error {
 	// FIXME unify sendDHCPPktIn and sendEapolPktIn methods
-	gemid, err := omci.GetGemPortId(msg.IntfId, msg.OnuId)
+	gemid, err := GetGemPortId(msg.IntfId, msg.OnuId)
 	if err != nil {
 		dhcpLogger.WithFields(log.Fields{
 			"OnuId":  msg.OnuId,
@@ -210,33 +212,6 @@ func sendDHCPPktIn(msg bbsim.ByteMsg, stream openolt.Openolt_EnableIndicationSer
 		dhcpLogger.Errorf("Fail to send DHCP PktInd indication. %v", err)
 		return err
 	}
-	return nil
-}
-
-func sendDHCPDiscovery(ponPortId uint32, onuId uint32, serialNumber string, onuHwAddress net.HardwareAddr, cTag int, stream openolt.Openolt_EnableIndicationServer) error {
-	dhcp := createDHCPDisc(ponPortId, onuId)
-	pkt, err := serializeDHCPPacket(ponPortId, onuId, onuHwAddress, dhcp)
-	if err != nil {
-		dhcpLogger.Errorf("Cannot serializeDHCPPacket: %s", err)
-		return err
-	}
-	// NOTE I don't think we need to tag the packet
-	//taggedPkt, err := packetHandlers.PushSingleTag(cTag, pkt)
-
-	msg := bbsim.ByteMsg{
-		IntfId: ponPortId,
-		OnuId:  onuId,
-		Bytes:  pkt,
-	}
-
-	if err := sendDHCPPktIn(msg, stream); err != nil {
-		return err
-	}
-	dhcpLogger.WithFields(log.Fields{
-		"OnuId":  onuId,
-		"IntfId": ponPortId,
-		"OnuSn":  serialNumber,
-	}).Infof("DHCPDiscovery Sent")
 	return nil
 }
 
@@ -268,38 +243,45 @@ func sendDHCPRequest(ponPortId uint32, onuId uint32, serialNumber string, onuHwA
 	return nil
 }
 
-func CreateDHCPClient(onuId uint32, ponPortId uint32, serialNumber string, onuHwAddress net.HardwareAddr, cTag int, onuStateMachine *fsm.FSM, stream openolt.Openolt_EnableIndicationServer, pktOutCh chan *bbsim.ByteMsg) {
-	// NOTE pckOutCh is channel to listen on for packets received by VOLTHA
-	// the OLT device will publish messages on that channel
-
-	dhcpLogger.WithFields(log.Fields{
-		"OnuId":  onuId,
-		"IntfId": ponPortId,
-		"OnuSn":  serialNumber,
-	}).Infof("DHCP State Machine starting")
-
-	defer dhcpLogger.WithFields(log.Fields{
-		"OnuId":  onuId,
-		"IntfId": ponPortId,
-		"OnuSn":  serialNumber,
-	}).Infof("DHCP State machine completed")
-
-	// Send DHCP Discovery packet
-	if err := sendDHCPDiscovery(ponPortId, onuId, serialNumber, onuHwAddress, cTag, stream); err != nil {
+func updateDhcpFailed(onuId uint32, ponPortId uint32, serialNumber string, onuStateMachine *fsm.FSM) error {
+	if err := onuStateMachine.Event("dhcp_failed"); err != nil {
 		dhcpLogger.WithFields(log.Fields{
 			"OnuId":  onuId,
 			"IntfId": ponPortId,
 			"OnuSn":  serialNumber,
-		}).Errorf("Can't send DHCP Discovery: %s", err)
-		if err := onuStateMachine.Event("dhcp_failed"); err != nil {
-			dhcpLogger.WithFields(log.Fields{
-				"OnuId":  onuId,
-				"IntfId": ponPortId,
-				"OnuSn":  serialNumber,
-			}).Errorf("Error while transitioning ONU State %v", err)
-		}
-		return
+		}).Errorf("Error while transitioning ONU State %v", err)
+		return err
 	}
+	return nil
+}
+
+func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serialNumber string, onuStateMachine *fsm.FSM, onuHwAddress net.HardwareAddr, cTag int, stream openolt.Openolt_EnableIndicationServer) error {
+	dhcp := createDHCPDisc(ponPortId, onuId)
+	pkt, err := serializeDHCPPacket(ponPortId, onuId, onuHwAddress, dhcp)
+	if err != nil {
+		dhcpLogger.Errorf("Cannot serializeDHCPPacket: %s", err)
+		return err
+	}
+	// NOTE I don't think we need to tag the packet
+	//taggedPkt, err := packetHandlers.PushSingleTag(cTag, pkt)
+
+	msg := bbsim.ByteMsg{
+		IntfId: ponPortId,
+		OnuId:  onuId,
+		Bytes:  pkt,
+	}
+
+	if err := sendDHCPPktIn(msg, stream); err != nil {
+		if err := updateDhcpFailed(onuId, ponPortId, serialNumber, onuStateMachine); err != nil {
+			return err
+		}
+		return err
+	}
+	dhcpLogger.WithFields(log.Fields{
+		"OnuId":  onuId,
+		"IntfId": ponPortId,
+		"OnuSn":  serialNumber,
+	}).Infof("DHCPDiscovery Sent")
 
 	if err := onuStateMachine.Event("dhcp_discovery_sent"); err != nil {
 		dhcpLogger.WithFields(log.Fields{
@@ -308,80 +290,79 @@ func CreateDHCPClient(onuId uint32, ponPortId uint32, serialNumber string, onuHw
 			"OnuSn":  serialNumber,
 		}).Errorf("Error while transitioning ONU State %v", err)
 	}
+	return nil
+}
 
-	dhcpLogger.WithFields(log.Fields{
-		"OnuId":  onuId,
-		"IntfId": ponPortId,
-		"OnuSn":  serialNumber,
-	}).Infof("Listening on dhcpPktOutCh")
+func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, onuHwAddress net.HardwareAddr, cTag int, onuStateMachine *fsm.FSM, pkt gopacket.Packet, stream openolt.Openolt_EnableIndicationServer) error {
 
-	for msg := range pktOutCh {
-		dhcpLogger.Tracef("Received DHCP message %v", msg)
-
-		pkt := gopacket.NewPacket(msg.Bytes, layers.LayerTypeEthernet, gopacket.Default)
-		dhcpLayer, err := getDhcpLayer(pkt)
-		if err != nil {
-			dhcpLogger.WithFields(log.Fields{
-				"OnuId":  onuId,
-				"IntfId": ponPortId,
-				"OnuSn":  serialNumber,
-			}).Errorf("Can't get DHCP Layer from Packet: %v", err)
-			continue
+	dhcpLayer, err := getDhcpLayer(pkt)
+	if err != nil {
+		dhcpLogger.WithFields(log.Fields{
+			"OnuId":  onuId,
+			"IntfId": ponPortId,
+			"OnuSn":  serialNumber,
+		}).Errorf("Can't get DHCP Layer from Packet: %v", err)
+		if err := updateDhcpFailed(onuId, ponPortId, serialNumber, onuStateMachine); err != nil {
+			return err
 		}
-		dhcpMessageType, err := getDhcpMessageType(dhcpLayer)
-		if err != nil {
-			dhcpLogger.WithFields(log.Fields{
-				"OnuId":  onuId,
-				"IntfId": ponPortId,
-				"OnuSn":  serialNumber,
-			}).Errorf("Can't get DHCP Message Type from DHCP Layer: %v", err)
-			continue
-		}
-
-		if dhcpLayer.Operation == layers.DHCPOpReply {
-			if dhcpMessageType == layers.DHCPMsgTypeOffer {
-				if err := sendDHCPRequest(ponPortId, onuId, serialNumber, onuHwAddress, cTag, stream); err != nil {
-					dhcpLogger.WithFields(log.Fields{
-						"OnuId":  onuId,
-						"IntfId": ponPortId,
-						"OnuSn":  serialNumber,
-					}).Errorf("Can't send DHCP Request: %s", err)
-					if err := onuStateMachine.Event("dhcp_failed"); err != nil {
-						dhcpLogger.WithFields(log.Fields{
-							"OnuId":  onuId,
-							"IntfId": ponPortId,
-							"OnuSn":  serialNumber,
-						}).Errorf("Error while transitioning ONU State %v", err)
-					}
-					return
-				}
-				if err := onuStateMachine.Event("dhcp_request_sent"); err != nil {
-					dhcpLogger.WithFields(log.Fields{
-						"OnuId":  onuId,
-						"IntfId": ponPortId,
-						"OnuSn":  serialNumber,
-					}).Errorf("Error while transitioning ONU State %v", err)
-				}
-
-			} else if dhcpMessageType == layers.DHCPMsgTypeAck {
-				// NOTE once the ack is received we don't need to do anything but change the state
-				if err := onuStateMachine.Event("dhcp_ack_received"); err != nil {
-					dhcpLogger.WithFields(log.Fields{
-						"OnuId":  onuId,
-						"IntfId": ponPortId,
-						"OnuSn":  serialNumber,
-					}).Errorf("Error while transitioning ONU State %v", err)
-				}
-				return
-			}
-			// NOTE do we need to care about DHCPMsgTypeRelease??
-		} else {
-			dhcpLogger.WithFields(log.Fields{
-				"OnuId":  onuId,
-				"IntfId": ponPortId,
-				"OnuSn":  serialNumber,
-			}).Warnf("Unsupported DHCP Operation: %s", dhcpLayer.Operation.String())
-			continue
-		}
+		return err
 	}
+	dhcpMessageType, err := getDhcpMessageType(dhcpLayer)
+	if err != nil {
+		dhcpLogger.WithFields(log.Fields{
+			"OnuId":  onuId,
+			"IntfId": ponPortId,
+			"OnuSn":  serialNumber,
+		}).Errorf("Can't get DHCP Message Type from DHCP Layer: %v", err)
+		if err := updateDhcpFailed(onuId, ponPortId, serialNumber, onuStateMachine); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if dhcpLayer.Operation == layers.DHCPOpReply {
+		if dhcpMessageType == layers.DHCPMsgTypeOffer {
+			if err := sendDHCPRequest(ponPortId, onuId, serialNumber, onuHwAddress, cTag, stream); err != nil {
+				dhcpLogger.WithFields(log.Fields{
+					"OnuId":  onuId,
+					"IntfId": ponPortId,
+					"OnuSn":  serialNumber,
+				}).Errorf("Can't send DHCP Request: %s", err)
+				if err := updateDhcpFailed(onuId, ponPortId, serialNumber, onuStateMachine); err != nil {
+					return err
+				}
+				return err
+			}
+			if err := onuStateMachine.Event("dhcp_request_sent"); err != nil {
+				dhcpLogger.WithFields(log.Fields{
+					"OnuId":  onuId,
+					"IntfId": ponPortId,
+					"OnuSn":  serialNumber,
+				}).Errorf("Error while transitioning ONU State %v", err)
+			}
+
+		} else if dhcpMessageType == layers.DHCPMsgTypeAck {
+			// NOTE once the ack is received we don't need to do anything but change the state
+			if err := onuStateMachine.Event("dhcp_ack_received"); err != nil {
+				dhcpLogger.WithFields(log.Fields{
+					"OnuId":  onuId,
+					"IntfId": ponPortId,
+					"OnuSn":  serialNumber,
+				}).Errorf("Error while transitioning ONU State %v", err)
+			}
+			dhcpLogger.WithFields(log.Fields{
+				"OnuId":  onuId,
+				"IntfId": ponPortId,
+				"OnuSn":  serialNumber,
+			}).Infof("DHCP State machine completed")
+		}
+		// NOTE do we need to care about DHCPMsgTypeRelease??
+	} else {
+		dhcpLogger.WithFields(log.Fields{
+			"OnuId":  onuId,
+			"IntfId": ponPortId,
+			"OnuSn":  serialNumber,
+		}).Warnf("Unsupported DHCP Operation: %s", dhcpLayer.Operation.String())
+	}
+	return nil
 }

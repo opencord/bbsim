@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
+	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
@@ -184,33 +185,22 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer) {
 			o.handleFlowUpdate(msg, stream)
 		case StartEAPOL:
 			log.Infof("Receive StartEAPOL message on ONU Channel")
-			go func() {
-				// TODO kill this thread
-				eapol.CreateWPASupplicant(
-					o.ID,
-					o.PonPortID,
-					o.Sn(),
-					o.InternalState,
-					stream,
-					o.eapolPktOutCh,
-				)
-			}()
+			eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.InternalState, stream)
 		case StartDHCP:
 			log.Infof("Receive StartDHCP message on ONU Channel")
-			go func() {
-				// TODO kill this thread
-				dhcp.CreateDHCPClient(
-					o.ID,
-					o.PonPortID,
-					o.Sn(),
-					o.HwAddress,
-					o.CTag,
-					o.InternalState,
-					stream,
-					o.dhcpPktOutCh,
-				)
-			}()
+			dhcp.SendDHCPDiscovery(o.PonPortID, o.ID, o.Sn(), o.InternalState, o.HwAddress, o.CTag, stream)
+		case OnuPacketOut:
+			msg, _ := message.Data.(OnuPacketOutMessage)
+			pkt := msg.Packet
+			etherType := pkt.Layer(layers.LayerTypeEthernet).(*layers.Ethernet).EthernetType
 
+			if etherType == layers.EthernetTypeEAPOL {
+				eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.InternalState, msg.Packet, stream)
+			} else if packetHandlers.IsDhcpPacket(pkt) {
+				// NOTE here we receive packets going from the DHCP Server to the ONU
+				// for now we expect them to be double-tagged, but ideally the should be single tagged
+				dhcp.HandleNextPacket(o.ID, o.PonPortID, o.Sn(), o.HwAddress, o.CTag, o.InternalState, msg.Packet, stream)
+			}
 		case DyingGaspIndication:
 			msg, _ := message.Data.(DyingGaspIndicationMessage)
 			o.sendDyingGaspInd(msg, stream)

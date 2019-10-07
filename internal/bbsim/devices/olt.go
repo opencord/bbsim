@@ -543,21 +543,37 @@ func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) 
 	pon, _ := o.getPonById(onuPkt.IntfId)
 	onu, _ := pon.getOnuById(onuPkt.OnuId)
 
+	oltLogger.WithFields(log.Fields{
+		"IntfId": onu.PonPortID,
+		"OnuId":  onu.ID,
+		"OnuSn":  onu.Sn(),
+	}).Tracef("Received OnuPacketOut")
+
 	rawpkt := gopacket.NewPacket(onuPkt.Pkt, layers.LayerTypeEthernet, gopacket.Default)
 
-	etherType := rawpkt.Layer(layers.LayerTypeEthernet).(*layers.Ethernet).EthernetType
-
-	if etherType == layers.EthernetTypeEAPOL {
-		eapolPkt := bbsim.ByteMsg{IntfId: onuPkt.IntfId, OnuId: onuPkt.OnuId, Bytes: rawpkt.Data()}
-		onu.eapolPktOutCh <- &eapolPkt
-	} else if layerDHCP := rawpkt.Layer(layers.LayerTypeDHCPv4); layerDHCP != nil {
-		// TODO use IsDhcpPacket
-		// TODO we need to untag the packets
-		// NOTE here we receive packets going from the DHCP Server to the ONU
-		// for now we expect them to be double-tagged, but ideally the should be single tagged
-		dhcpPkt := bbsim.ByteMsg{IntfId: onuPkt.IntfId, OnuId: onuPkt.OnuId, Bytes: rawpkt.Data()}
-		onu.dhcpPktOutCh <- &dhcpPkt
+	msg := Message{
+		Type: OnuPacketOut,
+		Data: OnuPacketOutMessage{
+			IntfId: onuPkt.IntfId,
+			OnuId:  onuPkt.OnuId,
+			Packet: rawpkt,
+		},
 	}
+	onu.Channel <- msg
+
+	//etherType := rawpkt.Layer(layers.LayerTypeEthernet).(*layers.Ethernet).EthernetType
+	//
+	//if etherType == layers.EthernetTypeEAPOL {
+	//	eapolPkt := bbsim.ByteMsg{IntfId: onuPkt.IntfId, OnuId: onuPkt.OnuId, Bytes: rawpkt.Data()}
+	//	onu.eapolPktOutCh <- &eapolPkt
+	//} else if layerDHCP := rawpkt.Layer(layers.LayerTypeDHCPv4); layerDHCP != nil {
+	//	// TODO use IsDhcpPacket
+	//	// TODO we need to untag the packets
+	//	// NOTE here we receive packets going from the DHCP Server to the ONU
+	//	// for now we expect them to be double-tagged, but ideally the should be single tagged
+	//	dhcpPkt := bbsim.ByteMsg{IntfId: onuPkt.IntfId, OnuId: onuPkt.OnuId, Bytes: rawpkt.Data()}
+	//	onu.dhcpPktOutCh <- &dhcpPkt
+	//}
 	return new(openolt.Empty), nil
 }
 
