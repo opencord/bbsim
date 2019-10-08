@@ -18,7 +18,7 @@ GIT_STATUS	?= $(shell [[ $DIFF != "" ]] && echo "Dirty" || echo "Clean")
 
 ## Docker related
 DOCKER_TAG  			?= ${VERSION}
-DOCKER_REPOSITORY  		?= voltha/
+DOCKER_REPOSITORY  		?= ""
 DOCKER_REGISTRY 		?= ""
 DOCKER_RUN_ARGS			?= ""
 
