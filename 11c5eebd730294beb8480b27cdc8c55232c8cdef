@@ -34,6 +34,42 @@
       "revId": "11c5eebd730294beb8480b27cdc8c55232c8cdef",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dce29bf6_746647d7",
+        "filename": "VERSION",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-10-09T16:12:33Z",
+      "side": 1,
+      "message": "the discussion was about having helm-charts that reference moving targets (eg: master or latest tag of a container)\nreleasing \"dev\" versions of a container is a practice that is accepted",
+      "parentUuid": "f889a13d_79fe422a",
+      "revId": "11c5eebd730294beb8480b27cdc8c55232c8cdef",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fd4ee98_426f1d76",
+        "filename": "VERSION",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-10-09T16:12:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6f4258f0_5374a49d",
+      "revId": "11c5eebd730294beb8480b27cdc8c55232c8cdef",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
