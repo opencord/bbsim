@@ -57,6 +57,20 @@ func PushSingleTag(tag int, pkt gopacket.Packet) (gopacket.Packet, error) {
 	return nil, errors.New("Couldn't extract LayerTypeEthernet from packet")
 }
 
+func PushDoubleTag(stag int, ctag int, pkt gopacket.Packet) (gopacket.Packet, error) {
+
+	singleTaggedPkt, err := PushSingleTag(ctag, pkt)
+	if err != nil {
+		return nil, err
+	}
+	doubleTaggedPkt, err := PushSingleTag(stag, singleTaggedPkt)
+	if err != nil {
+		return nil, err
+	}
+
+	return doubleTaggedPkt, nil
+}
+
 func PopSingleTag(pkt gopacket.Packet) (gopacket.Packet, error) {
 	layer, err := getDot1QLayer(pkt)
 	if err != nil {
@@ -114,7 +128,7 @@ func getDot1QLayer(pkt gopacket.Packet) (*layers.Dot1Q, error) {
 	return nil, errors.New("no-dot1q-layer-in-packet")
 }
 
-func getVlanTag(pkt gopacket.Packet) (uint16, error) {
+func GetVlanTag(pkt gopacket.Packet) (uint16, error) {
 	dot1q, err := getDot1QLayer(pkt)
 	if err != nil {
 		return 0, err

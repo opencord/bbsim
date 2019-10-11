@@ -17,6 +17,7 @@
 package packetHandlers
 
 import (
+	"errors"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"net"
@@ -29,6 +30,9 @@ func IsDhcpPacket(pkt gopacket.Packet) bool {
 	return false
 }
 
+// return true if the packet is coming in the OLT from the NNI port
+// it uses the ack to check if the source is the one we assigned to the
+// dhcp server
 func IsIncomingPacket(packet gopacket.Packet) bool {
 	if ipLayer := packet.Layer(layers.LayerTypeIPv4); ipLayer != nil {
 
@@ -40,4 +44,16 @@ func IsIncomingPacket(packet gopacket.Packet) bool {
 		}
 	}
 	return false
+}
+
+// returns the Desctination Mac Address contained in the packet
+func GetDstMacAddressFromPacket(packet gopacket.Packet) (net.HardwareAddr, error) {
+	if ethLayer := packet.Layer(layers.LayerTypeEthernet); ethLayer != nil {
+		eth, _ := ethLayer.(*layers.Ethernet)
+
+		if eth.DstMAC != nil {
+			return eth.DstMAC, nil
+		}
+	}
+	return nil, errors.New("cant-find-mac-address")
 }
