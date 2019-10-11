@@ -52,7 +52,7 @@ func (s BBSimServer) GetONUs(ctx context.Context, req *bbsim.Empty) (*bbsim.ONUs
 func (s BBSimServer) GetONU(ctx context.Context, req *bbsim.ONURequest) (*bbsim.ONU, error) {
 	olt := devices.GetOLT()
 
-	onu, err := olt.FindOnu(req.SerialNumber)
+	onu, err := olt.FindOnuBySn(req.SerialNumber)
 
 	if err != nil {
 		res := bbsim.ONU{}
@@ -87,7 +87,7 @@ func (s BBSimServer) ShutdownONU(ctx context.Context, req *bbsim.ONURequest) (*b
 
 	olt := devices.GetOLT()
 
-	onu, err := olt.FindOnu(req.SerialNumber)
+	onu, err := olt.FindOnuBySn(req.SerialNumber)
 
 	if err != nil {
 		res.StatusCode = int32(codes.NotFound)
@@ -132,7 +132,7 @@ func (s BBSimServer) PoweronONU(ctx context.Context, req *bbsim.ONURequest) (*bb
 
 	olt := devices.GetOLT()
 
-	onu, err := olt.FindOnu(req.SerialNumber)
+	onu, err := olt.FindOnuBySn(req.SerialNumber)
 
 	if err != nil {
 		res.StatusCode = int32(codes.NotFound)
