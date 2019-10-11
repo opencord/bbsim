@@ -50,8 +50,8 @@ type OltDevice struct {
 	apiDoneChannel  *chan bool
 	nniPktInChannel chan *bbsim.PacketMsg
 
-	Pons []PonPort
-	Nnis []NniPort
+	Pons []*PonPort
+	Nnis []*NniPort
 
 	// OLT Attributes
 	OperState *fsm.FSM
@@ -59,8 +59,8 @@ type OltDevice struct {
 
 var olt = OltDevice{}
 
-func GetOLT() OltDevice {
-	return olt
+func GetOLT() *OltDevice {
+	return &olt
 }
 
 func CreateOLT(seq int, nni int, pon int, onuPerPon int, sTag int, cTagInit int, oltDoneChannel *chan bool, apiDoneChannel *chan bool, group *sync.WaitGroup) OltDevice {
@@ -80,8 +80,8 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int, sTag int, cTagInit int,
 		NumNni:          nni,
 		NumPon:          pon,
 		NumOnuPerPon:    onuPerPon,
-		Pons:            []PonPort{},
-		Nnis:            []NniPort{},
+		Pons:            []*PonPort{},
+		Nnis:            []*NniPort{},
 		channel:         make(chan Message),
 		oltDoneChannel:  oltDoneChannel,
 		apiDoneChannel:  apiDoneChannel,
@@ -110,7 +110,7 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int, sTag int, cTagInit int,
 		oltLogger.Fatalf("Couldn't create NNI Port: %v", err)
 	}
 
-	olt.Nnis = append(olt.Nnis, nniPort)
+	olt.Nnis = append(olt.Nnis, &nniPort)
 
 	// create PON ports
 	availableCTag := cTagInit
@@ -135,7 +135,7 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int, sTag int, cTagInit int,
 			availableCTag = availableCTag + 1
 		}
 
-		olt.Pons = append(olt.Pons, p)
+		olt.Pons = append(olt.Pons, &p)
 	}
 
 	newOltServer(olt)
@@ -246,7 +246,7 @@ func (o OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error {
 func (o OltDevice) getPonById(id uint32) (*PonPort, error) {
 	for _, pon := range o.Pons {
 		if pon.ID == id {
-			return &pon, nil
+			return pon, nil
 		}
 	}
 	return nil, errors.New(fmt.Sprintf("Cannot find PonPort with id %d in OLT %d", id, o.ID))
@@ -255,7 +255,7 @@ func (o OltDevice) getPonById(id uint32) (*PonPort, error) {
 func (o OltDevice) getNniById(id uint32) (*NniPort, error) {
 	for _, nni := range o.Nnis {
 		if nni.ID == id {
-			return &nni, nil
+			return nni, nil
 		}
 	}
 	return nil, errors.New(fmt.Sprintf("Cannot find NniPort with id %d in OLT %d", id, o.ID))
@@ -421,7 +421,7 @@ func (o OltDevice) FindOnuBySn(serialNumber string) (*Onu, error) {
 	for _, pon := range o.Pons {
 		for _, onu := range pon.Onus {
 			if onu.Sn() == serialNumber {
-				return &onu, nil
+				return onu, nil
 			}
 		}
 	}
@@ -436,7 +436,7 @@ func (o OltDevice) FindOnuByMacAddress(mac net.HardwareAddr) (*Onu, error) {
 	for _, pon := range o.Pons {
 		for _, onu := range pon.Onus {
 			if onu.HwAddress.String() == mac.String() {
-				return &onu, nil
+				return onu, nil
 			}
 		}
 	}

@@ -34,6 +34,22 @@ var (
 	dhcpServerIp = "182.21.0.128"
 )
 
+type Executor interface {
+	Command(name string, arg ...string) Runnable
+}
+
+type DefaultExecutor struct{}
+
+func (d DefaultExecutor) Command(name string, arg ...string) Runnable {
+	return exec.Command(name, arg...)
+}
+
+type Runnable interface {
+	Run() error
+}
+
+var executor = DefaultExecutor{}
+
 type NniPort struct {
 	// BBSIM Internals
 	ID uint32
@@ -89,9 +105,9 @@ func sendNniPacket(packet gopacket.Packet) error {
 	return nil
 }
 
-// createNNIBridge will create a veth bridge to fake the connection between the NNI port
-// and something upstream, in this case a DHCP server.
-// It is also responsible to start the DHCP server itself
+//createNNIBridge will create a veth bridge to fake the connection between the NNI port
+//and something upstream, in this case a DHCP server.
+//It is also responsible to start the DHCP server itself
 func createNNIPair(olt *OltDevice) error {
 
 	if err := exec.Command("ip", "link", "add", nniVeth, "type", "veth", "peer", "name", upstreamVeth).Run(); err != nil {
@@ -99,11 +115,11 @@ func createNNIPair(olt *OltDevice) error {
 		return err
 	}
 
-	if err := setVethUp(nniVeth); err != nil {
+	if err := setVethUp(executor, nniVeth); err != nil {
 		return err
 	}
 
-	if err := setVethUp(upstreamVeth); err != nil {
+	if err := setVethUp(executor, upstreamVeth); err != nil {
 		return err
 	}
 
@@ -120,8 +136,8 @@ func createNNIPair(olt *OltDevice) error {
 }
 
 // setVethUp is responsible to activate a virtual interface
-func setVethUp(vethName string) error {
-	if err := exec.Command("ip", "link", "set", vethName, "up").Run(); err != nil {
+func setVethUp(executor Executor, vethName string) error {
+	if err := executor.Command("ip", "link", "set", vethName, "up").Run(); err != nil {
 		nniLogger.Errorf("Couldn't change interface %s state to up: %v", vethName, err)
 		return err
 	}
@@ -134,7 +150,7 @@ func startDHCPServer() error {
 		return err
 	}
 
-	if err := setVethUp(upstreamVeth); err != nil {
+	if err := setVethUp(executor, upstreamVeth); err != nil {
 		return err
 	}
 
