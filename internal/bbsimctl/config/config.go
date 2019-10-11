@@ -18,27 +18,27 @@
 package config
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net"
 	"os"
-	"fmt"
 	"time"
-	"gopkg.in/yaml.v2"
 )
 
 var (
-	Version 	string
-	BuildTime  	string
-	CommitHash 	string
-	GitStatus	string
+	Version    string
+	BuildTime  string
+	CommitHash string
+	GitStatus  string
 )
 
 var GlobalOptions struct {
-	Config   string `short:"c" long:"config" env:"BBSIMCTL_CONFIG" value-name:"FILE" default:"" description:"Location of client config file"`
-	Server   string `short:"s" long:"server" default:"" value-name:"SERVER:PORT" description:"IP/Host and port of XOS"`
+	Config string `short:"c" long:"config" env:"BBSIMCTL_CONFIG" value-name:"FILE" default:"" description:"Location of client config file"`
+	Server string `short:"s" long:"server" default:"" value-name:"SERVER:PORT" description:"IP/Host and port of XOS"`
 	//Protoset string `long:"protoset" value-name:"FILENAME" description:"Load protobuf definitions from protoset instead of reflection api"`
-	Debug    bool   `short:"d" long:"debug" description:"Enable debug mode"`
+	Debug bool `short:"d" long:"debug" description:"Enable debug mode"`
 }
 
 type GrpcConfigSpec struct {
@@ -46,8 +46,8 @@ type GrpcConfigSpec struct {
 }
 
 type GlobalConfigSpec struct {
-	Server   string        `yaml:"server"`
-	Grpc     GrpcConfigSpec
+	Server string `yaml:"server"`
+	Grpc   GrpcConfigSpec
 }
 
 var GlobalConfig = GlobalConfigSpec{
@@ -89,7 +89,6 @@ func ProcessGlobalOptions() {
 	if GlobalOptions.Server != "" {
 		GlobalConfig.Server = GlobalOptions.Server
 	}
-
 
 	// Generate error messages for required settings
 	if GlobalConfig.Server == "" {
