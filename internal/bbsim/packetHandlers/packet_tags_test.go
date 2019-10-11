@@ -14,34 +14,17 @@
  * limitations under the License.
  */
 
-package packetHandlers
+package packetHandlers_test
 
 import (
-	"fmt"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
+	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"gotest.tools/assert"
 	"net"
-	"os"
 	"testing"
 )
 
-func setUp() {
-	fmt.Println("Test Setup")
-}
-
-func tearDown() {
-	fmt.Println("Test Teardown")
-}
-
-func TestMain(m *testing.M) {
-	setUp()
-	code := m.Run()
-	tearDown()
-	os.Exit(code)
-}
-
-// GO111MODULE=on go test -v -mod vendor ./internal/bbsim/... -run TestPushSingleTag
 func TestPushSingleTag(t *testing.T) {
 	rawBytes := []byte{10, 20, 30}
 	srcMac := net.HardwareAddr{0xff, 0xff, 0xff, 0xff, byte(1), byte(1)}
@@ -64,14 +47,59 @@ func TestPushSingleTag(t *testing.T) {
 	)
 
 	untaggedPkt := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
-	taggedPkt, err := PushSingleTag(111, untaggedPkt)
+	taggedPkt, err := packetHandlers.PushSingleTag(111, untaggedPkt)
 	if err != nil {
 		t.Fail()
 		t.Logf("Error in PushSingleTag: %v", err)
 	}
 
-	vlan, _ := getVlanTag(taggedPkt)
+	vlan, _ := packetHandlers.GetVlanTag(taggedPkt)
 	assert.Equal(t, vlan, uint16(111))
+}
+
+func TestPushDoubleTag(t *testing.T) {
+	rawBytes := []byte{10, 20, 30}
+	srcMac := net.HardwareAddr{0xff, 0xff, 0xff, 0xff, byte(1), byte(1)}
+	dstMac := net.HardwareAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
+
+	ethernetLayer := &layers.Ethernet{
+		SrcMAC:       srcMac,
+		DstMAC:       dstMac,
+		EthernetType: 0x8100,
+	}
+
+	buffer := gopacket.NewSerializeBuffer()
+	gopacket.SerializeLayers(
+		buffer,
+		gopacket.SerializeOptions{
+			FixLengths: false,
+		},
+		ethernetLayer,
+		gopacket.Payload(rawBytes),
+	)
+
+	untaggedPkt := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
+	taggedPkt, err := packetHandlers.PushDoubleTag(900, 800, untaggedPkt)
+	if err != nil {
+		t.Fail()
+		t.Logf("Error in PushSingleTag: %v", err)
+	}
+
+	sTag, err := packetHandlers.GetVlanTag(taggedPkt)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	singleTagPkt, err := packetHandlers.PopSingleTag(taggedPkt)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	cTag, err := packetHandlers.GetVlanTag(singleTagPkt)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	assert.Equal(t, sTag, uint16(900))
+	assert.Equal(t, cTag, uint16(800))
 }
 
 func TestPopSingleTag(t *testing.T) {
@@ -102,13 +130,13 @@ func TestPopSingleTag(t *testing.T) {
 	)
 
 	untaggedPkt := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
-	taggedPkt, err := PopSingleTag(untaggedPkt)
+	taggedPkt, err := packetHandlers.PopSingleTag(untaggedPkt)
 	if err != nil {
 		t.Fail()
 		t.Logf("Error in PushSingleTag: %v", err)
 	}
 
-	vlan, err := getVlanTag(taggedPkt)
+	vlan, err := packetHandlers.GetVlanTag(taggedPkt)
 	assert.Equal(t, vlan, uint16(2580)) // FIXME where dows 2056 comes from??
 }
 
@@ -140,13 +168,13 @@ func TestPopDoubleTag(t *testing.T) {
 	)
 
 	untaggedPkt := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
-	taggedPkt, err := PopDoubleTag(untaggedPkt)
+	taggedPkt, err := packetHandlers.PopDoubleTag(untaggedPkt)
 	if err != nil {
 		t.Fail()
 		t.Logf("Error in PushSingleTag: %v", err)
 	}
 
-	vlan, err := getVlanTag(taggedPkt)
+	vlan, err := packetHandlers.GetVlanTag(taggedPkt)
 	assert.Equal(t, vlan, uint16(0))
 	assert.Equal(t, err.Error(), "no-dot1q-layer-in-packet")
 }

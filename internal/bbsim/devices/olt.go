@@ -23,6 +23,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
+	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/go/openolt"
 	"github.com/opencord/voltha-protos/go/tech_profile"
@@ -365,23 +366,58 @@ func (o OltDevice) processNniPacketIns(stream openolt.Openolt_EnableIndicationSe
 	}).Debug("Started NNI Channel")
 	nniId := o.Nnis[0].ID // FIXME we are assuming we have only one NNI
 	for message := range o.nniPktInChannel {
-		oltLogger.Debug("Received packets on NNI Channel")
+		oltLogger.Tracef("Received packets on NNI Channel")
+
+		onuMac, err := packetHandlers.GetDstMacAddressFromPacket(message.Pkt)
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"IntfType": "nni",
+				"IntfId":   nniId,
+				"Pkt":      message.Pkt.Data(),
+			}).Info("Can't find Dst MacAddress in packet")
+			return
+		}
+
+		onu, err := o.FindOnuByMacAddress(onuMac)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"IntfType":   "nni",
+				"IntfId":     nniId,
+				"Pkt":        message.Pkt.Data(),
+				"MacAddress": onuMac.String(),
+			}).Info("Can't find ONU with MacAddress")
+			return
+		}
+
+		doubleTaggedPkt, err := packetHandlers.PushDoubleTag(onu.STag, onu.CTag, message.Pkt)
+		if err != nil {
+			log.Error("Fail to add double tag to packet")
+		}
+
 		data := &openolt.Indication_PktInd{PktInd: &openolt.PacketIndication{
 			IntfType: "nni",
 			IntfId:   nniId,
-			Pkt:      message.Pkt.Data()}}
+			Pkt:      doubleTaggedPkt.Data()}}
 		if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
 			oltLogger.WithFields(log.Fields{
 				"IntfType": data.PktInd.IntfType,
 				"IntfId":   nniId,
-				"Pkt":      message.Pkt.Data(),
+				"Pkt":      doubleTaggedPkt.Data(),
 			}).Errorf("Fail to send PktInd indication: %v", err)
 		}
+		oltLogger.WithFields(log.Fields{
+			"IntfType": data.PktInd.IntfType,
+			"IntfId":   nniId,
+			"Pkt":      doubleTaggedPkt.Data(),
+		}).Tracef("Sent PktInd indication")
 	}
 }
 
-func (o OltDevice) FindOnu(serialNumber string) (*Onu, error) {
-
+// returns an ONU with a given Serial Number
+func (o OltDevice) FindOnuBySn(serialNumber string) (*Onu, error) {
+	// TODO this function can be a perfoormance bottlenec when we have many ONUs,
+	// memoizing it will remove the bottleneck
 	for _, pon := range o.Pons {
 		for _, onu := range pon.Onus {
 			if onu.Sn() == serialNumber {
@@ -390,7 +426,22 @@ func (o OltDevice) FindOnu(serialNumber string) (*Onu, error) {
 		}
 	}
 
-	return &Onu{}, errors.New(fmt.Sprintf("cannot-find-onu-%s", serialNumber))
+	return &Onu{}, errors.New(fmt.Sprintf("cannot-find-onu-by-serial-number-%s", serialNumber))
+}
+
+// returns an ONU with a given Mac Address
+func (o OltDevice) FindOnuByMacAddress(mac net.HardwareAddr) (*Onu, error) {
+	// TODO this function can be a perfoormance bottlenec when we have many ONUs,
+	// memoizing it will remove the bottleneck
+	for _, pon := range o.Pons {
+		for _, onu := range pon.Onus {
+			if onu.HwAddress.String() == mac.String() {
+				return &onu, nil
+			}
+		}
+	}
+
+	return &Onu{}, errors.New(fmt.Sprintf("cannot-find-onu-by-mac-address-%s", mac))
 }
 
 // GRPC Endpoints
