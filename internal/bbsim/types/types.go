@@ -20,7 +20,7 @@ import (
 	"github.com/google/gopacket"
 )
 
-// deprecated
+// deprecated, use OnuPacketOutMessage instead
 type ByteMsg struct {
 	IntfId uint32
 	OnuId  uint32
