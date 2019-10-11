@@ -45,6 +45,7 @@ message ONU {
     int32 STag = 6;
     int32 CTag = 7;
     string HwAddress = 8;
+    int32 PortNo = 9;
 }
 
 message ONUs {
