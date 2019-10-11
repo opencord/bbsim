@@ -27,7 +27,6 @@ import (
 )
 
 // MOCKS
-var calledSend = 0
 
 var eapolStateMachine = fsm.NewFSM(
 	"auth_started",
@@ -41,28 +40,33 @@ var eapolStateMachine = fsm.NewFSM(
 	fsm.Callbacks{},
 )
 
-type mockStreamSuccess struct {
+// params for the function under test
+var onuId uint32 = 1
+var gemPortId uint16 = 1
+var ponPortId uint32 = 0
+var serialNumber string = "BBSM00000001"
+var macAddress = net.HardwareAddr{0x01, 0x80, 0xC2, 0x00, 0x00, 0x03}
+var portNo uint32 = 16
+
+type mockStream struct {
 	grpc.ServerStream
+	CallCount int
+	Calls     map[int]*openolt.PacketIndication
+	fail      bool
 }
 
-func (s mockStreamSuccess) Send(ind *openolt.Indication) error {
-	calledSend++
+func (s *mockStream) Send(ind *openolt.Indication) error {
+	s.CallCount++
+	if s.fail {
+		return errors.New("fake-error")
+	}
+	s.Calls[s.CallCount] = ind.GetPktInd()
 	return nil
-}
-
-type mockStreamError struct {
-	grpc.ServerStream
-}
-
-func (s mockStreamError) Send(ind *openolt.Indication) error {
-	calledSend++
-	return errors.New("stream-error")
 }
 
 // TESTS
 
 func TestSendEapStartSuccess(t *testing.T) {
-	calledSend = 0
 	eapolStateMachine.SetState("auth_started")
 
 	// Save current function and restore at the end:
@@ -70,31 +74,30 @@ func TestSendEapStartSuccess(t *testing.T) {
 	defer func() { GetGemPortId = old }()
 
 	GetGemPortId = func(intfId uint32, onuId uint32) (uint16, error) {
-		return 1, nil
+		return gemPortId, nil
 	}
 
-	// params for the function under test
-	var onuId uint32 = 1
-	var ponPortId uint32 = 0
-	var serialNumber string = "BBSM00000001"
+	stream := &mockStream{
+		Calls: make(map[int]*openolt.PacketIndication),
+		fail:  false,
+	}
 
-	var macAddress = net.HardwareAddr{0x01, 0x80, 0xC2, 0x00, 0x00, 0x03}
-
-	stream := mockStreamSuccess{}
-
-	if err := SendEapStart(onuId, ponPortId, serialNumber, macAddress, eapolStateMachine, stream); err != nil {
+	if err := SendEapStart(onuId, ponPortId, serialNumber, portNo, macAddress, eapolStateMachine, stream); err != nil {
 		t.Errorf("SendEapStart returned an error: %v", err)
 		t.Fail()
 	}
 
-	assert.Equal(t, calledSend, 1)
+	assert.Equal(t, stream.CallCount, 1)
+	assert.Equal(t, stream.Calls[1].PortNo, portNo)
+	assert.Equal(t, stream.Calls[1].IntfId, ponPortId)
+	assert.Equal(t, stream.Calls[1].IntfType, "pon")
+	assert.Equal(t, stream.Calls[1].GemportId, uint32(gemPortId))
 
 	assert.Equal(t, eapolStateMachine.Current(), "eap_start_sent")
 
 }
 
 func TestSendEapStartFailNoGemPort(t *testing.T) {
-	calledSend = 0
 	eapolStateMachine.SetState("auth_started")
 
 	// Save current function and restore at the end:
@@ -105,16 +108,14 @@ func TestSendEapStartFailNoGemPort(t *testing.T) {
 		return 0, errors.New("no-gem-port")
 	}
 
-	// params for the function under test
-	var onuId uint32 = 1
-	var ponPortId uint32 = 0
-	var serialNumber string = "BBSM00000001"
-
 	var macAddress = net.HardwareAddr{0x01, 0x80, 0xC2, 0x00, 0x00, 0x03}
 
-	stream := mockStreamSuccess{}
+	stream := &mockStream{
+		Calls: make(map[int]*openolt.PacketIndication),
+		fail:  false,
+	}
 
-	err := SendEapStart(onuId, ponPortId, serialNumber, macAddress, eapolStateMachine, stream)
+	err := SendEapStart(onuId, ponPortId, serialNumber, portNo, macAddress, eapolStateMachine, stream)
 	if err == nil {
 		t.Errorf("SendEapStart did not return an error")
 		t.Fail()
@@ -126,7 +127,7 @@ func TestSendEapStartFailNoGemPort(t *testing.T) {
 }
 
 func TestSendEapStartFailStreamError(t *testing.T) {
-	calledSend = 0
+
 	eapolStateMachine.SetState("auth_started")
 
 	// Save current function and restore at the end:
@@ -137,21 +138,18 @@ func TestSendEapStartFailStreamError(t *testing.T) {
 		return 1, nil
 	}
 
-	// params for the function under test
-	var onuId uint32 = 1
-	var ponPortId uint32 = 0
-	var serialNumber = "BBSM00000001"
-	var macAddress = net.HardwareAddr{0x01, 0x80, 0xC2, 0x00, 0x00, 0x03}
+	stream := &mockStream{
+		Calls: make(map[int]*openolt.PacketIndication),
+		fail:  true,
+	}
 
-	stream := mockStreamError{}
-
-	err := SendEapStart(onuId, ponPortId, serialNumber, macAddress, eapolStateMachine, stream)
+	err := SendEapStart(onuId, ponPortId, serialNumber, portNo, macAddress, eapolStateMachine, stream)
 	if err == nil {
 		t.Errorf("SendEapStart did not return an error")
 		t.Fail()
 	}
 
-	assert.Equal(t, err.Error(), "stream-error")
+	assert.Equal(t, err.Error(), "fake-error")
 
 	assert.Equal(t, eapolStateMachine.Current(), "auth_failed")
 }

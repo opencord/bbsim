@@ -41,9 +41,9 @@ func createMockOlt(numPon int, numOnu int) OltDevice {
 				HwAddress: net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(onuId)},
 			}
 			onu.SerialNumber = onu.NewSN(olt.ID, pon.ID, onu.ID)
-			pon.Onus = append(pon.Onus, onu)
+			pon.Onus = append(pon.Onus, &onu)
 		}
-		olt.Pons = append(olt.Pons, pon)
+		olt.Pons = append(olt.Pons, &pon)
 	}
 	return olt
 }

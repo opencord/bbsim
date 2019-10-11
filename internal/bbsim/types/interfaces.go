@@ -16,17 +16,9 @@
 
 package types
 
-import (
-	"github.com/google/gopacket"
-)
+import "github.com/opencord/voltha-protos/go/openolt"
 
-// deprecated, use OnuPacketOutMessage instead
-type ByteMsg struct {
-	IntfId uint32
-	OnuId  uint32
-	Bytes  []byte
-}
-
-type PacketMsg struct {
-	Pkt gopacket.Packet
+// represent a gRPC stream
+type Stream interface {
+	Send(*openolt.Indication) error
 }
