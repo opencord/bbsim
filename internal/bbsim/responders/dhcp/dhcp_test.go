@@ -27,7 +27,6 @@ import (
 )
 
 // MOCKS
-var calledSend = 0
 
 var dhcpStateMachine = fsm.NewFSM(
 	"dhcp_started",
@@ -42,49 +41,55 @@ var dhcpStateMachine = fsm.NewFSM(
 
 type mockStreamSuccess struct {
 	grpc.ServerStream
+	CallCount int
+	Calls     map[int]*openolt.PacketIndication
+	fail      bool
 }
 
-func (s mockStreamSuccess) Send(ind *openolt.Indication) error {
-	calledSend++
+func (s *mockStreamSuccess) Send(ind *openolt.Indication) error {
+	s.CallCount++
+	if s.fail {
+		return errors.New("fake-error")
+	}
+	s.Calls[s.CallCount] = ind.GetPktInd()
 	return nil
-}
-
-type mockStreamError struct {
-	grpc.ServerStream
-}
-
-func (s mockStreamError) Send(ind *openolt.Indication) error {
-	calledSend++
-	return errors.New("stream-error")
 }
 
 // TESTS
 
 func TestSendDHCPDiscovery(t *testing.T) {
-	calledSend = 0
 	dhcpStateMachine.SetState("dhcp_started")
+
+	var onuId uint32 = 1
+	var gemPortId uint16 = 1
+	var ponPortId uint32 = 0
+	var serialNumber = "BBSM00000001"
+	var mac = net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(ponPortId), byte(onuId)}
+	var portNo uint32 = 16
 
 	// Save current function and restore at the end:
 	old := GetGemPortId
 	defer func() { GetGemPortId = old }()
 
 	GetGemPortId = func(intfId uint32, onuId uint32) (uint16, error) {
-		return 1, nil
+		return gemPortId, nil
 	}
 
-	var onuId uint32 = 1
-	var ponPortId uint32 = 0
-	var serialNumber string = "BBSM00000001"
-	var mac = net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(ponPortId), byte(onuId)}
+	stream := &mockStreamSuccess{
+		Calls: make(map[int]*openolt.PacketIndication),
+		fail:  false,
+	}
 
-	stream := mockStreamSuccess{}
-
-	if err := SendDHCPDiscovery(ponPortId, onuId, serialNumber, dhcpStateMachine, mac, 1, stream); err != nil {
+	if err := SendDHCPDiscovery(ponPortId, onuId, serialNumber, portNo, dhcpStateMachine, mac, 1, stream); err != nil {
 		t.Errorf("SendDHCPDiscovery returned an error: %v", err)
 		t.Fail()
 	}
 
-	assert.Equal(t, calledSend, 1)
+	assert.Equal(t, stream.CallCount, 1)
+	assert.Equal(t, stream.Calls[1].PortNo, portNo)
+	assert.Equal(t, stream.Calls[1].IntfId, ponPortId)
+	assert.Equal(t, stream.Calls[1].IntfType, "pon")
+	assert.Equal(t, stream.Calls[1].GemportId, uint32(gemPortId))
 
 	assert.Equal(t, dhcpStateMachine.Current(), "dhcp_discovery_sent")
 }

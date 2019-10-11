@@ -34,6 +34,22 @@ var (
 	dhcpServerIp = "182.21.0.128"
 )
 
+type Executor interface {
+	Command(name string, arg ...string) Runnable
+}
+
+type DefaultExecutor struct{}
+
+func (d DefaultExecutor) Command(name string, arg ...string) Runnable {
+	return exec.Command(name, arg...)
+}
+
+type Runnable interface {
+	Run() error
+}
+
+var executor = DefaultExecutor{}
+
 type NniPort struct {
 	// BBSIM Internals
 	ID uint32
@@ -51,7 +67,7 @@ func CreateNNI(olt *OltDevice) (NniPort, error) {
 		}),
 		Type: "nni",
 	}
-	createNNIPair(olt)
+	createNNIPair(executor, olt)
 	return nniPort, nil
 }
 
@@ -89,21 +105,21 @@ func sendNniPacket(packet gopacket.Packet) error {
 	return nil
 }
 
-// createNNIBridge will create a veth bridge to fake the connection between the NNI port
-// and something upstream, in this case a DHCP server.
-// It is also responsible to start the DHCP server itself
-func createNNIPair(olt *OltDevice) error {
+//createNNIBridge will create a veth bridge to fake the connection between the NNI port
+//and something upstream, in this case a DHCP server.
+//It is also responsible to start the DHCP server itself
+func createNNIPair(executor Executor, olt *OltDevice) error {
 
-	if err := exec.Command("ip", "link", "add", nniVeth, "type", "veth", "peer", "name", upstreamVeth).Run(); err != nil {
+	if err := executor.Command("ip", "link", "add", nniVeth, "type", "veth", "peer", "name", upstreamVeth).Run(); err != nil {
 		nniLogger.Errorf("Couldn't create veth pair between %s and %s", nniVeth, upstreamVeth)
 		return err
 	}
 
-	if err := setVethUp(nniVeth); err != nil {
+	if err := setVethUp(executor, nniVeth); err != nil {
 		return err
 	}
 
-	if err := setVethUp(upstreamVeth); err != nil {
+	if err := setVethUp(executor, upstreamVeth); err != nil {
 		return err
 	}
 
@@ -120,21 +136,21 @@ func createNNIPair(olt *OltDevice) error {
 }
 
 // setVethUp is responsible to activate a virtual interface
-func setVethUp(vethName string) error {
-	if err := exec.Command("ip", "link", "set", vethName, "up").Run(); err != nil {
+func setVethUp(executor Executor, vethName string) error {
+	if err := executor.Command("ip", "link", "set", vethName, "up").Run(); err != nil {
 		nniLogger.Errorf("Couldn't change interface %s state to up: %v", vethName, err)
 		return err
 	}
 	return nil
 }
 
-func startDHCPServer() error {
+var startDHCPServer = func() error {
 	if err := exec.Command("ip", "addr", "add", dhcpServerIp, "dev", upstreamVeth).Run(); err != nil {
 		nniLogger.Errorf("Couldn't assing ip %s to interface %s: %v", dhcpServerIp, upstreamVeth, err)
 		return err
 	}
 
-	if err := setVethUp(upstreamVeth); err != nil {
+	if err := setVethUp(executor, upstreamVeth); err != nil {
 		return err
 	}
 
@@ -168,7 +184,7 @@ func getVethHandler(vethName string) (*pcap.Handle, error) {
 	return handle, nil
 }
 
-func listenOnVeth(vethName string) (chan *types.PacketMsg, error) {
+var listenOnVeth = func(vethName string) (chan *types.PacketMsg, error) {
 
 	handle, err := getVethHandler(vethName)
 	if err != nil {

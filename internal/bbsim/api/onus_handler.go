@@ -42,6 +42,7 @@ func (s BBSimServer) GetONUs(ctx context.Context, req *bbsim.Empty) (*bbsim.ONUs
 				STag:          int32(o.STag),
 				CTag:          int32(o.CTag),
 				HwAddress:     o.HwAddress.String(),
+				PortNo:        int32(o.PortNo),
 			}
 			onus.Items = append(onus.Items, &onu)
 		}
@@ -68,6 +69,7 @@ func (s BBSimServer) GetONU(ctx context.Context, req *bbsim.ONURequest) (*bbsim.
 		STag:          int32(onu.STag),
 		CTag:          int32(onu.CTag),
 		HwAddress:     onu.HwAddress.String(),
+		PortNo:        int32(onu.PortNo),
 	}
 	return &res, nil
 }
