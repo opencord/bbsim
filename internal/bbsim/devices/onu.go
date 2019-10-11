@@ -34,11 +34,15 @@ var onuLogger = log.WithFields(log.Fields{
 })
 
 type Onu struct {
-	ID            uint32
-	PonPortID     uint32
-	PonPort       PonPort
-	STag          int
-	CTag          int
+	ID        uint32
+	PonPortID uint32
+	PonPort   PonPort
+	STag      int
+	CTag      int
+	// PortNo comes with flows and it's used when sending packetIndications,
+	// There is one PortNo per UNI Port, for now we're only storing the first one
+	// FIXME add support for multiple UNIs
+	PortNo        uint32
 	HwAddress     net.HardwareAddr
 	InternalState *fsm.FSM
 
@@ -52,7 +56,7 @@ func (o Onu) Sn() string {
 	return onuSnToString(o.SerialNumber)
 }
 
-func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) Onu {
+func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) *Onu {
 
 	o := Onu{
 		ID:        id,
@@ -61,8 +65,8 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) Onu {
 		STag:      sTag,
 		CTag:      cTag,
 		HwAddress: net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(id)},
-		// NOTE can we combine everything in a single Channel?
-		Channel: make(chan Message, 2048),
+		PortNo:    0,
+		Channel:   make(chan Message, 2048),
 	}
 	o.SerialNumber = o.NewSN(olt.ID, pon.ID, o.ID)
 
@@ -162,7 +166,7 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) Onu {
 			},
 		},
 	)
-	return o
+	return &o
 }
 
 func (o Onu) logStateChange(src string, dst string) {
@@ -201,21 +205,22 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer) {
 			o.handleFlowUpdate(msg, stream)
 		case StartEAPOL:
 			log.Infof("Receive StartEAPOL message on ONU Channel")
-			eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.HwAddress, o.InternalState, stream)
+			eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, stream)
 		case StartDHCP:
 			log.Infof("Receive StartDHCP message on ONU Channel")
-			dhcp.SendDHCPDiscovery(o.PonPortID, o.ID, o.Sn(), o.InternalState, o.HwAddress, o.CTag, stream)
+			// FIXME use id, ponId as SendEapStart
+			dhcp.SendDHCPDiscovery(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
 		case OnuPacketOut:
 			msg, _ := message.Data.(OnuPacketOutMessage)
 			pkt := msg.Packet
 			etherType := pkt.Layer(layers.LayerTypeEthernet).(*layers.Ethernet).EthernetType
 
 			if etherType == layers.EthernetTypeEAPOL {
-				eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.InternalState, msg.Packet, stream)
+				eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream)
 			} else if packetHandlers.IsDhcpPacket(pkt) {
 				// NOTE here we receive packets going from the DHCP Server to the ONU
 				// for now we expect them to be double-tagged, but ideally the should be single tagged
-				dhcp.HandleNextPacket(o.ID, o.PonPortID, o.Sn(), o.HwAddress, o.CTag, o.InternalState, msg.Packet, stream)
+				dhcp.HandleNextPacket(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.CTag, o.InternalState, msg.Packet, stream)
 			}
 		case DyingGaspIndication:
 			msg, _ := message.Data.(DyingGaspIndicationMessage)
@@ -349,14 +354,20 @@ func (o Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableInd
 
 	onuLogger.WithFields(log.Fields{
 		"IntfId":       o.PonPortID,
-		"SerialNumber": o.SerialNumber,
+		"SerialNumber": o.Sn(),
 		"omciPacket":   msg.omciMsg.Pkt,
 	}).Tracef("Received OMCI message")
 
 	var omciInd openolt.OmciIndication
 	respPkt, err := omci.OmciSim(o.PonPortID, o.ID, HexDecode(msg.omciMsg.Pkt))
 	if err != nil {
-		onuLogger.Errorf("Error handling OMCI message %v", msg)
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"SerialNumber": o.Sn(),
+			"omciPacket":   omciInd.Pkt,
+			"msg":          msg,
+		}).Errorf("Error handling OMCI message %v", msg)
+		return
 	}
 
 	omciInd.IntfId = o.PonPortID
@@ -365,16 +376,34 @@ func (o Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableInd
 
 	omci := &openolt.Indication_OmciInd{OmciInd: &omciInd}
 	if err := stream.Send(&openolt.Indication{Data: omci}); err != nil {
-		onuLogger.Errorf("send omci indication failed: %v", err)
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"SerialNumber": o.Sn(),
+			"omciPacket":   omciInd.Pkt,
+			"msg":          msg,
+		}).Errorf("send omci indication failed: %v", err)
+		return
 	}
 	onuLogger.WithFields(log.Fields{
 		"IntfId":       o.PonPortID,
-		"SerialNumber": o.SerialNumber,
+		"SerialNumber": o.Sn(),
 		"omciPacket":   omciInd.Pkt,
 	}).Tracef("Sent OMCI message")
 }
 
-func (o Onu) handleFlowUpdate(msg OnuFlowUpdateMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o *Onu) storePortNumber(portNo uint32) {
+	// FIXME this is a workaround to always use the SN-1 entry in sadis,
+	// we need to add support for multiple UNIs
+	// the action plan is:
+	// - refactor the omci-sim library to use https://github.com/cboling/omci instead of canned messages
+	// - change the library so that it reports a single UNI and remove this workaroung
+	// - add support for multiple UNIs in BBSim
+	if portNo < o.PortNo {
+		o.PortNo = portNo
+	}
+}
+
+func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage, stream openolt.Openolt_EnableIndicationServer) {
 	onuLogger.WithFields(log.Fields{
 		"DstPort":   msg.Flow.Classifier.DstPort,
 		"EthType":   fmt.Sprintf("%x", msg.Flow.Classifier.EthType),
@@ -392,6 +421,11 @@ func (o Onu) handleFlowUpdate(msg OnuFlowUpdateMessage, stream openolt.Openolt_E
 	}).Debug("ONU receives Flow")
 
 	if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeEAPOL) && msg.Flow.Classifier.OVid == 4091 {
+		// NOTE storing the PortNO, it's needed when sending PacketIndications
+		if o.PortNo == 0 {
+			o.storePortNumber(uint32(msg.Flow.PortNo))
+		}
+
 		// NOTE if we receive the EAPOL flows but we don't have GemPorts
 		// go an intermediate state, otherwise start auth
 		if o.InternalState.Is("enabled") {
