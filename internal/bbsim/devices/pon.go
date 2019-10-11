@@ -28,7 +28,7 @@ type PonPort struct {
 	// BBSIM Internals
 	ID     uint32
 	NumOnu int
-	Onus   []Onu
+	Onus   []*Onu
 	Olt    OltDevice
 
 	// PON Attributes
@@ -41,7 +41,7 @@ type PonPort struct {
 func (p PonPort) getOnuBySn(sn *openolt.SerialNumber) (*Onu, error) {
 	for _, onu := range p.Onus {
 		if bytes.Equal(onu.SerialNumber.VendorSpecific, sn.VendorSpecific) {
-			return &onu, nil
+			return onu, nil
 		}
 	}
 	return nil, errors.New(fmt.Sprintf("Cannot find Onu with serial number %d in PonPort %d", sn, p.ID))
@@ -50,7 +50,7 @@ func (p PonPort) getOnuBySn(sn *openolt.SerialNumber) (*Onu, error) {
 func (p PonPort) getOnuById(id uint32) (*Onu, error) {
 	for _, onu := range p.Onus {
 		if onu.ID == id {
-			return &onu, nil
+			return onu, nil
 		}
 	}
 	return nil, errors.New(fmt.Sprintf("Cannot find Onu with id %d in PonPort %d", id, p.ID))
