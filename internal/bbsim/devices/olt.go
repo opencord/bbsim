@@ -36,9 +36,24 @@ var oltLogger = log.WithFields(log.Fields{
 	"module": "OLT",
 })
 
-func init() {
-	//log.SetReportCaller(true)
-	log.SetLevel(log.DebugLevel)
+type OltDevice struct {
+	// BBSIM Internals
+	ID              int
+	SerialNumber    string
+	NumNni          int
+	NumPon          int
+	NumOnuPerPon    int
+	InternalState   *fsm.FSM
+	channel         chan Message
+	oltDoneChannel  *chan bool
+	apiDoneChannel  *chan bool
+	nniPktInChannel chan *bbsim.PacketMsg
+
+	Pons []PonPort
+	Nnis []NniPort
+
+	// OLT Attributes
+	OperState *fsm.FSM
 }
 
 var olt = OltDevice{}
@@ -561,19 +576,6 @@ func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) 
 	}
 	onu.Channel <- msg
 
-	//etherType := rawpkt.Layer(layers.LayerTypeEthernet).(*layers.Ethernet).EthernetType
-	//
-	//if etherType == layers.EthernetTypeEAPOL {
-	//	eapolPkt := bbsim.ByteMsg{IntfId: onuPkt.IntfId, OnuId: onuPkt.OnuId, Bytes: rawpkt.Data()}
-	//	onu.eapolPktOutCh <- &eapolPkt
-	//} else if layerDHCP := rawpkt.Layer(layers.LayerTypeDHCPv4); layerDHCP != nil {
-	//	// TODO use IsDhcpPacket
-	//	// TODO we need to untag the packets
-	//	// NOTE here we receive packets going from the DHCP Server to the ONU
-	//	// for now we expect them to be double-tagged, but ideally the should be single tagged
-	//	dhcpPkt := bbsim.ByteMsg{IntfId: onuPkt.IntfId, OnuId: onuPkt.OnuId, Bytes: rawpkt.Data()}
-	//	onu.dhcpPktOutCh <- &dhcpPkt
-	//}
 	return new(openolt.Empty), nil
 }
 

@@ -34,6 +34,15 @@ var (
 	dhcpServerIp = "182.21.0.128"
 )
 
+type NniPort struct {
+	// BBSIM Internals
+	ID uint32
+
+	// PON Attributes
+	OperState *fsm.FSM
+	Type      string
+}
+
 func CreateNNI(olt *OltDevice) (NniPort, error) {
 	nniPort := NniPort{
 		ID: uint32(0),

@@ -181,7 +181,7 @@ func (onuSn *OnuSnString) Complete(match string) []flags.Completion {
 
 	onus, err := client.GetONUs(ctx, &pb.Empty{})
 	if err != nil {
-		log.Fatal("could not get ONUs: %v", err)
+		log.Fatalf("could not get ONUs: %v", err)
 		return nil
 	}
 

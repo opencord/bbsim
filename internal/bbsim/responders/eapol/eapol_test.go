@@ -22,6 +22,7 @@ import (
 	"github.com/opencord/voltha-protos/go/openolt"
 	"google.golang.org/grpc"
 	"gotest.tools/assert"
+	"net"
 	"testing"
 )
 
@@ -77,9 +78,11 @@ func TestSendEapStartSuccess(t *testing.T) {
 	var ponPortId uint32 = 0
 	var serialNumber string = "BBSM00000001"
 
+	var macAddress = net.HardwareAddr{0x01, 0x80, 0xC2, 0x00, 0x00, 0x03}
+
 	stream := mockStreamSuccess{}
 
-	if err := SendEapStart(onuId, ponPortId, serialNumber, eapolStateMachine, stream); err != nil {
+	if err := SendEapStart(onuId, ponPortId, serialNumber, macAddress, eapolStateMachine, stream); err != nil {
 		t.Errorf("SendEapStart returned an error: %v", err)
 		t.Fail()
 	}
@@ -107,9 +110,11 @@ func TestSendEapStartFailNoGemPort(t *testing.T) {
 	var ponPortId uint32 = 0
 	var serialNumber string = "BBSM00000001"
 
+	var macAddress = net.HardwareAddr{0x01, 0x80, 0xC2, 0x00, 0x00, 0x03}
+
 	stream := mockStreamSuccess{}
 
-	err := SendEapStart(onuId, ponPortId, serialNumber, eapolStateMachine, stream)
+	err := SendEapStart(onuId, ponPortId, serialNumber, macAddress, eapolStateMachine, stream)
 	if err == nil {
 		t.Errorf("SendEapStart did not return an error")
 		t.Fail()
@@ -135,11 +140,12 @@ func TestSendEapStartFailStreamError(t *testing.T) {
 	// params for the function under test
 	var onuId uint32 = 1
 	var ponPortId uint32 = 0
-	var serialNumber string = "BBSM00000001"
+	var serialNumber = "BBSM00000001"
+	var macAddress = net.HardwareAddr{0x01, 0x80, 0xC2, 0x00, 0x00, 0x03}
 
 	stream := mockStreamError{}
 
-	err := SendEapStart(onuId, ponPortId, serialNumber, eapolStateMachine, stream)
+	err := SendEapStart(onuId, ponPortId, serialNumber, macAddress, eapolStateMachine, stream)
 	if err == nil {
 		t.Errorf("SendEapStart did not return an error")
 		t.Fail()

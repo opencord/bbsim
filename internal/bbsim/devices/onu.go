@@ -23,7 +23,6 @@ import (
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
-	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	omci "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/go/openolt"
 	log "github.com/sirupsen/logrus"
@@ -33,6 +32,25 @@ import (
 var onuLogger = log.WithFields(log.Fields{
 	"module": "ONU",
 })
+
+type Onu struct {
+	ID            uint32
+	PonPortID     uint32
+	PonPort       PonPort
+	STag          int
+	CTag          int
+	HwAddress     net.HardwareAddr
+	InternalState *fsm.FSM
+
+	OperState    *fsm.FSM
+	SerialNumber *openolt.SerialNumber
+
+	Channel chan Message // this Channel is to track state changes OMCI messages, EAPOL and DHCP packets
+}
+
+func (o Onu) Sn() string {
+	return onuSnToString(o.SerialNumber)
+}
 
 func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) Onu {
 
@@ -44,9 +62,7 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) Onu {
 		CTag:      cTag,
 		HwAddress: net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(id)},
 		// NOTE can we combine everything in a single Channel?
-		Channel:       make(chan Message, 2048),
-		eapolPktOutCh: make(chan *bbsim.ByteMsg, 1024),
-		dhcpPktOutCh:  make(chan *bbsim.ByteMsg, 1024),
+		Channel: make(chan Message, 2048),
 	}
 	o.SerialNumber = o.NewSN(olt.ID, pon.ID, o.ID)
 
@@ -185,7 +201,7 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer) {
 			o.handleFlowUpdate(msg, stream)
 		case StartEAPOL:
 			log.Infof("Receive StartEAPOL message on ONU Channel")
-			eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.InternalState, stream)
+			eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.HwAddress, o.InternalState, stream)
 		case StartDHCP:
 			log.Infof("Receive StartDHCP message on ONU Channel")
 			dhcp.SendDHCPDiscovery(o.PonPortID, o.ID, o.Sn(), o.InternalState, o.HwAddress, o.CTag, stream)

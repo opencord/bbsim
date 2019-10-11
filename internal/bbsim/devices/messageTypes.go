@@ -17,105 +17,9 @@
 package devices
 
 import (
-	"bytes"
-	"errors"
-	"fmt"
 	"github.com/google/gopacket"
-	"github.com/looplab/fsm"
-	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/go/openolt"
-	"net"
 )
-
-// TODO get rid of this file
-// - move ONU and OLT struct in their respective file
-// - create files for PonPorts and NniPorts
-// - move messages in the `types` package
-
-// Devices
-type Onu struct {
-	ID            uint32
-	PonPortID     uint32
-	PonPort       PonPort
-	STag          int
-	CTag          int
-	HwAddress     net.HardwareAddr
-	InternalState *fsm.FSM
-
-	OperState    *fsm.FSM
-	SerialNumber *openolt.SerialNumber
-
-	Channel       chan Message        // this Channel is to track state changes and OMCI messages
-	eapolPktOutCh chan *bbsim.ByteMsg // this Channel is for EAPOL Packet Outs (coming from the controller)
-	dhcpPktOutCh  chan *bbsim.ByteMsg // this Channel is for DHCP Packet Outs (coming from the controller)
-}
-
-func (o Onu) Sn() string {
-	return onuSnToString(o.SerialNumber)
-}
-
-type NniPort struct {
-	// BBSIM Internals
-	ID uint32
-
-	// PON Attributes
-	OperState *fsm.FSM
-	Type      string
-}
-
-type PonPort struct {
-	// BBSIM Internals
-	ID     uint32
-	NumOnu int
-	Onus   []Onu
-	Olt    OltDevice
-
-	// PON Attributes
-	OperState *fsm.FSM
-	Type      string
-
-	// NOTE do we need a state machine for the PON Ports?
-}
-
-func (p PonPort) getOnuBySn(sn *openolt.SerialNumber) (*Onu, error) {
-	for _, onu := range p.Onus {
-		if bytes.Equal(onu.SerialNumber.VendorSpecific, sn.VendorSpecific) {
-			return &onu, nil
-		}
-	}
-	return nil, errors.New(fmt.Sprintf("Cannot find Onu with serial number %d in PonPort %d", sn, p.ID))
-}
-
-func (p PonPort) getOnuById(id uint32) (*Onu, error) {
-	for _, onu := range p.Onus {
-		if onu.ID == id {
-			return &onu, nil
-		}
-	}
-	return nil, errors.New(fmt.Sprintf("Cannot find Onu with id %d in PonPort %d", id, p.ID))
-}
-
-type OltDevice struct {
-	// BBSIM Internals
-	ID              int
-	SerialNumber    string
-	NumNni          int
-	NumPon          int
-	NumOnuPerPon    int
-	InternalState   *fsm.FSM
-	channel         chan Message
-	oltDoneChannel  *chan bool
-	apiDoneChannel  *chan bool
-	nniPktInChannel chan *bbsim.PacketMsg
-
-	Pons []PonPort
-	Nnis []NniPort
-
-	// OLT Attributes
-	OperState *fsm.FSM
-}
-
-// BBSim Internals
 
 type MessageType int
 
@@ -198,16 +102,16 @@ type PacketMessage struct {
 	OnuID     uint32
 }
 
-type DyingGaspIndicationMessage struct {
-	PonPortID uint32
-	OnuID     uint32
-	Status    string
-}
-
 type OnuPacketOutMessage struct {
 	IntfId uint32
 	OnuId  uint32
 	Packet gopacket.Packet
+}
+
+type DyingGaspIndicationMessage struct {
+	PonPortID uint32
+	OnuID     uint32
+	Status    string
 }
 
 type OperState int

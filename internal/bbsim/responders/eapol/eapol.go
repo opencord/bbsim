@@ -129,7 +129,7 @@ func updateAuthFailed(onuId uint32, ponPortId uint32, serialNumber string, onuSt
 	return nil
 }
 
-func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, onuStateMachine *fsm.FSM, stream openolt.Openolt_EnableIndicationServer) error {
+func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, macAddress net.HardwareAddr, onuStateMachine *fsm.FSM, stream openolt.Openolt_EnableIndicationServer) error {
 
 	// send the packet (hacked together)
 	gemId, err := GetGemPortId(ponPortId, onuId)
@@ -151,7 +151,7 @@ func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, onuStateM
 	options := gopacket.SerializeOptions{}
 
 	ethernetLayer := &layers.Ethernet{
-		SrcMAC:       net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(ponPortId), byte(onuId)}, // TODO move the SrcMAC in the ONU Device
+		SrcMAC:       macAddress,
 		DstMAC:       net.HardwareAddr{0x01, 0x80, 0xC2, 0x00, 0x00, 0x03},
 		EthernetType: layers.EthernetTypeEAPOL,
 	}

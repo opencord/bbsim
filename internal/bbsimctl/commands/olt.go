@@ -40,7 +40,6 @@ type OltNNIs struct{}
 
 type OltPONs struct{}
 
-// TODO add autocomplete
 type oltOptions struct {
 	Get OltGet  `command:"get"`
 	NNI OltNNIs `command:"nnis"`
@@ -77,7 +76,6 @@ func printOltHeader(prefix string, o *pb.Olt) {
 	fmt.Println()
 }
 
-// TODO use voltctl or cordctl parser to print tables (this needs to be moved out of the internals package)
 func (o *OltGet) Execute(args []string) error {
 	olt := getOLT()
 

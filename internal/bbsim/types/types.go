@@ -16,7 +16,9 @@
 
 package types
 
-import "github.com/google/gopacket"
+import (
+	"github.com/google/gopacket"
+)
 
 // deprecated
 type ByteMsg struct {
