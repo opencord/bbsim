@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e14a4cf4_a870074e",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 610,
+      "author": {
+        "id": 1000455
+      },
+      "writtenOn": "2019-10-16T18:34:22Z",
+      "side": 1,
+      "message": "Should we at least log errors if they occur?",
+      "revId": "10003044afdd30ae146332457b538116fb24e8dd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
