@@ -31,6 +31,8 @@ github.com/opencord/omci-sim v0.0.0-20190717165025-5ff7bb17f1e9 h1:qUbCkEFUDEtOB
 github.com/opencord/omci-sim v0.0.0-20190717165025-5ff7bb17f1e9/go.mod h1:W10NTwE0xK9Kh++wrflXPfkknMCaNKkb7Io/ihO4y3k=
 github.com/opencord/omci-sim v0.0.0-20190826212842-203314beba7e h1:LHHUbAUR0LyFEHxl1KhMbSTZMDs4HvDngwIpmvvFE6U=
 github.com/opencord/omci-sim v0.0.0-20190826212842-203314beba7e/go.mod h1:ToOkj7hkHgoet9XQDadKMhYqgA7qItZsi2j1Pk/mX6Y=
+github.com/opencord/omci-sim v0.0.0-20191011202236-3687c57a7252 h1:CMRqdJmtqku04ImHZW5NtdRlc6RRcdxLOn5Ep/b9HBg=
+github.com/opencord/omci-sim v0.0.0-20191011202236-3687c57a7252/go.mod h1:ToOkj7hkHgoet9XQDadKMhYqgA7qItZsi2j1Pk/mX6Y=
 github.com/opencord/voltha-protos v0.0.0-20190813191205-792553b747df h1:j/gaZts38ij2uVVikbXGqlm6n3hts1s0zWzUnBI96C4=
 github.com/opencord/voltha-protos v0.0.0-20190813191205-792553b747df/go.mod h1:MDGL9ai3XOPbiZ0tA8U7k4twK/T/P0Hh4gtjNxNk/qY=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
