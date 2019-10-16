@@ -17,11 +17,10 @@
 package main
 
 import (
-	"flag"
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/api"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
-	bbsimLogger "github.com/opencord/bbsim/internal/bbsim/logger"
+	"github.com/opencord/bbsim/internal/common"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -30,50 +29,6 @@ import (
 	"runtime/pprof"
 	"sync"
 )
-
-type CliOptions struct {
-	OltID        int
-	NumNniPerOlt int
-	NumPonPerOlt int
-	NumOnuPerPon int
-	STag         int
-	CTagInit     int
-	profileCpu   *string
-	logLevel     string
-	logCaller    bool
-}
-
-func getOpts() *CliOptions {
-
-	olt_id := flag.Int("olt_id", 0, "Number of OLT devices to be emulated (default is 1)")
-	nni := flag.Int("nni", 1, "Number of NNI ports per OLT device to be emulated (default is 1)")
-	pon := flag.Int("pon", 1, "Number of PON ports per OLT device to be emulated (default is 1)")
-	onu := flag.Int("onu", 1, "Number of ONU devices per PON port to be emulated (default is 1)")
-
-	s_tag := flag.Int("s_tag", 900, "S-Tag value (default is 900)")
-	c_tag_init := flag.Int("c_tag", 900, "C-Tag starting value (default is 900), each ONU will get a sequentail one (targeting 1024 ONUs per BBSim instance the range is bug enough)")
-
-	profileCpu := flag.String("cpuprofile", "", "write cpu profile to file")
-
-	logLevel := flag.String("logLevel", "debug", "Set the log level (trace, debug, info, warn, error)")
-	logCaller := flag.Bool("logCaller", false, "Whether to print the caller filename or not")
-
-	flag.Parse()
-
-	o := new(CliOptions)
-
-	o.OltID = int(*olt_id)
-	o.NumNniPerOlt = int(*nni)
-	o.NumPonPerOlt = int(*pon)
-	o.NumOnuPerPon = int(*onu)
-	o.STag = int(*s_tag)
-	o.CTagInit = int(*c_tag_init)
-	o.profileCpu = profileCpu
-	o.logLevel = *logLevel
-	o.logCaller = *logCaller
-
-	return o
-}
 
 func startApiServer(channel chan bool, group *sync.WaitGroup) {
 	// TODO make configurable
@@ -110,14 +65,14 @@ func startApiServer(channel chan bool, group *sync.WaitGroup) {
 }
 
 func main() {
-	options := getOpts()
+	options := common.GetBBSimOpts()
 
-	bbsimLogger.SetLogLevel(log.StandardLogger(), options.logLevel, options.logCaller)
+	common.SetLogLevel(log.StandardLogger(), options.LogLevel, options.LogCaller)
 
-	if *options.profileCpu != "" {
+	if *options.ProfileCpu != "" {
 		// start profiling
-		log.Infof("Creating profile file at: %s", *options.profileCpu)
-		f, err := os.Create(*options.profileCpu)
+		log.Infof("Creating profile file at: %s", *options.ProfileCpu)
+		f, err := os.Create(*options.ProfileCpu)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -138,7 +93,8 @@ func main() {
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 
-	go devices.CreateOLT(options.OltID, options.NumNniPerOlt, options.NumPonPerOlt, options.NumOnuPerPon, options.STag, options.CTagInit, &oltDoneChannel, &apiDoneChannel, &wg)
+	olt := devices.CreateOLT(options.OltID, options.NumNniPerOlt, options.NumPonPerOlt, options.NumOnuPerPon, options.STag, options.CTagInit, &oltDoneChannel, &apiDoneChannel, false)
+	go devices.StartOlt(olt, &wg)
 	log.Debugf("Created OLT with id: %d", options.OltID)
 	go startApiServer(apiDoneChannel, &wg)
 	log.Debugf("Started APIService")
@@ -147,7 +103,7 @@ func main() {
 
 	defer func() {
 		log.Info("BroadBand Simulator is off")
-		if *options.profileCpu != "" {
+		if *options.ProfileCpu != "" {
 			log.Info("Stopping profiler")
 			pprof.StopCPUProfile()
 		}

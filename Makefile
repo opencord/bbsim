@@ -31,7 +31,7 @@ protos: api/bbsim/bbsim.pb.go # @HELP Build proto files
 dep: # @HELP Download the dependencies to the vendor folder
 	GO111MODULE=on go mod vendor
 
-build: dep protos fmt build-bbsim build-bbsimctl# @HELP Build the binary
+build: dep protos fmt build-bbsim build-bbsimctl build-bbr # @HELP Build the binary
 
 test: dep protos fmt # @HELP Execute unit tests
 	GO111MODULE=on go test -v -mod vendor ./... -covermode count -coverprofile ./tests/results/go-test-coverage.out 2>&1 | tee ./tests/results/go-test-results.out
@@ -50,6 +50,11 @@ docker-push: # @HELP Push a docker container to a registry
 docker-run: # @HELP Run the container locally (intended for development purposes: DOCKER_RUN_ARGS="-pon 2 -onu 2" make docker-run)
 	docker run -p 50070:50070 -p 50060:50060 --privileged --rm --name bbsim ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} /app/bbsim ${DOCKER_RUN_ARGS}
 
+.PHONY: docs
+docs: # @HELP Generate docs and serve them in the browser
+	@echo "\033[36m Open your browser at localhost:6060 \033[0m"
+	godoc -http=localhost:6060
+
 help: # @HELP Print the command options
 	@echo
 	@echo "\033[0;31m    BroadBand Simulator (BBSim) \033[0m"
@@ -66,9 +71,17 @@ help: # @HELP Print the command options
 
 
 # Internals
+build-bbr:
+	GO111MODULE=on go build -i -v -mod vendor \
+    	-ldflags "-w -X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
+    		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
+    		-X main.gitStatus=${GIT_STATUS} \
+    		-X main.version=${VERSION}" \
+    	./cmd/bbr
+
 build-bbsim:
 	GO111MODULE=on go build -i -v -mod vendor \
-    	-ldflags "-X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
+    	-ldflags "-w -X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
     		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
     		-X main.gitStatus=${GIT_STATUS} \
     		-X main.version=${VERSION}" \
@@ -76,7 +89,7 @@ build-bbsim:
 
 build-bbsimctl:
 	GO111MODULE=on go build -i -v -mod vendor \
-		-ldflags "-X github.com/opencord/bbsim/internal/bbsimctl/config.BuildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
+		-ldflags "-w -X github.com/opencord/bbsim/internal/bbsimctl/config.BuildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
 			-X github.com/opencord/bbsim/internal/bbsimctl/config.CommitHash=$(shell git log --pretty=format:%H -n 1) \
 			-X github.com/opencord/bbsim/internal/bbsimctl/config.GitStatus=${GIT_STATUS} \
 			-X github.com/opencord/bbsim/internal/bbsimctl/config.Version=${VERSION}" \

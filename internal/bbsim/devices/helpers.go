@@ -39,6 +39,7 @@ func getOperStateFSM(cb fsm.Callback) *fsm.FSM {
 	)
 }
 
+// deprecated
 func onuSnToString(sn *openolt.SerialNumber) string {
 	s := string(sn.VendorId)
 	for _, i := range sn.VendorSpecific {
