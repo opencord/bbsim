@@ -17,11 +17,13 @@
 package dhcp
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
+	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	omci "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/go/openolt"
@@ -167,7 +169,7 @@ func serializeDHCPPacket(intfId uint32, onuId uint32, srcMac net.HardwareAddr, d
 	return bytes, nil
 }
 
-func getDhcpLayer(pkt gopacket.Packet) (*layers.DHCPv4, error) {
+func GetDhcpLayer(pkt gopacket.Packet) (*layers.DHCPv4, error) {
 	layerDHCP := pkt.Layer(layers.LayerTypeDHCPv4)
 	dhcp, _ := layerDHCP.(*layers.DHCPv4)
 	if dhcp == nil {
@@ -176,11 +178,15 @@ func getDhcpLayer(pkt gopacket.Packet) (*layers.DHCPv4, error) {
 	return dhcp, nil
 }
 
-func getDhcpMessageType(dhcp *layers.DHCPv4) (layers.DHCPMsgType, error) {
+func GetDhcpMessageType(dhcp *layers.DHCPv4) (layers.DHCPMsgType, error) {
 	for _, option := range dhcp.Options {
 		if option.Type == layers.DHCPOptMessageType {
-			if reflect.DeepEqual(option.Data, []byte{byte(layers.DHCPMsgTypeOffer)}) {
+			if reflect.DeepEqual(option.Data, []byte{byte(layers.DHCPMsgTypeDiscover)}) {
+				return layers.DHCPMsgTypeDiscover, nil
+			} else if reflect.DeepEqual(option.Data, []byte{byte(layers.DHCPMsgTypeOffer)}) {
 				return layers.DHCPMsgTypeOffer, nil
+			} else if reflect.DeepEqual(option.Data, []byte{byte(layers.DHCPMsgTypeRequest)}) {
+				return layers.DHCPMsgTypeRequest, nil
 			} else if reflect.DeepEqual(option.Data, []byte{byte(layers.DHCPMsgTypeAck)}) {
 				return layers.DHCPMsgTypeAck, nil
 			} else if reflect.DeepEqual(option.Data, []byte{byte(layers.DHCPMsgTypeRelease)}) {
@@ -192,6 +198,20 @@ func getDhcpMessageType(dhcp *layers.DHCPv4) (layers.DHCPMsgType, error) {
 		}
 	}
 	return 0, errors.New("Failed to extract MsgType from dhcp")
+}
+
+// returns the DHCP Layer type or error if it's not a DHCP Packet
+func GetDhcpPacketType(pkt gopacket.Packet) (string, error) {
+	dhcpLayer, err := GetDhcpLayer(pkt)
+	if err != nil {
+		return "", err
+	}
+	dhcpMessageType, err := GetDhcpMessageType(dhcpLayer)
+	if err != nil {
+		return "", err
+	}
+
+	return dhcpMessageType.String(), nil
 }
 
 func sendDHCPPktIn(msg bbsim.ByteMsg, portNo uint32, stream bbsim.Stream) error {
@@ -299,7 +319,7 @@ func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serialNumber string, port
 
 func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portNo uint32, onuHwAddress net.HardwareAddr, cTag int, onuStateMachine *fsm.FSM, pkt gopacket.Packet, stream openolt.Openolt_EnableIndicationServer) error {
 
-	dhcpLayer, err := getDhcpLayer(pkt)
+	dhcpLayer, err := GetDhcpLayer(pkt)
 	if err != nil {
 		dhcpLogger.WithFields(log.Fields{
 			"OnuId":  onuId,
@@ -311,7 +331,7 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portN
 		}
 		return err
 	}
-	dhcpMessageType, err := getDhcpMessageType(dhcpLayer)
+	dhcpMessageType, err := GetDhcpMessageType(dhcpLayer)
 	if err != nil {
 		dhcpLogger.WithFields(log.Fields{
 			"OnuId":  onuId,
@@ -367,6 +387,88 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portN
 			"IntfId": ponPortId,
 			"OnuSn":  serialNumber,
 		}).Warnf("Unsupported DHCP Operation: %s", dhcpLayer.Operation.String())
+	}
+	return nil
+}
+
+// This method handle the BBR DHCP Packets
+// BBR does not need to do anything but forward the packets in the correct direction
+func HandleNextBbrPacket(onuId uint32, ponPortId uint32, serialNumber string, portNo uint32, onuHwAddress net.HardwareAddr, sTag int, cTag int, onuStateMachine *fsm.FSM, pkt gopacket.Packet, client openolt.OpenoltClient) error {
+
+	// check if the packet is going:
+	// - outgouing: toward the DHCP
+	// - incoming: toward the ONU
+	isIncoming := packetHandlers.IsIncomingPacket(pkt)
+	log.Tracef("Is Incoming: %t", isIncoming)
+
+	dhcpType, err := GetDhcpPacketType(pkt)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Fatalf("Can't find DHCP type for packet")
+	}
+
+	if isIncoming == true {
+
+		onuPacket := openolt.OnuPacket{
+			IntfId:    ponPortId,
+			OnuId:     onuId,
+			PortNo:    onuId,
+			GemportId: 1,
+			Pkt:       pkt.Data(),
+		}
+
+		if _, err := client.OnuPacketOut(context.Background(), &onuPacket); err != nil {
+			log.WithFields(log.Fields{
+				"OnuId":  onuId,
+				"IntfId": ponPortId,
+				"OnuSn":  serialNumber,
+				"Type":   dhcpType,
+				"error":  err,
+			}).Infof("Failed to send DHCP packet to the ONU")
+		}
+
+		log.WithFields(log.Fields{
+			"OnuId":  onuId,
+			"IntfId": ponPortId,
+			"OnuSn":  serialNumber,
+			"Type":   dhcpType,
+		}).Infof("Sent DHCP packet to the ONU")
+
+		// TODO: signal that the ONU has completed
+		//dhcpLayer, _ := GetDhcpLayer(pkt)
+		//dhcpMessageType, _ := GetDhcpMessageType(dhcpLayer)
+		//if dhcpMessageType == layers.DHCPMsgTypeAck {
+		//	onu.Done <- true
+		//}
+
+	} else {
+		// doble tag the packet and send it to the NNI
+		// NOTE do we need this in the HandleDHCP Packet?
+		doubleTaggedPkt, err := packetHandlers.PushDoubleTag(sTag, sTag, pkt)
+		if err != nil {
+			log.Error("Failt to add double tag to packet")
+		}
+
+		pkt := openolt.UplinkPacket{
+			IntfId: 0, // BBSim does not care about which NNI, it has only one
+			Pkt:    doubleTaggedPkt.Data(),
+		}
+		if _, err := client.UplinkPacketOut(context.Background(), &pkt); err != nil {
+			log.WithFields(log.Fields{
+				"OnuId":  onuId,
+				"IntfId": ponPortId,
+				"OnuSn":  serialNumber,
+				"Type":   dhcpType,
+				"error":  err,
+			}).Infof("Failed to send DHCP packet out of the NNI Port")
+		}
+		log.WithFields(log.Fields{
+			"OnuId":  onuId,
+			"IntfId": ponPortId,
+			"OnuSn":  serialNumber,
+			"Type":   dhcpType,
+		}).Infof("Sent DHCP packet out of the NNI Port")
 	}
 	return nil
 }

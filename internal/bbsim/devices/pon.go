@@ -38,7 +38,7 @@ type PonPort struct {
 	// NOTE do we need a state machine for the PON Ports?
 }
 
-func (p PonPort) getOnuBySn(sn *openolt.SerialNumber) (*Onu, error) {
+func (p PonPort) GetOnuBySn(sn *openolt.SerialNumber) (*Onu, error) {
 	for _, onu := range p.Onus {
 		if bytes.Equal(onu.SerialNumber.VendorSpecific, sn.VendorSpecific) {
 			return onu, nil
@@ -47,7 +47,7 @@ func (p PonPort) getOnuBySn(sn *openolt.SerialNumber) (*Onu, error) {
 	return nil, errors.New(fmt.Sprintf("Cannot find Onu with serial number %d in PonPort %d", sn, p.ID))
 }
 
-func (p PonPort) getOnuById(id uint32) (*Onu, error) {
+func (p PonPort) GetOnuById(id uint32) (*Onu, error) {
 	for _, onu := range p.Onus {
 		if onu.ID == id {
 			return onu, nil
