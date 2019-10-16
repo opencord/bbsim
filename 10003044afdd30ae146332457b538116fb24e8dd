@@ -16,6 +16,24 @@
       "revId": "10003044afdd30ae146332457b538116fb24e8dd",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ca091f2_4ee3da44",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 610,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-10-16T18:46:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e14a4cf4_a870074e",
+      "revId": "10003044afdd30ae146332457b538116fb24e8dd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
