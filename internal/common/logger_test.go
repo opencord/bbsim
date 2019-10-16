@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package logger_test
+package common_test
 
 import (
-	bbsimLogger "github.com/opencord/bbsim/internal/bbsim/logger"
+	"github.com/opencord/bbsim/internal/common"
 	"github.com/sirupsen/logrus"
 	"gotest.tools/assert"
 	"testing"
@@ -26,31 +26,31 @@ import (
 func Test_SetLogLevel(t *testing.T) {
 	log := logrus.New()
 
-	bbsimLogger.SetLogLevel(log, "trace", false)
+	common.SetLogLevel(log, "trace", false)
 	assert.Equal(t, log.Level, logrus.TraceLevel)
 
-	bbsimLogger.SetLogLevel(log, "debug", false)
+	common.SetLogLevel(log, "debug", false)
 	assert.Equal(t, log.Level, logrus.DebugLevel)
 
-	bbsimLogger.SetLogLevel(log, "info", false)
+	common.SetLogLevel(log, "info", false)
 	assert.Equal(t, log.Level, logrus.InfoLevel)
 
-	bbsimLogger.SetLogLevel(log, "warn", false)
+	common.SetLogLevel(log, "warn", false)
 	assert.Equal(t, log.Level, logrus.WarnLevel)
 
-	bbsimLogger.SetLogLevel(log, "error", false)
+	common.SetLogLevel(log, "error", false)
 	assert.Equal(t, log.Level, logrus.ErrorLevel)
 
-	bbsimLogger.SetLogLevel(log, "foobar", false)
+	common.SetLogLevel(log, "foobar", false)
 	assert.Equal(t, log.Level, logrus.DebugLevel)
 }
 
 func Test_SetLogLevelCaller(t *testing.T) {
 	log := logrus.New()
 
-	bbsimLogger.SetLogLevel(log, "debug", true)
+	common.SetLogLevel(log, "debug", true)
 	assert.Equal(t, log.ReportCaller, true)
 
-	bbsimLogger.SetLogLevel(log, "debug", false)
+	common.SetLogLevel(log, "debug", false)
 	assert.Equal(t, log.ReportCaller, false)
 }
