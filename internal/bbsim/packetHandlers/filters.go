@@ -20,6 +20,7 @@ import (
 	"errors"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
+	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"net"
 )
 
@@ -56,4 +57,28 @@ func GetDstMacAddressFromPacket(packet gopacket.Packet) (net.HardwareAddr, error
 		}
 	}
 	return nil, errors.New("cant-find-mac-address")
+}
+
+// returns the DHCP Layer type or error if it's not a DHCP Packet
+func GetDhcpPacketType(pkt gopacket.Packet) (string, error) {
+	dhcpLayer, err := dhcp.GetDhcpLayer(pkt)
+	if err != nil {
+		return "", err
+	}
+	dhcpMessageType, err := dhcp.GetDhcpMessageType(dhcpLayer)
+	if err != nil {
+		return "", err
+	}
+
+	return dhcpMessageType.String(), nil
+}
+
+// returns wether it's an EAPOL or DHCP packet, error if it's none
+func IsEapolOrDhcp(pkt gopacket.Packet) (string, error) {
+	if pkt.Layer(layers.LayerTypeEAP) != nil || pkt.Layer(layers.LayerTypeEAPOL) != nil {
+		return "EAPOL", nil
+	} else if IsDhcpPacket(pkt) {
+		return "DHCP", nil
+	}
+	return "", errors.New("packet-is-neither-eapol-or-dhcp")
 }

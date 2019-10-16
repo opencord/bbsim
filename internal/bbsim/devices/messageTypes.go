@@ -35,6 +35,9 @@ const (
 	StartDHCP           MessageType = 8
 	OnuPacketOut        MessageType = 9
 	DyingGaspIndication MessageType = 10
+
+	// BBR messages
+	OmciIndication MessageType = 11 // this are OMCI messages going from the OLT to VOLTHA
 )
 
 func (m MessageType) String() string {
@@ -50,6 +53,7 @@ func (m MessageType) String() string {
 		"StartDHCP",
 		"OnuPacketOut",
 		"DyingGaspIndication",
+		"OmciIndication",
 	}
 	return names[m]
 }
@@ -89,6 +93,12 @@ type OmciMessage struct {
 	OnuSN   *openolt.SerialNumber
 	OnuID   uint32
 	omciMsg *openolt.OmciMsg
+}
+
+type OmciIndicationMessage struct {
+	OnuSN   *openolt.SerialNumber
+	OnuID   uint32
+	OmciInd *openolt.OmciIndication
 }
 
 type OnuFlowUpdateMessage struct {
