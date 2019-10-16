@@ -112,7 +112,7 @@ ID    OPERSTATE
 3     up
 
 
-$ ./bbsimctl onus
+$ ./bbsimctl onu list
 PONPORTID    ID    SERIALNUMBER    STAG    CTAG    OPERSTATE    INTERNALSTATE
 0            1     BBSM00000001    900     900     up           eap_response_identity_sent
 0            2     BBSM00000002    900     901     up           eap_start_sent
