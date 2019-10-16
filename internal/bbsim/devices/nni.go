@@ -31,7 +31,7 @@ var (
 	nniLogger    = log.WithFields(log.Fields{"module": "NNI"})
 	nniVeth      = "nni"
 	upstreamVeth = "upstream"
-	dhcpServerIp = "182.21.0.128"
+	dhcpServerIp = "192.168.254.1"
 )
 
 type Executor interface {

@@ -64,7 +64,7 @@ func Test_IsDhcpPacket_False(t *testing.T) {
 
 func Test_IsIncomingPacket_True(t *testing.T) {
 	eth := &layers.IPv4{
-		SrcIP: net.ParseIP("182.21.0.128"),
+		SrcIP: net.ParseIP("192.168.254.1"),
 		DstIP: net.ParseIP("182.21.0.122"),
 	}
 
@@ -84,7 +84,7 @@ func Test_IsIncomingPacket_True(t *testing.T) {
 func Test_IsIncomingPacket_False(t *testing.T) {
 	eth := &layers.IPv4{
 		SrcIP: net.ParseIP("182.21.0.122"),
-		DstIP: net.ParseIP("182.21.0.128"),
+		DstIP: net.ParseIP("192.168.254.1"),
 	}
 
 	buffer := gopacket.NewSerializeBuffer()

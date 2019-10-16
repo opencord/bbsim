@@ -17,13 +17,17 @@
 package devices
 
 import (
+	"context"
 	"fmt"
+	"github.com/cboling/omci"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
-	omci "github.com/opencord/omci-sim"
+	"github.com/opencord/bbsim/internal/common"
+	omcilib "github.com/opencord/bbsim/internal/common/omci"
+	omcisim "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/go/openolt"
 	log "github.com/sirupsen/logrus"
 	"net"
@@ -50,23 +54,35 @@ type Onu struct {
 	SerialNumber *openolt.SerialNumber
 
 	Channel chan Message // this Channel is to track state changes OMCI messages, EAPOL and DHCP packets
+
+	// OMCI params
+	tid        uint16
+	hpTid      uint16
+	seqNumber  uint16
+	HasGemPort bool
+
+	DoneChannel chan bool // this channel is used to signal once the onu is complete (when the struct is used by BBR)
 }
 
 func (o Onu) Sn() string {
-	return onuSnToString(o.SerialNumber)
+	return common.OnuSnToString(o.SerialNumber)
 }
 
 func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) *Onu {
 
 	o := Onu{
-		ID:        id,
-		PonPortID: pon.ID,
-		PonPort:   pon,
-		STag:      sTag,
-		CTag:      cTag,
-		HwAddress: net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(id)},
-		PortNo:    0,
-		Channel:   make(chan Message, 2048),
+		ID:          id,
+		PonPortID:   pon.ID,
+		PonPort:     pon,
+		STag:        sTag,
+		CTag:        cTag,
+		HwAddress:   net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(id)},
+		PortNo:      0,
+		Channel:     make(chan Message, 2048),
+		tid:         0x1,
+		hpTid:       0x8000,
+		seqNumber:   0,
+		DoneChannel: make(chan bool, 1),
 	}
 	o.SerialNumber = o.NewSN(olt.ID, pon.ID, o.ID)
 
@@ -102,6 +118,10 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) *Onu {
 			{Name: "dhcp_request_sent", Src: []string{"dhcp_discovery_sent"}, Dst: "dhcp_request_sent"},
 			{Name: "dhcp_ack_received", Src: []string{"dhcp_request_sent"}, Dst: "dhcp_ack_received"},
 			{Name: "dhcp_failed", Src: []string{"dhcp_started", "dhcp_discovery_sent", "dhcp_request_sent"}, Dst: "dhcp_failed"},
+			// BBR States
+			// TODO add start OMCI state
+			{Name: "send_eapol_flow", Src: []string{"created"}, Dst: "eapol_flow_sent"},
+			{Name: "send_dhcp_flow", Src: []string{"eapol_flow_sent"}, Dst: "dhcp_flow_sent"},
 		},
 		fsm.Callbacks{
 			"enter_state": func(e *fsm.Event) {
@@ -164,6 +184,18 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) *Onu {
 					"OnuSn":  o.Sn(),
 				}).Errorf("ONU failed to DHCP!")
 			},
+			"enter_eapol_flow_sent": func(e *fsm.Event) {
+				msg := Message{
+					Type: SendEapolFlow,
+				}
+				o.Channel <- msg
+			},
+			"enter_dhcp_flow_sent": func(e *fsm.Event) {
+				msg := Message{
+					Type: SendDhcpFlow,
+				}
+				o.Channel <- msg
+			},
 		},
 	)
 	return &o
@@ -177,7 +209,7 @@ func (o Onu) logStateChange(src string, dst string) {
 	}).Debugf("Changing ONU InternalState from %s to %s", src, dst)
 }
 
-func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer) {
+func (o Onu) ProcessOnuMessages(stream openolt.Openolt_EnableIndicationServer, client openolt.OpenoltClient) {
 	onuLogger.WithFields(log.Fields{
 		"onuID": o.ID,
 		"onuSN": o.Sn(),
@@ -211,20 +243,51 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer) {
 			// FIXME use id, ponId as SendEapStart
 			dhcp.SendDHCPDiscovery(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
 		case OnuPacketOut:
-			msg, _ := message.Data.(OnuPacketOutMessage)
-			pkt := msg.Packet
-			etherType := pkt.Layer(layers.LayerTypeEthernet).(*layers.Ethernet).EthernetType
 
-			if etherType == layers.EthernetTypeEAPOL {
-				eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream)
-			} else if packetHandlers.IsDhcpPacket(pkt) {
+			msg, _ := message.Data.(OnuPacketMessage)
+
+			log.WithFields(log.Fields{
+				"IntfId":  msg.IntfId,
+				"OnuId":   msg.OnuId,
+				"pktType": msg.Type,
+			}).Trace("Received OnuPacketOut Message")
+
+			if msg.Type == packetHandlers.EAPOL {
+				eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream, client)
+			} else if msg.Type == packetHandlers.DHCP {
 				// NOTE here we receive packets going from the DHCP Server to the ONU
 				// for now we expect them to be double-tagged, but ideally the should be single tagged
 				dhcp.HandleNextPacket(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.CTag, o.InternalState, msg.Packet, stream)
 			}
+		case OnuPacketIn:
+			// NOTE we only receive BBR packets here.
+			// Eapol.HandleNextPacket can handle both BBSim and BBr cases so the call is the same
+			// in the DHCP case VOLTHA only act as a proxy, the behaviour is completely different thus we have a dhcp.HandleNextBbrPacket
+			msg, _ := message.Data.(OnuPacketMessage)
+
+			log.WithFields(log.Fields{
+				"IntfId":  msg.IntfId,
+				"OnuId":   msg.OnuId,
+				"pktType": msg.Type,
+			}).Trace("Received OnuPacketIn Message")
+
+			if msg.Type == packetHandlers.EAPOL {
+				eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream, client)
+			} else if msg.Type == packetHandlers.DHCP {
+				dhcp.HandleNextBbrPacket(o.ID, o.PonPortID, o.Sn(), o.STag, o.HwAddress, o.DoneChannel, msg.Packet, client)
+			}
 		case DyingGaspIndication:
 			msg, _ := message.Data.(DyingGaspIndicationMessage)
 			o.sendDyingGaspInd(msg, stream)
+		case OmciIndication:
+			// TODO handle me!
+			// here https://gerrit.opencord.org/#/c/15521/11/internal/bbr/onu.go in startOmci
+			msg, _ := message.Data.(OmciIndicationMessage)
+			o.handleOmci(msg, client)
+		case SendEapolFlow:
+			o.sendEapolFlow(client)
+		case SendDhcpFlow:
+			o.sendDhcpFlow(client)
 		default:
 			onuLogger.Warnf("Received unknown message data %v for type %v in OLT Channel", message.Data, message.Type)
 		}
@@ -232,7 +295,7 @@ func (o Onu) processOnuMessages(stream openolt.Openolt_EnableIndicationServer) {
 }
 
 func (o Onu) processOmciMessages(stream openolt.Openolt_EnableIndicationServer) {
-	ch := omci.GetChannel()
+	ch := omcisim.GetChannel()
 
 	onuLogger.WithFields(log.Fields{
 		"onuID": o.ID,
@@ -241,7 +304,7 @@ func (o Onu) processOmciMessages(stream openolt.Openolt_EnableIndicationServer) 
 
 	for message := range ch {
 		switch message.Type {
-		case omci.GemPortAdded:
+		case omcisim.GemPortAdded:
 			log.WithFields(log.Fields{
 				"OnuId":  message.Data.OnuId,
 				"IntfId": message.Data.IntfId,
@@ -359,7 +422,7 @@ func (o Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableInd
 	}).Tracef("Received OMCI message")
 
 	var omciInd openolt.OmciIndication
-	respPkt, err := omci.OmciSim(o.PonPortID, o.ID, HexDecode(msg.omciMsg.Pkt))
+	respPkt, err := omcisim.OmciSim(o.PonPortID, o.ID, HexDecode(msg.omciMsg.Pkt))
 	if err != nil {
 		onuLogger.WithFields(log.Fields{
 			"IntfId":       o.PonPortID,
@@ -381,7 +444,7 @@ func (o Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableInd
 			"SerialNumber": o.Sn(),
 			"omciPacket":   omciInd.Pkt,
 			"msg":          msg,
-		}).Errorf("send omci indication failed: %v", err)
+		}).Errorf("send omcisim indication failed: %v", err)
 		return
 	}
 	onuLogger.WithFields(log.Fields{
@@ -395,10 +458,10 @@ func (o *Onu) storePortNumber(portNo uint32) {
 	// FIXME this is a workaround to always use the SN-1 entry in sadis,
 	// we need to add support for multiple UNIs
 	// the action plan is:
-	// - refactor the omci-sim library to use https://github.com/cboling/omci instead of canned messages
+	// - refactor the omcisim-sim library to use https://github.com/cboling/omci instead of canned messages
 	// - change the library so that it reports a single UNI and remove this workaroung
 	// - add support for multiple UNIs in BBSim
-	if portNo < o.PortNo {
+	if o.PortNo == 0 || portNo < o.PortNo {
 		o.PortNo = portNo
 	}
 }
@@ -458,4 +521,194 @@ func HexDecode(pkt []byte) []byte {
 	}
 	onuLogger.Tracef("Omci decoded: %x.", p)
 	return p
+}
+
+// BBR methods
+
+func sendOmciMsg(pktBytes []byte, intfId uint32, onuId uint32, sn *openolt.SerialNumber, msgType string, client openolt.OpenoltClient) {
+	omciMsg := openolt.OmciMsg{
+		IntfId: intfId,
+		OnuId:  onuId,
+		Pkt:    pktBytes,
+	}
+
+	if _, err := client.OmciMsgOut(context.Background(), &omciMsg); err != nil {
+		log.WithFields(log.Fields{
+			"IntfId":       intfId,
+			"OnuId":        onuId,
+			"SerialNumber": common.OnuSnToString(sn),
+			"Pkt":          omciMsg.Pkt,
+		}).Fatalf("Failed to send MIB Reset")
+	}
+	log.WithFields(log.Fields{
+		"IntfId":       intfId,
+		"OnuId":        onuId,
+		"SerialNumber": common.OnuSnToString(sn),
+		"Pkt":          omciMsg.Pkt,
+	}).Tracef("Sent OMCI message %s", msgType)
+}
+
+func (onu *Onu) getNextTid(highPriority ...bool) uint16 {
+	var next uint16
+	if len(highPriority) > 0 && highPriority[0] {
+		next = onu.hpTid
+		onu.hpTid += 1
+		if onu.hpTid < 0x8000 {
+			onu.hpTid = 0x8000
+		}
+	} else {
+		next = onu.tid
+		onu.tid += 1
+		if onu.tid >= 0x8000 {
+			onu.tid = 1
+		}
+	}
+	return next
+}
+
+// TODO move this method in responders/omcisim
+func (o *Onu) StartOmci(client openolt.OpenoltClient) {
+	mibReset, _ := omcilib.CreateMibResetRequest(o.getNextTid(false))
+	sendOmciMsg(mibReset, o.PonPortID, o.ID, o.SerialNumber, "mibReset", client)
+}
+
+func (o *Onu) handleOmci(msg OmciIndicationMessage, client openolt.OpenoltClient) {
+	msgType, packet := omcilib.DecodeOmci(msg.OmciInd.Pkt)
+
+	log.WithFields(log.Fields{
+		"IntfId":  msg.OmciInd.IntfId,
+		"OnuId":   msg.OmciInd.OnuId,
+		"OnuSn":   common.OnuSnToString(o.SerialNumber),
+		"Pkt":     msg.OmciInd.Pkt,
+		"msgType": msgType,
+	}).Trace("ONU Receveives OMCI Msg")
+	switch msgType {
+	default:
+		log.Fatalf("unexpected frame: %v", packet)
+	case omci.MibResetResponseType:
+		mibUpload, _ := omcilib.CreateMibUploadRequest(o.getNextTid(false))
+		sendOmciMsg(mibUpload, o.PonPortID, o.ID, o.SerialNumber, "mibUpload", client)
+	case omci.MibUploadResponseType:
+		mibUploadNext, _ := omcilib.CreateMibUploadNextRequest(o.getNextTid(false), o.seqNumber)
+		sendOmciMsg(mibUploadNext, o.PonPortID, o.ID, o.SerialNumber, "mibUploadNext", client)
+	case omci.MibUploadNextResponseType:
+		o.seqNumber++
+
+		if o.seqNumber > 290 {
+			// NOTE we are done with the MIB Upload (290 is the number of messages the omci-sim library will respond to)
+			galEnet, _ := omcilib.CreateGalEnetRequest(o.getNextTid(false))
+			sendOmciMsg(galEnet, o.PonPortID, o.ID, o.SerialNumber, "CreateGalEnetRequest", client)
+		} else {
+			mibUploadNext, _ := omcilib.CreateMibUploadNextRequest(o.getNextTid(false), o.seqNumber)
+			sendOmciMsg(mibUploadNext, o.PonPortID, o.ID, o.SerialNumber, "mibUploadNext", client)
+		}
+	case omci.CreateResponseType:
+		// NOTE Creating a GemPort,
+		// BBsim actually doesn't care about the values, so we can do we want with the parameters
+		// In the same way we can create a GemPort even without setting up UNIs/TConts/...
+		// but we need the GemPort to trigger the state change
+
+		if !o.HasGemPort {
+			// NOTE this sends a CreateRequestType and BBSim replies with a CreateResponseType
+			// thus we send this request only once
+			gemReq, _ := omcilib.CreateGemPortRequest(o.getNextTid(false))
+			sendOmciMsg(gemReq, o.PonPortID, o.ID, o.SerialNumber, "CreateGemPortRequest", client)
+			o.HasGemPort = true
+		} else {
+			if err := o.InternalState.Event("send_eapol_flow"); err != nil {
+				onuLogger.WithFields(log.Fields{
+					"OnuId":  o.ID,
+					"IntfId": o.PonPortID,
+					"OnuSn":  o.Sn(),
+				}).Errorf("Error while transitioning ONU State %v", err)
+			}
+		}
+
+	}
+}
+
+func (o *Onu) sendEapolFlow(client openolt.OpenoltClient) {
+
+	classifierProto := openolt.Classifier{
+		EthType: uint32(layers.EthernetTypeEAPOL),
+		OVid:    4091,
+	}
+
+	actionProto := openolt.Action{}
+
+	downstreamFlow := openolt.Flow{
+		AccessIntfId:  int32(o.PonPortID),
+		OnuId:         int32(o.ID),
+		UniId:         int32(0x101), // FIXME do not hardcode this
+		FlowId:        uint32(o.ID),
+		FlowType:      "downstream",
+		AllocId:       int32(0),
+		NetworkIntfId: int32(0),
+		GemportId:     int32(1), // FIXME use the same value as CreateGemPortRequest PortID, do not hardcode
+		Classifier:    &classifierProto,
+		Action:        &actionProto,
+		Priority:      int32(100),
+		Cookie:        uint64(o.ID),
+		PortNo:        uint32(o.ID), // NOTE we are using this to map an incoming packetIndication to an ONU
+	}
+
+	if _, err := client.FlowAdd(context.Background(), &downstreamFlow); err != nil {
+		log.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"OnuId":        o.ID,
+			"FlowId":       downstreamFlow.FlowId,
+			"PortNo":       downstreamFlow.PortNo,
+			"SerialNumber": common.OnuSnToString(o.SerialNumber),
+		}).Fatalf("Failed to EAPOL Flow")
+	}
+	log.WithFields(log.Fields{
+		"IntfId":       o.PonPortID,
+		"OnuId":        o.ID,
+		"FlowId":       downstreamFlow.FlowId,
+		"PortNo":       downstreamFlow.PortNo,
+		"SerialNumber": common.OnuSnToString(o.SerialNumber),
+	}).Info("Sent EAPOL Flow")
+}
+
+func (o *Onu) sendDhcpFlow(client openolt.OpenoltClient) {
+	classifierProto := openolt.Classifier{
+		EthType: uint32(layers.EthernetTypeIPv4),
+		SrcPort: uint32(68),
+		DstPort: uint32(67),
+	}
+
+	actionProto := openolt.Action{}
+
+	downstreamFlow := openolt.Flow{
+		AccessIntfId:  int32(o.PonPortID),
+		OnuId:         int32(o.ID),
+		UniId:         int32(0x101), // FIXME do not hardcode this
+		FlowId:        uint32(o.ID),
+		FlowType:      "downstream",
+		AllocId:       int32(0),
+		NetworkIntfId: int32(0),
+		GemportId:     int32(1), // FIXME use the same value as CreateGemPortRequest PortID, do not hardcode
+		Classifier:    &classifierProto,
+		Action:        &actionProto,
+		Priority:      int32(100),
+		Cookie:        uint64(o.ID),
+		PortNo:        uint32(o.ID), // NOTE we are using this to map an incoming packetIndication to an ONU
+	}
+
+	if _, err := client.FlowAdd(context.Background(), &downstreamFlow); err != nil {
+		log.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"OnuId":        o.ID,
+			"FlowId":       downstreamFlow.FlowId,
+			"PortNo":       downstreamFlow.PortNo,
+			"SerialNumber": common.OnuSnToString(o.SerialNumber),
+		}).Fatalf("Failed to send DHCP Flow")
+	}
+	log.WithFields(log.Fields{
+		"IntfId":       o.PonPortID,
+		"OnuId":        o.ID,
+		"FlowId":       downstreamFlow.FlowId,
+		"PortNo":       downstreamFlow.PortNo,
+		"SerialNumber": common.OnuSnToString(o.SerialNumber),
+	}).Info("Sent DHCP Flow")
 }

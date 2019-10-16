@@ -39,14 +39,14 @@ func IsIncomingPacket(packet gopacket.Packet) bool {
 		ip, _ := ipLayer.(*layers.IPv4)
 
 		// FIXME find a better way to filter outgoing packets
-		if ip.SrcIP.Equal(net.ParseIP("182.21.0.128")) {
+		if ip.SrcIP.Equal(net.ParseIP("192.168.254.1")) {
 			return true
 		}
 	}
 	return false
 }
 
-// returns the Desctination Mac Address contained in the packet
+// returns the Destination Mac Address contained in the packet
 func GetDstMacAddressFromPacket(packet gopacket.Packet) (net.HardwareAddr, error) {
 	if ethLayer := packet.Layer(layers.LayerTypeEthernet); ethLayer != nil {
 		eth, _ := ethLayer.(*layers.Ethernet)
@@ -56,4 +56,26 @@ func GetDstMacAddressFromPacket(packet gopacket.Packet) (net.HardwareAddr, error
 		}
 	}
 	return nil, errors.New("cant-find-mac-address")
+}
+
+// returns the Source Mac Address contained in the packet
+func GetSrcMacAddressFromPacket(packet gopacket.Packet) (net.HardwareAddr, error) {
+	if ethLayer := packet.Layer(layers.LayerTypeEthernet); ethLayer != nil {
+		eth, _ := ethLayer.(*layers.Ethernet)
+
+		if eth.DstMAC != nil {
+			return eth.SrcMAC, nil
+		}
+	}
+	return nil, errors.New("cant-find-mac-address")
+}
+
+// returns wether it's an EAPOL or DHCP packet, error if it's none
+func IsEapolOrDhcp(pkt gopacket.Packet) (PacketType, error) {
+	if pkt.Layer(layers.LayerTypeEAP) != nil || pkt.Layer(layers.LayerTypeEAPOL) != nil {
+		return EAPOL, nil
+	} else if IsDhcpPacket(pkt) {
+		return DHCP, nil
+	}
+	return UNKNOWN, errors.New("packet-is-neither-eapol-or-dhcp")
 }

@@ -20,7 +20,7 @@ import (
 	"context"
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
-	bbsimLogger "github.com/opencord/bbsim/internal/bbsim/logger"
+	"github.com/opencord/bbsim/internal/common"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -82,7 +82,7 @@ func (s BBSimServer) GetOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Olt, 
 
 func (s BBSimServer) SetLogLevel(ctx context.Context, req *bbsim.LogLevel) (*bbsim.LogLevel, error) {
 
-	bbsimLogger.SetLogLevel(log.StandardLogger(), req.Level, req.Caller)
+	common.SetLogLevel(log.StandardLogger(), req.Level, req.Caller)
 
 	return &bbsim.LogLevel{
 		Level:  log.StandardLogger().Level.String(),
