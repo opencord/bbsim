@@ -63,17 +63,17 @@ func GetOLT() *OltDevice {
 	return &olt
 }
 
-func CreateOLT(seq int, nni int, pon int, onuPerPon int, sTag int, cTagInit int, oltDoneChannel *chan bool, apiDoneChannel *chan bool, group *sync.WaitGroup) OltDevice {
+func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit int, oltDoneChannel *chan bool, apiDoneChannel *chan bool, isMock bool) *OltDevice {
 	oltLogger.WithFields(log.Fields{
-		"ID":           seq,
+		"ID":           oltId,
 		"NumNni":       nni,
 		"NumPon":       pon,
 		"NumOnuPerPon": onuPerPon,
 	}).Debug("CreateOLT")
 
 	olt = OltDevice{
-		ID:           seq,
-		SerialNumber: fmt.Sprintf("BBSIM_OLT_%d", seq),
+		ID:           oltId,
+		SerialNumber: fmt.Sprintf("BBSIM_OLT_%d", oltId),
 		OperState: getOperStateFSM(func(e *fsm.Event) {
 			oltLogger.Debugf("Changing OLT OperState from %s to %s", e.Src, e.Dst)
 		}),
@@ -103,14 +103,15 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int, sTag int, cTagInit int,
 		},
 	)
 
-	// create NNI Port
-	nniPort, err := CreateNNI(&olt)
+	if isMock != true {
+		// create NNI Port
+		nniPort, err := CreateNNI(&olt)
+		if err != nil {
+			oltLogger.Fatalf("Couldn't create NNI Port: %v", err)
+		}
 
-	if err != nil {
-		oltLogger.Fatalf("Couldn't create NNI Port: %v", err)
+		olt.Nnis = append(olt.Nnis, &nniPort)
 	}
-
-	olt.Nnis = append(olt.Nnis, &nniPort)
 
 	// create PON ports
 	availableCTag := cTagInit
@@ -137,11 +138,13 @@ func CreateOLT(seq int, nni int, pon int, onuPerPon int, sTag int, cTagInit int,
 
 		olt.Pons = append(olt.Pons, &p)
 	}
+	return &olt
+}
 
-	newOltServer(olt)
-
+// this function start the OLT gRPC server and blocks until it's done
+func StartOlt(olt *OltDevice, group *sync.WaitGroup) {
+	newOltServer(*olt)
 	group.Done()
-	return olt
 }
 
 func newOltServer(o OltDevice) error {
