@@ -23,6 +23,7 @@ import (
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
+	"github.com/opencord/bbsim/internal/common"
 	omci "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/go/openolt"
 	log "github.com/sirupsen/logrus"
@@ -53,7 +54,7 @@ type Onu struct {
 }
 
 func (o Onu) Sn() string {
-	return onuSnToString(o.SerialNumber)
+	return common.OnuSnToString(o.SerialNumber)
 }
 
 func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) *Onu {
