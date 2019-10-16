@@ -75,7 +75,7 @@ type PonIndicationMessage struct {
 
 type OnuDiscIndicationMessage struct {
 	OperState OperState
-	Onu       Onu
+	Onu       *Onu
 }
 
 type OnuIndicationMessage struct {
