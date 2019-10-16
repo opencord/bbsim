@@ -47,7 +47,8 @@ RUN make protos
 # copy and build
 COPY . ./
 RUN go mod vendor -v  # we can't vendor dependencies unless the code is there
-RUN make build
+RUN make build-bbsim
+RUN make build-bbsimctl
 
 # runtime parent
 FROM golang:1.12-stretch
@@ -60,7 +61,6 @@ RUN apt-get update \
  && apt-get install -y libpcap-dev isc-dhcp-server network-manager tcpdump\
  && ln -s /usr/lib/libpcap.so.1.8.1 /usr/lib/libpcap.so.0.8
 
-COPY ./configs/isc-dhcp-server /etc/default/
 COPY ./configs/dhcpd.conf /etc/dhcp/
 RUN mv /usr/sbin/dhcpd /usr/local/bin/ \
 && mv /sbin/dhclient /usr/local/bin/ \
