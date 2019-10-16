@@ -631,6 +631,7 @@ func (o OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.Devi
 	devinfo.FlowIdStart = 1
 	devinfo.FlowIdEnd = 16383
 	devinfo.DeviceSerialNumber = o.SerialNumber
+	devinfo.DeviceId = net.HardwareAddr{0xA, 0xA, 0xA, 0xA, 0xA, byte(o.ID)}.String()
 
 	return devinfo, nil
 }
