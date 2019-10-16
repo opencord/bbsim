@@ -31,9 +31,9 @@ protos: api/bbsim/bbsim.pb.go # @HELP Build proto files
 dep: # @HELP Download the dependencies to the vendor folder
 	GO111MODULE=on go mod vendor
 
-build: fmt dep protos build-bbsim build-bbsimctl# @HELP Build the binary
+build: dep protos fmt build-bbsim build-bbsimctl# @HELP Build the binary
 
-test: fmt dep protos # @HELP Execute unit tests
+test: dep protos fmt # @HELP Execute unit tests
 	GO111MODULE=on go test -v -mod vendor ./... -covermode count -coverprofile ./tests/results/go-test-coverage.out 2>&1 | tee ./tests/results/go-test-results.out
 	go-junit-report < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml
 	gocover-cobertura < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml
