@@ -1,0 +1,252 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "bbsim/bbsim.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/olt": {
+      "get": {
+        "operationId": "GetOlt",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimOlt"
+            }
+          }
+        },
+        "tags": [
+          "BBSim"
+        ]
+      }
+    },
+    "/v1/olt/onus": {
+      "get": {
+        "operationId": "GetONUs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimONUs"
+            }
+          }
+        },
+        "tags": [
+          "BBSim"
+        ]
+      }
+    },
+    "/v1/olt/onus/{SerialNumber}": {
+      "get": {
+        "operationId": "GetONU",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimONU"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "SerialNumber",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BBSim"
+        ]
+      }
+    },
+    "/v1/olt/status": {
+      "get": {
+        "operationId": "GetOlt2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimOlt"
+            }
+          }
+        },
+        "tags": [
+          "BBSim"
+        ]
+      }
+    },
+    "/v1/version": {
+      "get": {
+        "operationId": "Version",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimVersionNumber"
+            }
+          }
+        },
+        "tags": [
+          "BBSim"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "bbsimLogLevel": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string"
+        },
+        "caller": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "bbsimNNIPort": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "OperState": {
+          "type": "string"
+        }
+      }
+    },
+    "bbsimONU": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "SerialNumber": {
+          "type": "string"
+        },
+        "OperState": {
+          "type": "string"
+        },
+        "InternalState": {
+          "type": "string"
+        },
+        "PonPortID": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "STag": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "CTag": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "HwAddress": {
+          "type": "string"
+        },
+        "PortNo": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "bbsimONUs": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bbsimONU"
+          }
+        }
+      }
+    },
+    "bbsimOlt": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "SerialNumber": {
+          "type": "string"
+        },
+        "OperState": {
+          "type": "string"
+        },
+        "InternalState": {
+          "type": "string"
+        },
+        "NNIPorts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bbsimNNIPort"
+          }
+        },
+        "PONPorts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bbsimPONPort"
+          }
+        }
+      }
+    },
+    "bbsimPONPort": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "OperState": {
+          "type": "string"
+        }
+      }
+    },
+    "bbsimResponse": {
+      "type": "object",
+      "properties": {
+        "status_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "bbsimVersionNumber": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "buildTime": {
+          "type": "string"
+        },
+        "commitHash": {
+          "type": "string"
+        },
+        "gitStatus": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

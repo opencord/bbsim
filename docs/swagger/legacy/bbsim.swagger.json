@@ -1,0 +1,1648 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "BBSim API",
+    "version": "1.0",
+    "contact": {
+      "url": "http://opencord.org"
+    }
+  },
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v0/olt": {
+      "get": {
+        "summary": "Get current status of OLT",
+        "operationId": "OLTStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyOLTStatusResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "tags": [
+          "BBSimService"
+        ]
+      }
+    },
+    "/v0/olt/flows": {
+      "get": {
+        "summary": "Get flows",
+        "operationId": "GetFlows",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyFlows"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "onu_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pon_port_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu_serial",
+            "description": "ONU serial number.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "oper_state",
+            "description": "ONU oper state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu_state",
+            "description": "ONU internal state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "gemports",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "tconts.uni_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "tconts.port_no",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      }
+    },
+    "/v0/olt/onu/{onu_serial}/flows": {
+      "get": {
+        "summary": "Get flows",
+        "operationId": "GetFlows2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyFlows"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "onu_serial",
+            "description": "ONU serial number",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "onu_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pon_port_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "oper_state",
+            "description": "ONU oper state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu_state",
+            "description": "ONU internal state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "gemports",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "tconts.uni_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "tconts.port_no",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      }
+    },
+    "/v0/olt/onus": {
+      "get": {
+        "summary": "Get status of all or specific ONUs",
+        "operationId": "ONUStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyONUs"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "onu.onu_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.pon_port_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.onu_serial",
+            "description": "ONU serial number.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.oper_state",
+            "description": "ONU oper state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.onu_state",
+            "description": "ONU internal state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.gemports",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "onu.tconts.uni_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.tconts.port_no",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      },
+      "delete": {
+        "summary": "Deactivate ONU(s) for specific PON port(s) specified by\na given onu_serial, onu_id, or pon_port_id",
+        "operationId": "ONUDeactivate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyBBSimResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/legacyONUs"
+            }
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      },
+      "post": {
+        "summary": "Single/bulk activate ONU(s) for specific PON port(s)",
+        "operationId": "ONUActivate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyBBSimResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/legacyONUs"
+            }
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      }
+    },
+    "/v0/olt/onus/{onu.onu_serial}": {
+      "get": {
+        "summary": "Get status of all or specific ONUs",
+        "operationId": "ONUStatus2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyONUs"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "onu.onu_serial",
+            "description": "ONU serial number",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "onu.onu_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.pon_port_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.oper_state",
+            "description": "ONU oper state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.onu_state",
+            "description": "ONU internal state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.gemports",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "onu.tconts.uni_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.tconts.port_no",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      },
+      "delete": {
+        "summary": "Deactivate ONU(s) for specific PON port(s) specified by\na given onu_serial, onu_id, or pon_port_id",
+        "operationId": "ONUDeactivate2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyBBSimResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "onu.onu_serial",
+            "description": "ONU serial number",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "onu.onu_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.pon_port_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.oper_state",
+            "description": "ONU oper state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.onu_state",
+            "description": "ONU internal state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.gemports",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "onu.tconts.uni_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.tconts.port_no",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      }
+    },
+    "/v0/olt/onus/{onu_serial}/alarms/{alarm_type}/{status}": {
+      "post": {
+        "summary": "Generate ONU related alarms",
+        "operationId": "GenerateONUAlarm",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyBBSimResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "onu_serial",
+            "description": "ONU serial number",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "alarm_type",
+            "description": "Alarm types are:\n  \"signaldegrade\"\n  \"lossofomcichannel\"\n  \"lossofploam\"",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "description": "\"on\"/\"off\" indicates raised or cleared alarm",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      }
+    },
+    "/v0/olt/ports/{onu.pon_port_id}/onus": {
+      "get": {
+        "summary": "Get status of all or specific ONUs",
+        "operationId": "ONUStatus4",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyONUs"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "onu.pon_port_id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.onu_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.onu_serial",
+            "description": "ONU serial number.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.oper_state",
+            "description": "ONU oper state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.onu_state",
+            "description": "ONU internal state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.gemports",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "onu.tconts.uni_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.tconts.port_no",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      },
+      "delete": {
+        "summary": "Deactivate ONU(s) for specific PON port(s) specified by\na given onu_serial, onu_id, or pon_port_id",
+        "operationId": "ONUDeactivate3",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyBBSimResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "onu.pon_port_id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.onu_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.onu_serial",
+            "description": "ONU serial number.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.oper_state",
+            "description": "ONU oper state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.onu_state",
+            "description": "ONU internal state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.gemports",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "onu.tconts.uni_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.tconts.port_no",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      },
+      "post": {
+        "summary": "Single/bulk activate ONU(s) for specific PON port(s)",
+        "operationId": "ONUActivate2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyBBSimResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "onu.pon_port_id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      }
+    },
+    "/v0/olt/ports/{onu.pon_port_id}/onus/{onu.onu_id}": {
+      "get": {
+        "summary": "Get status of all or specific ONUs",
+        "operationId": "ONUStatus3",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyONUs"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "onu.pon_port_id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.onu_id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.onu_serial",
+            "description": "ONU serial number.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.oper_state",
+            "description": "ONU oper state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.onu_state",
+            "description": "ONU internal state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.gemports",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "onu.tconts.uni_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.tconts.port_no",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      },
+      "delete": {
+        "summary": "Deactivate ONU(s) for specific PON port(s) specified by\na given onu_serial, onu_id, or pon_port_id",
+        "operationId": "ONUDeactivate4",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyBBSimResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "onu.pon_port_id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.onu_id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.onu_serial",
+            "description": "ONU serial number.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.oper_state",
+            "description": "ONU oper state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.onu_state",
+            "description": "ONU internal state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "onu.gemports",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "onu.tconts.uni_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.tconts.port_no",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      }
+    },
+    "/v0/olt/ports/{onu.pon_port_id}/onus/{onu.onu_serial}": {
+      "post": {
+        "summary": "Single/bulk activate ONU(s) for specific PON port(s)",
+        "operationId": "ONUActivate3",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyBBSimResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "onu.pon_port_id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "onu.onu_serial",
+            "description": "ONU serial number",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      }
+    },
+    "/v0/olt/ports/{port_type}/{port_id}/alarms/los/{status}": {
+      "post": {
+        "summary": "Generate OLT related alarms",
+        "operationId": "GenerateOLTAlarm",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyBBSimResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "port_type",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "port_id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "status",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      }
+    },
+    "/v0/olt/ports/{port_type}/{port_id}/status": {
+      "get": {
+        "summary": "Get status of a PON/NNI port",
+        "operationId": "PortStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyPorts"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "port_type",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "port_id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pon_port_max_onus",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pon_port_active_onus",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "port_state",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "alarm_state",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      }
+    },
+    "/v0/olt/status": {
+      "get": {
+        "summary": "Get current status of OLT",
+        "operationId": "OLTStatus2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyOLTStatusResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "tags": [
+          "BBSimService"
+        ]
+      }
+    },
+    "/v0/olt/{device_type}/{serial_number}/action/{action}": {
+      "patch": {
+        "summary": "Perform actions on OLT/ONU devices (e.g. reboot)",
+        "operationId": "PerformDeviceAction2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyBBSimResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "device_type",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "serial_number",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      }
+    },
+    "/v0/{device_type}/action/{action}": {
+      "patch": {
+        "summary": "Perform actions on OLT/ONU devices (e.g. reboot)",
+        "operationId": "PerformDeviceAction",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/legacyBBSimResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "device_type",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BBSimService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "legacyBBSimResponse": {
+      "type": "object",
+      "properties": {
+        "status_msg": {
+          "type": "string"
+        }
+      },
+      "title": "BBSim response message"
+    },
+    "legacyFlows": {
+      "type": "object",
+      "properties": {
+        "flows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/openoltFlow"
+          }
+        }
+      }
+    },
+    "legacyOLTInfo": {
+      "type": "object",
+      "properties": {
+        "olt_id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "olt_serial": {
+          "type": "string"
+        },
+        "olt_ip": {
+          "type": "string"
+        },
+        "olt_state": {
+          "type": "string"
+        },
+        "olt_vendor": {
+          "type": "string"
+        }
+      },
+      "title": "OLT information"
+    },
+    "legacyOLTStatusResponse": {
+      "type": "object",
+      "properties": {
+        "olt": {
+          "$ref": "#/definitions/legacyOLTInfo"
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/legacyPortInfo"
+          }
+        }
+      },
+      "title": "BBSim status"
+    },
+    "legacyONUInfo": {
+      "type": "object",
+      "properties": {
+        "onu_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pon_port_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "onu_serial": {
+          "type": "string",
+          "title": "ONU serial number"
+        },
+        "oper_state": {
+          "type": "string",
+          "title": "ONU oper state"
+        },
+        "onu_state": {
+          "type": "string",
+          "title": "ONU internal state"
+        },
+        "gemports": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "tconts": {
+          "$ref": "#/definitions/legacyTconts"
+        }
+      },
+      "title": "ONU information"
+    },
+    "legacyONUs": {
+      "type": "object",
+      "properties": {
+        "onus": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/legacyONUInfo"
+          }
+        }
+      },
+      "title": "Bulk ONU operations"
+    },
+    "legacyPortInfo": {
+      "type": "object",
+      "properties": {
+        "port_type": {
+          "type": "string"
+        },
+        "port_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pon_port_max_onus": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pon_port_active_onus": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "port_state": {
+          "type": "string"
+        },
+        "alarm_state": {
+          "type": "string"
+        }
+      },
+      "title": "Port information"
+    },
+    "legacyPorts": {
+      "type": "object",
+      "properties": {
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/legacyPortInfo"
+          }
+        }
+      },
+      "title": "Bulk port information"
+    },
+    "legacyTconts": {
+      "type": "object",
+      "properties": {
+        "uni_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "port_no": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "tconts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tech_profileTrafficScheduler"
+          }
+        }
+      }
+    },
+    "openoltAction": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "$ref": "#/definitions/openoltActionCmd"
+        },
+        "o_vid": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "o_pbits": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "o_tpid": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "i_vid": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "i_pbits": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "i_tpid": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "openoltActionCmd": {
+      "type": "object",
+      "properties": {
+        "add_outer_tag": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "remove_outer_tag": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "trap_to_host": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "openoltClassifier": {
+      "type": "object",
+      "properties": {
+        "o_tpid": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "o_vid": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "i_tpid": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "i_vid": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "o_pbits": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "i_pbits": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "eth_type": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "dst_mac": {
+          "type": "string",
+          "format": "byte"
+        },
+        "src_mac": {
+          "type": "string",
+          "format": "byte"
+        },
+        "ip_proto": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "dst_ip": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "src_ip": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "src_port": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "dst_port": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pkt_tag_type": {
+          "type": "string"
+        }
+      }
+    },
+    "openoltFlow": {
+      "type": "object",
+      "properties": {
+        "access_intf_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "onu_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "uni_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "flow_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "flow_type": {
+          "type": "string"
+        },
+        "alloc_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "network_intf_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "gemport_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "classifier": {
+          "$ref": "#/definitions/openoltClassifier"
+        },
+        "action": {
+          "$ref": "#/definitions/openoltAction"
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "cookie": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "port_no": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "tech_profileAdditionalBW": {
+      "type": "string",
+      "enum": [
+        "AdditionalBW_None",
+        "AdditionalBW_NA",
+        "AdditionalBW_BestEffort",
+        "AdditionalBW_Auto"
+      ],
+      "default": "AdditionalBW_None"
+    },
+    "tech_profileDirection": {
+      "type": "string",
+      "enum": [
+        "UPSTREAM",
+        "DOWNSTREAM",
+        "BIDIRECTIONAL"
+      ],
+      "default": "UPSTREAM"
+    },
+    "tech_profileInferredAdditionBWIndication": {
+      "type": "string",
+      "enum": [
+        "InferredAdditionBWIndication_None",
+        "InferredAdditionBWIndication_Assured",
+        "InferredAdditionBWIndication_BestEffort"
+      ],
+      "default": "InferredAdditionBWIndication_None"
+    },
+    "tech_profileSchedulerConfig": {
+      "type": "object",
+      "properties": {
+        "direction": {
+          "$ref": "#/definitions/tech_profileDirection"
+        },
+        "additional_bw": {
+          "$ref": "#/definitions/tech_profileAdditionalBW"
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "weight": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "sched_policy": {
+          "$ref": "#/definitions/tech_profileSchedulingPolicy"
+        }
+      }
+    },
+    "tech_profileSchedulingPolicy": {
+      "type": "string",
+      "enum": [
+        "WRR",
+        "StrictPriority",
+        "Hybrid"
+      ],
+      "default": "WRR"
+    },
+    "tech_profileTrafficScheduler": {
+      "type": "object",
+      "properties": {
+        "direction": {
+          "$ref": "#/definitions/tech_profileDirection"
+        },
+        "alloc_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "scheduler": {
+          "$ref": "#/definitions/tech_profileSchedulerConfig"
+        },
+        "traffic_shaping_info": {
+          "$ref": "#/definitions/tech_profileTrafficShapingInfo"
+        }
+      }
+    },
+    "tech_profileTrafficShapingInfo": {
+      "type": "object",
+      "properties": {
+        "cir": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "cbs": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pir": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pbs": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "gir": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "add_bw_ind": {
+          "$ref": "#/definitions/tech_profileInferredAdditionBWIndication"
+        }
+      }
+    }
+  }
+}

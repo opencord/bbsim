@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+
 	"github.com/looplab/fsm"
 	"github.com/opencord/voltha-protos/go/openolt"
 )

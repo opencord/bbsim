@@ -18,6 +18,7 @@ package api
 
 import (
 	"context"
+
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"github.com/opencord/bbsim/internal/common"
@@ -39,7 +40,7 @@ type BBSimServer struct {
 }
 
 func (s BBSimServer) Version(ctx context.Context, req *bbsim.Empty) (*bbsim.VersionNumber, error) {
-	// TODO add a flag to specofy whether the tree was clean at this commit or not
+	// TODO add a flag to specify whether the tree was clean at this commit or not
 	return &bbsim.VersionNumber{
 		Version:    version,
 		BuildTime:  buildTime,
