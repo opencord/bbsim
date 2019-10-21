@@ -20,6 +20,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
+	"sync"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
@@ -30,8 +33,6 @@ import (
 	"github.com/opencord/voltha-protos/go/tech_profile"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"net"
-	"sync"
 )
 
 var oltLogger = log.WithFields(log.Fields{
@@ -436,7 +437,7 @@ func (o OltDevice) processNniPacketIns(stream openolt.Openolt_EnableIndicationSe
 
 // returns an ONU with a given Serial Number
 func (o OltDevice) FindOnuBySn(serialNumber string) (*Onu, error) {
-	// TODO this function can be a perfoormance bottlenec when we have many ONUs,
+	// TODO this function can be a performance bottleneck when we have many ONUs,
 	// memoizing it will remove the bottleneck
 	for _, pon := range o.Pons {
 		for _, onu := range pon.Onus {
@@ -467,7 +468,7 @@ func (o OltDevice) FindOnuById(intfId uint32, onuId uint32) (*Onu, error) {
 
 // returns an ONU with a given Mac Address
 func (o OltDevice) FindOnuByMacAddress(mac net.HardwareAddr) (*Onu, error) {
-	// TODO this function can be a perfoormance bottlenec when we have many ONUs,
+	// TODO this function can be a performance bottleneck when we have many ONUs,
 	// memoizing it will remove the bottleneck
 	for _, pon := range o.Pons {
 		for _, onu := range pon.Onus {
@@ -478,6 +479,23 @@ func (o OltDevice) FindOnuByMacAddress(mac net.HardwareAddr) (*Onu, error) {
 	}
 
 	return &Onu{}, errors.New(fmt.Sprintf("cannot-find-onu-by-mac-address-%s", mac))
+}
+
+func (o OltDevice) GetOnuById(ponPortId uint32, onuId uint32) (*Onu, error) {
+	pon, err := o.GetPonById(ponPortId)
+	if err != nil {
+		return nil, err
+	}
+	return pon.GetOnuById(onuId)
+}
+
+func (o OltDevice) GetOnuBySn(ponPortId uint32, onuSn *openolt.SerialNumber) (*Onu, error) {
+	// TODO this function could be merged with FindOnuBySn
+	pon, err := o.GetPonById(ponPortId)
+	if err != nil {
+		return nil, err
+	}
+	return pon.GetOnuBySn(onuSn)
 }
 
 // GRPC Endpoints
