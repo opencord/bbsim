@@ -1,0 +1,232 @@
+// Copyright (c) 2018 Open Networking Foundation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at:
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+package legacy;
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "voltha_protos/openolt.proto";
+import "voltha_protos/tech_profile.proto";
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+	info: {
+	title: "BBSim API";
+	version: "1.0";
+	contact: {
+		url: "http://opencord.org";
+		};
+	};
+	schemes: HTTP;
+	consumes: "application/json";
+	produces: "application/json";
+	responses: {
+	key: "404";
+	value: {
+		description: "Returned when the resource does not exist.";
+		schema: {
+			json_schema: {
+			  type: STRING;
+		}
+		}
+	}
+	}
+};
+
+// OLT information
+message OLTInfo {
+	option deprecated = true;
+	int64   olt_id = 1;
+	string  olt_serial = 2;
+	string  olt_ip = 3;
+	string  olt_state = 4;
+	string  olt_vendor = 5;
+}
+
+// ONU information
+message ONUInfo {
+    uint32 onu_id = 1;
+    uint32 pon_port_id = 2;
+    // ONU serial number
+    string onu_serial = 3;
+    // ONU oper state
+    string oper_state = 4;
+    // ONU internal state
+    string onu_state = 5;
+    repeated uint32 gemports = 6;
+    Tconts tconts = 7;
+}
+
+// Bulk ONU operations
+message ONUs {
+	repeated ONUInfo onus = 1;
+}
+
+message ONURequest {
+	ONUInfo onu = 1;
+	ONUs onus_batch = 2;
+}
+
+// Port information
+message PortInfo {
+	string port_type = 1;
+	uint32 port_id = 2;
+	uint32 pon_port_max_onus = 3;
+	uint32 pon_port_active_onus = 4;
+	string port_state = 5;
+	string alarm_state = 6;
+}
+
+// Bulk port information
+message Ports {
+	repeated PortInfo ports = 1;
+}
+
+// BBSim status
+message OLTStatusResponse {
+	OLTInfo olt = 1;
+	repeated PortInfo ports = 2;
+}
+
+// BBSim response message
+message BBSimResponse {
+	string status_msg = 1;
+}
+
+// ONU alarm request
+message ONUAlarmRequest {
+	// ONU serial number
+	string onu_serial = 1;
+	// Alarm types are:
+	//   "signaldegrade"
+	//   "lossofomcichannel"
+	//   "lossofploam"
+	string alarm_type = 2;
+	// "on"/"off" indicates raised or cleared alarm
+	string status = 3;                 }
+
+// OLT alarm request
+message OLTAlarmRequest {
+	uint32 port_id = 1;
+	string port_type = 2;
+	string status = 3;
+}
+
+// Device action
+message DeviceAction {
+	string device_type = 1;             // ONU or OLT
+	string serial_number = 2;    // Device serial number
+	string action = 3;           // soft or hard reboot
+}
+
+message Tconts {
+    fixed32 uni_id = 4;
+	fixed32 port_no = 5;
+	repeated tech_profile.TrafficScheduler tconts = 3;
+}
+
+message Flows {
+    repeated openolt.Flow flows = 1;
+}
+
+message Empty {}
+
+service BBSimService {
+
+	// Get current status of OLT
+	rpc OLTStatus(Empty) returns (OLTStatusResponse) {
+		option deprecated = true;
+		option (google.api.http) = {
+			get : "/v0/olt"
+			additional_bindings {get : "/v0/olt/status"}
+		};
+	}
+
+	// Get status of a PON/NNI port
+	rpc PortStatus(PortInfo) returns (Ports) {
+		option deprecated = true;
+		option (google.api.http) = {
+			get : "/v0/olt/ports/{port_type}/{port_id}/status"
+		};
+	}
+
+	// Get status of all or specific ONUs
+	rpc ONUStatus(ONURequest) returns (ONUs) {
+		option deprecated = true;
+		option (google.api.http) = {
+			get : "/v0/olt/onus"
+			additional_bindings { get : "/v0/olt/onus/{onu.onu_serial}" }
+			additional_bindings { get : "/v0/olt/ports/{onu.pon_port_id}/onus/{onu.onu_id}" }
+			additional_bindings { get : "/v0/olt/ports/{onu.pon_port_id}/onus" }
+		};
+	}
+
+	// Single/bulk activate ONU(s) for specific PON port(s)
+	rpc ONUActivate(ONURequest) returns (BBSimResponse) {
+		option deprecated = true;
+		option (google.api.http) = {
+			post : "/v0/olt/onus"
+			body: "onus_batch"
+			additional_bindings { post : "/v0/olt/ports/{onu.pon_port_id}/onus" }
+			additional_bindings { post : "/v0/olt/ports/{onu.pon_port_id}/onus/{onu.onu_serial}" }
+		};
+	}
+
+	// Deactivate ONU(s) for specific PON port(s) specified by
+	// a given onu_serial, onu_id, or pon_port_id
+	rpc ONUDeactivate(ONURequest) returns (BBSimResponse) {
+		option deprecated = true;
+		option (google.api.http) = {
+			delete : "/v0/olt/onus"
+			body: "onus_batch"
+			additional_bindings { delete: "/v0/olt/onus/{onu.onu_serial}" }
+			additional_bindings { delete: "/v0/olt/ports/{onu.pon_port_id}/onus" }
+			additional_bindings { delete: "/v0/olt/ports/{onu.pon_port_id}/onus/{onu.onu_id}" }
+		};
+	}
+
+	// Generate ONU related alarms
+	rpc GenerateONUAlarm(ONUAlarmRequest) returns (BBSimResponse) {
+		option deprecated = true;
+		option (google.api.http) = {
+			post : "/v0/olt/onus/{onu_serial}/alarms/{alarm_type}/{status}"
+		};
+	}
+
+	// Generate OLT related alarms
+	rpc GenerateOLTAlarm(OLTAlarmRequest) returns (BBSimResponse) {
+		option deprecated = true;
+		option (google.api.http) = {
+			post : "/v0/olt/ports/{port_type}/{port_id}/alarms/los/{status}"
+		};
+	}
+
+	// Perform actions on OLT/ONU devices (e.g. reboot)
+	rpc PerformDeviceAction(DeviceAction) returns (BBSimResponse) {
+		option deprecated = true;
+		option (google.api.http) = {
+			patch: "/v0/{device_type}/action/{action}"
+			additional_bindings { patch : "/v0/olt/{device_type}/{serial_number}/action/{action}"}
+		};
+	}
+
+	// Get flows
+	rpc GetFlows(ONUInfo) returns(Flows) {
+		option deprecated = true;
+	    option (google.api.http) = {
+	        get: "/v0/olt/flows"
+	        additional_bindings {get: "/v0/olt/onu/{onu_serial}/flows"}
+	    };
+	}
+}

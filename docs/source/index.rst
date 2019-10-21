@@ -15,6 +15,7 @@ Welcome to BBSim's documentation!
    development-dependencies.rst
    bbr.rst
    bbsimctl.rst
+   api.rst
 
 
 Quickstart
