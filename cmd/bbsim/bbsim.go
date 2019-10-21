@@ -17,23 +17,28 @@
 package main
 
 import (
+	"context"
+	"net"
+	"net/http"
+	"os"
+	"runtime/pprof"
+	"sync"
+
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/opencord/bbsim/api/bbsim"
+	"github.com/opencord/bbsim/api/legacy"
 	"github.com/opencord/bbsim/internal/bbsim/api"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"github.com/opencord/bbsim/internal/common"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"net"
-	"os"
-	"runtime/pprof"
-	"sync"
 )
 
 func startApiServer(channel chan bool, group *sync.WaitGroup) {
 	// TODO make configurable
 	address := "0.0.0.0:50070"
-	log.Debugf("APIServer Listening on: %v", address)
+	log.Debugf("APIServer listening on: %v", address)
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Fatalf("APIServer failed to listen: %v", err)
@@ -47,6 +52,7 @@ func startApiServer(channel chan bool, group *sync.WaitGroup) {
 	wg.Add(1)
 
 	go grpcServer.Serve(lis)
+	go startApiRestServer(channel, group, address)
 
 	for {
 		_, ok := <-channel
@@ -62,6 +68,69 @@ func startApiServer(channel chan bool, group *sync.WaitGroup) {
 	wg.Wait()
 	group.Done()
 	return
+}
+
+// startApiRestServer method starts the REST server (grpc gateway) for BBSim.
+func startApiRestServer(channel chan bool, group *sync.WaitGroup, grpcAddress string) {
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// TODO make configurable
+	address := "0.0.0.0:50071"
+
+	mux := runtime.NewServeMux()
+	opts := []grpc.DialOption{grpc.WithInsecure()}
+
+	if err := bbsim.RegisterBBSimHandlerFromEndpoint(ctx, mux, grpcAddress, opts); err != nil {
+		log.Error("Could not start API server: %v", err)
+		return
+	}
+
+	log.Infof("REST API server listening on %s ...", address)
+
+	if err := http.ListenAndServe(address, mux); err != nil {
+		log.Error("Could not start API server: %v", err)
+		return
+	}
+	return
+
+}
+
+func startLegacyApiServer(channel chan bool, group *sync.WaitGroup) {
+	// TODO make configurable
+	grpcAddress := "0.0.0.0:50072"
+	restAddress := "0.0.0.0:50073"
+
+	log.Debugf("Legacy APIServer listening on: %v", grpcAddress)
+	listener, err := net.Listen("tcp", grpcAddress)
+	if err != nil {
+		log.Fatalf("Legacy APIServer failed to listen: %v", err)
+		return
+	}
+	apiserver := grpc.NewServer()
+	legacy.RegisterBBSimServiceServer(apiserver, api.BBSimLegacyServer{})
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	go apiserver.Serve(listener)
+	// Start rest gateway for BBSim server
+	go api.StartRestGatewayService(channel, group, grpcAddress, restAddress)
+
+	for {
+		_, ok := <-channel
+		if !ok {
+			// if the olt channel is closed, stop the gRPC server
+			log.Warnf("Stopping legacy API gRPC server")
+			apiserver.Stop()
+			wg.Done()
+			break
+		}
+	}
+
+	wg.Wait()
+	group.Done()
 }
 
 func main() {
@@ -91,12 +160,14 @@ func main() {
 	apiDoneChannel := make(chan bool)
 
 	wg := sync.WaitGroup{}
-	wg.Add(2)
+	wg.Add(3)
 
 	olt := devices.CreateOLT(options.OltID, options.NumNniPerOlt, options.NumPonPerOlt, options.NumOnuPerPon, options.STag, options.CTagInit, &oltDoneChannel, &apiDoneChannel, false)
 	go devices.StartOlt(olt, &wg)
 	log.Debugf("Created OLT with id: %d", options.OltID)
 	go startApiServer(apiDoneChannel, &wg)
+	go startLegacyApiServer(apiDoneChannel, &wg)
+
 	log.Debugf("Started APIService")
 
 	wg.Wait()
