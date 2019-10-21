@@ -29,24 +29,21 @@ RUN apt-get update \
  && mv /tmp/protoc3/bin/* /usr/local/bin/ \
  && mv /tmp/protoc3/include/* /usr/local/include/ \
  && go get -v github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway \
+ && go get -v github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger \
  && go get -v github.com/golang/protobuf/protoc-gen-go
 
 WORKDIR /go/src/github.com/opencord/bbsim
 ENV GO111MODULE=on
 ENV GOPROXY=https://proxy.golang.org
 
-# get dependencies
-COPY go.mod go.sum ./
-COPY vendor ./vendor
-
 # build the protos
 COPY Makefile ./
 COPY api ./api
-RUN make protos
 
 # copy and build
 COPY . ./
-RUN go mod vendor -v  # we can't vendor dependencies unless the code is there
+RUN make dep  # we cannot vendor dependencies unless the code is there
+RUN make protos
 RUN make build-bbsim
 RUN make build-bbsimctl
 
