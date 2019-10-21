@@ -14,7 +14,7 @@
 
 VERSION     ?= $(shell cat ./VERSION)
 DIFF		?= $(git diff --shortstat 2> /dev/null | tail -n1)
-GIT_STATUS	?= $(shell [[ $DIFF != "" ]] && echo "Dirty" || echo "Clean")
+GIT_STATUS	?= $(shell [ -z "$DIFF" ] && echo "Dirty" || echo "Clean")
 
 ## Docker related
 DOCKER_TAG  			?= ${VERSION}
@@ -22,11 +22,15 @@ DOCKER_REPOSITORY  		?= ""
 DOCKER_REGISTRY 		?= ""
 DOCKER_RUN_ARGS			?= ""
 
+## protobuf related
+GRPC_GW		            ?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
+VOLTHA_PROTOS           ?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/opencord/voltha-protos)
+
 # Public targets
 
 all: help
 
-protos: api/bbsim/bbsim.pb.go # @HELP Build proto files
+protos: api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go # @HELP Build proto files
 
 dep: # @HELP Download the dependencies to the vendor folder
 	GO111MODULE=on go mod vendor
@@ -137,10 +141,18 @@ api/openolt/openolt.pb.go: api/openolt/openolt.proto
     	--go_out=plugins=grpc:./ \
     	$<
 
-api/bbsim/bbsim.pb.go: api/bbsim/bbsim.proto
-	@protoc -I . \
+api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go: api/bbsim/bbsim.proto api/bbsim/bbsim.yaml
+	@protoc -I. \
     	-I${GOPATH}/src \
-    	-I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
     	--go_out=plugins=grpc:./ \
+		--grpc-gateway_out=logtostderr=true,grpc_api_configuration=api/bbsim/bbsim.yaml,allow_delete_body=true:./ \
     	$<
 
+api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go: api/legacy/bbsim.proto
+	@protoc -I. \
+		-I${GRPC_GW}/third_party/googleapis/ \
+		-I${GRPC_GW}/ \
+		-I${VOLTHA_PROTOS}/protos/ \
+    	--go_out=plugins=grpc:./ \
+		--grpc-gateway_out=logtostderr=true,allow_delete_body=true:./ \
+    	$<
