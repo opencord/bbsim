@@ -34,6 +34,7 @@ RUN apt-get update \
 WORKDIR /go/src/github.com/opencord/bbsim
 ENV GO111MODULE=on
 ENV GOPROXY=https://proxy.golang.org
+ENV PATH $GOPATH/bin:$PATH
 
 # get dependencies
 COPY go.mod go.sum ./
