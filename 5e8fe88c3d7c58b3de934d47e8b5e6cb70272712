@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dbfd4076_a469b416",
+        "filename": "tests/bbr.groovy",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2019-10-21T18:05:47Z",
+      "side": 1,
+      "message": "In the future you might want to parameterize these values.",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 44,
+        "endChar": 54
+      },
+      "revId": "5e8fe88c3d7c58b3de934d47e8b5e6cb70272712",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ddc670d_f5e8c23a",
+        "filename": "tests/bbr.groovy",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2019-10-21T18:05:47Z",
+      "side": 1,
+      "message": "How about running running `docker logs` only once in the `always` section rather than here and in the earlier stage, and then archiveArtifacts?",
+      "range": {
+        "startLine": 55,
+        "startChar": 8,
+        "endLine": 55,
+        "endChar": 54
+      },
+      "revId": "5e8fe88c3d7c58b3de934d47e8b5e6cb70272712",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
