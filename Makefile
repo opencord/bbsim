@@ -14,7 +14,7 @@
 
 VERSION     ?= $(shell cat ./VERSION)
 DIFF		?= $(git diff --shortstat 2> /dev/null | tail -n1)
-GIT_STATUS	?= $(shell [[ $DIFF != "" ]] && echo "Dirty" || echo "Clean")
+GIT_STATUS	?= $(shell [ -z "$DIFF" ] && echo "Dirty" || echo "Clean")
 
 ## Docker related
 DOCKER_TAG  			?= ${VERSION}
@@ -22,11 +22,27 @@ DOCKER_REPOSITORY  		?= ""
 DOCKER_REGISTRY 		?= ""
 DOCKER_RUN_ARGS			?= ""
 
-# Public targets
+## protobuf related
+GRPC_GW					?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
+VOLTHA_PROTOS			?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/opencord/voltha-protos)
+GOOGLEAPI			?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
+TOOLS_DIR := tools
+TOOLS_BIN := $(shell pwd)/$(TOOLS_DIR)/bin
 
+export PATH=$(shell echo $$PATH):$(TOOLS_BIN)
+
+# Public targets
 all: help
 
-protos: api/bbsim/bbsim.pb.go # @HELP Build proto files
+tools/bin/protoc-gen-go:
+	GOBIN=${TOOLS_BIN} GO111MODULE=off go get -u github.com/golang/protobuf/protoc-gen-go
+
+tools/bin/protoc-gen-grpc-gateway:
+	GOBIN=${TOOLS_BIN} GO111MODULE=off go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+
+_proto_deps: tools/bin/protoc-gen-go tools/bin/protoc-gen-grpc-gateway
+
+protos: _proto_deps dep api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go # @HELP Build proto files
 
 dep: # @HELP Download the dependencies to the vendor folder
 	GO111MODULE=on go mod vendor
@@ -79,7 +95,6 @@ $(RELEASE_BBR_BINS):
 	export GOARCH=$(rel_arch) ;\
 	GO111MODULE=on go build -i -v -mod vendor \
         	-ldflags "-w -X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
-        		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
         		-X main.gitStatus=${GIT_STATUS} \
         		-X main.version=${VERSION}" \
         	-o "$@" ./cmd/bbr
@@ -89,7 +104,6 @@ $(RELEASE_BBSIM_BINS):
 	export GOARCH=$(rel_arch) ;\
 	GO111MODULE=on go build -i -v -mod vendor \
         	-ldflags "-w -X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
-        		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
         		-X main.gitStatus=${GIT_STATUS} \
         		-X main.version=${VERSION}" \
         	-o "$@" ./cmd/bbsim
@@ -140,15 +154,25 @@ build-bbsimctl:
 
 api/openolt/openolt.pb.go: api/openolt/openolt.proto
 	@protoc -I . \
-    	-I${GOPATH}/src \
-    	-I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+    	-I${GOOGLEAPI}/third_party/googleapis \
     	--go_out=plugins=grpc:./ \
     	$<
 
-api/bbsim/bbsim.pb.go: api/bbsim/bbsim.proto
-	@protoc -I . \
-    	-I${GOPATH}/src \
-    	-I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go: api/bbsim/bbsim.proto api/bbsim/bbsim.yaml
+	@protoc -I. \
+		-I${GOOGLEAPI}/third_party/googleapis \
     	--go_out=plugins=grpc:./ \
+		--grpc-gateway_out=logtostderr=true,grpc_api_configuration=api/bbsim/bbsim.yaml,allow_delete_body=true:./ \
+    	$<
+
+api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go: api/legacy/bbsim.proto
+	$(info    GRPC_GW is set to $(GRPC_GW))
+	@echo GOPATH is $(GOPATH)
+	@protoc -I. \
+		-I${GOOGLEAPI}/third_party/googleapis/ \
+		-I${GRPC_GW}/ \
+		-I${VOLTHA_PROTOS}/protos/ \
+    	--go_out=plugins=grpc:./ \
+		--grpc-gateway_out=logtostderr=true,allow_delete_body=true:./ \
     	$<
 
