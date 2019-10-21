@@ -42,11 +42,11 @@ COPY vendor ./vendor
 # build the protos
 COPY Makefile ./
 COPY api ./api
-RUN make protos
 
 # copy and build
 COPY . ./
 RUN go mod vendor -v  # we can't vendor dependencies unless the code is there
+RUN make protos
 RUN make build-bbsim
 RUN make build-bbsimctl
 
