@@ -25,6 +25,7 @@
     stage('Build BBSim') {
       steps {
         sh """
+          docker pull voltha/bbsim:master
           make docker-build
         """
       }
@@ -32,6 +33,7 @@
     stage('Build BBR') {
       steps {
         sh """
+          export PATH=$PATH:/usr/lib/go-1.12/bin:/usr/local/go/bin:$GOPATH/bin
           make build-bbr
         """
       }
