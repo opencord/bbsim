@@ -1,5 +1,17 @@
 # BBR
 
+BBR (a.k.a BBSim Reflector) is a tool designed to scale test BBSim.
+It is responsible to emulate ONOS and VOLTHA in order to quickly reply
+to any message that BBSim sends.
+
+Here is a graph of the measuraments of BBSim performance captured over
+10 runs with different PON Layout
+
+![BBSim Performances](./assets/bbr_runs.png "BBSim Performances") 
+
+
+## Run BBR
+
 To run `bbr` you need to have a `bbsim` instance running.
 
 You can start `bbsim` locally with:

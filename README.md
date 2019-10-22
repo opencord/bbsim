@@ -144,13 +144,4 @@ source <(bbsimctl completion bash)
 
 More advanced documentation lives in the [here](./docs/README.md)
 
-## Know Issues
-
-In some runs, EAPOL fails with:
-```
-time="2019-09-20T21:24:31Z" level=error msg="Can't send EapStart Message: ONU {intfid:1, onuid:2} - Not DONE (GemportID is not set)" IntfId=1 OnuId=2 OnuSn=BBSM00000102 module=EAPOL
-time="2019-09-20T21:24:31Z" level=error msg="ONU failed to authenticate!" IntfId=1 OnuId=2 OnuSn=BBSM00000102 module=ONU
-```
-Investigate why this happens (we believe the source to be in the OMCI library)
-
 > This project structure is based on [golang-standards/project-layout](https://github.com/golang-standards/project-layout).
