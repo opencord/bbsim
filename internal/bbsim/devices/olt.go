@@ -25,6 +25,7 @@ import (
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
+	omcisim "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/go/openolt"
 	"github.com/opencord/voltha-protos/go/tech_profile"
 	log "github.com/sirupsen/logrus"
@@ -212,7 +213,7 @@ func (o OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error {
 		}
 		o.channel <- msg
 	}
-
+	go o.processOmciMessages()
 	// send PON Port indications
 	for _, pon := range o.Pons {
 		msg := Message{
@@ -226,7 +227,6 @@ func (o OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error {
 
 		for _, onu := range pon.Onus {
 			go onu.ProcessOnuMessages(stream, nil)
-			go onu.processOmciMessages(stream)
 			// FIXME move the message generation in the state transition
 			// from here only invoke the state transition
 			msg := Message{
@@ -242,6 +242,22 @@ func (o OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error {
 
 	wg.Wait()
 	return nil
+}
+
+func (o OltDevice) processOmciMessages() {
+	ch := omcisim.GetChannel()
+
+	oltLogger.Debug("Started OMCI Indication Channel")
+
+	for message := range ch {
+		onuId := message.Data.OnuId
+		intfId := message.Data.IntfId
+		onu, err := o.FindOnuById(intfId, onuId)
+		if err != nil {
+			oltLogger.Errorf("Failed to find onu: %v", err)
+		}
+		go onu.processOmciMessage(message)
+	}
 }
 
 // Helpers method
@@ -431,6 +447,22 @@ func (o OltDevice) FindOnuBySn(serialNumber string) (*Onu, error) {
 	}
 
 	return &Onu{}, errors.New(fmt.Sprintf("cannot-find-onu-by-serial-number-%s", serialNumber))
+}
+
+// returns an ONU with a given interface/Onu Id
+func (o OltDevice) FindOnuById(intfId uint32, onuId uint32) (*Onu, error) {
+	// TODO this function can be a performance bottlenec when we have many ONUs,
+	// memoizing it will remove the bottleneck
+	for _, pon := range o.Pons {
+		if pon.ID == intfId {
+			for _, onu := range pon.Onus {
+				if onu.ID == onuId {
+					return onu, nil
+				}
+			}
+		}
+	}
+	return &Onu{}, errors.New(fmt.Sprintf("cannot-find-onu-by-id-%v-%v", intfId, onuId))
 }
 
 // returns an ONU with a given Mac Address

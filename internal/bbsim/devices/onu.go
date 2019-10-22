@@ -294,32 +294,23 @@ func (o Onu) ProcessOnuMessages(stream openolt.Openolt_EnableIndicationServer, c
 	}
 }
 
-func (o Onu) processOmciMessages(stream openolt.Openolt_EnableIndicationServer) {
-	ch := omcisim.GetChannel()
+func (o Onu) processOmciMessage(message omcisim.OmciChMessage) {
+	switch message.Type {
+	case omcisim.GemPortAdded:
+		log.WithFields(log.Fields{
+			"OnuId":  message.Data.OnuId,
+			"IntfId": message.Data.IntfId,
+		}).Infof("GemPort Added")
 
-	onuLogger.WithFields(log.Fields{
-		"onuID": o.ID,
-		"onuSN": o.Sn(),
-	}).Debug("Started OMCI Indication Channel")
-
-	for message := range ch {
-		switch message.Type {
-		case omcisim.GemPortAdded:
-			log.WithFields(log.Fields{
-				"OnuId":  message.Data.OnuId,
-				"IntfId": message.Data.IntfId,
-			}).Infof("GemPort Added")
-
-			// NOTE if we receive the GemPort but we don't have EAPOL flows
-			// go an intermediate state, otherwise start auth
-			if o.InternalState.Is("enabled") {
-				if err := o.InternalState.Event("add_gem_port"); err != nil {
-					log.Errorf("Can't go to gem_port_added: %v", err)
-				}
-			} else if o.InternalState.Is("eapol_flow_received") {
-				if err := o.InternalState.Event("start_auth"); err != nil {
-					log.Errorf("Can't go to auth_started: %v", err)
-				}
+		// NOTE if we receive the GemPort but we don't have EAPOL flows
+		// go an intermediate state, otherwise start auth
+		if o.InternalState.Is("enabled") {
+			if err := o.InternalState.Event("add_gem_port"); err != nil {
+				log.Errorf("Can't go to gem_port_added: %v", err)
+			}
+		} else if o.InternalState.Is("eapol_flow_received") {
+			if err := o.InternalState.Event("start_auth"); err != nil {
+				log.Errorf("Can't go to auth_started: %v", err)
 			}
 		}
 	}
