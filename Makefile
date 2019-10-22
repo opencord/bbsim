@@ -55,6 +55,40 @@ docs: # @HELP Generate docs and serve them in the browser
 	@echo "\033[36m Open your browser at localhost:6060 \033[0m"
 	godoc -http=localhost:6060
 
+# Release related items
+# Generates binaries in $RELEASE_DIR with name $RELEASE_NAME-$RELEASE_OS_ARCH
+# Inspired by: https://github.com/kubernetes/minikube/releases
+RELEASE_DIR     ?= release
+RELEASE_OS_ARCH ?= linux-amd64 linux-arm64 windows-amd64 darwin-amd64
+
+RELEASE_BBR_NAME    ?= bbr
+RELEASE_BBR_BINS    := $(foreach rel,$(RELEASE_OS_ARCH),$(RELEASE_DIR)/$(RELEASE_BBR_NAME)-$(rel))
+RELEASE_BBSIM_NAME    ?= bbsimctl
+RELEASE_BBSIM_BINS    := $(foreach rel,$(RELEASE_OS_ARCH),$(RELEASE_DIR)/$(RELEASE_BBSIM_NAME)-$(rel))
+
+$(RELEASE_BBR_BINS):
+	export GOOS=$(rel_os) ;\
+	export GOARCH=$(rel_arch) ;\
+	GO111MODULE=on go build -i -v -mod vendor \
+        	-ldflags "-w -X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
+        		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
+        		-X main.gitStatus=${GIT_STATUS} \
+        		-X main.version=${VERSION}" \
+        	-o "$@" ./cmd/bbr
+
+$(RELEASE_BBSIM_BINS):
+	export GOOS=$(rel_os) ;\
+	export GOARCH=$(rel_arch) ;\
+	GO111MODULE=on go build -i -v -mod vendor \
+        	-ldflags "-w -X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
+        		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
+        		-X main.gitStatus=${GIT_STATUS} \
+        		-X main.version=${VERSION}" \
+        	-o "$@" ./cmd/bbsim
+
+.PHONY: release $(RELEASE_BBR_BINS) $(RELEASE_BBSIM_BINS)
+release: $(RELEASE_BBR_BINS) $(RELEASE_BBSIM_BINS) # @HELP Release BBSimctl and BBR artifacts
+
 help: # @HELP Print the command options
 	@echo
 	@echo "\033[0;31m    BroadBand Simulator (BBSim) \033[0m"
@@ -71,6 +105,7 @@ help: # @HELP Print the command options
 
 
 # Internals
+
 build-bbr:
 	GO111MODULE=on go build -i -v -mod vendor \
     	-ldflags "-w -X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
