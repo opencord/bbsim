@@ -22,19 +22,12 @@
   }
 
   stages {
-    stage('Build BBSim') {
+    stage('Download BBR') {
       steps {
         sh """
-          docker pull voltha/bbsim:master
-          make docker-build
-        """
-      }
-    }
-    stage('Build BBR') {
-      steps {
-        sh """
-          export PATH=$PATH:/usr/lib/go-1.12/bin:/usr/local/go/bin:$GOPATH/bin
-          make build-bbr
+          wget https://github.com/opencord/bbsim/releases/download/v0.0.2/bbr-linux-amd64
+          mv bbr-linux-amd64 bbr
+          chmod a+x bbr
         """
       }
     }
@@ -42,7 +35,9 @@
       steps {
         timeout(1) {
           sh """
-            DOCKER_RUN_ARGS="-pon 4 -onu 16" make docker-run
+            docker rm -f bbsim
+            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-pon 4 -onu 16" make docker-run
+            sleep 5
             ./bbr -pon 4 -onu 16 2>&1 | tee bbr_16_4.logs
             docker logs bbsim 2>&1 | tee bbsim_16_4.logs
           """
@@ -54,7 +49,8 @@
         timeout(1) {
           sh """
             docker rm -f bbsim
-            DOCKER_RUN_ARGS="-pon 4 -onu 32" make docker-run
+            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-pon 4 -onu 32" make docker-run
+            sleep 5
             ./bbr -pon 4 -onu 32 2>&1 | tee bbr_32_4.logs
             docker logs bbsim 2>&1 | tee bbsim_32_4.logs
           """
@@ -66,7 +62,8 @@
         timeout(1) {
           sh """
             docker rm -f bbsim
-            DOCKER_RUN_ARGS="-pon 8 -onu 32" make docker-run
+            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-pon 8 -onu 32" make docker-run
+            sleep 5
             ./bbr -pon 8 -onu 32 2>&1 | tee bbr_32_8.logs
             docker logs bbsim 2>&1 | tee bbsim_32_8.logs
           """

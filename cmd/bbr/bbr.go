@@ -52,6 +52,8 @@ func main() {
 		"NumNniPerOlt": options.NumNniPerOlt,
 		"NumPonPerOlt": options.NumPonPerOlt,
 		"NumOnuPerPon": options.NumOnuPerPon,
+		"BBSimIp":      options.BBSimIp,
+		"BBSimPort":    options.BBSimPort,
 	}).Info("BroadBand Reflector is on")
 
 	// NOTE this are probably useless in the MockOLT case, check if we can avoid using them in the CreateOlt method
