@@ -52,7 +52,7 @@ func (o *OltMock) Start() {
 
 	for _, pon := range o.Olt.Pons {
 		for _, onu := range pon.Onus {
-			log.Debugf("Created ONU: %s (%d:%d)", onu.Sn(), onu.STag, onu.CTag)
+			log.Tracef("Created ONU: %s (%d:%d)", onu.Sn(), onu.STag, onu.CTag)
 		}
 	}
 
