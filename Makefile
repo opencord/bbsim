@@ -87,7 +87,7 @@ $(RELEASE_BBSIM_BINS):
         	-o "$@" ./cmd/bbsim
 
 .PHONY: release $(RELEASE_BBR_BINS) $(RELEASE_BBSIM_BINS)
-release: $(RELEASE_BBR_BINS) $(RELEASE_BBSIM_BINS) # @HELP Release BBSimctl and BBR artifacts
+release: dep protos $(RELEASE_BBR_BINS) $(RELEASE_BBSIM_BINS) # @HELP Release BBSimctl and BBR artifacts
 
 help: # @HELP Print the command options
 	@echo
