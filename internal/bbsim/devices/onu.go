@@ -234,7 +234,7 @@ func (o Onu) ProcessOnuMessages(stream openolt.Openolt_EnableIndicationServer, c
 			o.handleOmciMessage(msg, stream)
 		case FlowUpdate:
 			msg, _ := message.Data.(OnuFlowUpdateMessage)
-			o.handleFlowUpdate(msg, stream)
+			o.handleFlowUpdate(msg)
 		case StartEAPOL:
 			log.Infof("Receive StartEAPOL message on ONU Channel")
 			eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, stream)
@@ -280,8 +280,6 @@ func (o Onu) ProcessOnuMessages(stream openolt.Openolt_EnableIndicationServer, c
 			msg, _ := message.Data.(DyingGaspIndicationMessage)
 			o.sendDyingGaspInd(msg, stream)
 		case OmciIndication:
-			// TODO handle me!
-			// here https://gerrit.opencord.org/#/c/15521/11/internal/bbr/onu.go in startOmci
 			msg, _ := message.Data.(OmciIndicationMessage)
 			o.handleOmci(msg, client)
 		case SendEapolFlow:
@@ -446,18 +444,25 @@ func (o Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableInd
 }
 
 func (o *Onu) storePortNumber(portNo uint32) {
-	// FIXME this is a workaround to always use the SN-1 entry in sadis,
+	// NOTE this needed only as long as we don't support multiple UNIs
 	// we need to add support for multiple UNIs
 	// the action plan is:
 	// - refactor the omcisim-sim library to use https://github.com/cboling/omci instead of canned messages
 	// - change the library so that it reports a single UNI and remove this workaroung
 	// - add support for multiple UNIs in BBSim
 	if o.PortNo == 0 || portNo < o.PortNo {
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"OnuId":        o.ID,
+			"SerialNumber": o.Sn(),
+			"OnuPortNo":    o.PortNo,
+			"FlowPortNo":   portNo,
+		}).Debug("Storing ONU portNo")
 		o.PortNo = portNo
 	}
 }
 
-func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 	onuLogger.WithFields(log.Fields{
 		"DstPort":   msg.Flow.Classifier.DstPort,
 		"EthType":   fmt.Sprintf("%x", msg.Flow.Classifier.EthType),
@@ -474,11 +479,19 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage, stream openolt.Openolt_
 		"UniID":     msg.Flow.UniId,
 	}).Debug("ONU receives Flow")
 
+	if msg.Flow.UniId != 0 {
+		// as of now BBSim only support a single UNI, so ignore everything that is not targeted to it
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"OnuId":        o.ID,
+			"SerialNumber": o.Sn(),
+		}).Debug("Ignoring flow as it's not for the first UNI")
+		return
+	}
+
 	if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeEAPOL) && msg.Flow.Classifier.OVid == 4091 {
 		// NOTE storing the PortNO, it's needed when sending PacketIndications
-		if o.PortNo == 0 {
-			o.storePortNumber(uint32(msg.Flow.PortNo))
-		}
+		o.storePortNumber(uint32(msg.Flow.PortNo))
 
 		// NOTE if we receive the EAPOL flows but we don't have GemPorts
 		// go an intermediate state, otherwise start auth
@@ -575,7 +588,13 @@ func (o *Onu) handleOmci(msg OmciIndicationMessage, client openolt.OpenoltClient
 	}).Trace("ONU Receveives OMCI Msg")
 	switch msgType {
 	default:
-		log.Fatalf("unexpected frame: %v", packet)
+		log.WithFields(log.Fields{
+			"IntfId":  msg.OmciInd.IntfId,
+			"OnuId":   msg.OmciInd.OnuId,
+			"OnuSn":   common.OnuSnToString(o.SerialNumber),
+			"Pkt":     msg.OmciInd.Pkt,
+			"msgType": msgType,
+		}).Fatalf("unexpected frame: %v", packet)
 	case omci.MibResetResponseType:
 		mibUpload, _ := omcilib.CreateMibUploadRequest(o.getNextTid(false))
 		sendOmciMsg(mibUpload, o.PonPortID, o.ID, o.SerialNumber, "mibUpload", client)
@@ -630,7 +649,7 @@ func (o *Onu) sendEapolFlow(client openolt.OpenoltClient) {
 	downstreamFlow := openolt.Flow{
 		AccessIntfId:  int32(o.PonPortID),
 		OnuId:         int32(o.ID),
-		UniId:         int32(0x101), // FIXME do not hardcode this
+		UniId:         int32(0), // NOTE do not hardcode this, we need to support multiple UNIs
 		FlowId:        uint32(o.ID),
 		FlowType:      "downstream",
 		AllocId:       int32(0),
@@ -673,7 +692,7 @@ func (o *Onu) sendDhcpFlow(client openolt.OpenoltClient) {
 	downstreamFlow := openolt.Flow{
 		AccessIntfId:  int32(o.PonPortID),
 		OnuId:         int32(o.ID),
-		UniId:         int32(0x101), // FIXME do not hardcode this
+		UniId:         int32(0), // FIXME do not hardcode this
 		FlowId:        uint32(o.ID),
 		FlowType:      "downstream",
 		AllocId:       int32(0),
