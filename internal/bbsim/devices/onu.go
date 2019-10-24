@@ -453,6 +453,13 @@ func (o *Onu) storePortNumber(portNo uint32) {
 	// - change the library so that it reports a single UNI and remove this workaroung
 	// - add support for multiple UNIs in BBSim
 	if o.PortNo == 0 || portNo < o.PortNo {
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"OnuId":        o.ID,
+			"SerialNumber": o.Sn(),
+			"OnuPortNo":    o.PortNo,
+			"FlowPortNo":   portNo,
+		}).Debug("Storing ONU portNo")
 		o.PortNo = portNo
 	}
 }
@@ -474,14 +481,29 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage, stream openolt.Openolt_
 		"UniID":     msg.Flow.UniId,
 	}).Debug("ONU receives Flow")
 
+	if msg.Flow.UniId != 0 {
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"OnuId":        o.ID,
+			"SerialNumber": o.Sn(),
+		}).Debug("Ignoring flow as it's not for the first UNI")
+		return
+	}
+
 	if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeEAPOL) && msg.Flow.Classifier.OVid == 4091 {
 		// NOTE storing the PortNO, it's needed when sending PacketIndications
-		if o.PortNo == 0 {
-			o.storePortNumber(uint32(msg.Flow.PortNo))
-		}
+		o.storePortNumber(uint32(msg.Flow.PortNo))
 
 		// NOTE if we receive the EAPOL flows but we don't have GemPorts
 		// go an intermediate state, otherwise start auth
+		// FIXME each ONU receives 10 EAPOL flows (1 upstream/downstream for each UNI Port + 2 TBD)
+		// DstPort=0 EthType=888e FlowId=22 FlowType=upstream OuterVlan=901 PortNo=16 SrcPort=0 UniID=0 module=ONU
+		// DstPort=0 EthType=888e FlowId=23 FlowType=downstream OuterVlan=4090 PortNo=16 SrcPort=0 UniID=0 module=ONU
+		// we should move the ONU to start_auth only when we get the one for the first UNI Port
+		//
+		// This does not cause any issue in a VOLTHA only setup (as we are manually adding the subscriber flows)
+		// but will fail a build in SEBA since EAPOL goes through event though is not formally correct (it authenticates a non-existing subscriber):
+		// UserName=user,CurrentState=AUTHORIZED,DeviceId=of:000000000a801609,MAC=2E:60:70:13:00:02,PortNumber=33,SubscriberId=UNKNOWN
 		if o.InternalState.Is("enabled") {
 			if err := o.InternalState.Event("receive_eapol_flow"); err != nil {
 				log.Warnf("Can't go to eapol_flow_received: %v", err)
