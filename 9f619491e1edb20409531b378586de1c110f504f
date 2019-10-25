@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "823ac085_c7187178",
+        "filename": "docs/source/onu-state-machine.rst",
+        "patchSetId": 7
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2019-10-25T22:20:24Z",
+      "side": 1,
+      "message": "Rather than coloring (may have trouble with colorblind people or if printed), may want to use subgraphs to group these.",
+      "revId": "9f619491e1edb20409531b378586de1c110f504f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
