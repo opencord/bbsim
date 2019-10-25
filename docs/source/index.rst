@@ -10,6 +10,7 @@ Welcome to BBSim's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   operations.rst
    onu-state-machine.rst
    development-dependencies.rst
    bbr.rst

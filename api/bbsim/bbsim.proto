@@ -87,4 +87,6 @@ service BBSim {
     rpc SetLogLevel(LogLevel) returns (LogLevel) {}
     rpc ShutdownONU (ONURequest) returns (Response) {}
     rpc PoweronONU (ONURequest) returns (Response) {}
+    rpc RestartEapol (ONURequest) returns (Response) {}
+    rpc RestartDhcp (ONURequest) returns (Response) {}
 }
