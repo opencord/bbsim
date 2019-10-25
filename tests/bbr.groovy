@@ -31,6 +31,13 @@
         """
       }
     }
+    stage('Pull BBSim image from DockerHub') {
+      steps {
+        sh """
+          docker pull voltha/bbsim:master
+        """
+      }
+    }
     stage('64 ONUs (16 ONU x 4 PONs)') {
       steps {
         timeout(1) {
