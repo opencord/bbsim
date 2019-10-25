@@ -51,9 +51,9 @@ docker-run: # @HELP Run the container locally (intended for development purposes
 	docker run -d -p 50070:50070 -p 50060:50060 --privileged --rm --name bbsim ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} /app/bbsim ${DOCKER_RUN_ARGS}
 
 .PHONY: docs
-docs: # @HELP Generate docs and serve them in the browser
-	@echo "\033[36m Open your browser at localhost:6060 \033[0m"
-	godoc -http=localhost:6060
+docs: # @HELP Generate docs and opens them in the browser
+	pushd docs; make doc_venv; make html; popd
+	open docs/build/html/index.html
 
 # Release related items
 # Generates binaries in $RELEASE_DIR with name $RELEASE_NAME-$RELEASE_OS_ARCH
