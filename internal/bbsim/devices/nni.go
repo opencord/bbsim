@@ -22,6 +22,7 @@ import (
 	"github.com/google/gopacket/pcap"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
+	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/types"
 	log "github.com/sirupsen/logrus"
 	"os/exec"
@@ -55,53 +56,73 @@ type NniPort struct {
 	ID uint32
 
 	// PON Attributes
-	OperState *fsm.FSM
-	Type      string
+	OperState  *fsm.FSM
+	Type       string
+	DhcpServer *dhcp.DhcpServer
 }
 
 func CreateNNI(olt *OltDevice) (NniPort, error) {
+	dhcpServer, _ := dhcp.CreateDhcpServer("192.168.0.0/16")
 	nniPort := NniPort{
 		ID: uint32(0),
 		OperState: getOperStateFSM(func(e *fsm.Event) {
 			oltLogger.Debugf("Changing NNI OperState from %s to %s", e.Src, e.Dst)
 		}),
-		Type: "nni",
+		Type:       "nni",
+		DhcpServer: dhcpServer,
 	}
-	createNNIPair(executor, olt)
+	// FIXME this should be create in the CreateOLT method
+	olt.nniPktInChannel = make(chan *types.PacketMsg, 32)
+
+	//createNNIPair(executor, olt)
 	return nniPort, nil
 }
 
-// sendNniPacket will send a packet out of the NNI interface.
-// We will send upstream only DHCP packets and drop anything else
-func sendNniPacket(packet gopacket.Packet) error {
+// The only packets we expect BBSim to handle are DHCP packets
+// this function will forge a response based on the packet and send it back on the NNI channel
+func sendNniPacket(packet gopacket.Packet, olt OltDevice) error {
 	if isDhcp := packetHandlers.IsDhcpPacket(packet); !isDhcp {
 		nniLogger.WithFields(log.Fields{
 			"packet": packet,
 		}).Trace("Dropping NNI packet as it's not DHCP")
+		return nil
 	}
 
-	packet, err := packetHandlers.PopDoubleTag(packet)
+	responsePacket, err := olt.Nnis[0].DhcpServer.HandleDhcpReq(packet)
+
 	if err != nil {
 		nniLogger.WithFields(log.Fields{
 			"packet": packet,
-		}).Errorf("Can't remove double tags from packet: %v", err)
-		return err
+		}).Errorf("Failed to process packet on the NNI port: %s", err)
 	}
 
-	handle, err := getVethHandler(nniVeth)
-	if err != nil {
-		return err
+	pkt := types.PacketMsg{
+		Pkt: responsePacket,
 	}
+	olt.nniPktInChannel <- &pkt
 
-	err = handle.WritePacketData(packet.Data())
-	if err != nil {
-		nniLogger.WithFields(log.Fields{
-			"packet": packet,
-		}).Errorf("Failed to send packet out of the NNI: %s", err)
-		return err
-	}
-
-	nniLogger.Infof("Sent packet out of NNI")
+	//packet, err := packetHandlers.PopDoubleTag(packet)
+	//if err != nil {
+	//	nniLogger.WithFields(log.Fields{
+	//		"packet": packet,
+	//	}).Errorf("Can't remove double tags from packet: %v", err)
+	//	return err
+	//}
+	//
+	//handle, err := getVethHandler(nniVeth)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//err = handle.WritePacketData(packet.Data())
+	//if err != nil {
+	//	nniLogger.WithFields(log.Fields{
+	//		"packet": packet,
+	//	}).Errorf("Failed to send packet out of the NNI: %s", err)
+	//	return err
+	//}
+	//
+	//nniLogger.Infof("Sent packet out of NNI")
 	return nil
 }
 
@@ -127,11 +148,11 @@ func createNNIPair(executor Executor, olt *OltDevice) error {
 		return err
 	}
 
-	ch, err := listenOnVeth(nniVeth)
+	_, err := listenOnVeth(nniVeth)
 	if err != nil {
 		return err
 	}
-	olt.nniPktInChannel = ch
+
 	return nil
 }
 

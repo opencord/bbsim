@@ -18,6 +18,7 @@ package devices
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/google/gopacket"
@@ -393,7 +394,7 @@ func (o OltDevice) processNniPacketIns(stream openolt.Openolt_EnableIndicationSe
 			log.WithFields(log.Fields{
 				"IntfType": "nni",
 				"IntfId":   nniId,
-				"Pkt":      message.Pkt.Data(),
+				"Pkt":      hex.EncodeToString(message.Pkt.Data()),
 			}).Error("Can't find Dst MacAddress in packet")
 			return
 		}
@@ -711,7 +712,7 @@ func (o OltDevice) ReenableOlt(context.Context, *openolt.Empty) (*openolt.Empty,
 func (o OltDevice) UplinkPacketOut(context context.Context, packet *openolt.UplinkPacket) (*openolt.Empty, error) {
 	pkt := gopacket.NewPacket(packet.Pkt, layers.LayerTypeEthernet, gopacket.Default)
 
-	sendNniPacket(pkt)
+	sendNniPacket(pkt, olt)
 	// NOTE should we return an error if sendNniPakcet fails?
 	return new(openolt.Empty), nil
 }

@@ -55,7 +55,7 @@ func GetDstMacAddressFromPacket(packet gopacket.Packet) (net.HardwareAddr, error
 			return eth.DstMAC, nil
 		}
 	}
-	return nil, errors.New("cant-find-mac-address")
+	return nil, errors.New("cant-find-dst-mac-address")
 }
 
 // returns the Source Mac Address contained in the packet
@@ -67,7 +67,7 @@ func GetSrcMacAddressFromPacket(packet gopacket.Packet) (net.HardwareAddr, error
 			return eth.SrcMAC, nil
 		}
 	}
-	return nil, errors.New("cant-find-mac-address")
+	return nil, errors.New("cant-find-src-mac-address")
 }
 
 // returns wether it's an EAPOL or DHCP packet, error if it's none

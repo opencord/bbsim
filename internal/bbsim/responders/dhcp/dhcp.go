@@ -54,7 +54,7 @@ var defaultParamsRequestList = []layers.DHCPOpt{
 	layers.DHCPOptNTPServers,
 }
 
-func createDefaultDHCPReq(intfId uint32, onuId uint32, mac net.HardwareAddr) layers.DHCPv4 {
+func createDefaultDHCPReq(onuId uint32, mac net.HardwareAddr) layers.DHCPv4 {
 	return layers.DHCPv4{
 		Operation:    layers.DHCPOpRequest,
 		HardwareType: layers.LinkTypeEthernet,
@@ -87,8 +87,8 @@ func createDefaultOpts() []layers.DHCPOption {
 	return opts
 }
 
-func createDHCPDisc(intfId uint32, onuId uint32, macAddress net.HardwareAddr) *layers.DHCPv4 {
-	dhcpLayer := createDefaultDHCPReq(intfId, onuId, macAddress)
+func createDHCPDisc(onuId uint32, macAddress net.HardwareAddr) *layers.DHCPv4 {
+	dhcpLayer := createDefaultDHCPReq(onuId, macAddress)
 	defaultOpts := createDefaultOpts()
 	dhcpLayer.Options = append([]layers.DHCPOption{layers.DHCPOption{
 		Type:   layers.DHCPOptMessageType,
@@ -108,7 +108,7 @@ func createDHCPDisc(intfId uint32, onuId uint32, macAddress net.HardwareAddr) *l
 }
 
 func createDHCPReq(intfId uint32, onuId uint32, macAddress net.HardwareAddr, offeredIp net.IP) *layers.DHCPv4 {
-	dhcpLayer := createDefaultDHCPReq(intfId, onuId, macAddress)
+	dhcpLayer := createDefaultDHCPReq(onuId, macAddress)
 	defaultOpts := createDefaultOpts()
 
 	dhcpLayer.Options = append(defaultOpts, layers.DHCPOption{
@@ -141,7 +141,7 @@ func createDHCPReq(intfId uint32, onuId uint32, macAddress net.HardwareAddr, off
 	return &dhcpLayer
 }
 
-func serializeDHCPPacket(intfId uint32, onuId uint32, srcMac net.HardwareAddr, dhcp *layers.DHCPv4) ([]byte, error) {
+func serializeDHCPPacket(srcMac net.HardwareAddr, dhcp *layers.DHCPv4) ([]byte, error) {
 	buffer := gopacket.NewSerializeBuffer()
 	options := gopacket.SerializeOptions{
 		ComputeChecksums: true,
@@ -249,7 +249,7 @@ func sendDHCPPktIn(msg bbsim.ByteMsg, portNo uint32, stream bbsim.Stream) error 
 
 func sendDHCPRequest(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, onuHwAddress net.HardwareAddr, offeredIp net.IP, stream openolt.Openolt_EnableIndicationServer) error {
 	dhcp := createDHCPReq(ponPortId, onuId, onuHwAddress, offeredIp)
-	pkt, err := serializeDHCPPacket(ponPortId, onuId, onuHwAddress, dhcp)
+	pkt, err := serializeDHCPPacket(onuHwAddress, dhcp)
 
 	if err != nil {
 		dhcpLogger.Errorf("Cannot serializeDHCPPacket: %s", err)
@@ -290,8 +290,8 @@ func updateDhcpFailed(onuId uint32, ponPortId uint32, serialNumber string, onuSt
 }
 
 func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, onuStateMachine *fsm.FSM, onuHwAddress net.HardwareAddr, cTag int, stream bbsim.Stream) error {
-	dhcp := createDHCPDisc(ponPortId, onuId, onuHwAddress)
-	pkt, err := serializeDHCPPacket(ponPortId, onuId, onuHwAddress, dhcp)
+	dhcp := createDHCPDisc(onuId, onuHwAddress)
+	pkt, err := serializeDHCPPacket(onuHwAddress, dhcp)
 	if err != nil {
 		dhcpLogger.Errorf("Cannot serializeDHCPPacket: %s", err)
 		return err
@@ -488,7 +488,7 @@ func HandleNextBbrPacket(onuId uint32, ponPortId uint32, serialNumber string, sT
 			"DstMac": dstMac,
 			"SrcMac": srcMac,
 			"OnuMac": macAddress,
-		}).Infof("Sent DHCP packet out of the NNI Port")
+		}).Infof("Sent DHCP packet out toward the NNI Port")
 	}
 	return nil
 }
