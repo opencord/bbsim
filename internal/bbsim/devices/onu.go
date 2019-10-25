@@ -113,7 +113,7 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) *Onu {
 			{Name: "eap_response_success_received", Src: []string{"eap_response_challenge_sent"}, Dst: "eap_response_success_received"},
 			{Name: "auth_failed", Src: []string{"auth_started", "eap_start_sent", "eap_response_identity_sent", "eap_response_challenge_sent"}, Dst: "auth_failed"},
 			// DHCP
-			{Name: "start_dhcp", Src: []string{"eap_response_success_received", "dhcp_ack_received", "dhcp_failed"}, Dst: "dhcp_started"},
+			{Name: "start_dhcp", Src: []string{"eap_response_success_received", "dhcp_discovery_sent", "dhcp_request_sent", "dhcp_ack_received", "dhcp_failed"}, Dst: "dhcp_started"},
 			{Name: "dhcp_discovery_sent", Src: []string{"dhcp_started"}, Dst: "dhcp_discovery_sent"},
 			{Name: "dhcp_request_sent", Src: []string{"dhcp_discovery_sent"}, Dst: "dhcp_request_sent"},
 			{Name: "dhcp_ack_received", Src: []string{"dhcp_request_sent"}, Dst: "dhcp_ack_received"},
