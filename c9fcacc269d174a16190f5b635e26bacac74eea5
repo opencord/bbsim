@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "20afb776_a6cc4a71",
+        "filename": ".gitignore",
+        "patchSetId": 1
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-10-25T00:18:42Z",
+      "side": 1,
+      "message": "there is a .gitignore in the vendor folder, without this folder the docker build will fail",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 7
+      },
+      "revId": "c9fcacc269d174a16190f5b635e26bacac74eea5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e44897d_5e224e2f",
+        "filename": "cmd/bbsim/bbsim.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-10-25T00:18:42Z",
+      "side": 1,
+      "message": "is this needed?",
+      "range": {
+        "startLine": 55,
+        "startChar": 1,
+        "endLine": 55,
+        "endChar": 19
+      },
+      "revId": "c9fcacc269d174a16190f5b635e26bacac74eea5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b3c9fb4_5eb2db67",
+        "filename": "cmd/bbsim/bbsim.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-10-25T00:18:42Z",
+      "side": 1,
+      "message": "we are now starting 4 threads:\n- OLT\n- apiServer\n- legacyApiServer\n- restGateway\nso we should wait for all of them to be complete.\n\nEach thread can listen on apiDoneChannel and terminate once that channel is closed, like: https://github.com/opencord/bbsim/blob/master/cmd/bbsim/bbsim.go#L51-L60",
+      "range": {
+        "startLine": 151,
+        "startChar": 1,
+        "endLine": 151,
+        "endChar": 10
+      },
+      "revId": "c9fcacc269d174a16190f5b635e26bacac74eea5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "585ce9d5_6140bcd7",
+        "filename": "internal/bbsim/api/legacy_api_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-10-25T00:18:42Z",
+      "side": 1,
+      "message": "the Onu struct as a .Sn() method that return the stringified serial number",
+      "range": {
+        "startLine": 123,
+        "startChar": 0,
+        "endLine": 125,
+        "endChar": 1
+      },
+      "revId": "c9fcacc269d174a16190f5b635e26bacac74eea5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b341181_51fed25a",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-10-25T00:18:42Z",
+      "side": 1,
+      "message": "There is already a FindOnuById method",
+      "range": {
+        "startLine": 484,
+        "startChar": 19,
+        "endLine": 484,
+        "endChar": 29
+      },
+      "revId": "c9fcacc269d174a16190f5b635e26bacac74eea5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c600884d_b07b3f2a",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-10-25T00:18:42Z",
+      "side": 1,
+      "message": "please use FindOnuBySn",
+      "range": {
+        "startLine": 492,
+        "startChar": 19,
+        "endLine": 492,
+        "endChar": 29
+      },
+      "revId": "c9fcacc269d174a16190f5b635e26bacac74eea5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
