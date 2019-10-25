@@ -55,11 +55,25 @@ type ONUPowerOn struct {
 	} `positional-args:"yes" required:"yes"`
 }
 
+type ONUEapolRestart struct {
+	Args struct {
+		OnuSn OnuSnString
+	} `positional-args:"yes" required:"yes"`
+}
+
+type ONUDhcpRestart struct {
+	Args struct {
+		OnuSn OnuSnString
+	} `positional-args:"yes" required:"yes"`
+}
+
 type ONUOptions struct {
-	List     ONUList     `command:"list"`
-	Get      ONUGet      `command:"get"`
-	ShutDown ONUShutDown `command:"shutdown"`
-	PowerOn  ONUPowerOn  `command:"poweron"`
+	List         ONUList         `command:"list"`
+	Get          ONUGet          `command:"get"`
+	ShutDown     ONUShutDown     `command:"shutdown"`
+	PowerOn      ONUPowerOn      `command:"poweron"`
+	RestartEapol ONUEapolRestart `command:"auth_restart"`
+	RestartDchp  ONUDhcpRestart  `command:"dhcp_restart"`
 }
 
 func RegisterONUCommands(parser *flags.Parser) {
@@ -142,7 +156,7 @@ func (options *ONUShutDown) Execute(args []string) error {
 	res, err := client.ShutdownONU(ctx, &req)
 
 	if err != nil {
-		log.Fatalf("Cannot not shutdown ONU %s: %v", options.Args.OnuSn, err)
+		log.Fatalf("Cannot shutdown ONU %s: %v", options.Args.OnuSn, err)
 		return err
 	}
 
@@ -163,7 +177,49 @@ func (options *ONUPowerOn) Execute(args []string) error {
 	res, err := client.PoweronONU(ctx, &req)
 
 	if err != nil {
-		log.Fatalf("Cannot not power on ONU %s: %v", options.Args.OnuSn, err)
+		log.Fatalf("Cannot power on ONU %s: %v", options.Args.OnuSn, err)
+		return err
+	}
+
+	fmt.Println(fmt.Sprintf("[Status: %d] %s", res.StatusCode, res.Message))
+
+	return nil
+}
+
+func (options *ONUEapolRestart) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+	req := pb.ONURequest{
+		SerialNumber: string(options.Args.OnuSn),
+	}
+	res, err := client.RestartEapol(ctx, &req)
+
+	if err != nil {
+		log.Fatalf("Cannot restart EAPOL for ONU %s: %v", options.Args.OnuSn, err)
+		return err
+	}
+
+	fmt.Println(fmt.Sprintf("[Status: %d] %s", res.StatusCode, res.Message))
+
+	return nil
+}
+
+func (options *ONUDhcpRestart) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+	req := pb.ONURequest{
+		SerialNumber: string(options.Args.OnuSn),
+	}
+	res, err := client.RestartDhcp(ctx, &req)
+
+	if err != nil {
+		log.Fatalf("Cannot restart DHCP for ONU %s: %v", options.Args.OnuSn, err)
 		return err
 	}
 

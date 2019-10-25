@@ -11,7 +11,7 @@ display all the available targets
 Documentation
 =============
 
-More advanced documentation lives in [here](./docs/index.rst).
+More advanced documentation lives in [here](./docs/source/index.rst).
 
 You can generate and browse the documentation by executing:
 

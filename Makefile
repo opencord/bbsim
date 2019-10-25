@@ -47,8 +47,11 @@ docker-build: # @HELP Build a docker container
 docker-push: # @HELP Push a docker container to a registry
 	docker push ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG}
 
-docker-run: # @HELP Run the container locally (intended for development purposes: DOCKER_RUN_ARGS="-pon 2 -onu 2" make docker-run)
+docker-run: # @HELP Runs the container locally (available options: DOCKER_RUN_ARGS="-pon 2 -onu 2" make docker-run)
 	docker run -d -p 50070:50070 -p 50060:50060 --privileged --rm --name bbsim ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} /app/bbsim ${DOCKER_RUN_ARGS}
+
+docker-run-dev: # @HELP Runs the container locally (intended for development purposes, not in detached mode)
+	docker run -p 50070:50070 -p 50060:50060 --privileged --rm --name bbsim ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} /app/bbsim ${DOCKER_RUN_ARGS}
 
 .PHONY: docs
 docs: # @HELP Generate docs and opens them in the browser
