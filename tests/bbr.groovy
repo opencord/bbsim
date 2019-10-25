@@ -35,7 +35,7 @@
       steps {
         timeout(1) {
           sh """
-            docker rm -f bbsim
+            docker rm -f bbsim || true
             DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-pon 4 -onu 16" make docker-run
             sleep 5
             ./bbr -pon 4 -onu 16 2>&1 | tee bbr_16_4.logs
@@ -48,7 +48,7 @@
       steps {
         timeout(1) {
           sh """
-            docker rm -f bbsim
+            docker rm -f bbsim || true
             DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-pon 4 -onu 32" make docker-run
             sleep 5
             ./bbr -pon 4 -onu 32 2>&1 | tee bbr_32_4.logs
@@ -61,7 +61,7 @@
       steps {
         timeout(1) {
           sh """
-            docker rm -f bbsim
+            docker rm -f bbsim || true
             DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-pon 8 -onu 32" make docker-run
             sleep 5
             ./bbr -pon 8 -onu 32 2>&1 | tee bbr_32_8.logs
