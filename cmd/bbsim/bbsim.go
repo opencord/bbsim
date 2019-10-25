@@ -84,6 +84,7 @@ func main() {
 		"NumNniPerOlt": options.NumNniPerOlt,
 		"NumPonPerOlt": options.NumPonPerOlt,
 		"NumOnuPerPon": options.NumOnuPerPon,
+		"TotalOnus":    options.NumPonPerOlt * options.NumOnuPerPon,
 	}).Info("BroadBand Simulator is on")
 
 	// control channels, they are only closed when the goroutine needs to be terminated

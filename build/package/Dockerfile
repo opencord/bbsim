@@ -69,6 +69,7 @@ RUN mv /usr/sbin/dhcpd /usr/local/bin/ \
 WORKDIR /app
 COPY --from=builder /go/src/github.com/opencord/bbsim/bbsim /app/bbsim
 COPY --from=builder /go/src/github.com/opencord/bbsim/bbsimctl /usr/bin/bbsimctl
+RUN mv /usr/sbin/tcpdump /usr/bin/tcpdump
 RUN chmod a+x /app/bbsim
 RUN chmod a+x /usr/bin/bbsimctl
 RUN bbsimctl completion bash >> $HOME/.bashrc
