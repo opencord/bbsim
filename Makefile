@@ -31,7 +31,11 @@ protos: api/bbsim/bbsim.pb.go # @HELP Build proto files
 dep: # @HELP Download the dependencies to the vendor folder
 	GO111MODULE=on go mod vendor
 
-build: dep protos fmt build-bbsim build-bbsimctl build-bbr # @HELP Build the binary
+_build: dep protos fmt build-bbsim build-bbsimctl build-bbr
+
+build: # @HELP Build the binaries (it runs inside a docker container and output the built code on your local file system)
+	docker build -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim-builder:${DOCKER_TAG} -f build/ci/Dockerfile.builder .
+	docker run --rm -v $(shell pwd):/bbsim ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim-builder:${DOCKER_TAG} /bin/sh -c "cd /bbsim; make build"
 
 test: dep protos fmt # @HELP Execute unit tests
 	GO111MODULE=on go test -v -mod vendor ./... -covermode count -coverprofile ./tests/results/go-test-coverage.out 2>&1 | tee ./tests/results/go-test-results.out
@@ -41,10 +45,10 @@ test: dep protos fmt # @HELP Execute unit tests
 fmt:
 	go fmt ./...
 
-docker-build: # @HELP Build a docker container
+docker-build: # @HELP Build the BBSim docker container (contains BBSimCtl too)
 	docker build -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} -f build/package/Dockerfile .
 
-docker-push: # @HELP Push a docker container to a registry
+docker-push: # @HELP Push the docker container to a registry
 	docker push ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG}
 
 docker-run: # @HELP Runs the container locally (available options: DOCKER_RUN_ARGS="-pon 2 -onu 2" make docker-run)
@@ -90,7 +94,7 @@ $(RELEASE_BBSIM_BINS):
         	-o "$@" ./cmd/bbsim
 
 .PHONY: release $(RELEASE_BBR_BINS) $(RELEASE_BBSIM_BINS)
-release: dep protos $(RELEASE_BBR_BINS) $(RELEASE_BBSIM_BINS) # @HELP Release BBSimctl and BBR artifacts
+release: dep protos $(RELEASE_BBR_BINS) $(RELEASE_BBSIM_BINS) # @HELP Creates release ready bynaries for BBSimctl and BBR artifacts
 
 help: # @HELP Print the command options
 	@echo

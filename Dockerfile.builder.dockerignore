@@ -1,5 +1,6 @@
 build/*
 deployments/*
+vendor/*
 release/*
 tests/*
 docs/*

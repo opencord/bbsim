@@ -22,19 +22,18 @@
   }
 
   stages {
-    stage('Download BBR') {
+    stage('Build BBR') {
       steps {
         sh """
-          wget https://github.com/opencord/bbsim/releases/download/v0.0.2/bbr-linux-amd64
-          mv bbr-linux-amd64 bbr
-          chmod a+x bbr
+          make build-in-docker
         """
       }
     }
-    stage('Pull BBSim image from DockerHub') {
+    stage('Build BBSim') {
       steps {
         sh """
           docker pull voltha/bbsim:master
+          DOCKER_REPOSITORY=voltha/ DOCKER_TAG=candidate make docker-build
         """
       }
     }
@@ -43,9 +42,9 @@
         timeout(1) {
           sh """
             docker rm -f bbsim || true
-            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-pon 4 -onu 16" make docker-run
+            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=candidate DOCKER_RUN_ARGS="-pon 4 -onu 16" make docker-run
             sleep 5
-            ./bbr -pon 4 -onu 16 2>&1 | tee bbr_16_4.logs
+            ./bbr -pon 4 -onu 16
             docker logs bbsim 2>&1 | tee bbsim_16_4.logs
           """
         }
@@ -56,9 +55,9 @@
         timeout(1) {
           sh """
             docker rm -f bbsim || true
-            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-pon 4 -onu 32" make docker-run
+            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=candidate DOCKER_RUN_ARGS="-pon 4 -onu 32" make docker-run
             sleep 5
-            ./bbr -pon 4 -onu 32 2>&1 | tee bbr_32_4.logs
+            ./bbr -pon 4 -onu 32
             docker logs bbsim 2>&1 | tee bbsim_32_4.logs
           """
         }
@@ -69,9 +68,9 @@
         timeout(1) {
           sh """
             docker rm -f bbsim || true
-            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-pon 8 -onu 32" make docker-run
+            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=candidate DOCKER_RUN_ARGS="-pon 8 -onu 32" make docker-run
             sleep 5
-            ./bbr -pon 8 -onu 32 2>&1 | tee bbr_32_8.logs
+            ./bbr -pon 8 -onu 32
             docker logs bbsim 2>&1 | tee bbsim_32_8.logs
           """
         }

@@ -3,3 +3,4 @@
 /bbsimctl
 logs/*
 release
+.DS_Store
