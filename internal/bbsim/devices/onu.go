@@ -18,6 +18,7 @@ package devices
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/cboling/omci"
 	"github.com/google/gopacket/layers"
@@ -46,9 +47,12 @@ type Onu struct {
 	// PortNo comes with flows and it's used when sending packetIndications,
 	// There is one PortNo per UNI Port, for now we're only storing the first one
 	// FIXME add support for multiple UNIs
-	PortNo        uint32
 	HwAddress     net.HardwareAddr
 	InternalState *fsm.FSM
+
+	// ONU State
+	PortNo           uint32
+	DhcpFlowReceived bool
 
 	OperState    *fsm.FSM
 	SerialNumber *openolt.SerialNumber
@@ -64,25 +68,34 @@ type Onu struct {
 	DoneChannel chan bool // this channel is used to signal once the onu is complete (when the struct is used by BBR)
 }
 
-func (o Onu) Sn() string {
+func (o *Onu) Sn() string {
 	return common.OnuSnToString(o.SerialNumber)
+}
+
+func (o *Onu) HasDhcpFlow() bool {
+	return o.DhcpFlowReceived
+}
+
+func (o *Onu) SetDhcpFlow() {
+	o.DhcpFlowReceived = true
 }
 
 func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) *Onu {
 
 	o := Onu{
-		ID:          id,
-		PonPortID:   pon.ID,
-		PonPort:     pon,
-		STag:        sTag,
-		CTag:        cTag,
-		HwAddress:   net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(id)},
-		PortNo:      0,
-		Channel:     make(chan Message, 2048),
-		tid:         0x1,
-		hpTid:       0x8000,
-		seqNumber:   0,
-		DoneChannel: make(chan bool, 1),
+		ID:               id,
+		PonPortID:        pon.ID,
+		PonPort:          pon,
+		STag:             sTag,
+		CTag:             cTag,
+		HwAddress:        net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(id)},
+		PortNo:           0,
+		Channel:          make(chan Message, 2048),
+		tid:              0x1,
+		hpTid:            0x8000,
+		seqNumber:        0,
+		DoneChannel:      make(chan bool, 1),
+		DhcpFlowReceived: false,
 	}
 	o.SerialNumber = o.NewSN(olt.ID, pon.ID, o.ID)
 
@@ -166,6 +179,11 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) *Onu {
 					"IntfId": o.PonPortID,
 					"OnuSn":  o.Sn(),
 				}).Errorf("ONU failed to authenticate!")
+			},
+			"before_start_dhcp": func(e *fsm.Event) {
+				if o.HasDhcpFlow() == false {
+					e.Cancel(errors.New("cannot-go-to-dhcp-started-as-dhcp-flow-is-missing"))
+				}
 			},
 			"enter_dhcp_started": func(e *fsm.Event) {
 				msg := Message{
@@ -507,9 +525,12 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 	} else if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeIPv4) &&
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
 		msg.Flow.Classifier.DstPort == uint32(67) {
+
+		// keep track that we reveived the DHCP Flows so that we can transition the state to dhcp_started
+		o.SetDhcpFlow()
 		// NOTE we are receiving mulitple DHCP flows but we shouldn't call the transition multiple times
 		if err := o.InternalState.Event("start_dhcp"); err != nil {
-			log.Warnf("Can't go to dhcp_started: %v", err)
+			log.Errorf("Can't go to dhcp_started: %v", err)
 		}
 	}
 }
