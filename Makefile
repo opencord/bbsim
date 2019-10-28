@@ -33,6 +33,7 @@ dep: # @HELP Download the dependencies to the vendor folder
 
 _build: dep protos fmt build-bbsim build-bbsimctl build-bbr
 
+.PHONY: build
 build: # @HELP Build the binaries (it runs inside a docker container and output the built code on your local file system)
 	docker build -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim-builder:${DOCKER_TAG} -f build/ci/Dockerfile.builder .
 	docker run --rm -v $(shell pwd):/bbsim ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim-builder:${DOCKER_TAG} /bin/sh -c "cd /bbsim; make build"
