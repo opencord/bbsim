@@ -30,6 +30,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net"
 	"reflect"
+	"strconv"
 )
 
 var GetGemPortId = omci.GetGemPortId
@@ -55,18 +56,27 @@ var defaultParamsRequestList = []layers.DHCPOpt{
 }
 
 func createDefaultDHCPReq(intfId uint32, onuId uint32, mac net.HardwareAddr) layers.DHCPv4 {
+	// NOTE we want to generate a unique XID, the easiest way is to concat the PON ID and the ONU ID
+	// we increment them by one otherwise:
+	// - PON: 0 ONU: 62 = 062 -> 62
+	// - PON: 6 ONU: 2 = 62 -> 62
+	xid, err := strconv.Atoi(fmt.Sprintf("%d%d", intfId+1, onuId+1))
+	if err != nil {
+		log.Fatal("Can't generate unique XID for ONU")
+	}
+
 	return layers.DHCPv4{
 		Operation:    layers.DHCPOpRequest,
 		HardwareType: layers.LinkTypeEthernet,
 		HardwareLen:  6,
 		HardwareOpts: 0,
-		Xid:          onuId,
+		Xid:          uint32(xid),
 		ClientHWAddr: mac,
 	}
 }
 
-func createDefaultOpts() []layers.DHCPOption {
-	hostname := []byte("bbsim.onf.org")
+func createDefaultOpts(intfId uint32, onuId uint32) []layers.DHCPOption {
+	hostname := []byte(fmt.Sprintf("%d.%d.bbsim.onf.org", intfId, onuId))
 	opts := []layers.DHCPOption{}
 	opts = append(opts, layers.DHCPOption{
 		Type:   layers.DHCPOptHostname,
@@ -89,27 +99,27 @@ func createDefaultOpts() []layers.DHCPOption {
 
 func createDHCPDisc(intfId uint32, onuId uint32, macAddress net.HardwareAddr) *layers.DHCPv4 {
 	dhcpLayer := createDefaultDHCPReq(intfId, onuId, macAddress)
-	defaultOpts := createDefaultOpts()
+	defaultOpts := createDefaultOpts(intfId, onuId)
 	dhcpLayer.Options = append([]layers.DHCPOption{layers.DHCPOption{
 		Type:   layers.DHCPOptMessageType,
 		Data:   []byte{byte(layers.DHCPMsgTypeDiscover)},
 		Length: 1,
 	}}, defaultOpts...)
 
-	//data := []byte{0xcd, 0x28, 0xcb, 0xcc, 0x00, 0x01, 0x00, 0x01,
-	//	0x23, 0xed, 0x11, 0xec, 0x4e, 0xfc, 0xcd, 0x28, byte(intfId), byte(onuId)}
-	//dhcpLayer.Options = append(dhcpLayer.Options, layers.DHCPOption{
-	//	Type:   layers.DHCPOptClientID,
-	//	Data:   data,
-	//	Length: uint8(len(data)),
-	//})
+	data := []byte{0xcd, 0x28, 0xcb, 0xcc, 0x00, 0x01, 0x00, 0x01,
+		0x23, 0xed, 0x11, 0xec, 0x4e, 0xfc, 0xcd, 0x28, byte(intfId), byte(onuId)}
+	dhcpLayer.Options = append(dhcpLayer.Options, layers.DHCPOption{
+		Type:   layers.DHCPOptClientID,
+		Data:   data,
+		Length: uint8(len(data)),
+	})
 
 	return &dhcpLayer
 }
 
 func createDHCPReq(intfId uint32, onuId uint32, macAddress net.HardwareAddr, offeredIp net.IP) *layers.DHCPv4 {
 	dhcpLayer := createDefaultDHCPReq(intfId, onuId, macAddress)
-	defaultOpts := createDefaultOpts()
+	defaultOpts := createDefaultOpts(intfId, onuId)
 
 	dhcpLayer.Options = append(defaultOpts, layers.DHCPOption{
 		Type:   layers.DHCPOptMessageType,
@@ -247,12 +257,20 @@ func sendDHCPPktIn(msg bbsim.ByteMsg, portNo uint32, stream bbsim.Stream) error 
 	return nil
 }
 
-func sendDHCPRequest(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, onuHwAddress net.HardwareAddr, offeredIp net.IP, stream openolt.Openolt_EnableIndicationServer) error {
+func sendDHCPRequest(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, onuStateMachine *fsm.FSM, onuHwAddress net.HardwareAddr, offeredIp net.IP, stream openolt.Openolt_EnableIndicationServer) error {
 	dhcp := createDHCPReq(ponPortId, onuId, onuHwAddress, offeredIp)
 	pkt, err := serializeDHCPPacket(ponPortId, onuId, onuHwAddress, dhcp)
 
 	if err != nil {
-		dhcpLogger.Errorf("Cannot serializeDHCPPacket: %s", err)
+		dhcpLogger.WithFields(log.Fields{
+			"OnuId":     onuId,
+			"IntfId":    ponPortId,
+			"OnuSn":     serialNumber,
+			"OfferedIp": offeredIp.String(),
+		}).Errorf("Cannot serializeDHCPPacket: %s", err)
+		if err := updateDhcpFailed(onuId, ponPortId, serialNumber, onuStateMachine); err != nil {
+			return err
+		}
 		return err
 	}
 	// NOTE I don't think we need to tag the packet
@@ -265,6 +283,14 @@ func sendDHCPRequest(ponPortId uint32, onuId uint32, serialNumber string, portNo
 	}
 
 	if err := sendDHCPPktIn(msg, portNo, stream); err != nil {
+		dhcpLogger.WithFields(log.Fields{
+			"OnuId":  onuId,
+			"IntfId": ponPortId,
+			"OnuSn":  serialNumber,
+		}).Errorf("Cannot sendDHCPPktIn: %s", err)
+		if err := updateDhcpFailed(onuId, ponPortId, serialNumber, onuStateMachine); err != nil {
+			return err
+		}
 		return err
 	}
 
@@ -293,7 +319,14 @@ func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serialNumber string, port
 	dhcp := createDHCPDisc(ponPortId, onuId, onuHwAddress)
 	pkt, err := serializeDHCPPacket(ponPortId, onuId, onuHwAddress, dhcp)
 	if err != nil {
-		dhcpLogger.Errorf("Cannot serializeDHCPPacket: %s", err)
+		dhcpLogger.WithFields(log.Fields{
+			"OnuId":  onuId,
+			"IntfId": ponPortId,
+			"OnuSn":  serialNumber,
+		}).Errorf("Cannot serializeDHCPPacket: %s", err)
+		if err := updateDhcpFailed(onuId, ponPortId, serialNumber, onuStateMachine); err != nil {
+			return err
+		}
 		return err
 	}
 	// NOTE I don't think we need to tag the packet
@@ -306,6 +339,11 @@ func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serialNumber string, port
 	}
 
 	if err := sendDHCPPktIn(msg, portNo, stream); err != nil {
+		dhcpLogger.WithFields(log.Fields{
+			"OnuId":  onuId,
+			"IntfId": ponPortId,
+			"OnuSn":  serialNumber,
+		}).Errorf("Cannot sendDHCPPktIn: %s", err)
 		if err := updateDhcpFailed(onuId, ponPortId, serialNumber, onuStateMachine); err != nil {
 			return err
 		}
@@ -327,6 +365,7 @@ func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serialNumber string, port
 	return nil
 }
 
+// FIXME cTag is not used here
 func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portNo uint32, onuHwAddress net.HardwareAddr, cTag int, onuStateMachine *fsm.FSM, pkt gopacket.Packet, stream openolt.Openolt_EnableIndicationServer) error {
 
 	dhcpLayer, err := GetDhcpLayer(pkt)
@@ -357,7 +396,7 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portN
 	if dhcpLayer.Operation == layers.DHCPOpReply {
 		if dhcpMessageType == layers.DHCPMsgTypeOffer {
 			offeredIp := dhcpLayer.YourClientIP
-			if err := sendDHCPRequest(ponPortId, onuId, serialNumber, portNo, onuHwAddress, offeredIp, stream); err != nil {
+			if err := sendDHCPRequest(ponPortId, onuId, serialNumber, portNo, onuStateMachine, onuHwAddress, offeredIp, stream); err != nil {
 				dhcpLogger.WithFields(log.Fields{
 					"OnuId":  onuId,
 					"IntfId": ponPortId,
@@ -399,6 +438,7 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portN
 			"OnuSn":  serialNumber,
 		}).Warnf("Unsupported DHCP Operation: %s", dhcpLayer.Operation.String())
 	}
+
 	return nil
 }
 

@@ -158,7 +158,7 @@ var startDHCPServer = func() error {
 	conf := "/etc/dhcp/dhcpd.conf" // copied in the container from configs/dhcpd.conf
 	logfile := "/tmp/dhcplog"
 	var stderr bytes.Buffer
-	cmd := exec.Command(dhcp, "-cf", conf, upstreamVeth, "-tf", logfile)
+	cmd := exec.Command(dhcp, "-cf", conf, upstreamVeth, "-tf", logfile, "-4")
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
