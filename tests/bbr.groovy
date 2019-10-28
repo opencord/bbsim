@@ -25,7 +25,7 @@
     stage('Build BBR') {
       steps {
         sh """
-          make build-in-docker
+          make build
         """
       }
     }
