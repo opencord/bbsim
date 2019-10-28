@@ -158,3 +158,71 @@ func (s BBSimServer) PoweronONU(ctx context.Context, req *bbsim.ONURequest) (*bb
 
 	return res, nil
 }
+
+func (s BBSimServer) RestartEapol(ctx context.Context, req *bbsim.ONURequest) (*bbsim.Response, error) {
+	res := &bbsim.Response{}
+
+	logger.WithFields(log.Fields{
+		"OnuSn": req.SerialNumber,
+	}).Infof("Received request to restart authentication ONU")
+
+	olt := devices.GetOLT()
+
+	onu, err := olt.FindOnuBySn(req.SerialNumber)
+
+	if err != nil {
+		res.StatusCode = int32(codes.NotFound)
+		res.Message = err.Error()
+		return res, err
+	}
+
+	if err := onu.InternalState.Event("start_auth"); err != nil {
+		logger.WithFields(log.Fields{
+			"OnuId":  onu.ID,
+			"IntfId": onu.PonPortID,
+			"OnuSn":  onu.Sn(),
+		}).Errorf("Cannot restart authenticaton for ONU: %s", err.Error())
+		res.StatusCode = int32(codes.FailedPrecondition)
+		res.Message = err.Error()
+		return res, err
+	}
+
+	res.StatusCode = int32(codes.OK)
+	res.Message = fmt.Sprintf("Authentication restarted for ONU %s.", onu.Sn())
+
+	return res, nil
+}
+
+func (s BBSimServer) RestartDhcp(ctx context.Context, req *bbsim.ONURequest) (*bbsim.Response, error) {
+	res := &bbsim.Response{}
+
+	logger.WithFields(log.Fields{
+		"OnuSn": req.SerialNumber,
+	}).Infof("Received request to restart DHCP on ONU")
+
+	olt := devices.GetOLT()
+
+	onu, err := olt.FindOnuBySn(req.SerialNumber)
+
+	if err != nil {
+		res.StatusCode = int32(codes.NotFound)
+		res.Message = err.Error()
+		return res, err
+	}
+
+	if err := onu.InternalState.Event("start_dhcp"); err != nil {
+		logger.WithFields(log.Fields{
+			"OnuId":  onu.ID,
+			"IntfId": onu.PonPortID,
+			"OnuSn":  onu.Sn(),
+		}).Errorf("Cannot restart DHCP for ONU: %s", err.Error())
+		res.StatusCode = int32(codes.FailedPrecondition)
+		res.Message = err.Error()
+		return res, err
+	}
+
+	res.StatusCode = int32(codes.OK)
+	res.Message = fmt.Sprintf("DHCP restarted for ONU %s.", onu.Sn())
+
+	return res, nil
+}
