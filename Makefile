@@ -33,6 +33,10 @@ dep: # @HELP Download the dependencies to the vendor folder
 
 build: dep protos fmt build-bbsim build-bbsimctl build-bbr # @HELP Build the binary
 
+build-in-docker:
+	docker build -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim-builder:${DOCKER_TAG} -f build/ci/Dockerfile.builder .
+	docker run -v $(shell pwd):/bbsim ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim-builder:${DOCKER_TAG} /bin/sh -c "cd /bbsim; make build"
+
 test: dep protos fmt # @HELP Execute unit tests
 	GO111MODULE=on go test -v -mod vendor ./... -covermode count -coverprofile ./tests/results/go-test-coverage.out 2>&1 | tee ./tests/results/go-test-results.out
 	go-junit-report < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml
