@@ -44,7 +44,7 @@
             docker rm -f bbsim || true
             DOCKER_REPOSITORY=voltha/ DOCKER_TAG=candidate DOCKER_RUN_ARGS="-pon 4 -onu 16" make docker-run
             sleep 5
-            ./bbr -pon 4 -onu 16
+            ./bbr -pon 4 -onu 16 -logfile bbr_16_4.logs
             docker logs bbsim 2>&1 | tee bbsim_16_4.logs
           """
         }
@@ -57,7 +57,7 @@
             docker rm -f bbsim || true
             DOCKER_REPOSITORY=voltha/ DOCKER_TAG=candidate DOCKER_RUN_ARGS="-pon 4 -onu 32" make docker-run
             sleep 5
-            ./bbr -pon 4 -onu 32
+            ./bbr -pon 4 -onu 32 -logfile bbr_32_4.logs
             docker logs bbsim 2>&1 | tee bbsim_32_4.logs
           """
         }
@@ -70,7 +70,7 @@
             docker rm -f bbsim || true
             DOCKER_REPOSITORY=voltha/ DOCKER_TAG=candidate DOCKER_RUN_ARGS="-pon 8 -onu 32" make docker-run
             sleep 5
-            ./bbr -pon 8 -onu 32
+            ./bbr -pon 8 -onu 32 -logfile bbr_32_8.logs
             docker logs bbsim 2>&1 | tee bbsim_32_8.logs
           """
         }

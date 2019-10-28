@@ -35,6 +35,7 @@ type BBRCliOptions struct {
 	BBSimIp      string
 	BBSimPort    string
 	BBSimApiPort string
+	LogFile      string
 }
 
 func GetBBSimOpts() *BBSimCliOptions {
@@ -74,6 +75,7 @@ func GetBBROpts() BBRCliOptions {
 	bbsimIp := flag.String("bbsimIp", "127.0.0.1", "BBSim IP")
 	bbsimPort := flag.String("bbsimPort", "50060", "BBSim Port")
 	bbsimApiPort := flag.String("bbsimApiPort", "50070", "BBSim API Port")
+	logFile := flag.String("logfile", "", "Log to a file")
 
 	options := GetBBSimOpts()
 
@@ -82,6 +84,7 @@ func GetBBROpts() BBRCliOptions {
 		*bbsimIp,
 		*bbsimPort,
 		*bbsimApiPort,
+		*logFile,
 	}
 
 	return bbrOptions

@@ -37,6 +37,15 @@ func main() {
 
 	common.SetLogLevel(log.StandardLogger(), options.LogLevel, options.LogCaller)
 
+	if options.LogFile != "" {
+		file, err := os.OpenFile(options.LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err == nil {
+			log.StandardLogger().Out = file
+		} else {
+			log.Fatal("Failed to log to file, using default stderr")
+		}
+	}
+
 	if *options.ProfileCpu != "" {
 		// start profiling
 		log.Infof("Creating profile file at: %s", *options.ProfileCpu)
