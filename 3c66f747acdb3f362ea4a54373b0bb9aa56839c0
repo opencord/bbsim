@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "43451907_e496f636",
+        "filename": "cmd/bbsim/bbsim.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1000455
+      },
+      "writtenOn": "2019-10-29T15:46:08Z",
+      "side": 1,
+      "message": "I see, that makes sense.",
+      "parentUuid": "173ff41f_a486a096",
+      "revId": "3c66f747acdb3f362ea4a54373b0bb9aa56839c0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aff1205d_0f8d1359",
         "filename": "go.mod",
         "patchSetId": 3
@@ -84,6 +102,24 @@
       "side": 1,
       "message": "Agreed, we shouldn\u0027t depend on older code, the good new is that it\u0027s only referenced here, not in the code. Looks like a \"go mod tidy\" will remove it.",
       "parentUuid": "aff1205d_0f8d1359",
+      "revId": "3c66f747acdb3f362ea4a54373b0bb9aa56839c0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce7d58c3_f12a3595",
+        "filename": "go.mod",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000455
+      },
+      "writtenOn": "2019-10-29T15:46:08Z",
+      "side": 1,
+      "message": "Sounds good.",
+      "parentUuid": "b0ee4c8f_80301966",
       "revId": "3c66f747acdb3f362ea4a54373b0bb9aa56839c0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
