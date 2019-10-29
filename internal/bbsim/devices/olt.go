@@ -64,7 +64,7 @@ func GetOLT() *OltDevice {
 	return &olt
 }
 
-func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit int, oltDoneChannel *chan bool, apiDoneChannel *chan bool, isMock bool) *OltDevice {
+func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit int, oltDoneChannel *chan bool, apiDoneChannel *chan bool, noAuth bool, noDhcp bool, isMock bool) *OltDevice {
 	oltLogger.WithFields(log.Fields{
 		"ID":           oltId,
 		"NumNni":       nni,
@@ -132,7 +132,7 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 
 		// create ONU devices
 		for j := 0; j < onuPerPon; j++ {
-			o := CreateONU(olt, p, uint32(j+1), sTag, availableCTag)
+			o := CreateONU(olt, p, uint32(j+1), sTag, availableCTag, noAuth, noDhcp)
 			p.Onus = append(p.Onus, o)
 			availableCTag = availableCTag + 1
 		}

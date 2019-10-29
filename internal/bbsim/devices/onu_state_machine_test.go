@@ -22,13 +22,7 @@ import (
 )
 
 func Test_Onu_StateMachine_enable(t *testing.T) {
-	olt := OltDevice{
-		ID: 0,
-	}
-	pon := PonPort{
-		ID: 1,
-	}
-	onu := CreateONU(olt, pon, 1, 900, 900)
+	onu := createTestOnu()
 
 	assert.Equal(t, onu.InternalState.Current(), "created")
 	onu.InternalState.Event("discover")
@@ -38,13 +32,7 @@ func Test_Onu_StateMachine_enable(t *testing.T) {
 }
 
 func Test_Onu_StateMachine_eapol_start_eap_flow(t *testing.T) {
-	olt := OltDevice{
-		ID: 0,
-	}
-	pon := PonPort{
-		ID: 1,
-	}
-	onu := CreateONU(olt, pon, 1, 900, 900)
+	onu := createTestOnu()
 
 	onu.InternalState.SetState("enabled")
 
@@ -62,13 +50,7 @@ func Test_Onu_StateMachine_eapol_start_eap_flow(t *testing.T) {
 }
 
 func Test_Onu_StateMachine_eapol_start_gem_port(t *testing.T) {
-	olt := OltDevice{
-		ID: 0,
-	}
-	pon := PonPort{
-		ID: 1,
-	}
-	onu := CreateONU(olt, pon, 1, 900, 900)
+	onu := createTestOnu()
 
 	onu.InternalState.SetState("enabled")
 
@@ -86,13 +68,7 @@ func Test_Onu_StateMachine_eapol_start_gem_port(t *testing.T) {
 }
 
 func Test_Onu_StateMachine_eapol_states(t *testing.T) {
-	olt := OltDevice{
-		ID: 0,
-	}
-	pon := PonPort{
-		ID: 1,
-	}
-	onu := CreateONU(olt, pon, 1, 900, 900)
+	onu := createTestOnu()
 
 	onu.InternalState.SetState("auth_started")
 
@@ -108,13 +84,7 @@ func Test_Onu_StateMachine_eapol_states(t *testing.T) {
 }
 
 func Test_Onu_StateMachine_dhcp_start(t *testing.T) {
-	olt := OltDevice{
-		ID: 0,
-	}
-	pon := PonPort{
-		ID: 1,
-	}
-	onu := CreateONU(olt, pon, 1, 900, 900)
+	onu := createTestOnu()
 	onu.DhcpFlowReceived = true
 
 	onu.InternalState.SetState("eap_response_success_received")
@@ -126,13 +96,7 @@ func Test_Onu_StateMachine_dhcp_start(t *testing.T) {
 }
 
 func Test_Onu_StateMachine_dhcp_start_error(t *testing.T) {
-	olt := OltDevice{
-		ID: 0,
-	}
-	pon := PonPort{
-		ID: 1,
-	}
-	onu := CreateONU(olt, pon, 1, 900, 900)
+	onu := createTestOnu()
 
 	onu.InternalState.SetState("eap_response_success_received")
 	assert.Equal(t, onu.InternalState.Current(), "eap_response_success_received")
@@ -144,13 +108,7 @@ func Test_Onu_StateMachine_dhcp_start_error(t *testing.T) {
 }
 
 func Test_Onu_StateMachine_dhcp_states(t *testing.T) {
-	olt := OltDevice{
-		ID: 0,
-	}
-	pon := PonPort{
-		ID: 1,
-	}
-	onu := CreateONU(olt, pon, 1, 900, 900)
+	onu := createTestOnu()
 
 	onu.DhcpFlowReceived = false
 
