@@ -44,6 +44,7 @@ type Onu struct {
 	PonPort   PonPort
 	STag      int
 	CTag      int
+	NoAuth    bool // don't automatically start EAPOL if set to true
 	// PortNo comes with flows and it's used when sending packetIndications,
 	// There is one PortNo per UNI Port, for now we're only storing the first one
 	// FIXME add support for multiple UNIs
@@ -72,7 +73,7 @@ func (o *Onu) Sn() string {
 	return common.OnuSnToString(o.SerialNumber)
 }
 
-func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) *Onu {
+func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, noAuth bool) *Onu {
 
 	o := Onu{
 		ID:               id,
@@ -80,6 +81,7 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) *Onu {
 		PonPort:          pon,
 		STag:             sTag,
 		CTag:             cTag,
+		NoAuth:           noAuth,
 		HwAddress:        net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(id)},
 		PortNo:           0,
 		Channel:          make(chan Message, 2048),
@@ -511,6 +513,16 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 				log.Warnf("Can't go to eapol_flow_received: %v", err)
 			}
 		} else if o.InternalState.Is("gem_port_added") {
+
+			if o.NoAuth == true {
+				onuLogger.WithFields(log.Fields{
+					"IntfId":       o.PonPortID,
+					"OnuId":        o.ID,
+					"SerialNumber": o.Sn(),
+				}).Warn("Not starting authentication as NoAuth bit is set in CLI parameters")
+				return
+			}
+
 			if err := o.InternalState.Event("start_auth"); err != nil {
 				log.Warnf("Can't go to auth_started: %v", err)
 			}

@@ -25,6 +25,7 @@ type BBSimCliOptions struct {
 	NumOnuPerPon int
 	STag         int
 	CTagInit     int
+	NoAuth       bool
 	ProfileCpu   *string
 	LogLevel     string
 	LogCaller    bool
@@ -43,6 +44,8 @@ func GetBBSimOpts() *BBSimCliOptions {
 	nni := flag.Int("nni", 1, "Number of NNI ports per OLT device to be emulated")
 	pon := flag.Int("pon", 1, "Number of PON ports per OLT device to be emulated")
 	onu := flag.Int("onu", 1, "Number of ONU devices per PON port to be emulated")
+
+	noAuth := flag.Bool("no-auth", false, "Set this flag if you don't want authentication to start automatically (can be started via CLI)")
 
 	s_tag := flag.Int("s_tag", 900, "S-Tag value")
 	c_tag_init := flag.Int("c_tag", 900, "C-Tag starting value, each ONU will get a sequential one (targeting 1024 ONUs per BBSim instance the range is big enough)")
@@ -65,6 +68,7 @@ func GetBBSimOpts() *BBSimCliOptions {
 	o.ProfileCpu = profileCpu
 	o.LogLevel = *logLevel
 	o.LogCaller = *logCaller
+	o.NoAuth = *noAuth
 
 	return o
 }

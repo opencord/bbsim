@@ -25,7 +25,7 @@ import (
 )
 
 func Test_Onu_SendEapolFlow(t *testing.T) {
-	onu := createMockOnu(1, 1, 900, 900)
+	onu := createMockOnu(1, 1, 900, 900, false)
 
 	client := &mockClient{
 		FlowAddSpy: FlowAddSpy{
@@ -49,7 +49,7 @@ func Test_Onu_SendEapolFlow(t *testing.T) {
 // it transition to auth_started state
 func Test_HandleFlowUpdateEapolFromGem(t *testing.T) {
 
-	onu := createMockOnu(1, 1, 900, 900)
+	onu := createMockOnu(1, 1, 900, 900, false)
 
 	onu.InternalState = fsm.NewFSM(
 		"gem_port_added",
@@ -90,7 +90,7 @@ func Test_HandleFlowUpdateEapolFromGem(t *testing.T) {
 // no action is taken
 func Test_HandleFlowUpdateEapolFromGemIgnore(t *testing.T) {
 
-	onu := createMockOnu(1, 1, 900, 900)
+	onu := createMockOnu(1, 1, 900, 900, false)
 
 	onu.InternalState = fsm.NewFSM(
 		"gem_port_added",
@@ -131,7 +131,7 @@ func Test_HandleFlowUpdateEapolFromGemIgnore(t *testing.T) {
 // it transition to auth_started state
 func Test_HandleFlowUpdateEapolFromEnabled(t *testing.T) {
 
-	onu := createMockOnu(1, 1, 900, 900)
+	onu := createMockOnu(1, 1, 900, 900, false)
 
 	onu.InternalState = fsm.NewFSM(
 		"enabled",
@@ -172,7 +172,7 @@ func Test_HandleFlowUpdateEapolFromEnabled(t *testing.T) {
 // no action is taken
 func Test_HandleFlowUpdateEapolFromEnabledIgnore(t *testing.T) {
 
-	onu := createMockOnu(1, 1, 900, 900)
+	onu := createMockOnu(1, 1, 900, 900, false)
 
 	onu.InternalState = fsm.NewFSM(
 		"enabled",
@@ -207,6 +207,46 @@ func Test_HandleFlowUpdateEapolFromEnabledIgnore(t *testing.T) {
 
 	onu.handleFlowUpdate(msg)
 	assert.Equal(t, onu.InternalState.Current(), "enabled")
+}
+
+// validates that when an ONU receives an EAPOL flow for UNI 0
+// but the noAuth bit is set no action is taken
+func Test_HandleFlowUpdateEapolNoAuth(t *testing.T) {
+	onu := createMockOnu(1, 1, 900, 900, true)
+
+	onu.InternalState = fsm.NewFSM(
+		"gem_port_added",
+		fsm.Events{
+			{Name: "start_auth", Src: []string{"eapol_flow_received", "gem_port_added"}, Dst: "auth_started"},
+		},
+		fsm.Callbacks{},
+	)
+
+	flow := openolt.Flow{
+		AccessIntfId:  int32(onu.PonPortID),
+		OnuId:         int32(onu.ID),
+		UniId:         int32(0),
+		FlowId:        uint32(onu.ID),
+		FlowType:      "downstream",
+		AllocId:       int32(0),
+		NetworkIntfId: int32(0),
+		Classifier: &openolt.Classifier{
+			EthType: uint32(layers.EthernetTypeEAPOL),
+			OVid:    4091,
+		},
+		Action:   &openolt.Action{},
+		Priority: int32(100),
+		PortNo:   uint32(onu.ID), // NOTE we are using this to map an incoming packetIndication to an ONU
+	}
+
+	msg := OnuFlowUpdateMessage{
+		PonPortID: 1,
+		OnuID:     1,
+		Flow:      &flow,
+	}
+
+	onu.handleFlowUpdate(msg)
+	assert.Equal(t, onu.InternalState.Current(), "gem_port_added")
 }
 
 // TODO add tests for DHCP flow

@@ -94,7 +94,18 @@ func main() {
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 
-	olt := devices.CreateOLT(options.OltID, options.NumNniPerOlt, options.NumPonPerOlt, options.NumOnuPerPon, options.STag, options.CTagInit, &oltDoneChannel, &apiDoneChannel, false)
+	olt := devices.CreateOLT(
+		options.OltID,
+		options.NumNniPerOlt,
+		options.NumPonPerOlt,
+		options.NumOnuPerPon,
+		options.STag,
+		options.CTagInit,
+		&oltDoneChannel,
+		&apiDoneChannel,
+		options.NoAuth,
+		false,
+	)
 	go devices.StartOlt(olt, &wg)
 	log.Debugf("Created OLT with id: %d", options.OltID)
 	go startApiServer(apiDoneChannel, &wg)
