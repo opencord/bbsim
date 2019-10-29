@@ -85,6 +85,8 @@ func main() {
 		"NumPonPerOlt": options.NumPonPerOlt,
 		"NumOnuPerPon": options.NumOnuPerPon,
 		"TotalOnus":    options.NumPonPerOlt * options.NumOnuPerPon,
+		"NoAuth":       options.NoAuth,
+		"NoDhcp":       options.NoDhcp,
 	}).Info("BroadBand Simulator is on")
 
 	// control channels, they are only closed when the goroutine needs to be terminated
@@ -94,7 +96,19 @@ func main() {
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 
-	olt := devices.CreateOLT(options.OltID, options.NumNniPerOlt, options.NumPonPerOlt, options.NumOnuPerPon, options.STag, options.CTagInit, &oltDoneChannel, &apiDoneChannel, false)
+	olt := devices.CreateOLT(
+		options.OltID,
+		options.NumNniPerOlt,
+		options.NumPonPerOlt,
+		options.NumOnuPerPon,
+		options.STag,
+		options.CTagInit,
+		&oltDoneChannel,
+		&apiDoneChannel,
+		options.NoAuth,
+		options.NoDhcp,
+		false,
+	)
 	go devices.StartOlt(olt, &wg)
 	log.Debugf("Created OLT with id: %d", options.OltID)
 	go startApiServer(apiDoneChannel, &wg)
