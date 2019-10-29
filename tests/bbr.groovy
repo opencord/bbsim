@@ -46,6 +46,7 @@
             sleep 5
             ./bbr -pon 4 -onu 16 -logfile bbr_16_4.logs
             docker logs bbsim 2>&1 | tee bbsim_16_4.logs
+            res=\$(cat bbr_16_4.logs | grep Duration | awk '{print \$5}' ); echo YVALUE=\${res:9:10} > bbr_16_4.txt
           """
         }
       }
@@ -59,6 +60,7 @@
             sleep 5
             ./bbr -pon 4 -onu 32 -logfile bbr_32_4.logs
             docker logs bbsim 2>&1 | tee bbsim_32_4.logs
+            res=\$(cat bbr_32_4.logs | grep Duration | awk '{print \$5}' ); echo YVALUE=\${res:9:10} > bbr_32_4.txt
           """
         }
       }
@@ -72,6 +74,7 @@
             sleep 5
             ./bbr -pon 8 -onu 32 -logfile bbr_32_8.logs
             docker logs bbsim 2>&1 | tee bbsim_32_8.logs
+            res=\$(cat bbr_32_8.logs | grep Duration | awk '{print \$5}' ); echo YVALUE=\${res:9:10} > bbr_32_8.txt
           """
         }
       }
@@ -81,6 +84,29 @@
     always {
       archiveArtifacts artifacts: '*.logs'
       step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: "teo@opennetworking.org", sendToIndividuals: false])
+    }
+    success {
+      plot([
+        csvFileName: 'plot-bbr_16_4.csv',
+        csvSeries: [[file: 'bbr_16_4.txt']],
+        group: 'BBSim',
+        title: '64 ONUs (16 ONUs x 4 PONs)',
+        style: 'line'
+      ])
+      plot([
+        csvFileName: 'plot-bbr_32_4.csv',
+        csvSeries: [[file: 'bbr_32_4.txt']],
+        group: 'BBSim',
+        title: '128 ONUs (32 ONUs x 4 PONs)',
+        style: 'line'
+      ])
+      plot([
+        csvFileName: 'plot-bbr_32_8.csv',
+        csvSeries: [[file: 'bbr_32_8.txt']],
+        group: 'BBSim',
+        title: '256 ONUs (32 ONUs x 8 PONs)',
+        style: 'line'
+      ])
     }
     failure {
       sh '''
