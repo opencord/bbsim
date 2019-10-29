@@ -70,7 +70,19 @@ func main() {
 	apiDoneChannel := make(chan bool)
 
 	// create the OLT device
-	olt := devices.CreateOLT(options.OltID, options.NumNniPerOlt, options.NumPonPerOlt, options.NumOnuPerPon, options.STag, options.CTagInit, &oltDoneChannel, &apiDoneChannel, true)
+	olt := devices.CreateOLT(
+		options.OltID,
+		options.NumNniPerOlt,
+		options.NumPonPerOlt,
+		options.NumOnuPerPon,
+		options.STag,
+		options.CTagInit,
+		&oltDoneChannel,
+		&apiDoneChannel,
+		true, // this parameter is not important in the BBR Case
+		true, // this parameter is not important in the BBR Case
+		true,
+	)
 	oltMock := bbrdevices.OltMock{
 		Olt:           olt,
 		TargetOnus:    options.NumPonPerOlt * options.NumOnuPerPon,
