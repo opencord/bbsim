@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "173ff41f_a486a096",
+        "filename": "cmd/bbsim/bbsim.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-10-29T15:42:11Z",
+      "side": 1,
+      "message": "Also I believe if you only care for the \"channel closed\" event is fine to have multiple listener on the same channel",
+      "parentUuid": "66f9627f_8b673353",
+      "revId": "3c66f747acdb3f362ea4a54373b0bb9aa56839c0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aff1205d_0f8d1359",
         "filename": "go.mod",
         "patchSetId": 3
