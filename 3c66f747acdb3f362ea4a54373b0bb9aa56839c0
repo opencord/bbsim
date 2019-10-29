@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "66f9627f_8b673353",
+        "filename": "cmd/bbsim/bbsim.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-10-29T15:33:35Z",
+      "side": 1,
+      "message": "@william the LegacyApiServer exposes the same endpoints as the older BBSim. It is required as few people built automation around those APIs. More details in the Jira",
+      "parentUuid": "b697591f_4497399c",
+      "revId": "3c66f747acdb3f362ea4a54373b0bb9aa56839c0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aff1205d_0f8d1359",
         "filename": "go.mod",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2019-10-29T14:58:10Z",
       "side": 1,
       "message": "Does the old bbsim need to be a dependency of this one? It seems like their code should be independent to me.",
+      "revId": "3c66f747acdb3f362ea4a54373b0bb9aa56839c0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0ee4c8f_80301966",
+        "filename": "go.mod",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-10-29T15:33:35Z",
+      "side": 1,
+      "message": "Agreed, we shouldn\u0027t depend on older code, the good new is that it\u0027s only referenced here, not in the code. Looks like a \"go mod tidy\" will remove it.",
+      "parentUuid": "aff1205d_0f8d1359",
       "revId": "3c66f747acdb3f362ea4a54373b0bb9aa56839c0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
