@@ -44,6 +44,8 @@ type Onu struct {
 	PonPort   PonPort
 	STag      int
 	CTag      int
+	Auth      bool // automatically start EAPOL if set to true
+	Dhcp      bool // automatically start DHCP if set to true
 	// PortNo comes with flows and it's used when sending packetIndications,
 	// There is one PortNo per UNI Port, for now we're only storing the first one
 	// FIXME add support for multiple UNIs
@@ -72,7 +74,7 @@ func (o *Onu) Sn() string {
 	return common.OnuSnToString(o.SerialNumber)
 }
 
-func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) *Onu {
+func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth bool, dhcp bool) *Onu {
 
 	o := Onu{
 		ID:               id,
@@ -80,6 +82,8 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int) *Onu {
 		PonPort:          pon,
 		STag:             sTag,
 		CTag:             cTag,
+		Auth:             auth,
+		Dhcp:             dhcp,
 		HwAddress:        net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(id)},
 		PortNo:           0,
 		Channel:          make(chan Message, 2048),
@@ -511,9 +515,19 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 				log.Warnf("Can't go to eapol_flow_received: %v", err)
 			}
 		} else if o.InternalState.Is("gem_port_added") {
-			if err := o.InternalState.Event("start_auth"); err != nil {
-				log.Warnf("Can't go to auth_started: %v", err)
+
+			if o.Auth == true {
+				if err := o.InternalState.Event("start_auth"); err != nil {
+					log.Warnf("Can't go to auth_started: %v", err)
+				}
+			} else {
+				onuLogger.WithFields(log.Fields{
+					"IntfId":       o.PonPortID,
+					"OnuId":        o.ID,
+					"SerialNumber": o.Sn(),
+				}).Warn("Not starting authentication as Auth bit is not set in CLI parameters")
 			}
+
 		}
 	} else if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeIPv4) &&
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
@@ -521,9 +535,18 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 
 		// keep track that we reveived the DHCP Flows so that we can transition the state to dhcp_started
 		o.DhcpFlowReceived = true
-		// NOTE we are receiving mulitple DHCP flows but we shouldn't call the transition multiple times
-		if err := o.InternalState.Event("start_dhcp"); err != nil {
-			log.Errorf("Can't go to dhcp_started: %v", err)
+
+		if o.Dhcp == true {
+			// NOTE we are receiving mulitple DHCP flows but we shouldn't call the transition multiple times
+			if err := o.InternalState.Event("start_dhcp"); err != nil {
+				log.Errorf("Can't go to dhcp_started: %v", err)
+			}
+		} else {
+			onuLogger.WithFields(log.Fields{
+				"IntfId":       o.PonPortID,
+				"OnuId":        o.ID,
+				"SerialNumber": o.Sn(),
+			}).Warn("Not starting DHCP as Dhcp bit is not set in CLI parameters")
 		}
 	}
 }
