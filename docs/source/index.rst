@@ -66,3 +66,33 @@ Enable the device:
 .. code:: bash
 
     voltctl device enable $(voltctl device list --filter Type~openolt -q)
+
+BBSim startup options
+---------------------
+
+``BBSim`` supports a series of options that can be set at startup, you can see the list via ``./bbsim --help``
+
+.. code:: bash
+
+   $ ./bbsim --help
+   Usage of ./bbsim:
+     -c_tag int
+           C-Tag starting value, each ONU will get a sequential one (targeting 1024 ONUs per BBSim instance the range is big enough) (default 900)
+     -cpuprofile string
+           write cpu profile to file
+     -logCaller
+           Whether to print the caller filename or not
+     -logLevel string
+           Set the log level (trace, debug, info, warn, error) (default "debug")
+     -nni int
+           Number of NNI ports per OLT device to be emulated (default 1)
+     -no-auth
+           Set this flag if you don't want authentication to start automatically (can be started via CLI)
+     -olt_id int
+           Number of OLT devices to be emulated
+     -onu int
+           Number of ONU devices per PON port to be emulated (default 1)
+     -pon int
+           Number of PON ports per OLT device to be emulated (default 1)
+     -s_tag int
+           S-Tag value (default 900)
