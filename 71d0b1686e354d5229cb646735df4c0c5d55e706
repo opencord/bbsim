@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "08342ec1_563f26a3",
+        "filename": "build/package/Dockerfile",
+        "patchSetId": 7
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-10-30T18:56:59Z",
+      "side": 1,
+      "message": "what is this needed for?",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 26
+      },
+      "revId": "71d0b1686e354d5229cb646735df4c0c5d55e706",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
