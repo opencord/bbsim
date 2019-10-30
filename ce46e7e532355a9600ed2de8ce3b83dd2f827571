@@ -22,6 +22,30 @@
       "revId": "ce46e7e532355a9600ed2de8ce3b83dd2f827571",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af731ed2_5c164e97",
+        "filename": "Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1000553
+      },
+      "writtenOn": "2019-10-30T18:15:07Z",
+      "side": 0,
+      "message": "the issue seems to be that the protoc-gen-grpc-gateway binary is not in the path",
+      "parentUuid": "b57034e1_df016534",
+      "range": {
+        "startLine": 151,
+        "startChar": 5,
+        "endLine": 151,
+        "endChar": 84
+      },
+      "revId": "ce46e7e532355a9600ed2de8ce3b83dd2f827571",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
