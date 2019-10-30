@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b57034e1_df016534",
+        "filename": "Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-10-30T17:31:44Z",
+      "side": 0,
+      "message": "I think this line was needed in order to compile to protos on Jenkis, that step is failing in the unit-test job",
+      "range": {
+        "startLine": 151,
+        "startChar": 5,
+        "endLine": 151,
+        "endChar": 84
+      },
+      "revId": "ce46e7e532355a9600ed2de8ce3b83dd2f827571",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
