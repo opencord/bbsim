@@ -32,6 +32,7 @@ import (
 	"github.com/opencord/voltha-protos/go/openolt"
 	log "github.com/sirupsen/logrus"
 	"net"
+	"time"
 )
 
 var onuLogger = log.WithFields(log.Fields{
@@ -253,6 +254,8 @@ func (o *Onu) ProcessOnuMessages(stream openolt.Openolt_EnableIndicationServer, 
 			log.Infof("Receive StartEAPOL message on ONU Channel")
 			eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, stream)
 		case StartDHCP:
+			// NOTE we need to slow down and send DHCP packets in batches or the DHCP server dies
+			time.Sleep(time.Duration(int(o.ID)*o.PonPort.Olt.DhcpDelay) * time.Millisecond)
 			log.Infof("Receive StartDHCP message on ONU Channel")
 			// FIXME use id, ponId as SendEapStart
 			dhcp.SendDHCPDiscovery(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
