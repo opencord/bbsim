@@ -51,6 +51,8 @@ type OltDevice struct {
 	apiDoneChannel  *chan bool
 	nniPktInChannel chan *bbsim.PacketMsg
 
+	DhcpDelay int
+
 	Pons []*PonPort
 	Nnis []*NniPort
 
@@ -64,7 +66,7 @@ func GetOLT() *OltDevice {
 	return &olt
 }
 
-func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit int, oltDoneChannel *chan bool, apiDoneChannel *chan bool, isMock bool) *OltDevice {
+func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit int, oltDoneChannel *chan bool, apiDoneChannel *chan bool, dhcpDelay int, isMock bool) *OltDevice {
 	oltLogger.WithFields(log.Fields{
 		"ID":           oltId,
 		"NumNni":       nni,
@@ -87,6 +89,7 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 		oltDoneChannel:  oltDoneChannel,
 		apiDoneChannel:  apiDoneChannel,
 		nniPktInChannel: make(chan *bbsim.PacketMsg, 1024), // packets coming in from the NNI and going to VOLTHA
+		DhcpDelay:       dhcpDelay,
 	}
 
 	// OLT State machine

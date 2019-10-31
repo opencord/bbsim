@@ -28,6 +28,7 @@ type BBSimCliOptions struct {
 	ProfileCpu   *string
 	LogLevel     string
 	LogCaller    bool
+	DhcpDelay    int
 }
 
 type BBRCliOptions struct {
@@ -53,6 +54,8 @@ func GetBBSimOpts() *BBSimCliOptions {
 	logLevel := flag.String("logLevel", "debug", "Set the log level (trace, debug, info, warn, error)")
 	logCaller := flag.Bool("logCaller", false, "Whether to print the caller filename or not")
 
+	dhcpDelay := flag.Int("dhcp_delay", 500, "The delay between DHCP DISCOVERY batches (1 ONU per each PON PORT at a time")
+
 	flag.Parse()
 
 	o := new(BBSimCliOptions)
@@ -66,6 +69,7 @@ func GetBBSimOpts() *BBSimCliOptions {
 	o.ProfileCpu = profileCpu
 	o.LogLevel = *logLevel
 	o.LogCaller = *logCaller
+	o.DhcpDelay = *dhcpDelay
 
 	return o
 }
