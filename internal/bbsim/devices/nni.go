@@ -200,7 +200,7 @@ var listenOnVeth = func(vethName string) (chan *types.PacketMsg, error) {
 		return nil, err
 	}
 
-	channel := make(chan *types.PacketMsg, 32)
+	channel := make(chan *types.PacketMsg, 1024)
 
 	go func() {
 		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())

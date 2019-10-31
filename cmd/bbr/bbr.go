@@ -81,6 +81,7 @@ func main() {
 		&apiDoneChannel,
 		true, // this parameter is not important in the BBR Case
 		true, // this parameter is not important in the BBR Case
+		0, // this parameter does not matter in the BBR case
 		true,
 	)
 	oltMock := bbrdevices.OltMock{

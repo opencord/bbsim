@@ -32,6 +32,7 @@ import (
 	"github.com/opencord/voltha-protos/go/openolt"
 	log "github.com/sirupsen/logrus"
 	"net"
+	"time"
 )
 
 var onuLogger = log.WithFields(log.Fields{
@@ -239,6 +240,8 @@ func (o *Onu) ProcessOnuMessages(stream openolt.Openolt_EnableIndicationServer, 
 		switch message.Type {
 		case OnuDiscIndication:
 			msg, _ := message.Data.(OnuDiscIndicationMessage)
+			// NOTE we need to slow down and send ONU Discovery Indication in batches to better emulate a real scenario
+			time.Sleep(time.Duration(int(o.ID)*o.PonPort.Olt.Delay) * time.Millisecond)
 			o.sendOnuDiscIndication(msg, stream)
 		case OnuIndication:
 			msg, _ := message.Data.(OnuIndicationMessage)
