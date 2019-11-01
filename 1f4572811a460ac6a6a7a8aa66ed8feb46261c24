@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c761aab8_a95a6572",
+        "filename": "api/bbsim/bbsim.proto",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-01T16:32:04Z",
+      "side": 1,
+      "message": "this change will affect the other endpoints using it, I would define an IGMPRequest message. We can use protobuf composition to avoid duplicating fields, eg:\n\nmessage IGMPRequest {\n  ONURequest onu \u003d 1;\n  string SubActionVal \u003d 2;\n}\n\nSee https://stackoverflow.com/questions/41243168/inheritance-in-protocol-buffers\n\nPS: it would be good to use Enum instead of string for SubActionVal: https://developers.google.com/protocol-buffers/docs/proto3#enum",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 1
+      },
+      "revId": "1f4572811a460ac6a6a7a8aa66ed8feb46261c24",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46563a2d_14cb1936",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-01T16:32:04Z",
+      "side": 1,
+      "message": "It would be better to transition the ONU to a \"igmp_start\" state so that it\u0027s easier to keep track of the state of an ONU when listing them via CLI",
+      "range": {
+        "startLine": 180,
+        "startChar": 2,
+        "endLine": 187,
+        "endChar": 3
+      },
+      "revId": "1f4572811a460ac6a6a7a8aa66ed8feb46261c24",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5b2347c_05dfca66",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-01T16:32:04Z",
+      "side": 1,
+      "message": "I would split this in multiple states:\n- igmp_join_start\n- igmp_join_done (TBD: how do we capture this?)\n- igmp_join_error\nto make it easier to debug",
+      "range": {
+        "startLine": 132,
+        "startChar": 11,
+        "endLine": 132,
+        "endChar": 20
+      },
+      "revId": "1f4572811a460ac6a6a7a8aa66ed8feb46261c24",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "937da911_7c89368c",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-01T16:32:04Z",
+      "side": 1,
+      "message": "we don\u0027t need to start IGMP automatically for now.\neven EAPOL and DHCP are going to be disabled.",
+      "range": {
+        "startLine": 214,
+        "startChar": 3,
+        "endLine": 219,
+        "endChar": 5
+      },
+      "revId": "1f4572811a460ac6a6a7a8aa66ed8feb46261c24",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e47a18f_ba105a6d",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-01T16:32:04Z",
+      "side": 1,
+      "message": "it would be better to handle this via state changes so that it\u0027s easier to track the action that an ONU is trying to perform",
+      "range": {
+        "startLine": 758,
+        "startChar": 0,
+        "endLine": 764,
+        "endChar": 1
+      },
+      "revId": "1f4572811a460ac6a6a7a8aa66ed8feb46261c24",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
