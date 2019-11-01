@@ -42,6 +42,10 @@ const (
 	SendEapolFlow  MessageType = 12
 	SendDhcpFlow   MessageType = 13
 	OnuPacketIn    MessageType = 14
+
+	//IGMP
+	IGMPMembershipReportV2 MessageType = 15 // Version 2 Membership Report (JOIN)
+	IGMPLeaveGroup         MessageType = 16 // Leave Group
 )
 
 func (m MessageType) String() string {
@@ -61,6 +65,8 @@ func (m MessageType) String() string {
 		"SendEapolFlow",
 		"SendDhcpFlow",
 		"OnuPacketIn",
+		"IGMPMembershipReportV2",
+		"IGMPLeaveGroup",
 	}
 	return names[m]
 }
