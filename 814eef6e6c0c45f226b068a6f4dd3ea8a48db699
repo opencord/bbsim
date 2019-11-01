@@ -22,6 +22,30 @@
       "revId": "814eef6e6c0c45f226b068a6f4dd3ea8a48db699",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb0de799_a81527f9",
+        "filename": "go.mod",
+        "patchSetId": 24
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1000553
+      },
+      "writtenOn": "2019-11-01T12:22:32Z",
+      "side": 0,
+      "message": "these were removed by go tidy.. readded",
+      "parentUuid": "4e06eec6_1d0ca40c",
+      "range": {
+        "startLine": 14,
+        "startChar": 1,
+        "endLine": 14,
+        "endChar": 83
+      },
+      "revId": "814eef6e6c0c45f226b068a6f4dd3ea8a48db699",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
