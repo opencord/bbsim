@@ -21,15 +21,14 @@ import (
 	"errors"
 	"fmt"
 	"net"
-
 	"time"
-
 	"github.com/cboling/omci"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
+	"github.com/opencord/bbsim/internal/bbsim/responders/igmp"
 	"github.com/opencord/bbsim/internal/common"
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
 	omcisim "github.com/opencord/omci-sim"
@@ -42,21 +41,20 @@ var onuLogger = log.WithFields(log.Fields{
 })
 
 type Onu struct {
-	ID                  uint32
-	PonPortID           uint32
-	PonPort             PonPort
-	STag                int
-	CTag                int
-	Auth                bool // automatically start EAPOL if set to true
-	Dhcp                bool // automatically start DHCP if set to true
-	HwAddress           net.HardwareAddr
-	InternalState       *fsm.FSM
-	DiscoveryRetryDelay time.Duration
-
-	// ONU State
+	ID        uint32
+	PonPortID uint32
+	PonPort   PonPort
+	STag      int
+	CTag      int
+	Auth      bool // automatically start EAPOL if set to true
+	Dhcp      bool // automatically start DHCP if set to true
 	// PortNo comes with flows and it's used when sending packetIndications,
 	// There is one PortNo per UNI Port, for now we're only storing the first one
 	// FIXME add support for multiple UNIs
+	HwAddress     net.HardwareAddr
+	InternalState *fsm.FSM
+
+	// ONU State
 	PortNo           uint32
 	DhcpFlowReceived bool
 
@@ -81,21 +79,20 @@ func (o *Onu) Sn() string {
 func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth bool, dhcp bool) *Onu {
 
 	o := Onu{
-		ID:                  id,
-		PonPortID:           pon.ID,
-		PonPort:             pon,
-		STag:                sTag,
-		CTag:                cTag,
-		Auth:                auth,
-		Dhcp:                dhcp,
-		HwAddress:           net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(id)},
-		PortNo:              0,
-		tid:                 0x1,
-		hpTid:               0x8000,
-		seqNumber:           0,
-		DoneChannel:         make(chan bool, 1),
-		DhcpFlowReceived:    false,
-		DiscoveryRetryDelay: 60 * time.Second, // this is used to send OnuDiscoveryIndications until an activate call is received
+		ID:               id,
+		PonPortID:        pon.ID,
+		PonPort:          pon,
+		STag:             sTag,
+		CTag:             cTag,
+		Auth:             auth,
+		Dhcp:             dhcp,
+		HwAddress:        net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(id)},
+		PortNo:           0,
+		tid:              0x1,
+		hpTid:            0x8000,
+		seqNumber:        0,
+		DoneChannel:      make(chan bool, 1),
+		DhcpFlowReceived: false,
 	}
 	o.SerialNumber = o.NewSN(olt.ID, pon.ID, o.ID)
 
@@ -113,14 +110,12 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth b
 		fsm.Events{
 			// DEVICE Lifecycle
 			{Name: "initialize", Src: []string{"created", "disabled"}, Dst: "initialized"},
-			{Name: "discover", Src: []string{"initialized", "pon_disabled"}, Dst: "discovered"},
+			{Name: "discover", Src: []string{"initialized"}, Dst: "discovered"},
 			{Name: "enable", Src: []string{"discovered", "disabled"}, Dst: "enabled"},
 			{Name: "receive_eapol_flow", Src: []string{"enabled", "gem_port_added"}, Dst: "eapol_flow_received"},
 			{Name: "add_gem_port", Src: []string{"enabled", "eapol_flow_received"}, Dst: "gem_port_added"},
 			// NOTE should disabled state be different for oper_disabled (emulating an error) and admin_disabled (received a disabled call via VOLTHA)?
 			{Name: "disable", Src: []string{"enabled", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "disabled"},
-			// ONU state when PON port is disabled but ONU is power ON(more states should be added in src?)
-			{Name: "pon_disabled", Src: []string{"enabled", "gem_port_added", "eapol_flow_received", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst:"pon_disabled"},
 			// EAPOL
 			{Name: "start_auth", Src: []string{"eapol_flow_received", "gem_port_added", "eap_start_sent", "eap_response_identity_sent", "eap_response_challenge_sent", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "auth_started"},
 			{Name: "eap_start_sent", Src: []string{"auth_started"}, Dst: "eap_start_sent"},
@@ -138,6 +133,11 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth b
 			// TODO add start OMCI state
 			{Name: "send_eapol_flow", Src: []string{"initialized"}, Dst: "eapol_flow_sent"},
 			{Name: "send_dhcp_flow", Src: []string{"eapol_flow_sent"}, Dst: "dhcp_flow_sent"},
+			// IGMP
+                        {Name: "igmp_join_start", Src: []string{"gem_port_added", "eapol_flow_received"}, Dst: "igmp_join_start"},
+			{Name: "igmp_join_done", Src: []string{"igmp_join_start"}, Dst: "igmp_join_done"},
+			{Name: "igmp_join_error", Src: []string{"igmp_join_start"}, Dst: "igmp_join_error"},
+			{Name: "igmp_leave", Src: []string{"igmp_join_start"}, Dst: "igmp_left"},
 		},
 		fsm.Callbacks{
 			"enter_state": func(e *fsm.Event) {
@@ -233,6 +233,17 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth b
 				}
 				o.Channel <- msg
 			},
+			"igmp_join_start": func(e *fsm.Event) {
+				msg := Message{
+					Type: IGMPMembershipReportV2,
+				}
+				o.Channel <- msg
+			},
+                        "igmp_leave": func(e *fsm.Event) {
+                                msg := Message{
+                                        Type: IGMPLeaveGroup, }
+                                o.Channel <- msg
+                        },
 		},
 	)
 
@@ -248,105 +259,94 @@ func (o *Onu) logStateChange(src string, dst string) {
 }
 
 // ProcessOnuMessages starts indication channel for each ONU
-func (o *Onu) ProcessOnuMessages(ctx context.Context, stream openolt.Openolt_EnableIndicationServer, client openolt.OpenoltClient) {
+func (o *Onu) ProcessOnuMessages(stream openolt.Openolt_EnableIndicationServer, client openolt.OpenoltClient) {
 	onuLogger.WithFields(log.Fields{
 		"onuID":   o.ID,
 		"onuSN":   o.Sn(),
 		"ponPort": o.PonPortID,
 	}).Debug("Starting ONU Indication Channel")
 
-loop:
-	for {
-		select {
-		case <-ctx.Done():
-			onuLogger.WithFields(log.Fields{
-				"onuID": o.ID,
-				"onuSN": o.Sn(),
-			}).Tracef("ONU message handling canceled via context")
-			break loop
-		case message, ok := <-o.Channel:
-			if !ok || ctx.Err() != nil {
-				onuLogger.WithFields(log.Fields{
-					"onuID": o.ID,
-					"onuSN": o.Sn(),
-				}).Tracef("ONU message handling canceled via channel close")
-				break loop
+	for message := range o.Channel {
+		onuLogger.WithFields(log.Fields{
+			"onuID":       o.ID,
+			"onuSN":       o.Sn(),
+			"messageType": message.Type,
+		}).Tracef("Received message on ONU Channel")
+
+		switch message.Type {
+		case OnuDiscIndication:
+			msg, _ := message.Data.(OnuDiscIndicationMessage)
+			// NOTE we need to slow down and send ONU Discovery Indication in batches to better emulate a real scenario
+			time.Sleep(time.Duration(int(o.ID)*o.PonPort.Olt.Delay) * time.Millisecond)
+			o.sendOnuDiscIndication(msg, stream)
+		case OnuIndication:
+			msg, _ := message.Data.(OnuIndicationMessage)
+			o.sendOnuIndication(msg, stream)
+		case OMCI:
+			msg, _ := message.Data.(OmciMessage)
+			o.handleOmciMessage(msg, stream)
+		case FlowUpdate:
+			msg, _ := message.Data.(OnuFlowUpdateMessage)
+			o.handleFlowUpdate(msg)
+		case StartEAPOL:
+			log.Infof("Receive StartEAPOL message on ONU Channel")
+			eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, stream)
+		case StartDHCP:
+			log.Infof("Receive StartDHCP message on ONU Channel")
+			// FIXME use id, ponId as SendEapStart
+			dhcp.SendDHCPDiscovery(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
+		case OnuPacketOut:
+
+			msg, _ := message.Data.(OnuPacketMessage)
+
+			log.WithFields(log.Fields{
+				"IntfId":  msg.IntfId,
+				"OnuId":   msg.OnuId,
+				"pktType": msg.Type,
+			}).Trace("Received OnuPacketOut Message")
+
+			if msg.Type == packetHandlers.EAPOL {
+				eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream, client)
+			} else if msg.Type == packetHandlers.DHCP {
+				// NOTE here we receive packets going from the DHCP Server to the ONU
+				// for now we expect them to be double-tagged, but ideally the should be single tagged
+				dhcp.HandleNextPacket(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.CTag, o.InternalState, msg.Packet, stream)
 			}
-			onuLogger.WithFields(log.Fields{
-				"onuID":       o.ID,
-				"onuSN":       o.Sn(),
-				"messageType": message.Type,
-			}).Tracef("Received message on ONU Channel")
+		case OnuPacketIn:
+			// NOTE we only receive BBR packets here.
+			// Eapol.HandleNextPacket can handle both BBSim and BBr cases so the call is the same
+			// in the DHCP case VOLTHA only act as a proxy, the behaviour is completely different thus we have a dhcp.HandleNextBbrPacket
+			msg, _ := message.Data.(OnuPacketMessage)
 
-			switch message.Type {
-			case OnuDiscIndication:
-				msg, _ := message.Data.(OnuDiscIndicationMessage)
-				// NOTE we need to slow down and send ONU Discovery Indication in batches to better emulate a real scenario
-				time.Sleep(time.Duration(int(o.ID)*o.PonPort.Olt.Delay) * time.Millisecond)
-				o.sendOnuDiscIndication(msg, stream)
-			case OnuIndication:
-				msg, _ := message.Data.(OnuIndicationMessage)
-				o.sendOnuIndication(msg, stream)
-			case OMCI:
-				msg, _ := message.Data.(OmciMessage)
-				o.handleOmciMessage(msg, stream)
-			case FlowUpdate:
-				msg, _ := message.Data.(OnuFlowUpdateMessage)
-				o.handleFlowUpdate(msg)
-			case StartEAPOL:
-				log.Infof("Receive StartEAPOL message on ONU Channel")
-				eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, stream)
-			case StartDHCP:
-				log.Infof("Receive StartDHCP message on ONU Channel")
-				// FIXME use id, ponId as SendEapStart
-				dhcp.SendDHCPDiscovery(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
-			case OnuPacketOut:
+			log.WithFields(log.Fields{
+				"IntfId":  msg.IntfId,
+				"OnuId":   msg.OnuId,
+				"pktType": msg.Type,
+			}).Trace("Received OnuPacketIn Message")
 
-				msg, _ := message.Data.(OnuPacketMessage)
-
-				log.WithFields(log.Fields{
-					"IntfId":  msg.IntfId,
-					"OnuId":   msg.OnuId,
-					"pktType": msg.Type,
-				}).Trace("Received OnuPacketOut Message")
-
-				if msg.Type == packetHandlers.EAPOL {
-					eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream, client)
-				} else if msg.Type == packetHandlers.DHCP {
-					// NOTE here we receive packets going from the DHCP Server to the ONU
-					// for now we expect them to be double-tagged, but ideally the should be single tagged
-					dhcp.HandleNextPacket(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.CTag, o.InternalState, msg.Packet, stream)
-				}
-			case OnuPacketIn:
-				// NOTE we only receive BBR packets here.
-				// Eapol.HandleNextPacket can handle both BBSim and BBr cases so the call is the same
-				// in the DHCP case VOLTHA only act as a proxy, the behaviour is completely different thus we have a dhcp.HandleNextBbrPacket
-				msg, _ := message.Data.(OnuPacketMessage)
-
-				log.WithFields(log.Fields{
-					"IntfId":  msg.IntfId,
-					"OnuId":   msg.OnuId,
-					"pktType": msg.Type,
-				}).Trace("Received OnuPacketIn Message")
-
-				if msg.Type == packetHandlers.EAPOL {
-					eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream, client)
-				} else if msg.Type == packetHandlers.DHCP {
-					dhcp.HandleNextBbrPacket(o.ID, o.PonPortID, o.Sn(), o.STag, o.HwAddress, o.DoneChannel, msg.Packet, client)
-				}
-			case DyingGaspIndication:
-				msg, _ := message.Data.(DyingGaspIndicationMessage)
-				o.sendDyingGaspInd(msg, stream)
-			case OmciIndication:
-				msg, _ := message.Data.(OmciIndicationMessage)
-				o.handleOmci(msg, client)
-			case SendEapolFlow:
-				o.sendEapolFlow(client)
-			case SendDhcpFlow:
-				o.sendDhcpFlow(client)
-			default:
-				onuLogger.Warnf("Received unknown message data %v for type %v in OLT Channel", message.Data, message.Type)
+			if msg.Type == packetHandlers.EAPOL {
+				eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream, client)
+			} else if msg.Type == packetHandlers.DHCP {
+				dhcp.HandleNextBbrPacket(o.ID, o.PonPortID, o.Sn(), o.STag, o.HwAddress, o.DoneChannel, msg.Packet, client)
 			}
+		case DyingGaspIndication:
+			msg, _ := message.Data.(DyingGaspIndicationMessage)
+			o.sendDyingGaspInd(msg, stream)
+		case OmciIndication:
+			msg, _ := message.Data.(OmciIndicationMessage)
+			o.handleOmci(msg, client)
+		case SendEapolFlow:
+			o.sendEapolFlow(client)
+		case SendDhcpFlow:
+			o.sendDhcpFlow(client)
+		case IGMPMembershipReportV2:
+			log.Infof("Recieved IGMPMembershipReportV2 message on ONU channel")
+			igmp.SendIGMPMembershipReportV2(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.HwAddress, stream)
+		case IGMPLeaveGroup:
+                        log.Infof("Recieved IGMPLeaveGroupV2 message on ONU channel")
+			igmp.SendIGMPLeaveGroupV2(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.HwAddress, stream)
+		default:
+			onuLogger.Warnf("Received unknown message data %v for type %v in OLT Channel", message.Data, message.Type)
 		}
 	}
 	onuLogger.WithFields(log.Fields{
@@ -437,14 +437,6 @@ func (o *Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt
 		"OnuSn":  msg.Onu.Sn(),
 		"OnuId":  o.ID,
 	}).Debug("Sent Indication_OnuDiscInd")
-
-	// after DiscoveryRetryDelay check if the state is the same and in case send a new OnuDiscIndication
-	go func(delay time.Duration) {
-		time.Sleep(delay)
-		if o.InternalState.Current() == "discovered" {
-			o.sendOnuDiscIndication(msg, stream)
-		}
-	}(o.DiscoveryRetryDelay)
 }
 
 func (o *Onu) sendOnuIndication(msg OnuIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
