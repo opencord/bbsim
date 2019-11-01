@@ -74,34 +74,43 @@ func CreateNNI(olt *OltDevice) (NniPort, error) {
 // sendNniPacket will send a packet out of the NNI interface.
 // We will send upstream only DHCP packets and drop anything else
 func sendNniPacket(packet gopacket.Packet) error {
-	if isDhcp := packetHandlers.IsDhcpPacket(packet); !isDhcp {
+	isDhcp := packetHandlers.IsDhcpPacket(packet)
+	isLldp := packetHandlers.IsLldpPacket(packet)
+
+	if isDhcp == false && isLldp == false {
 		nniLogger.WithFields(log.Fields{
 			"packet": packet,
 		}).Trace("Dropping NNI packet as it's not DHCP")
+		return nil
 	}
 
-	packet, err := packetHandlers.PopDoubleTag(packet)
-	if err != nil {
-		nniLogger.WithFields(log.Fields{
-			"packet": packet,
-		}).Errorf("Can't remove double tags from packet: %v", err)
-		return err
-	}
+	if isDhcp {
+		packet, err := packetHandlers.PopDoubleTag(packet)
+		if err != nil {
+			nniLogger.WithFields(log.Fields{
+				"packet": packet,
+			}).Errorf("Can't remove double tags from packet: %v", err)
+			return err
+		}
 
-	handle, err := getVethHandler(nniVeth)
-	if err != nil {
-		return err
-	}
+		handle, err := getVethHandler(nniVeth)
+		if err != nil {
+			return err
+		}
 
-	err = handle.WritePacketData(packet.Data())
-	if err != nil {
-		nniLogger.WithFields(log.Fields{
-			"packet": packet,
-		}).Errorf("Failed to send packet out of the NNI: %s", err)
-		return err
-	}
+		err = handle.WritePacketData(packet.Data())
+		if err != nil {
+			nniLogger.WithFields(log.Fields{
+				"packet": packet,
+			}).Errorf("Failed to send packet out of the NNI: %s", err)
+			return err
+		}
 
-	nniLogger.Infof("Sent packet out of NNI")
+		nniLogger.Infof("Sent packet out of NNI")
+	} else if isLldp {
+		// TODO rework this when BBSim supports data-plane packets
+		nniLogger.Trace("Received LLDP Packet, ignoring it")
+	}
 	return nil
 }
 
