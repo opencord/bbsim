@@ -4,8 +4,8 @@
 
 # BBSim specific settings
 bbsim:
-  enable_dhcp: false
-  enable_auth: false
+  enable_dhcp: true
+  enable_auth: true
   openolt_address: "0.0.0.0:50060"
   api_address: "0.0.0.0:50070"
   rest_api_address: "0.0.0.0:50071"
