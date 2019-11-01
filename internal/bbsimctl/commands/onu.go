@@ -20,14 +20,15 @@ package commands
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/jessevdk/go-flags"
 	pb "github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
 	"github.com/opencord/cordctl/pkg/format"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"os"
-	"strings"
 )
 
 const (
@@ -35,6 +36,11 @@ const (
 )
 
 type OnuSnString string
+type IgmpSubAction string
+
+const IgmpJoinKey string = "join"
+const IgmpLeaveKey string = "leave"
+
 type ONUList struct{}
 
 type ONUGet struct {
@@ -67,6 +73,13 @@ type ONUDhcpRestart struct {
 	} `positional-args:"yes" required:"yes"`
 }
 
+type ONUIgmp struct {
+	Args struct {
+		OnuSn OnuSnString
+		SubAction IgmpSubAction
+	} `positional-args:"yes" required:"yes"`
+}
+
 type ONUOptions struct {
 	List         ONUList         `command:"list"`
 	Get          ONUGet          `command:"get"`
@@ -74,6 +87,7 @@ type ONUOptions struct {
 	PowerOn      ONUPowerOn      `command:"poweron"`
 	RestartEapol ONUEapolRestart `command:"auth_restart"`
 	RestartDchp  ONUDhcpRestart  `command:"dhcp_restart"`
+	Igmp         ONUIgmp         `command:"igmp"`
 }
 
 func RegisterONUCommands(parser *flags.Parser) {
@@ -224,6 +238,53 @@ func (options *ONUDhcpRestart) Execute(args []string) error {
 	}
 
 	fmt.Println(fmt.Sprintf("[Status: %d] %s", res.StatusCode, res.Message))
+
+	return nil
+}
+
+func (options *ONUIgmp) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+
+	req := pb.ONURequest{
+		SerialNumber: string(options.Args.OnuSn),
+	}
+
+	var subActionVal pb.SubActionTypes
+	if string(options.Args.SubAction) == IgmpJoinKey {
+		subActionVal = pb.SubActionTypes_JOIN
+	} else if string(options.Args.SubAction) == IgmpLeaveKey {
+		subActionVal = pb.SubActionTypes_LEAVE
+	}
+
+	igmpReq := pb.IgmpRequest{
+		OnuReq:       &req,
+		SubActionVal: subActionVal,
+	}
+	res, err := client.GetONU(ctx, igmpReq.OnuReq)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"SerialNumber": options.Args.OnuSn,
+		}).Fatalf("Cannot not get details on ONU error: %v", err)
+		return err
+	}
+	log.WithFields(log.Fields{
+    		"SerialNumber": igmpReq.OnuReq.SerialNumber,
+	}).Debugf("ONU has indentified : %s", res)
+
+	igmpRes, igmpErr := client.ChangeIgmpState(ctx, &igmpReq)
+	if igmpErr != nil {
+		log.WithFields(log.Fields{
+                        "SubAction": options.Args.SubAction,
+                }).Fatalf("Could not process Action: error: %v", igmpErr)
+		return igmpErr
+	} else {
+		fmt.Sprintf("igmp state has been changed with response: %s",
+			igmpRes.Message)
+	}
 
 	return nil
 }
