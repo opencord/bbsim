@@ -62,6 +62,50 @@ func Test_IsDhcpPacket_False(t *testing.T) {
 	assert.Equal(t, res, false)
 }
 
+func Test_IsLldpPacket_True(t *testing.T) {
+	layer := &layers.LinkLayerDiscovery{
+		PortID: layers.LLDPPortID{
+			ID:      []byte{1, 2, 3, 4},
+			Subtype: layers.LLDPPortIDSubtypeMACAddr,
+		},
+		ChassisID: layers.LLDPChassisID{
+			ID:      []byte{1, 2, 3, 4},
+			Subtype: layers.LLDPChassisIDSubTypeMACAddr,
+		},
+	}
+
+	buffer := gopacket.NewSerializeBuffer()
+	opts := gopacket.SerializeOptions{FixLengths: true}
+	err := gopacket.SerializeLayers(buffer, opts, layer)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	packet := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeLinkLayerDiscovery, gopacket.DecodeOptions{})
+
+	res := packetHandlers.IsLldpPacket(packet)
+	assert.Equal(t, res, true)
+}
+
+func Test_IsLldpPacket_False(t *testing.T) {
+	eth := &layers.Ethernet{
+		DstMAC: net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, 0x15, 0x16},
+		SrcMAC: net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, 0x15, 0x17},
+	}
+
+	buffer := gopacket.NewSerializeBuffer()
+	opts := gopacket.SerializeOptions{FixLengths: true}
+	err := gopacket.SerializeLayers(buffer, opts, eth)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ethernetPkt := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeEthernet, gopacket.DecodeOptions{})
+
+	res := packetHandlers.IsLldpPacket(ethernetPkt)
+	assert.Equal(t, res, false)
+}
+
 func Test_IsIncomingPacket_True(t *testing.T) {
 	eth := &layers.IPv4{
 		SrcIP: net.ParseIP("192.168.254.1"),

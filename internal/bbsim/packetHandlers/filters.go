@@ -30,6 +30,13 @@ func IsDhcpPacket(pkt gopacket.Packet) bool {
 	return false
 }
 
+func IsLldpPacket(pkt gopacket.Packet) bool {
+	if layer := pkt.Layer(layers.LayerTypeLinkLayerDiscovery); layer != nil {
+		return true
+	}
+	return false
+}
+
 // return true if the packet is coming in the OLT from the NNI port
 // it uses the ack to check if the source is the one we assigned to the
 // dhcp server
