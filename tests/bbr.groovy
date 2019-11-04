@@ -46,7 +46,7 @@
             sleep 5
             ./bbr -pon 4 -onu 16 -logfile bbr_16_4.logs
             docker logs bbsim 2>&1 | tee bbsim_16_4.logs
-            res=\$(cat bbr_16_4.logs | grep Duration | awk '{print \$5}' ); echo YVALUE=\${res:9:10} > bbr_16_4.txt
+            res=\$(cat bbr_16_4.logs | grep Duration | awk '{print \$5}' ); printf "Runtime\n\${res:9:10}" > bbr_16_4.txt
           """
         }
       }
@@ -60,7 +60,7 @@
             sleep 5
             ./bbr -pon 4 -onu 32 -logfile bbr_32_4.logs
             docker logs bbsim 2>&1 | tee bbsim_32_4.logs
-            res=\$(cat bbr_32_4.logs | grep Duration | awk '{print \$5}' ); echo YVALUE=\${res:9:10} > bbr_32_4.txt
+            res=\$(cat bbr_32_4.logs | grep Duration | awk '{print \$5}' ); printf "Runtime\n\${res:9:10}" > bbr_32_4.txt
           """
         }
       }
@@ -74,7 +74,7 @@
             sleep 5
             ./bbr -pon 8 -onu 32 -logfile bbr_32_8.logs
             docker logs bbsim 2>&1 | tee bbsim_32_8.logs
-            res=\$(cat bbr_32_8.logs | grep Duration | awk '{print \$5}' ); echo YVALUE=\${res:9:10} > bbr_32_8.txt
+            res=\$(cat bbr_32_8.logs | grep Duration | awk '{print \$5}' ); printf "Runtime\n\${res:9:10}" > bbr_32_8.txt
           """
         }
       }
