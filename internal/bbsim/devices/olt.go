@@ -490,6 +490,7 @@ func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*open
 
 	pon, _ := o.GetPonById(onu.IntfId)
 	_onu, _ := pon.GetOnuBySn(onu.SerialNumber)
+	_onu.SetID(onu.OnuId)
 
 	if err := _onu.OperState.Event("enable"); err != nil {
 		oltLogger.WithFields(log.Fields{

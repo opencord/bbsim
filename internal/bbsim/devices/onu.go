@@ -215,7 +215,7 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth b
 	return &o
 }
 
-func (o Onu) logStateChange(src string, dst string) {
+func (o *Onu) logStateChange(src string, dst string) {
 	onuLogger.WithFields(log.Fields{
 		"OnuId":  o.ID,
 		"IntfId": o.PonPortID,
@@ -306,7 +306,7 @@ func (o *Onu) ProcessOnuMessages(stream openolt.Openolt_EnableIndicationServer, 
 	}
 }
 
-func (o Onu) processOmciMessage(message omcisim.OmciChMessage) {
+func (o *Onu) processOmciMessage(message omcisim.OmciChMessage) {
 	switch message.Type {
 	case omcisim.GemPortAdded:
 		log.WithFields(log.Fields{
@@ -328,7 +328,7 @@ func (o Onu) processOmciMessage(message omcisim.OmciChMessage) {
 	}
 }
 
-func (o Onu) NewSN(oltid int, intfid uint32, onuid uint32) *openolt.SerialNumber {
+func (o *Onu) NewSN(oltid int, intfid uint32, onuid uint32) *openolt.SerialNumber {
 
 	sn := new(openolt.SerialNumber)
 
@@ -342,7 +342,7 @@ func (o Onu) NewSN(oltid int, intfid uint32, onuid uint32) *openolt.SerialNumber
 // NOTE handle_/process methods can change the ONU internal state as they are receiving messages
 // send method should not change the ONU state
 
-func (o Onu) sendDyingGaspInd(msg DyingGaspIndicationMessage, stream openolt.Openolt_EnableIndicationServer) error {
+func (o *Onu) sendDyingGaspInd(msg DyingGaspIndicationMessage, stream openolt.Openolt_EnableIndicationServer) error {
 	alarmData := &openolt.AlarmIndication_DyingGaspInd{
 		DyingGaspInd: &openolt.DyingGaspIndication{
 			IntfId: msg.PonPortID,
@@ -364,7 +364,7 @@ func (o Onu) sendDyingGaspInd(msg DyingGaspIndicationMessage, stream openolt.Ope
 	return nil
 }
 
-func (o Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o *Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
 	discoverData := &openolt.Indication_OnuDiscInd{OnuDiscInd: &openolt.OnuDiscIndication{
 		IntfId:       msg.Onu.PonPortID,
 		SerialNumber: msg.Onu.SerialNumber,
@@ -390,7 +390,7 @@ func (o Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt.
 	}).Debug("Sent Indication_OnuDiscInd")
 }
 
-func (o Onu) sendOnuIndication(msg OnuIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o *Onu) sendOnuIndication(msg OnuIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
 	// NOTE voltha returns an ID, but if we use that ID then it complains:
 	// expected_onu_id: 1, received_onu_id: 1024, event: ONU-id-mismatch, can happen if both voltha and the olt rebooted
 	// so we're using the internal ID that is 1
@@ -417,7 +417,7 @@ func (o Onu) sendOnuIndication(msg OnuIndicationMessage, stream openolt.Openolt_
 
 }
 
-func (o Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o *Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableIndicationServer) {
 
 	onuLogger.WithFields(log.Fields{
 		"IntfId":       o.PonPortID,
@@ -475,6 +475,10 @@ func (o *Onu) storePortNumber(portNo uint32) {
 		}).Debug("Storing ONU portNo")
 		o.PortNo = portNo
 	}
+}
+
+func (o *Onu) SetID(id uint32) {
+	o.ID = id
 }
 
 func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
