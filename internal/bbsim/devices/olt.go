@@ -491,14 +491,14 @@ func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*open
 	pon, _ := o.GetPonById(onu.IntfId)
 	_onu, _ := pon.GetOnuBySn(onu.SerialNumber)
 
-	if err := _onu.OperState.Event("enable"); err != nil {
+	if err := _onu.OperState.Event("enable", onu); err != nil {
 		oltLogger.WithFields(log.Fields{
 			"IntfId": _onu.PonPortID,
 			"OnuSn":  _onu.Sn(),
 			"OnuId":  _onu.ID,
 		}).Infof("Failed to transition ONU.OperState to enabled state: %s", err.Error())
 	}
-	if err := _onu.InternalState.Event("enable"); err != nil {
+	if err := _onu.InternalState.Event("enable", onu); err != nil {
 		oltLogger.WithFields(log.Fields{
 			"IntfId": _onu.PonPortID,
 			"OnuSn":  _onu.Sn(),
