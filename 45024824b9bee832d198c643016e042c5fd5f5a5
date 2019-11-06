@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16254bb3_97138f0a",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-06T18:48:34Z",
+      "side": 1,
+      "message": "We\u0027re not using the onu in the OperState state machine",
+      "range": {
+        "startLine": 494,
+        "startChar": 40,
+        "endLine": 494,
+        "endChar": 46
+      },
+      "revId": "45024824b9bee832d198c643016e042c5fd5f5a5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b39e529_bca648c3",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-06T18:48:34Z",
+      "side": 1,
+      "message": "Any reason why we\u0027re passing the ONU and assigning the ID during the transition?\n\nWhat about having an explicit \"SetID()\" method in the ONU struct and calling it from here?",
+      "range": {
+        "startLine": 501,
+        "startChar": 44,
+        "endLine": 501,
+        "endChar": 49
+      },
+      "revId": "45024824b9bee832d198c643016e042c5fd5f5a5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
