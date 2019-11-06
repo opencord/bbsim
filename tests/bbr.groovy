@@ -112,9 +112,7 @@
     failure {
       sh '''
       docker logs bbsim 2>&1 | tee bbsim_failed.logs
-      docker cp bbsim:/app/dhcp.logs dhcp_failed.logs
       docker cp bbsim:/var/lib/dhcp/dhcpd.leases dhcpd_leases_failed.logs
-      docker cp bbsim:/app/tcpdump.logs tcpdump_failed.logs
       docker exec bbsim bbsimctl onu list > onu_list.logs
       '''
     }
