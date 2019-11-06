@@ -22,18 +22,19 @@
   }
 
   stages {
-    stage('Build BBR') {
+    stage('Download BBR') {
       steps {
         sh """
-          make build
+          curl -s https://api.github.com/repos/opencord/bbsim/releases/latest | grep "browser_download_url.*bbr-linux-amd" | cut -d : -f 2,3 | tr -d \\" | wget -qi -
+          mv bbr-linux-amd64 bbr
+          chmod a+x bbr
         """
       }
     }
-    stage('Build BBSim') {
+    stage('Download BBSim') {
       steps {
         sh """
           docker pull voltha/bbsim:master
-          DOCKER_REPOSITORY=voltha/ DOCKER_TAG=candidate make docker-build
         """
       }
     }
@@ -42,7 +43,7 @@
         timeout(1) {
           sh """
             docker rm -f bbsim || true
-            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=candidate DOCKER_RUN_ARGS="-pon 4 -onu 16" make docker-run
+            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-auth -dhcp -pon 4 -onu 16" make docker-run
             sleep 5
             ./bbr -pon 4 -onu 16 -logfile bbr_16_4.logs
             docker logs bbsim 2>&1 | tee bbsim_16_4.logs
@@ -56,7 +57,7 @@
         timeout(1) {
           sh """
             docker rm -f bbsim || true
-            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=candidate DOCKER_RUN_ARGS="-pon 4 -onu 32" make docker-run
+            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-auth -dhcp -pon 4 -onu 32" make docker-run
             sleep 5
             ./bbr -pon 4 -onu 32 -logfile bbr_32_4.logs
             docker logs bbsim 2>&1 | tee bbsim_32_4.logs
@@ -70,7 +71,7 @@
         timeout(1) {
           sh """
             docker rm -f bbsim || true
-            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=candidate DOCKER_RUN_ARGS="-pon 8 -onu 32" make docker-run
+            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-auth -dhcp -pon 8 -onu 32" make docker-run
             sleep 5
             ./bbr -pon 8 -onu 32 -logfile bbr_32_8.logs
             docker logs bbsim 2>&1 | tee bbsim_32_8.logs
