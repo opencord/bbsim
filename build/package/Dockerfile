@@ -59,9 +59,13 @@ RUN apt-get update \
  && ln -s /usr/lib/libpcap.so.1.8.1 /usr/lib/libpcap.so.0.8
 
 COPY ./configs/dhcpd.conf /etc/dhcp/
-RUN mv /usr/sbin/dhcpd /usr/local/bin/ \
-&& mv /sbin/dhclient /usr/local/bin/ \
-&& touch /var/lib/dhcp/dhcpd.leases
+RUN touch /var/lib/dhcp/dhcpd.leases
+
+RUN ip link add nni type veth peer name upstream
+RUN ip link set nni up
+RUN ip link set upstream up
+RUN ip addr add 192.168.254.1 dev upstream
+RUN ip link set upstream up
 
 WORKDIR /app
 COPY --from=builder /go/src/github.com/opencord/bbsim/bbsim /app/bbsim

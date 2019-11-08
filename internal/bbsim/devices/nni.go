@@ -18,6 +18,8 @@ package devices
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
 	"github.com/looplab/fsm"
@@ -28,10 +30,11 @@ import (
 )
 
 var (
-	nniLogger    = log.WithFields(log.Fields{"module": "NNI"})
-	nniVeth      = "nni"
-	upstreamVeth = "upstream"
-	dhcpServerIp = "192.168.254.1"
+	nniLogger                 = log.WithFields(log.Fields{"module": "NNI"})
+	nniVeth                   = "nni"
+	upstreamVeth              = "upstream"
+	dhcpServerIp              = "192.168.254.1"
+	nniHandle    *pcap.Handle = nil
 )
 
 type Executor interface {
@@ -119,18 +122,33 @@ func sendNniPacket(packet gopacket.Packet) error {
 //It is also responsible to start the DHCP server itself
 func createNNIPair(executor Executor, olt *OltDevice) error {
 
-	if err := executor.Command("ip", "link", "add", nniVeth, "type", "veth", "peer", "name", upstreamVeth).Run(); err != nil {
-		nniLogger.Errorf("Couldn't create veth pair between %s and %s", nniVeth, upstreamVeth)
+	//if err := executor.Command("ip", "link", "add", nniVeth, "type", "veth", "peer", "name", upstreamVeth).Run(); err != nil {
+	//	nniLogger.Errorf("Couldn't create veth pair between %s and %s", nniVeth, upstreamVeth)
+	//	return err
+	//}
+	//
+	//if err := setVethUp(executor, nniVeth); err != nil {
+	//	return err
+	//}
+	//
+	//if err := setVethUp(executor, upstreamVeth); err != nil {
+	//	return err
+	//}
+
+	var (
+		snapshotLen int32 = 1518
+		promiscuous       = false
+		timeout           = pcap.BlockForever
+	)
+	handle, err := pcap.OpenLive("nni", snapshotLen, promiscuous, timeout)
+	if err != nil {
+		nniLogger.WithFields(log.Fields{
+			"err": err,
+		}).Errorf("Can't retrieve handler for interface NNI")
 		return err
 	}
 
-	if err := setVethUp(executor, nniVeth); err != nil {
-		return err
-	}
-
-	if err := setVethUp(executor, upstreamVeth); err != nil {
-		return err
-	}
+	nniHandle = handle
 
 	if err := startDHCPServer(); err != nil {
 		return err
@@ -154,43 +172,35 @@ func setVethUp(executor Executor, vethName string) error {
 }
 
 var startDHCPServer = func() error {
-	if err := exec.Command("ip", "addr", "add", dhcpServerIp, "dev", upstreamVeth).Run(); err != nil {
-		nniLogger.Errorf("Couldn't assing ip %s to interface %s: %v", dhcpServerIp, upstreamVeth, err)
-		return err
-	}
+	//if err := exec.Command("ip", "addr", "add", dhcpServerIp, "dev", upstreamVeth).Run(); err != nil {
+	//	nniLogger.Errorf("Couldn't assing ip %s to interface %s: %v", dhcpServerIp, upstreamVeth, err)
+	//	return err
+	//}
 
-	if err := setVethUp(executor, upstreamVeth); err != nil {
-		return err
-	}
+	//if err := setVethUp(executor, upstreamVeth); err != nil {
+	//	return err
+	//}
 
-	dhcp := "/usr/local/bin/dhcpd"
+	dhcp := "/usr/sbin/dhcpd"
 	conf := "/etc/dhcp/dhcpd.conf" // copied in the container from configs/dhcpd.conf
-	logfile := "/tmp/dhcplog"
+	//logfile := "/tmp/dhcplog"
 	var stderr bytes.Buffer
-	cmd := exec.Command(dhcp, "-cf", conf, upstreamVeth, "-tf", logfile, "-4")
+	//cmd := exec.Command(dhcp, "-cf", conf, upstreamVeth, "-tf", logfile, "-4")
+	cmd := exec.Command(dhcp, "-cf", conf, upstreamVeth, "-4")
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		nniLogger.Errorf("Fail to start DHCP Server: %s, %s", err, stderr.String())
-		return err
+		nniLogger.Fatalf("Fail to start DHCP Server: %s, %s", err, stderr.String())
 	}
 	nniLogger.Info("Successfully activated DHCP Server")
 	return nil
 }
 
 func getVethHandler(vethName string) (*pcap.Handle, error) {
-	var (
-		device            = vethName
-		snapshotLen int32 = 1518
-		promiscuous       = false
-		timeout           = pcap.BlockForever
-	)
-	handle, err := pcap.OpenLive(device, snapshotLen, promiscuous, timeout)
-	if err != nil {
-		nniLogger.Errorf("Can't retrieve handler for interface %s", vethName)
-		return nil, err
+	if vethName == "nni" {
+		return nniHandle, nil
 	}
-	return handle, nil
+	return nil, errors.New(fmt.Sprintf("no-handle-for-%s", vethName))
 }
 
 var listenOnVeth = func(vethName string) (chan *types.PacketMsg, error) {

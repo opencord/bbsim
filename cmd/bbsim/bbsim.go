@@ -164,6 +164,9 @@ func main() {
 	signal.Notify(sigs, syscall.SIGTERM)
 
 	go func() {
+
+		// TODO shutdown the dhcp server
+
 		<-sigs
 		// TODO check when these servers should be shutdown
 		close(apiDoneChannel)
