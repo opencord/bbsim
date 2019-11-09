@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "235ca21e_654962b2",
+        "filename": "internal/common/options.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2019-11-09T16:23:30Z",
+      "side": 1,
+      "message": "I think this is in ms. But can you specify that just to be clear.",
+      "revId": "2cd1337660f85800066276bbfab324215ecb288c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
