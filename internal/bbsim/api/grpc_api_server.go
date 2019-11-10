@@ -18,11 +18,13 @@ package api
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"github.com/opencord/bbsim/internal/common"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
 )
 
 var logger = log.WithFields(log.Fields{
@@ -79,6 +81,43 @@ func (s BBSimServer) GetOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Olt, 
 		PONPorts:      pons,
 	}
 	return &res, nil
+}
+
+func (s BBSimServer) PoweronOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Response, error) {
+	res := &bbsim.Response{}
+	o := devices.GetOLT()
+
+	if err := o.InternalState.Event("initialize"); err != nil {
+		log.Errorf("Error initializing OLT: %v", err)
+		res.StatusCode = int32(codes.FailedPrecondition)
+		return res, err
+	}
+
+	res.StatusCode = int32(codes.OK)
+	return res, nil
+}
+
+func (s BBSimServer) ShutdownOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Response, error) {
+	res := &bbsim.Response{}
+	o := devices.GetOLT()
+
+	if err := o.InternalState.Event("disable"); err != nil {
+		log.Errorf("Error disabling OLT: %v", err)
+		res.StatusCode = int32(codes.FailedPrecondition)
+		return res, err
+	}
+
+	res.StatusCode = int32(codes.OK)
+	return res, nil
+}
+
+func (s BBSimServer) RebootOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Response, error) {
+	res := &bbsim.Response{}
+	o := devices.GetOLT()
+	go o.RestartOLT()
+	res.StatusCode = int32(codes.OK)
+	res.Message = fmt.Sprintf("OLT restart triggered.")
+	return res, nil
 }
 
 func (s BBSimServer) SetLogLevel(ctx context.Context, req *bbsim.LogLevel) (*bbsim.LogLevel, error) {
