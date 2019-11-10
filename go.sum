@@ -43,8 +43,8 @@ github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4 h1:Odib2px8tyALzd
 github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4/go.mod h1:/+3S0pwQUy7HeKnH0KfKp5W6hmh/LdZzuZTNT/m7vA4=
 github.com/opencord/omci-sim v0.0.0-20191011202236-3687c57a7252 h1:CMRqdJmtqku04ImHZW5NtdRlc6RRcdxLOn5Ep/b9HBg=
 github.com/opencord/omci-sim v0.0.0-20191011202236-3687c57a7252/go.mod h1:ToOkj7hkHgoet9XQDadKMhYqgA7qItZsi2j1Pk/mX6Y=
-github.com/opencord/voltha-protos/v2 v2.0.1 h1:vcE0XxNVeu0SED0bW2lf2w24k/QMFrFqMexuedIyTEg=
-github.com/opencord/voltha-protos/v2 v2.0.1/go.mod h1:6kOcfYi1CadWowFxI2SH5wLfHrsRECZLZlD2MFK6WDI=
+github.com/opencord/voltha-protos/v2 v2.1.0 h1:Ppl4/3OBwgGuLk0ob9vIEwMGGRC2sqe7WWoxh0Uq/n0=
+github.com/opencord/voltha-protos/v2 v2.1.0/go.mod h1:6kOcfYi1CadWowFxI2SH5wLfHrsRECZLZlD2MFK6WDI=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

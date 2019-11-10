@@ -17,14 +17,14 @@
 package devices
 
 import (
-	"gotest.tools/assert"
 	"testing"
+
+	"gotest.tools/assert"
 )
 
 func Test_Onu_StateMachine_enable(t *testing.T) {
 	onu := createTestOnu()
-
-	assert.Equal(t, onu.InternalState.Current(), "created")
+	assert.Equal(t, onu.InternalState.Current(), "initialized")
 	onu.InternalState.Event("discover")
 	assert.Equal(t, onu.InternalState.Current(), "discovered")
 	onu.InternalState.Event("enable")

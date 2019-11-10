@@ -185,7 +185,7 @@ func StartRestGatewayService(channel chan bool, group *sync.WaitGroup, grpcAddre
 	// Register REST endpoints
 	err := legacy.RegisterBBSimServiceHandlerFromEndpoint(ctx, mux, grpcAddress, opts)
 	if err != nil {
-		logger.Error("%v", err)
+		logger.Errorf("%v", err)
 		return
 	}
 

@@ -129,5 +129,7 @@ func createTestOnu() *Onu {
 		ID: 1,
 	}
 	onu := CreateONU(olt, pon, 1, 900, 900, false, false)
+	// NOTE we need this in order to create the OnuChannel
+	onu.InternalState.Event("initialize")
 	return onu
 }

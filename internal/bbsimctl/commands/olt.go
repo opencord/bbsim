@@ -40,10 +40,19 @@ type OltNNIs struct{}
 
 type OltPONs struct{}
 
+type OltShutdown struct{}
+
+type OltPoweron struct{}
+
+type OltReboot struct{}
+
 type oltOptions struct {
-	Get OltGet  `command:"get"`
-	NNI OltNNIs `command:"nnis"`
-	PON OltPONs `command:"pons"`
+	Get      OltGet      `command:"get"`
+	NNI      OltNNIs     `command:"nnis"`
+	PON      OltPONs     `command:"pons"`
+	Shutdown OltShutdown `command:"shutdown"`
+	Poweron  OltPoweron  `command:"poweron"`
+	Reboot   OltReboot   `command:"reboot"`
 }
 
 func RegisterOltCommands(parser *flags.Parser) {
@@ -105,5 +114,59 @@ func (o *OltPONs) Execute(args []string) error {
 	tableFormat := format.Format(DEFAULT_PORT_HEADER_FORMAT)
 	tableFormat.Execute(os.Stdout, true, olt.PONPorts)
 
+	return nil
+}
+
+func (o *OltShutdown) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+
+	res, err := client.ShutdownOlt(ctx, &pb.Empty{})
+
+	if err != nil {
+		log.Fatalf("Cannot shut down OLT: %v", err)
+		return err
+	}
+
+	fmt.Println(fmt.Sprintf("[Status: %d] %s", res.StatusCode, res.Message))
+	return nil
+}
+
+func (o *OltPoweron) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+
+	res, err := client.PoweronOlt(ctx, &pb.Empty{})
+
+	if err != nil {
+		log.Fatalf("Cannot power on OLT: %v", err)
+		return err
+	}
+
+	fmt.Println(fmt.Sprintf("[Status: %d] %s", res.StatusCode, res.Message))
+	return nil
+}
+
+func (o *OltReboot) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+
+	res, err := client.RebootOlt(ctx, &pb.Empty{})
+
+	if err != nil {
+		log.Fatalf("Cannot reboot OLT: %v", err)
+		return err
+	}
+
+	fmt.Println(fmt.Sprintf("[Status: %d] %s", res.StatusCode, res.Message))
 	return nil
 }

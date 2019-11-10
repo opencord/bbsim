@@ -18,19 +18,18 @@ package devices
 
 import (
 	"bytes"
+	"os/exec"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/types"
 	log "github.com/sirupsen/logrus"
-	"os/exec"
 )
 
 var (
 	nniLogger    = log.WithFields(log.Fields{"module": "NNI"})
-	nniVeth      = "nni"
-	upstreamVeth = "upstream"
 	dhcpServerIp = "192.168.254.1"
 )
 
@@ -52,7 +51,9 @@ var executor = DefaultExecutor{}
 
 type NniPort struct {
 	// BBSIM Internals
-	ID uint32
+	ID           uint32
+	nniVeth      string
+	upstreamVeth string
 
 	// PON Attributes
 	OperState *fsm.FSM
@@ -61,19 +62,21 @@ type NniPort struct {
 
 func CreateNNI(olt *OltDevice) (NniPort, error) {
 	nniPort := NniPort{
-		ID: uint32(0),
+		ID:           uint32(0),
+		nniVeth:      "nni",
+		upstreamVeth: "upstream",
 		OperState: getOperStateFSM(func(e *fsm.Event) {
 			oltLogger.Debugf("Changing NNI OperState from %s to %s", e.Src, e.Dst)
 		}),
 		Type: "nni",
 	}
-	createNNIPair(executor, olt)
+	createNNIPair(executor, olt, &nniPort)
 	return nniPort, nil
 }
 
 // sendNniPacket will send a packet out of the NNI interface.
 // We will send upstream only DHCP packets and drop anything else
-func sendNniPacket(packet gopacket.Packet) error {
+func (n *NniPort) sendNniPacket(packet gopacket.Packet) error {
 	isDhcp := packetHandlers.IsDhcpPacket(packet)
 	isLldp := packetHandlers.IsLldpPacket(packet)
 
@@ -93,7 +96,7 @@ func sendNniPacket(packet gopacket.Packet) error {
 			return err
 		}
 
-		handle, err := getVethHandler(nniVeth)
+		handle, err := getVethHandler(n.nniVeth)
 		if err != nil {
 			return err
 		}
@@ -117,31 +120,45 @@ func sendNniPacket(packet gopacket.Packet) error {
 //createNNIBridge will create a veth bridge to fake the connection between the NNI port
 //and something upstream, in this case a DHCP server.
 //It is also responsible to start the DHCP server itself
-func createNNIPair(executor Executor, olt *OltDevice) error {
+func createNNIPair(executor Executor, olt *OltDevice, nniPort *NniPort) error {
 
-	if err := executor.Command("ip", "link", "add", nniVeth, "type", "veth", "peer", "name", upstreamVeth).Run(); err != nil {
-		nniLogger.Errorf("Couldn't create veth pair between %s and %s", nniVeth, upstreamVeth)
+	if err := executor.Command("ip", "link", "add", nniPort.nniVeth, "type", "veth", "peer", "name", nniPort.upstreamVeth).Run(); err != nil {
+		nniLogger.Errorf("Couldn't create veth pair between %s and %s", nniPort.nniVeth, nniPort.upstreamVeth)
 		return err
 	}
 
-	if err := setVethUp(executor, nniVeth); err != nil {
+	if err := setVethUp(executor, nniPort.nniVeth); err != nil {
 		return err
 	}
 
-	if err := setVethUp(executor, upstreamVeth); err != nil {
+	if err := setVethUp(executor, nniPort.upstreamVeth); err != nil {
 		return err
 	}
 
-	if err := startDHCPServer(); err != nil {
+	// TODO should be moved out of this function in case there are multiple NNI interfaces.
+	// Only one DHCP server should be running and listening on all NNI interfaces
+	if err := startDHCPServer(nniPort.upstreamVeth, dhcpServerIp); err != nil {
 		return err
 	}
 
-	ch, err := listenOnVeth(nniVeth)
-	if err != nil {
-		return err
-	}
-	olt.nniPktInChannel = ch
 	return nil
+}
+
+func deleteNNIPair(executor Executor, nniPort *NniPort) error {
+	if err := executor.Command("ip", "link", "del", nniPort.nniVeth).Run(); err != nil {
+		nniLogger.Errorf("Couldn't delete veth pair between %s and %s", nniPort.nniVeth, nniPort.upstreamVeth)
+		return err
+	}
+	return nil
+}
+
+// NewVethChan returns a new channel for receiving packets over the NNI interface
+func (n *NniPort) NewVethChan() (chan *types.PacketMsg, error) {
+	ch, err := listenOnVeth(n.nniVeth)
+	if err != nil {
+		return nil, err
+	}
+	return ch, err
 }
 
 // setVethUp is responsible to activate a virtual interface
@@ -153,7 +170,8 @@ func setVethUp(executor Executor, vethName string) error {
 	return nil
 }
 
-var startDHCPServer = func() error {
+var startDHCPServer = func(upstreamVeth string, dhcpServerIp string) error {
+	// TODO the DHCP server should support multiple interfaces
 	if err := exec.Command("ip", "addr", "add", dhcpServerIp, "dev", upstreamVeth).Run(); err != nil {
 		nniLogger.Errorf("Couldn't assing ip %s to interface %s: %v", dhcpServerIp, upstreamVeth, err)
 		return err
