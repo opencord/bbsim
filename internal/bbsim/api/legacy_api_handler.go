@@ -123,7 +123,7 @@ func getOpenoltSerialNumber(SerialNumber string) (*openolt.SerialNumber, error) 
 	var SerialNumberLength = 12
 
 	if len(SerialNumber) != SerialNumberLength {
-		logger.Error("Invalid serial number %s", SerialNumber)
+		logger.Errorf("Invalid serial number %s", SerialNumber)
 		return nil, errors.New("invalid serial number")
 	}
 	// First four characters are vendorId

@@ -20,6 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
+
+	"time"
+
 	"github.com/cboling/omci"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
@@ -31,8 +35,6 @@ import (
 	omcisim "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
 	log "github.com/sirupsen/logrus"
-	"net"
-	"time"
 )
 
 var onuLogger = log.WithFields(log.Fields{
@@ -87,7 +89,6 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth b
 		Dhcp:             dhcp,
 		HwAddress:        net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(id)},
 		PortNo:           0,
-		Channel:          make(chan Message, 2048),
 		tid:              0x1,
 		hpTid:            0x8000,
 		seqNumber:        0,
@@ -109,12 +110,13 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth b
 		"created",
 		fsm.Events{
 			// DEVICE Lifecycle
-			{Name: "discover", Src: []string{"created"}, Dst: "discovered"},
+			{Name: "initialize", Src: []string{"created", "disabled"}, Dst: "initialized"},
+			{Name: "discover", Src: []string{"initialized"}, Dst: "discovered"},
 			{Name: "enable", Src: []string{"discovered", "disabled"}, Dst: "enabled"},
 			{Name: "receive_eapol_flow", Src: []string{"enabled", "gem_port_added"}, Dst: "eapol_flow_received"},
 			{Name: "add_gem_port", Src: []string{"enabled", "eapol_flow_received"}, Dst: "gem_port_added"},
-			// NOTE should disabled state be diffente for oper_disabled (emulating an error) and admin_disabled (received a disabled call via VOLTHA)?
-			{Name: "disable", Src: []string{"eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "disabled"},
+			// NOTE should disabled state be different for oper_disabled (emulating an error) and admin_disabled (received a disabled call via VOLTHA)?
+			{Name: "disable", Src: []string{"enabled", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "disabled"},
 			// EAPOL
 			{Name: "start_auth", Src: []string{"eapol_flow_received", "gem_port_added", "eap_start_sent", "eap_response_identity_sent", "eap_response_challenge_sent", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "auth_started"},
 			{Name: "eap_start_sent", Src: []string{"auth_started"}, Dst: "eap_start_sent"},
@@ -130,12 +132,26 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth b
 			{Name: "dhcp_failed", Src: []string{"dhcp_started", "dhcp_discovery_sent", "dhcp_request_sent"}, Dst: "dhcp_failed"},
 			// BBR States
 			// TODO add start OMCI state
-			{Name: "send_eapol_flow", Src: []string{"created"}, Dst: "eapol_flow_sent"},
+			{Name: "send_eapol_flow", Src: []string{"initialized"}, Dst: "eapol_flow_sent"},
 			{Name: "send_dhcp_flow", Src: []string{"eapol_flow_sent"}, Dst: "dhcp_flow_sent"},
 		},
 		fsm.Callbacks{
 			"enter_state": func(e *fsm.Event) {
 				o.logStateChange(e.Src, e.Dst)
+			},
+			"enter_initialized": func(e *fsm.Event) {
+				// create new channel for ProcessOnuMessages Go routine
+				o.Channel = make(chan Message, 2048)
+			},
+			"enter_discovered": func(e *fsm.Event) {
+				msg := Message{
+					Type: OnuDiscIndication,
+					Data: OnuDiscIndicationMessage{
+						Onu:       &o,
+						OperState: UP,
+					},
+				}
+				o.Channel <- msg
 			},
 			"enter_enabled": func(event *fsm.Event) {
 				msg := Message{
@@ -158,6 +174,8 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth b
 					},
 				}
 				o.Channel <- msg
+				// terminate the ONU's ProcessOnuMessages Go routine
+				close(o.Channel)
 			},
 			"enter_auth_started": func(e *fsm.Event) {
 				o.logStateChange(e.Src, e.Dst)
@@ -213,6 +231,7 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth b
 			},
 		},
 	)
+
 	return &o
 }
 
@@ -224,11 +243,13 @@ func (o *Onu) logStateChange(src string, dst string) {
 	}).Debugf("Changing ONU InternalState from %s to %s", src, dst)
 }
 
+// ProcessOnuMessages starts indication channel for each ONU
 func (o *Onu) ProcessOnuMessages(stream openolt.Openolt_EnableIndicationServer, client openolt.OpenoltClient) {
 	onuLogger.WithFields(log.Fields{
-		"onuID": o.ID,
-		"onuSN": o.Sn(),
-	}).Debug("Started ONU Indication Channel")
+		"onuID":   o.ID,
+		"onuSN":   o.Sn(),
+		"ponPort": o.PonPortID,
+	}).Debug("Starting ONU Indication Channel")
 
 	for message := range o.Channel {
 		onuLogger.WithFields(log.Fields{
@@ -307,6 +328,10 @@ func (o *Onu) ProcessOnuMessages(stream openolt.Openolt_EnableIndicationServer, 
 			onuLogger.Warnf("Received unknown message data %v for type %v in OLT Channel", message.Data, message.Type)
 		}
 	}
+	onuLogger.WithFields(log.Fields{
+		"onuID": o.ID,
+		"onuSN": o.Sn(),
+	}).Debug("Stopped handling ONU Indication Channel")
 }
 
 func (o *Onu) processOmciMessage(message omcisim.OmciChMessage) {
@@ -331,7 +356,7 @@ func (o *Onu) processOmciMessage(message omcisim.OmciChMessage) {
 	}
 }
 
-func (o *Onu) NewSN(oltid int, intfid uint32, onuid uint32) *openolt.SerialNumber {
+func (o Onu) NewSN(oltid int, intfid uint32, onuid uint32) *openolt.SerialNumber {
 
 	sn := new(openolt.SerialNumber)
 
@@ -540,11 +565,11 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
 		msg.Flow.Classifier.DstPort == uint32(67) {
 
-		// keep track that we reveived the DHCP Flows so that we can transition the state to dhcp_started
+		// keep track that we received the DHCP Flows so that we can transition the state to dhcp_started
 		o.DhcpFlowReceived = true
 
 		if o.Dhcp == true {
-			// NOTE we are receiving mulitple DHCP flows but we shouldn't call the transition multiple times
+			// NOTE we are receiving multiple DHCP flows but we shouldn't call the transition multiple times
 			if err := o.InternalState.Event("start_dhcp"); err != nil {
 				log.Errorf("Can't go to dhcp_started: %v", err)
 			}
