@@ -82,6 +82,9 @@ message Empty {}
 service BBSim {
     rpc Version(Empty) returns (VersionNumber) {}
     rpc GetOlt(Empty) returns (Olt) {}
+    rpc PoweronOlt(Empty) returns (Response) {}
+    rpc ShutdownOlt(Empty) returns (Response) {}
+    rpc RebootOlt(Empty) returns (Response) {}
     rpc GetONUs(Empty) returns (ONUs) {}
     rpc GetONU(ONURequest) returns (ONU) {}
     rpc SetLogLevel(LogLevel) returns (LogLevel) {}
