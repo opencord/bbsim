@@ -49,7 +49,7 @@ func TestCreateNNIPair(t *testing.T) {
 	startDHCPServerCalled := false
 	_startDHCPServer := startDHCPServer
 	defer func() { startDHCPServer = _startDHCPServer }()
-	startDHCPServer = func() error {
+	startDHCPServer = func(upstreamVeth string, dhcpServerIp string) error {
 		startDHCPServerCalled = true
 		return nil
 	}
@@ -67,8 +67,9 @@ func TestCreateNNIPair(t *testing.T) {
 	}
 
 	olt := OltDevice{}
+	nni := NniPort{}
 
-	err := createNNIPair(spy, &olt)
+	err := createNNIPair(spy, &olt, &nni)
 
 	assert.Equal(t, spy.CommandCallCount, 3)
 	assert.Equal(t, startDHCPServerCalled, true)
