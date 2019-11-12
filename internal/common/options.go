@@ -59,7 +59,7 @@ func GetBBSimOpts() *BBSimCliOptions {
 	logLevel := flag.String("logLevel", "debug", "Set the log level (trace, debug, info, warn, error)")
 	logCaller := flag.Bool("logCaller", false, "Whether to print the caller filename or not")
 
-	dhcpDelay := flag.Int("dhcp_delay", 200, "The delay between ONU DISCOVERY batches in milliseconds (1 ONU per each PON PORT at a time")
+	delay := flag.Int("delay", 200, "The delay between ONU DISCOVERY batches in milliseconds (1 ONU per each PON PORT at a time")
 
 	flag.Parse()
 
@@ -76,7 +76,7 @@ func GetBBSimOpts() *BBSimCliOptions {
 	o.LogCaller = *logCaller
 	o.Auth = *auth
 	o.Dhcp = *dhcp
-	o.Delay = *dhcpDelay
+	o.Delay = *delay
 
 	return o
 }

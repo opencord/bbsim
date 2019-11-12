@@ -95,6 +95,8 @@ BBSim startup options
            C-Tag starting value, each ONU will get a sequential one (targeting 1024 ONUs per BBSim instance the range is big enough) (default 900)
      -cpuprofile string
            write cpu profile to file
+     -delay int
+           The delay between ONU DISCOVERY batches in milliseconds (1 ONU per each PON PORT at a time (default 200)
      -dhcp
            Set this flag if you want DHCP to start automatically
      -logCaller

@@ -80,6 +80,34 @@
         }
       }
     }
+    stage('512 ONUs (64 ONU x 8 PONs)') {
+      steps {
+        timeout(1) {
+          sh """
+            docker rm -f bbsim || true
+            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-auth -dhcp -pon 8 -onu 64" make docker-run
+            sleep 5
+            ./bbr -pon 8 -onu 64 -logfile bbr_64_8.logs
+            docker logs bbsim 2>&1 | tee bbsim_64_8.logs
+            res=\$(cat bbr_64_8.logs | grep Duration | awk '{print \$5}' ); printf "Runtime\n\${res:9:10}" > bbr_64_8.txt
+          """
+        }
+      }
+    }
+    stage('960 ONUs (64 ONU x 15 PONs)') {
+      steps {
+        timeout(1) {
+          sh """
+            docker rm -f bbsim || true
+            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-auth -dhcp -pon 15 -onu 64" make docker-run
+            sleep 5
+            ./bbr -pon 15 -onu 64 -logfile bbr_64_15.logs
+            docker logs bbsim 2>&1 | tee bbsim_64_15.logs
+            res=\$(cat bbr_64_15.logs | grep Duration | awk '{print \$5}' ); printf "Runtime\n\${res:9:10}" > bbr_64_15.txt
+          """
+        }
+      }
+    }
   }
   post {
     always {
@@ -106,6 +134,20 @@
         csvSeries: [[file: 'bbr_32_8.txt']],
         group: 'BBSim',
         title: '256 ONUs (32 ONUs x 8 PONs)',
+        style: 'line'
+      ])
+      plot([
+        csvFileName: 'plot-bbr_64_8.csv',
+        csvSeries: [[file: 'bbr_64_8.txt']],
+        group: 'BBSim',
+        title: '512 ONUs (64 ONUs x 8 PONs)',
+        style: 'line'
+      ])
+      plot([
+        csvFileName: 'plot-bbr_64_15.csv',
+        csvSeries: [[file: 'bbr_64_15.txt']],
+        group: 'BBSim',
+        title: '960 ONUs (64 ONUs x 15 PONs)',
         style: 'line'
       ])
     }
