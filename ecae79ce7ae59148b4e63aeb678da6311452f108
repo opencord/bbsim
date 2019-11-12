@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c9562b61_c9ab7476",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-12T18:21:25Z",
+      "side": 1,
+      "message": "we need to handle the case in which this parameters is not \"join\" or \"leave\". What about using a protobuf Enum?",
+      "range": {
+        "startLine": 182,
+        "startChar": 2,
+        "endLine": 187,
+        "endChar": 3
+      },
+      "revId": "ecae79ce7ae59148b4e63aeb678da6311452f108",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b537022_d6f782a4",
+        "filename": "internal/bbsimctl/commands/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-12T18:21:25Z",
+      "side": 1,
+      "message": "this is not used",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 35
+      },
+      "revId": "ecae79ce7ae59148b4e63aeb678da6311452f108",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd5bcf67_f409ff9a",
+        "filename": "internal/bbsimctl/commands/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-12T18:21:25Z",
+      "side": 1,
+      "message": "Can we create an autocomplete for this? see bottom of this file for an example",
+      "range": {
+        "startLine": 82,
+        "startChar": 12,
+        "endLine": 82,
+        "endChar": 25
+      },
+      "revId": "ecae79ce7ae59148b4e63aeb678da6311452f108",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "849e7ff2_e44c6681",
+        "filename": "internal/bbsimctl/commands/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-12T18:21:25Z",
+      "side": 1,
+      "message": "this will stop execution",
+      "range": {
+        "startLine": 272,
+        "startChar": 1,
+        "endLine": 272,
+        "endChar": 48
+      },
+      "revId": "ecae79ce7ae59148b4e63aeb678da6311452f108",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cb6ab24_19c0b044",
+        "filename": "internal/bbsimctl/commands/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-12T18:21:25Z",
+      "side": 1,
+      "message": "This check is failing:\n$ bbsimctl onu igmp BBSM00000001 join\nOnu device has identified : ID:1 SerialNumber:\"BBSM00000001\" OperState:\"down\" InternalState:\"created\" STag:900 CTag:900 HwAddress:\"2e:60:70:13:00:01\"\nINFO[0000] Args : join\nFATA[0000] Invalid sub-Action for igmp command\n\n(this check should be done in the server, not in the client)",
+      "range": {
+        "startLine": 273,
+        "startChar": 1,
+        "endLine": 276,
+        "endChar": 2
+      },
+      "revId": "ecae79ce7ae59148b4e63aeb678da6311452f108",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
