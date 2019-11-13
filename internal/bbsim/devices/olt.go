@@ -703,9 +703,11 @@ func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) 
 }
 
 func (o OltDevice) Reboot(context.Context, *openolt.Empty) (*openolt.Empty, error) {
-	oltLogger.Info("Shutting Down")
-	close(*o.oltDoneChannel)
-	close(*o.apiDoneChannel)
+	defer func() {
+		oltLogger.Info("Shutting Down")
+		close(*o.oltDoneChannel)
+		close(*o.apiDoneChannel)
+	}()
 	return new(openolt.Empty), nil
 }
 
