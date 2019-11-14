@@ -19,7 +19,7 @@ package devices
 import (
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
-	"github.com/opencord/voltha-protos/go/openolt"
+	"github.com/opencord/voltha-protos/v2/go/openolt"
 	"gotest.tools/assert"
 	"testing"
 )
