@@ -24,7 +24,7 @@ DOCKER_RUN_ARGS			?= ""
 DOCKER_PORTS			?= -p 50070:50070 -p 50060:50060 -p 50071:50071 -p 50072:50072 -p 50073:50073
 
 ## protobuf related
-VOLTHA_PROTOS			?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/opencord/voltha-protos)
+VOLTHA_PROTOS			?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/opencord/voltha-protos/v2)
 GOOGLEAPI				?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
 TOOLS_DIR := tools
 TOOLS_BIN := $(TOOLS_DIR)/bin/
@@ -39,19 +39,7 @@ GO_TOOLS := github.com/golang/protobuf/protoc-gen-go \
             github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway \
             github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 
-# tools
-GO_TOOLS_BIN := $(addprefix $(TOOLS_BIN), $(notdir $(GO_TOOLS)))
-GO_TOOLS_VENDOR := $(addprefix vendor/, $(GO_TOOLS))
-
-TEST_PACKAGES := github.com/opencord/bbsim/cmd/... \
-                 github.com/opencord/bbsim/internal/...
-
-setup_tools: $(GO_TOOLS_BIN)
-
-$(GO_TOOLS_BIN): $(GO_TOOLS_VENDOR)
-	GO111MODULE=on GOBIN="$(PWD)/$(TOOLS_BIN)" go install -mod=vendor $(GO_TOOLS)
-
-protos: dep setup_tools api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go # @HELP Build proto files
+protos: api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go # @HELP Build proto files
 
 dep: # @HELP Download the dependencies to the vendor folder
 	GO111MODULE=on go mod vendor
@@ -64,7 +52,7 @@ build: # @HELP Build the binaries (it runs inside a docker container and output 
 	docker run --rm -v $(shell pwd):/bbsim ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim-builder:${DOCKER_TAG} /bin/sh -c "cd /bbsim; make _build"
 
 test: dep protos fmt # @HELP Execute unit tests
-	GO111MODULE=on go test -v -mod vendor $(TEST_PACKAGES) -covermode count -coverprofile ./tests/results/go-test-coverage.out 2>&1 | tee ./tests/results/go-test-results.out
+	GO111MODULE=on go test -v -mod vendor ./... -covermode count -coverprofile ./tests/results/go-test-coverage.out 2>&1 | tee ./tests/results/go-test-results.out
 	go-junit-report < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml
 	gocover-cobertura < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml
 
@@ -121,6 +109,13 @@ $(RELEASE_BBSIM_BINS):
 release: dep protos $(RELEASE_BBR_BINS) $(RELEASE_BBSIM_BINS) # @HELP Creates release ready bynaries for BBSimctl and BBR artifacts
 swagger: docs/swagger/bbsim/bbsim.swagger.json docs/swagger/leagacy/bbsim.swagger.json # @HELP Generate swagger documentation for BBSim API
 
+clean:
+	rm -f api/bbsim/*.go
+	rm -f api/legacy/*.go
+	rm -f bbsim
+	rm -f bbsimctl
+	rm -f bbr
+
 help: # @HELP Print the command options
 	@echo
 	@echo "\033[0;31m    BroadBand Simulator (BBSim) \033[0m"
@@ -136,7 +131,7 @@ help: # @HELP Print the command options
     '
 
 
-# Internals
+# Build
 
 build-bbr:
 	GO111MODULE=on go build -i -v -mod vendor \
@@ -162,11 +157,7 @@ build-bbsimctl:
 			-X github.com/opencord/bbsim/internal/bbsimctl/config.Version=${VERSION}" \
 		./cmd/bbsimctl
 
-api/openolt/openolt.pb.go: api/openolt/openolt.proto
-	@protoc -I. \
-    	-I${GOOGLEAPI}/third_party/googleapis \
-    	--go_out=plugins=grpc:./ \
-    	$<
+# Protos
 
 api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go: api/bbsim/bbsim.proto api/bbsim/bbsim.yaml
 	@protoc -I. \
@@ -183,6 +174,8 @@ api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go: api/legacy/bbsim.proto
     	--go_out=plugins=grpc:./ \
 		--grpc-gateway_out=logtostderr=true,allow_delete_body=true:./ \
     	$<
+
+# Swagger docs
 
 docs/swagger/bbsim/bbsim.swagger.json: api/bbsim/bbsim.yaml
 	@protoc -I ./api \
