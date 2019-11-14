@@ -19,8 +19,8 @@ package devices
 import (
 	"context"
 	"errors"
-	"github.com/opencord/voltha-protos/go/openolt"
-	"github.com/opencord/voltha-protos/go/tech_profile"
+	"github.com/opencord/voltha-protos/v2/go/openolt"
+	"github.com/opencord/voltha-protos/v2/go/tech_profile"
 	"google.golang.org/grpc"
 	"net"
 )
