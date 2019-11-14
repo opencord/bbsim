@@ -29,8 +29,8 @@ import (
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	omcisim "github.com/opencord/omci-sim"
-	"github.com/opencord/voltha-protos/go/openolt"
-	"github.com/opencord/voltha-protos/go/tech_profile"
+	"github.com/opencord/voltha-protos/v2/go/openolt"
+	"github.com/opencord/voltha-protos/v2/go/tech_profile"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )

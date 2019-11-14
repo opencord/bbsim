@@ -22,7 +22,7 @@ import (
 	"fmt"
 
 	"github.com/looplab/fsm"
-	"github.com/opencord/voltha-protos/go/openolt"
+	"github.com/opencord/voltha-protos/v2/go/openolt"
 )
 
 type PonPort struct {

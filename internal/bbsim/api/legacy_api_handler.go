@@ -25,7 +25,7 @@ import (
 	"github.com/opencord/bbsim/api/legacy"
 	api "github.com/opencord/bbsim/api/legacy"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
-	"github.com/opencord/voltha-protos/go/openolt"
+	"github.com/opencord/voltha-protos/v2/go/openolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

@@ -24,7 +24,7 @@ DOCKER_RUN_ARGS			?= ""
 DOCKER_PORTS			?= -p 50070:50070 -p 50060:50060 -p 50071:50071 -p 50072:50072 -p 50073:50073
 
 ## protobuf related
-VOLTHA_PROTOS			?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/opencord/voltha-protos)
+VOLTHA_PROTOS			?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/opencord/voltha-protos/v2)
 GOOGLEAPI				?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
 TOOLS_DIR := tools
 TOOLS_BIN := $(TOOLS_DIR)/bin/
@@ -51,7 +51,7 @@ setup_tools: $(GO_TOOLS_BIN)
 $(GO_TOOLS_BIN): $(GO_TOOLS_VENDOR)
 	GO111MODULE=on GOBIN="$(PWD)/$(TOOLS_BIN)" go install -mod=vendor $(GO_TOOLS)
 
-protos: dep setup_tools api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go # @HELP Build proto files
+protos: setup_tools api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go # @HELP Build proto files
 
 dep: # @HELP Download the dependencies to the vendor folder
 	GO111MODULE=on go mod vendor
@@ -63,7 +63,7 @@ build: # @HELP Build the binaries (it runs inside a docker container and output 
 	docker build -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim-builder:${DOCKER_TAG} -f build/ci/Dockerfile.builder .
 	docker run --rm -v $(shell pwd):/bbsim ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim-builder:${DOCKER_TAG} /bin/sh -c "cd /bbsim; make _build"
 
-test: dep protos fmt # @HELP Execute unit tests
+test: clean dep protos fmt # @HELP Execute unit tests
 	GO111MODULE=on go test -v -mod vendor $(TEST_PACKAGES) -covermode count -coverprofile ./tests/results/go-test-coverage.out 2>&1 | tee ./tests/results/go-test-results.out
 	go-junit-report < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml
 	gocover-cobertura < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml
@@ -137,6 +137,15 @@ help: # @HELP Print the command options
 
 
 # Internals
+
+clean:
+	rm -f api/bbsim/*.go
+	rm -f api/legacy/*.go
+	rm -f bbsim
+	rm -f bbsimctl
+	rm -f bbr
+	rm -rf tools/bin
+	rm -rf vendor
 
 build-bbr:
 	GO111MODULE=on go build -i -v -mod vendor \

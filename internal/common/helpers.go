@@ -17,7 +17,7 @@
 package common
 
 import (
-	"github.com/opencord/voltha-protos/go/openolt"
+	"github.com/opencord/voltha-protos/v2/go/openolt"
 	"strconv"
 )
 
