@@ -121,6 +121,13 @@ $(RELEASE_BBSIM_BINS):
 release: dep protos $(RELEASE_BBR_BINS) $(RELEASE_BBSIM_BINS) # @HELP Creates release ready bynaries for BBSimctl and BBR artifacts
 swagger: docs/swagger/bbsim/bbsim.swagger.json docs/swagger/leagacy/bbsim.swagger.json # @HELP Generate swagger documentation for BBSim API
 
+clean:
+	rm -f api/bbsim/*.go
+	rm -f api/legacy/*.go
+	rm -f bbsim
+	rm -f bbsimctl
+	rm -f bbr
+
 help: # @HELP Print the command options
 	@echo
 	@echo "\033[0;31m    BroadBand Simulator (BBSim) \033[0m"
