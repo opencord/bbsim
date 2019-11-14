@@ -29,7 +29,7 @@ import (
 	"github.com/opencord/bbsim/internal/common"
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
 	omcisim "github.com/opencord/omci-sim"
-	"github.com/opencord/voltha-protos/go/openolt"
+	"github.com/opencord/voltha-protos/v2/go/openolt"
 	log "github.com/sirupsen/logrus"
 	"net"
 	"time"
