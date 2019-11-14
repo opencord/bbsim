@@ -153,7 +153,7 @@ func main() {
 		"TotalOnus":    options.NumPonPerOlt * options.NumOnuPerPon,
 		"Auth":         options.Auth,
 		"Dhcp":         options.Dhcp,
-		"Delay":    options.Delay,
+		"Delay":        options.Delay,
 	}).Info("BroadBand Simulator is on")
 
 	// control channels, they are only closed when the goroutine needs to be terminated
@@ -170,7 +170,6 @@ func main() {
 		close(apiDoneChannel)
 		close(oltDoneChannel)
 	}()
-
 
 	wg := sync.WaitGroup{}
 	wg.Add(5)

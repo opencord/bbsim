@@ -24,7 +24,7 @@ DOCKER_RUN_ARGS			?= ""
 DOCKER_PORTS			?= -p 50070:50070 -p 50060:50060 -p 50071:50071 -p 50072:50072 -p 50073:50073
 
 ## protobuf related
-VOLTHA_PROTOS			?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/opencord/voltha-protos)
+VOLTHA_PROTOS			?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/opencord/voltha-protos/v2)
 GOOGLEAPI				?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
 TOOLS_DIR := tools
 TOOLS_BIN := $(TOOLS_DIR)/bin/
@@ -51,7 +51,7 @@ setup_tools: $(GO_TOOLS_BIN)
 $(GO_TOOLS_BIN): $(GO_TOOLS_VENDOR)
 	GO111MODULE=on GOBIN="$(PWD)/$(TOOLS_BIN)" go install -mod=vendor $(GO_TOOLS)
 
-protos: dep setup_tools api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go # @HELP Build proto files
+protos: setup_tools api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go # @HELP Build proto files
 
 dep: # @HELP Download the dependencies to the vendor folder
 	GO111MODULE=on go mod vendor
@@ -120,6 +120,13 @@ $(RELEASE_BBSIM_BINS):
 .PHONY: release $(RELEASE_BBR_BINS) $(RELEASE_BBSIM_BINS)
 release: dep protos $(RELEASE_BBR_BINS) $(RELEASE_BBSIM_BINS) # @HELP Creates release ready bynaries for BBSimctl and BBR artifacts
 swagger: docs/swagger/bbsim/bbsim.swagger.json docs/swagger/leagacy/bbsim.swagger.json # @HELP Generate swagger documentation for BBSim API
+
+clean:
+	rm -f api/bbsim/*.go
+	rm -f api/legacy/*.go
+	rm -f bbsim
+	rm -f bbsimctl
+	rm -f bbr
 
 help: # @HELP Print the command options
 	@echo

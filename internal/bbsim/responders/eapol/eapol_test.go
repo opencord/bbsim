@@ -19,7 +19,7 @@ package eapol
 import (
 	"errors"
 	"github.com/looplab/fsm"
-	"github.com/opencord/voltha-protos/go/openolt"
+	"github.com/opencord/voltha-protos/v2/go/openolt"
 	"google.golang.org/grpc"
 	"gotest.tools/assert"
 	"net"
