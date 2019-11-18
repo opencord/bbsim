@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e33ce55d_f0d1906b",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-18T17:15:50Z",
+      "side": 1,
+      "message": "nothing should happen before the ONU has been enabled",
+      "range": {
+        "startLine": 138,
+        "startChar": 43,
+        "endLine": 138,
+        "endChar": 52
+      },
+      "revId": "424804d6823c060e86d3849ed2930ab07398d612",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
