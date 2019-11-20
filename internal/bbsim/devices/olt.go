@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/opentracing/opentracing-go"
 	"net"
 	"sync"
 
@@ -33,6 +34,8 @@ import (
 	"github.com/opencord/voltha-protos/go/tech_profile"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
 )
 
 var oltLogger = log.WithFields(log.Fields{
@@ -59,6 +62,8 @@ type OltDevice struct {
 
 	// OLT Attributes
 	OperState *fsm.FSM
+
+	Tracer opentracing.Tracer
 }
 
 var olt OltDevice
@@ -67,7 +72,7 @@ func GetOLT() *OltDevice {
 	return &olt
 }
 
-func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit int, oltDoneChannel *chan bool, apiDoneChannel *chan bool, auth bool, dhcp bool, delay int, isMock bool) *OltDevice {
+func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit int, oltDoneChannel *chan bool, apiDoneChannel *chan bool, auth bool, dhcp bool, delay int, isMock bool, tracer opentracing.Tracer) *OltDevice {
 	oltLogger.WithFields(log.Fields{
 		"ID":           oltId,
 		"NumNni":       nni,
@@ -91,6 +96,7 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 		apiDoneChannel:  apiDoneChannel,
 		nniPktInChannel: make(chan *bbsim.PacketMsg, 1024), // packets coming in from the NNI and going to VOLTHA
 		Delay:           delay,
+		Tracer:          tracer,
 	}
 
 	// OLT State machine
@@ -159,7 +165,15 @@ func newOltServer(o OltDevice) error {
 	if err != nil {
 		oltLogger.Fatalf("OLT failed to listen: %v", err)
 	}
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			// add opentracing stream interceptor to chain
+			grpc_opentracing.StreamServerInterceptor(grpc_opentracing.WithTracer(o.Tracer)),
+		)),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			// add opentracing unary interceptor to chain
+			grpc_opentracing.UnaryServerInterceptor(grpc_opentracing.WithTracer(o.Tracer)),
+		)),)
 	openolt.RegisterOpenoltServer(grpcServer, o)
 
 	wg := sync.WaitGroup{}
@@ -188,6 +202,12 @@ func newOltServer(o OltDevice) error {
 
 func (o OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error {
 
+	span := o.Tracer.StartSpan("enable-olt")
+	span.SetTag("olt-sn", o.SerialNumber)
+
+	ctx := context.Background()
+	ctx = opentracing.ContextWithSpan(ctx, span)
+
 	oltLogger.Debug("Enable OLT called")
 
 	wg := sync.WaitGroup{}
@@ -203,6 +223,7 @@ func (o OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error {
 		Data: OltIndicationMessage{
 			OperState: UP,
 		},
+		Ctx: ctx,
 	}
 	o.channel <- olt_msg
 
@@ -214,6 +235,7 @@ func (o OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error {
 				OperState: UP,
 				NniPortID: nni.ID,
 			},
+			Ctx: ctx,
 		}
 		o.channel <- msg
 	}
@@ -226,6 +248,7 @@ func (o OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error {
 				OperState: UP,
 				PonPortID: pon.ID,
 			},
+			Ctx: ctx,
 		}
 		o.channel <- msg
 
@@ -239,10 +262,13 @@ func (o OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error {
 					Onu:       onu,
 					OperState: UP,
 				},
+				Ctx: ctx,
 			}
 			onu.Channel <- msg
 		}
 	}
+
+	span.Finish()
 
 	wg.Wait()
 	return nil
@@ -284,7 +310,12 @@ func (o OltDevice) getNniById(id uint32) (*NniPort, error) {
 	return nil, errors.New(fmt.Sprintf("Cannot find NniPort with id %d in OLT %d", id, o.ID))
 }
 
-func (o OltDevice) sendOltIndication(msg OltIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o OltDevice) sendOltIndication(ctx context.Context, msg OltIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+
+	span, _ := opentracing.StartSpanFromContext(ctx, "sendOltIndication")
+	span.SetTag("olt-serial-number", o.SerialNumber)
+	defer span.Finish()
+
 	data := &openolt.Indication_OltInd{OltInd: &openolt.OltIndication{OperState: msg.OperState.String()}}
 	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
 		oltLogger.Errorf("Failed to send Indication_OltInd: %v", err)
@@ -295,7 +326,12 @@ func (o OltDevice) sendOltIndication(msg OltIndicationMessage, stream openolt.Op
 	}).Debug("Sent Indication_OltInd")
 }
 
-func (o OltDevice) sendNniIndication(msg NniIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o OltDevice) sendNniIndication(ctx context.Context, msg NniIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+
+	span, _ := opentracing.StartSpanFromContext(ctx, "sendNniIndication")
+	span.SetTag("olt-serial-number", o.SerialNumber)
+	defer span.Finish()
+
 	nni, _ := o.getNniById(msg.NniPortID)
 	nni.OperState.Event("enable")
 	// NOTE Operstate may need to be an integer
@@ -316,7 +352,12 @@ func (o OltDevice) sendNniIndication(msg NniIndicationMessage, stream openolt.Op
 	}).Debug("Sent Indication_IntfOperInd for NNI")
 }
 
-func (o OltDevice) sendPonIndication(msg PonIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o OltDevice) sendPonIndication(ctx context.Context, msg PonIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+
+	span, _ := opentracing.StartSpanFromContext(ctx, "sendPonIndication")
+	span.SetTag("olt-serial-number", o.SerialNumber)
+	defer span.Finish()
+
 	pon, _ := o.GetPonById(msg.PonPortID)
 	pon.OperState.Event("enable")
 	discoverData := &openolt.Indication_IntfInd{IntfInd: &openolt.IntfIndication{
@@ -369,13 +410,13 @@ func (o OltDevice) processOltMessages(stream openolt.Openolt_EnableIndicationSer
 				o.InternalState.Event("disable")
 				o.OperState.Event("disable")
 			}
-			o.sendOltIndication(msg, stream)
+			o.sendOltIndication(message.Ctx, msg, stream)
 		case NniIndication:
 			msg, _ := message.Data.(NniIndicationMessage)
-			o.sendNniIndication(msg, stream)
+			o.sendNniIndication(message.Ctx, msg, stream)
 		case PonIndication:
 			msg, _ := message.Data.(PonIndicationMessage)
-			o.sendPonIndication(msg, stream)
+			o.sendPonIndication(message.Ctx, msg, stream)
 		default:
 			oltLogger.Warnf("Received unknown message data %v for type %v in OLT Channel", message.Data, message.Type)
 		}
@@ -487,6 +528,11 @@ func (o OltDevice) FindOnuByMacAddress(mac net.HardwareAddr) (*Onu, error) {
 // GRPC Endpoints
 
 func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*openolt.Empty, error) {
+
+	span, _ := opentracing.StartSpanFromContext(context, "ActivateOnu")
+	span.SetTag("olt-serial-number", o.SerialNumber)
+	defer span.Finish()
+
 	oltLogger.WithFields(log.Fields{
 		"OnuSn": onuSnToString(onu.SerialNumber),
 	}).Info("Received ActivateOnu call from VOLTHA")
@@ -494,6 +540,17 @@ func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*open
 	pon, _ := o.GetPonById(onu.IntfId)
 	_onu, _ := pon.GetOnuBySn(onu.SerialNumber)
 	_onu.SetID(onu.OnuId)
+
+	msg := Message{
+		Type: OnuIndication,
+		Data: OnuIndicationMessage{
+			OnuSN:     _onu.SerialNumber,
+			PonPortID: _onu.PonPortID,
+			OperState: UP,
+		},
+		Ctx:context,
+	}
+	_onu.Channel <- msg
 
 	if err := _onu.OperState.Event("enable"); err != nil {
 		oltLogger.WithFields(log.Fields{
@@ -511,7 +568,6 @@ func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*open
 	}
 
 	// NOTE we need to immediately activate the ONU or the OMCI state machine won't start
-
 	return new(openolt.Empty), nil
 }
 
@@ -662,6 +718,9 @@ func (o OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*
 }
 
 func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) (*openolt.Empty, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OnuPacketOut")
+	span.SetTag("olt-serial-number", o.SerialNumber)
+	defer span.Finish()
 	pon, err := o.GetPonById(onuPkt.IntfId)
 	if err != nil {
 		oltLogger.WithFields(log.Fields{
@@ -696,6 +755,7 @@ func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) 
 			Packet: rawpkt,
 			Type:   pktType,
 		},
+		Ctx:ctx,
 	}
 	onu.Channel <- msg
 

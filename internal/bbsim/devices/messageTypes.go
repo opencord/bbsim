@@ -17,6 +17,7 @@
 package devices
 
 import (
+	"context"
 	"github.com/google/gopacket"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/voltha-protos/go/openolt"
@@ -68,6 +69,7 @@ func (m MessageType) String() string {
 type Message struct {
 	Type MessageType
 	Data interface{}
+	Ctx  context.Context
 }
 
 type OltIndicationMessage struct {

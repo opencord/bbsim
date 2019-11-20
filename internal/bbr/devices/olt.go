@@ -22,10 +22,13 @@ import (
 	"fmt"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/voltha-protos/go/openolt"
+	"github.com/opentracing/opentracing-go"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"io"
@@ -56,7 +59,7 @@ func (o *OltMock) Start() {
 		}
 	}
 
-	client, conn := Connect(o.BBSimIp, o.BBSimPort)
+	client, conn := Connect(o.BBSimIp, o.BBSimPort, o.Olt.Tracer)
 	o.conn = conn
 	defer conn.Close()
 
@@ -330,6 +333,8 @@ func (o *OltMock) handlePktIndication(client openolt.OpenoltClient, pktIndicatio
 				Packet: pkt,
 				Type:   pktType,
 			},
+			// FIXME understand how to get context from a stream
+			Ctx: context.Background(),
 		}
 		// NOTE we send it on the ONU channel so that is handled as all the others packets in a separate thread
 		onu.Channel <- msg
@@ -362,15 +367,26 @@ func (o *OltMock) handlePktIndication(client openolt.OpenoltClient, pktIndicatio
 				Packet: pkt,
 				Type:   pktType,
 			},
+			// FIXME understand how to get context from a stream
+			Ctx: context.Background(),
 		}
 		onu.Channel <- msg
 	}
 }
 
 // TODO Move in a different file
-func Connect(ip string, port string) (openolt.OpenoltClient, *grpc.ClientConn) {
+func Connect(ip string, port string, tracer opentracing.Tracer) (openolt.OpenoltClient, *grpc.ClientConn) {
 	server := fmt.Sprintf("%s:%s", ip, port)
-	conn, err := grpc.Dial(server, grpc.WithInsecure())
+	conn, err := grpc.Dial(
+		server,
+		grpc.WithInsecure(),
+		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(
+			grpc_opentracing.StreamClientInterceptor(grpc_opentracing.WithTracer(tracer)),
+		)),
+		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(
+			grpc_opentracing.UnaryClientInterceptor(grpc_opentracing.WithTracer(tracer)),
+		)),
+	)
 
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
