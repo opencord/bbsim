@@ -18,6 +18,8 @@ package main
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -32,6 +34,7 @@ import (
 	"github.com/opencord/bbsim/internal/bbsim/api"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"github.com/opencord/bbsim/internal/common"
+	"github.com/opencord/bbsim/internal/common/tracer"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -131,6 +134,9 @@ func startLegacyApiServer(channel chan bool, group *sync.WaitGroup) {
 }
 
 func main() {
+	t, closer, _ := tracer.InitJaeger("bbsim")
+	span := t.StartSpan("Start BBSim")
+
 	options := common.GetBBSimOpts()
 
 	common.SetLogLevel(log.StandardLogger(), options.LogLevel, options.LogCaller)
@@ -188,6 +194,7 @@ func main() {
 		options.Dhcp,
 		options.Delay,
 		false,
+		t,
 	)
 
 	go devices.StartOlt(olt, &wg)
@@ -199,11 +206,13 @@ func main() {
 
 	wg.Wait()
 
-	defer func() {
+	defer func(span opentracing.Span, closer io.Closer) {
 		log.Info("BroadBand Simulator is off")
 		if *options.ProfileCpu != "" {
 			log.Info("Stopping profiler")
 			pprof.StopCPUProfile()
 		}
-	}()
+		span.Finish()
+		closer.Close()
+	}(span, closer)
 }
