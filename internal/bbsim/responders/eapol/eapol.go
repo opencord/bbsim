@@ -20,12 +20,15 @@ import (
 	"context"
 	"crypto/md5"
 	"errors"
+	"fmt"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	omci "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
+	"github.com/opentracing/opentracing-go"
+	opentraceLog "github.com/opentracing/opentracing-go/log"
 	log "github.com/sirupsen/logrus"
 	"net"
 )
@@ -265,7 +268,11 @@ func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, portNo ui
 	return nil
 }
 
-func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portNo uint32, onuStateMachine *fsm.FSM, pkt gopacket.Packet, stream openolt.Openolt_EnableIndicationServer, client openolt.OpenoltClient) {
+func HandleNextPacket(ctx context.Context, onuId uint32, ponPortId uint32, serialNumber string, portNo uint32, onuStateMachine *fsm.FSM, pkt gopacket.Packet, stream openolt.Openolt_EnableIndicationServer, client openolt.OpenoltClient) {
+
+	span, _ := opentracing.StartSpanFromContext(ctx, "HandleNextPacket")
+	span.SetTag("onu-serial-number", serialNumber)
+	defer span.Finish()
 
 	eap, eapErr := extractEAP(pkt)
 
@@ -333,6 +340,13 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portN
 			"OnuSn":  serialNumber,
 			"PortNo": portNo,
 		}).Debugf("Sent EAPIdentityResponse packet")
+		span.LogFields(
+			opentraceLog.String("OnuSn", serialNumber),
+			opentraceLog.String("IntfId", fmt.Sprint(ponPortId)),
+			opentraceLog.String("OnuId", fmt.Sprint(onuId)),
+			opentraceLog.String("PortNo", fmt.Sprint(portNo)),
+			opentraceLog.String("event", "Sent EAPIdentityResponse packet"),
+		)
 		if err := onuStateMachine.Event("eap_response_identity_sent"); err != nil {
 			eapolLogger.WithFields(log.Fields{
 				"OnuId":  onuId,
@@ -361,6 +375,13 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portN
 			"IntfId": ponPortId,
 			"OnuSn":  serialNumber,
 		}).Infof("Sent EAPChallengeRequest packet")
+		span.LogFields(
+			opentraceLog.String("OnuSn", serialNumber),
+			opentraceLog.String("IntfId", fmt.Sprint(ponPortId)),
+			opentraceLog.String("OnuId", fmt.Sprint(onuId)),
+			opentraceLog.String("PortNo", fmt.Sprint(portNo)),
+			opentraceLog.String("event", "Sent EAPChallengeRequest packet"),
+		)
 		return
 	} else if eap.Code == layers.EAPCodeRequest && eap.Type == layers.EAPTypeOTP {
 		senddata := getMD5Data(eap)
@@ -381,6 +402,13 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portN
 			"OnuSn":  serialNumber,
 			"PortNo": portNo,
 		}).Debugf("Sent EAPChallengeResponse packet")
+		span.LogFields(
+			opentraceLog.String("OnuSn", serialNumber),
+			opentraceLog.String("IntfId", fmt.Sprint(ponPortId)),
+			opentraceLog.String("OnuId", fmt.Sprint(onuId)),
+			opentraceLog.String("PortNo", fmt.Sprint(portNo)),
+			opentraceLog.String("event", "Sent EAPChallengeResponse packet"),
+		)
 		if err := onuStateMachine.Event("eap_response_challenge_sent"); err != nil {
 			eapolLogger.WithFields(log.Fields{
 				"OnuId":  onuId,
@@ -407,6 +435,13 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portN
 			"IntfId": ponPortId,
 			"OnuSn":  serialNumber,
 		}).Infof("Sent EAP Success packet")
+		span.LogFields(
+			opentraceLog.String("OnuSn", serialNumber),
+			opentraceLog.String("IntfId", fmt.Sprint(ponPortId)),
+			opentraceLog.String("OnuId", fmt.Sprint(onuId)),
+			opentraceLog.String("PortNo", fmt.Sprint(portNo)),
+			opentraceLog.String("event", "Sent EAP Success packet"),
+		)
 
 		if err := onuStateMachine.Event("send_dhcp_flow"); err != nil {
 			eapolLogger.WithFields(log.Fields{
@@ -434,6 +469,13 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portN
 			"IntfId": ponPortId,
 			"OnuSn":  serialNumber,
 		}).Infof("EAPOL State machine completed")
+		span.LogFields(
+			opentraceLog.String("OnuSn", serialNumber),
+			opentraceLog.String("IntfId", fmt.Sprint(ponPortId)),
+			opentraceLog.String("OnuId", fmt.Sprint(onuId)),
+			opentraceLog.String("PortNo", fmt.Sprint(portNo)),
+			opentraceLog.String("event", "EAPOL State machine completed"),
+		)
 		return
 	}
 }
