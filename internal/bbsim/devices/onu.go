@@ -35,6 +35,7 @@ import (
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
 	omcisim "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
+	"github.com/opentracing/opentracing-go"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -155,7 +156,12 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 				o.Channel = make(chan Message, 2048)
 				if !isMock {
 					// start ProcessOnuMessages Go routine
-					go o.ProcessOnuMessages(olt.enableContext, *olt.OpenoltStream, nil)
+					span := olt.Tracer.StartSpan("process ONU Message")
+					span.SetTag("onu-sn", olt.SerialNumber)
+
+					ctx := opentracing.ContextWithSpan(olt.enableContext, span)
+
+					go o.ProcessOnuMessages(ctx, *olt.OpenoltStream, nil)
 				}
 			},
 			"enter_discovered": func(e *fsm.Event) {
@@ -305,10 +311,10 @@ loop:
 				msg, _ := message.Data.(OnuDiscIndicationMessage)
 				// NOTE we need to slow down and send ONU Discovery Indication in batches to better emulate a real scenario
 				time.Sleep(o.DiscoveryDelay)
-				o.sendOnuDiscIndication(msg, stream)
+				o.sendOnuDiscIndication(message.Ctx, msg, stream)
 			case OnuIndication:
 				msg, _ := message.Data.(OnuIndicationMessage)
-				o.sendOnuIndication(msg, stream)
+				o.sendOnuIndication(message.Ctx, msg, stream)
 			case OMCI:
 				msg, _ := message.Data.(OmciMessage)
 				o.handleOmciMessage(msg, stream)
@@ -333,7 +339,7 @@ loop:
 				}).Trace("Received OnuPacketOut Message")
 
 				if msg.Type == packetHandlers.EAPOL {
-					eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream, client)
+					eapol.HandleNextPacket(message.Ctx, msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream, client)
 				} else if msg.Type == packetHandlers.DHCP {
 					// NOTE here we receive packets going from the DHCP Server to the ONU
 					// for now we expect them to be double-tagged, but ideally the should be single tagged
@@ -352,7 +358,7 @@ loop:
 				}).Trace("Received OnuPacketIn Message")
 
 				if msg.Type == packetHandlers.EAPOL {
-					eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream, client)
+					eapol.HandleNextPacket(message.Ctx, msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream, client)
 				} else if msg.Type == packetHandlers.DHCP {
 					dhcp.HandleNextBbrPacket(o.ID, o.PonPortID, o.Sn(), o.STag, o.HwAddress, o.DoneChannel, msg.Packet, client)
 				}
@@ -481,7 +487,13 @@ func (o *Onu) sendDyingGaspInd(msg DyingGaspIndicationMessage, stream openolt.Op
 	return nil
 }
 
-func (o *Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o *Onu) sendOnuDiscIndication(ctx context.Context, msg OnuDiscIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+
+	if ctx != nil {
+		span, _ := opentracing.StartSpanFromContext(ctx, "sendOnuDiscIndication")
+		span.SetTag("onu-serial-number", o.Sn())
+		defer span.Finish()
+	}
 	discoverData := &openolt.Indication_OnuDiscInd{OnuDiscInd: &openolt.OnuDiscIndication{
 		IntfId:       msg.Onu.PonPortID,
 		SerialNumber: msg.Onu.SerialNumber,
@@ -499,19 +511,25 @@ func (o *Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt
 	}).Debug("Sent Indication_OnuDiscInd")
 
 	// after DiscoveryRetryDelay check if the state is the same and in case send a new OnuDiscIndication
-	go func(delay time.Duration) {
+	go func(ctx context.Context, delay time.Duration) {
 		time.Sleep(delay)
 		if o.InternalState.Current() == "discovered" {
-			o.sendOnuDiscIndication(msg, stream)
+			o.sendOnuDiscIndication(ctx, msg, stream)
 		}
-	}(o.DiscoveryRetryDelay)
+	}(ctx, o.DiscoveryRetryDelay)
 }
 
-func (o *Onu) sendOnuIndication(msg OnuIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o *Onu) sendOnuIndication(ctx context.Context, msg OnuIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
 	// NOTE voltha returns an ID, but if we use that ID then it complains:
 	// expected_onu_id: 1, received_onu_id: 1024, event: ONU-id-mismatch, can happen if both voltha and the olt rebooted
 	// so we're using the internal ID that is 1
 	// o.ID = msg.OnuID
+
+	if ctx != nil {
+		span, _ := opentracing.StartSpanFromContext(ctx, "sendOnuIndication")
+		span.SetTag("onu-serial-number", o.Sn())
+		defer span.Finish()
+	}
 
 	indData := &openolt.Indication_OnuInd{OnuInd: &openolt.OnuIndication{
 		IntfId:       o.PonPortID,

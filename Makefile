@@ -99,6 +99,16 @@ docker-run-dev: # @HELP Runs the container locally (intended for development pur
 	docker run ${DOCKER_PORTS} --privileged --rm --name bbsim ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} /app/bbsim ${DOCKER_RUN_ARGS}
 
 .PHONY: docs docs-lint
+jaeger:
+	docker run -d\
+      --rm \
+      -p 6831:6831/udp \
+      -p 6832:6832/udp \
+      -p 16686:16686 \
+      --name jaeger \
+      jaegertracing/all-in-one:1.7 \
+      --log-level=debug
+
 docs: swagger # @HELP Generate docs and opens them in the browser
 	make -C docs html
 	@echo -e "\nBBSim documentation generated in file://${PWD}/docs/build/html/index.html"
