@@ -25,7 +25,10 @@ import (
 	bbrdevices "github.com/opencord/bbsim/internal/bbr/devices"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"github.com/opencord/bbsim/internal/common"
+	"github.com/opencord/bbsim/internal/common/tracer"
+	"github.com/opentracing/opentracing-go"
 	log "github.com/sirupsen/logrus"
+	"io"
 	"os"
 	"runtime/pprof"
 	"time"
@@ -33,6 +36,9 @@ import (
 
 // usage
 func main() {
+	t, closer := tracer.InitJaeger("bbr")
+	span := t.StartSpan("Start BBR")
+
 	options := common.GetBBROpts()
 
 	common.SetLogLevel(log.StandardLogger(), options.LogLevel, options.LogCaller)
@@ -83,6 +89,7 @@ func main() {
 		true, // this parameter is not important in the BBR Case
 		0, // this parameter does not matter in the BBR case
 		true,
+		t,
 	)
 	oltMock := bbrdevices.OltMock{
 		Olt:           olt,
@@ -95,10 +102,12 @@ func main() {
 
 	// start the enable sequence
 	startTime := time.Now()
-	defer func() {
+	defer func(span opentracing.Span, closer io.Closer) {
 		endTime := time.Now()
 		runTime := endTime.Sub(startTime)
 		log.WithField("Duration", runTime).Info("BBR done!")
-	}()
+		span.Finish()
+		closer.Close()
+	}(span, closer)
 	oltMock.Start()
 }
