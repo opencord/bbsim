@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6d03845_a873cb6c",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-21T23:35:24Z",
+      "side": 1,
+      "message": "This is missing a formatting directive (eg: %v), is this log message required at all?",
+      "range": {
+        "startLine": 186,
+        "startChar": 3,
+        "endLine": 186,
+        "endChar": 55
+      },
+      "revId": "c7a39539c24409254867db26aae2596034caed7d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1a8c267_807c57fd",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-21T23:35:24Z",
+      "side": 1,
+      "message": "I\u0027m thinking that is probably not needed to have both states, we may consider to consolidate that into one.\n\nWhy is the order important?",
+      "range": {
+        "startLine": 188,
+        "startChar": 3,
+        "endLine": 189,
+        "endChar": 37
+      },
+      "revId": "c7a39539c24409254867db26aae2596034caed7d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
