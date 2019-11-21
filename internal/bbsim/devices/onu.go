@@ -116,7 +116,7 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth b
 			// NOTE should disabled state be diffente for oper_disabled (emulating an error) and admin_disabled (received a disabled call via VOLTHA)?
 			{Name: "disable", Src: []string{"eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "disabled"},
 			// EAPOL
-			{Name: "start_auth", Src: []string{"eapol_flow_received", "gem_port_added", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "auth_started"},
+			{Name: "start_auth", Src: []string{"eapol_flow_received", "gem_port_added", "eap_start_sent", "eap_response_identity_sent", "eap_response_challenge_sent", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "auth_started"},
 			{Name: "eap_start_sent", Src: []string{"auth_started"}, Dst: "eap_start_sent"},
 			{Name: "eap_response_identity_sent", Src: []string{"eap_start_sent"}, Dst: "eap_response_identity_sent"},
 			{Name: "eap_response_challenge_sent", Src: []string{"eap_response_identity_sent"}, Dst: "eap_response_challenge_sent"},

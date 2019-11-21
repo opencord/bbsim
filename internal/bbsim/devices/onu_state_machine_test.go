@@ -81,6 +81,15 @@ func Test_Onu_StateMachine_eapol_states(t *testing.T) {
 	assert.Equal(t, onu.InternalState.Current(), "eap_response_challenge_sent")
 	onu.InternalState.Event("eap_response_success_received")
 	assert.Equal(t, onu.InternalState.Current(), "eap_response_success_received")
+
+	// test that we can retrigger EAPOL
+	states := []string{"eap_start_sent", "eap_response_identity_sent", "eap_response_challenge_sent", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}
+	for _, state := range states {
+		onu.InternalState.SetState(state)
+		err := onu.InternalState.Event("start_auth")
+		assert.Equal(t, err, nil)
+		assert.Equal(t, onu.InternalState.Current(), "auth_started")
+	}
 }
 
 func Test_Onu_StateMachine_dhcp_start(t *testing.T) {
@@ -121,4 +130,14 @@ func Test_Onu_StateMachine_dhcp_states(t *testing.T) {
 	assert.Equal(t, onu.InternalState.Current(), "dhcp_request_sent")
 	onu.InternalState.Event("dhcp_ack_received")
 	assert.Equal(t, onu.InternalState.Current(), "dhcp_ack_received")
+
+	// test that we can retrigger DHCP
+	onu.DhcpFlowReceived = true
+	states := []string{"eap_response_success_received", "dhcp_discovery_sent", "dhcp_request_sent", "dhcp_ack_received", "dhcp_failed"}
+	for _, state := range states {
+		onu.InternalState.SetState(state)
+		err := onu.InternalState.Event("start_dhcp")
+		assert.Equal(t, err, nil)
+		assert.Equal(t, onu.InternalState.Current(), "dhcp_started")
+	}
 }
