@@ -8,49 +8,102 @@ library: `fsm <https://github.com/looplab/fsm>`__.
 
 Here is a list of possible state transitions in BBSim:
 
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
-| Transition                     | Starting States                                                                                                   | End State                      | Notes                                                                                         |
-+================================+===================================================================================================================+================================+===============================================================================================+
-|                                |                                                                                                                   | created                        |                                                                                               |
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
-| discover                       | created                                                                                                           | discovered                     |                                                                                               |
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
-| enable                         | discovered, disabled                                                                                              | enabled                        |                                                                                               |
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
-| receive_eapol_flow             | enabled, gem_port_added                                                                                           | eapol_flow_received            |                                                                                               |
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
-| add_gem_port                   | enabled, eapol_flow_received                                                                                      | gem_port_added                 | We need to wait for both the flow and the gem port to come before moving to ``auth_started``  |
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
-| start_auth                     | eapol_flow_received, gem_port_added, eap_response_success_received, auth_failed, dhcp_ack_received, dhcp_failed   | auth_started                   |                                                                                               |
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
-| eap_start_sent                 | auth_started                                                                                                      | eap_start_sent                 |                                                                                               |
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
-| eap_response_identity_sent     | eap_start_sent                                                                                                    | eap_response_identity_sent     |                                                                                               |
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
-| eap_response_challenge_sent    | eap_response_identity_sent                                                                                        | eap_response_challenge_sent    |                                                                                               |
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
-| eap_response_success_received  | eap_response_challenge_sent                                                                                       | eap_response_success_received  |                                                                                               |
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
-| auth_failed                    | auth_started, eap_start_sent, eap_response_identity_sent, eap_response_challenge_sent                             | auth_failed                    |                                                                                               |
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
-| start_dhcp                     | eap_response_success_received, dhcp_ack_received, dhcp_failed                                                     | dhcp_started                   |                                                                                               |
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
-| dhcp_discovery_sent            | dhcp_started                                                                                                      | dhcp_discovery_sent            |                                                                                               |
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
-| dhcp_request_sent              | dhcp_discovery_sent                                                                                               | dhcp_request_sent              |                                                                                               |
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
-| dhcp_ack_received              | dhcp_request_sent                                                                                                 | dhcp_ack_received              |                                                                                               |
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
-| dhcp_failed                    | dhcp_started, dhcp_discovery_sent, dhcp_request_sent                                                              | dhcp_failed                    |                                                                                               |
-+--------------------------------+-------------------------------------------------------------------------------------------------------------------+--------------------------------+-----------------------------------------------------------------------------------------------+
+.. list-table:: ONU States
+    :widths: 10 35 10 45
+    :header-rows: 1
 
-In addition some transition can be forced via the API:
+    * - Transition
+      - Starting States
+      - End State
+      - Notes
+    * -
+      -
+      - created
+      -
+    * - discover
+      - created
+      - discovered
+      -
+    * - enable
+      - discovered, disabled
+      - enabled
+      -
+    * - receive_eapol_flow
+      - enabled, gem_port_added
+      - eapol_flow_received
+      -
+    * - add_gem_port
+      - enabled, eapol_flow_received
+      - gem_port_added
+      - We need to wait for both the flow and the gem port to come before moving to ``auth_started``
+    * - start_auth
+      - eapol_flow_received, gem_port_added, eap_start_sent, eap_response_identity_sent, eap_response_challenge_sent, eap_response_success_received, auth_failed, dhcp_ack_received, dhcp_failed
+      - auth_started
+      -
+    * - eap_start_sent
+      - auth_started
+      - eap_start_sent
+      -
+    * - eap_response_identity_sent
+      - eap_start_sent
+      - eap_response_identity_sent
+      -
+    * - eap_response_challenge_sent
+      - eap_response_identity_sent
+      - eap_response_challenge_sent
+      -
+    * - eap_response_success_received
+      - eap_response_challenge_sent
+      - eap_response_success_received
+      -
+    * - auth_failed
+      - auth_started, eap_start_sent, eap_response_identity_sent, eap_response_challenge_sent
+      - auth_failed
+      -
+    * - start_dhcp
+      - eap_response_success_received, dhcp_discovery_sent, dhcp_request_sent, dhcp_ack_received, dhcp_failed
+      - dhcp_started
+      -
+    * - dhcp_discovery_sent
+      - dhcp_started
+      - dhcp_discovery_sent
+      -
+    * - dhcp_request_sent
+      - dhcp_discovery_sent
+      - dhcp_request_sent
+      -
+    * - dhcp_ack_received
+      - dhcp_request_sent
+      - dhcp_ack_received
+      -
+    * - dhcp_failed
+      - dhcp_started, dhcp_discovery_sent, dhcp_request_sent
+      - dhcp_failed
+      -
 
-+---------------------+----------------------------------------------------------------------------+-----------+---------------------------------------------------------------------------------------------------------+
-| End StateTransition | Starting States                                                            | End State | Notes                                                                                                   |
-+=====================+============================================================================+===========+=========================================================================================================+
-| disable             | eap_response_success_received, auth_failed, dhcp_ack_received, dhcp_failed | disabled  | Emulates a devide mulfunction. Sends a ``DyingGaspInd`` and then an ``OnuIndication{OperState: 'down'}``|
-+---------------------+----------------------------------------------------------------------------+-----------+---------------------------------------------------------------------------------------------------------+
+In addition some transition can be forced via the API,
+check the previous table to verify when you can trigger those actions and
+:ref:`BBSimCtl` for more informations about ``BBSimCtl``:
+
+.. list-table:: API State Transitions
+    :widths: 15 15 70
+    :header-rows: 1
+
+    * - BBSimCtl command
+      - Transitions To
+      - Notes
+    * - shutdown
+      - disable
+      - Emulates a devide shutdown. Sends a ``DyingGaspInd`` and then an ``OnuIndication{OperState: 'down'}``
+    * - poweron
+      - enable
+      - Emulates a devide power on. Sends a ``OnuDiscInd`` and then an ``OnuIndication{OperState: 'up'}``
+    * - auth_restart
+      - start_auth
+      - Forces the ONU to send a new ``EapStart`` packet.
+    * - dhcp_restart
+      - start_dhcp
+      - Forces the ONU to send a new ``DHCPDiscovery`` packet.
 
 Below is a diagram of the state machine:
 
@@ -98,6 +151,10 @@ Below is a diagram of the state machine:
         eap_response_identity_sent -> auth_failed
         eap_response_challenge_sent -> auth_failed
 
+        eap_start_sent -> auth_started
+        eap_response_identity_sent -> auth_started
+        eap_response_challenge_sent -> auth_started
+
         eap_response_success_received -> auth_started
         auth_failed -> auth_started
         dhcp_ack_received -> auth_started
@@ -116,6 +173,8 @@ Below is a diagram of the state machine:
         dhcp_failed -> disabled
         disabled -> enabled
 
+        dhcp_discovery_sent -> dhcp_started
+        dhcp_request_sent -> dhcp_started
         dhcp_ack_received -> dhcp_started
         dhcp_failed -> dhcp_started
     }
