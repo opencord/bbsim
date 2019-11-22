@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0be7bebc_0c9469e6",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-22T16:56:53Z",
+      "side": 1,
+      "message": "The two states that identify an ONU to be ready to send traffic are gem_port_added and eapol_flow_received.\n\"enabled\" means it\u0027s still going through OMCI so it may be too early to send IGMP Packets",
+      "range": {
+        "startLine": 138,
+        "startChar": 43,
+        "endLine": 138,
+        "endChar": 71
+      },
+      "revId": "b3f714867e6f96a81b20197bb74709c4d4f32840",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e3557c2_72e494fc",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-22T16:56:53Z",
+      "side": 1,
+      "message": "we need to handle this, a log.Error message will probably do for now",
+      "range": {
+        "startLine": 26,
+        "startChar": 2,
+        "endLine": 26,
+        "endChar": 25
+      },
+      "revId": "b3f714867e6f96a81b20197bb74709c4d4f32840",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3b6710d_f3d64f27",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-22T16:56:53Z",
+      "side": 1,
+      "message": "ByteMsg is deprecated, you can use OnuPacketMessage if needed but those messages are generally used to exchange informations between the OLT and the ONU, in this case there\u0027s no need to create a struct to read it a few lines below",
+      "range": {
+        "startLine": 32,
+        "startChar": 1,
+        "endLine": 36,
+        "endChar": 2
+      },
+      "revId": "b3f714867e6f96a81b20197bb74709c4d4f32840",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7a56657_2cc1621d",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-22T16:56:53Z",
+      "side": 1,
+      "message": "can we add the Onu Serial number to this log?\nWe\u0027re trying to keep that consistent so that one can grep the logs with \"BBSIM0000001\" and get all the informations related to a single device",
+      "range": {
+        "startLine": 41,
+        "startChar": 3,
+        "endLine": 42,
+        "endChar": 24
+      },
+      "revId": "b3f714867e6f96a81b20197bb74709c4d4f32840",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6e73902_ad86c40c",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-22T16:56:53Z",
+      "side": 1,
+      "message": "Add Onu informations to the log message",
+      "range": {
+        "startLine": 59,
+        "startChar": 2,
+        "endLine": 59,
+        "endChar": 12
+      },
+      "revId": "b3f714867e6f96a81b20197bb74709c4d4f32840",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d073da5_67d123f5",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-22T16:56:53Z",
+      "side": 1,
+      "message": "what is this ip?",
+      "range": {
+        "startLine": 103,
+        "startChar": 12,
+        "endLine": 103,
+        "endChar": 34
+      },
+      "revId": "b3f714867e6f96a81b20197bb74709c4d4f32840",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eda015f3_1b68c4d2",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-22T16:56:53Z",
+      "side": 1,
+      "message": "it is ok to merge this in BBSim and import them from gopacket once merged in there",
+      "range": {
+        "startLine": 121,
+        "startChar": 2,
+        "endLine": 121,
+        "endChar": 113
+      },
+      "revId": "b3f714867e6f96a81b20197bb74709c4d4f32840",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
