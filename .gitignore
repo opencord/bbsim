@@ -1,6 +1,9 @@
+.idea
 /bbr
 /bbsim
 /bbsimctl
 logs/*
 release
 .DS_Store
+*.logs
+*.trace
