@@ -24,8 +24,6 @@ import (
 
 func Test_Onu_StateMachine_enable(t *testing.T) {
 	onu := createTestOnu()
-	assert.Equal(t, onu.InternalState.Current(), "created")
-	onu.InternalState.Event("initialize")
 	assert.Equal(t, onu.InternalState.Current(), "initialized")
 	onu.InternalState.Event("discover")
 	assert.Equal(t, onu.InternalState.Current(), "discovered")
