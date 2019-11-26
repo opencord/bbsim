@@ -22,14 +22,13 @@
 package main
 
 import (
-	"os"
-	"runtime/pprof"
-	"time"
-
 	bbrdevices "github.com/opencord/bbsim/internal/bbr/devices"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"github.com/opencord/bbsim/internal/common"
 	log "github.com/sirupsen/logrus"
+	"os"
+	"runtime/pprof"
+	"time"
 )
 
 // usage
@@ -66,6 +65,10 @@ func main() {
 		"BBSimPort":    options.BBSimPort,
 	}).Info("BroadBand Reflector is on")
 
+	// NOTE this are probably useless in the MockOLT case, check if we can avoid using them in the CreateOlt method
+	oltDoneChannel := make(chan bool)
+	apiDoneChannel := make(chan bool)
+
 	// create the OLT device
 	olt := devices.CreateOLT(
 		options.OltID,
@@ -74,6 +77,8 @@ func main() {
 		options.NumOnuPerPon,
 		options.STag,
 		options.CTagInit,
+		&oltDoneChannel,
+		&apiDoneChannel,
 		true, // this parameter is not important in the BBR Case
 		true, // this parameter is not important in the BBR Case
 		0,    // this parameter does not matter in the BBR case

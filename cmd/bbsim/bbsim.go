@@ -37,7 +37,7 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-func startApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
+func startApiServer(channel chan bool, group *sync.WaitGroup) {
 	// TODO make configurable
 	address := "0.0.0.0:50070"
 	log.Debugf("APIServer listening on: %v", address)
@@ -51,11 +51,11 @@ func startApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 	reflection.Register(grpcServer)
 
 	go grpcServer.Serve(lis)
-	go startApiRestServer(apiDoneChannel, group, address)
+	go startApiRestServer(channel, group, address)
 
 	select {
-	case <-apiDoneChannel:
-		// if the API channel is closed, stop the gRPC server
+	case <-channel:
+		// if the api channel is closed, stop the gRPC server
 		grpcServer.Stop()
 		log.Warnf("Stopping API gRPC server")
 	}
@@ -64,7 +64,7 @@ func startApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 }
 
 // startApiRestServer method starts the REST server (grpc gateway) for BBSim.
-func startApiRestServer(apiDoneChannel chan bool, group *sync.WaitGroup, grpcAddress string) {
+func startApiRestServer(channel chan bool, group *sync.WaitGroup, grpcAddress string) {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -91,7 +91,7 @@ func startApiRestServer(apiDoneChannel chan bool, group *sync.WaitGroup, grpcAdd
 	}()
 
 	select {
-	case <-apiDoneChannel:
+	case <-channel:
 		log.Warnf("Stopping API REST server")
 		s.Shutdown(ctx)
 	}
@@ -100,7 +100,7 @@ func startApiRestServer(apiDoneChannel chan bool, group *sync.WaitGroup, grpcAdd
 }
 
 // This server aims to provide compatibility with the previous BBSim version. It is deprecated and will be removed in the future.
-func startLegacyApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
+func startLegacyApiServer(channel chan bool, group *sync.WaitGroup) {
 	// TODO make configurable
 	grpcAddress := "0.0.0.0:50072"
 	restAddress := "0.0.0.0:50073"
@@ -116,11 +116,11 @@ func startLegacyApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 
 	go apiserver.Serve(listener)
 	// Start rest gateway for BBSim server
-	go api.StartRestGatewayService(apiDoneChannel, group, grpcAddress, restAddress)
+	go api.StartRestGatewayService(channel, group, grpcAddress, restAddress)
 
 	select {
-	case <-apiDoneChannel:
-		// if the API channel is closed, stop the gRPC server
+	case <-channel:
+		// if the olt channel is closed, stop the gRPC server
 		log.Warnf("Stopping legacy API gRPC server")
 		apiserver.Stop()
 		break
@@ -157,37 +157,43 @@ func main() {
 	}).Info("BroadBand Simulator is on")
 
 	// control channels, they are only closed when the goroutine needs to be terminated
+	oltDoneChannel := make(chan bool)
 	apiDoneChannel := make(chan bool)
 
-	devices.CreateOLT(
+	sigs := make(chan os.Signal, 1)
+	// stop API and OLT servers on SIGTERM
+	signal.Notify(sigs, syscall.SIGTERM)
+
+	go func() {
+		<-sigs
+		// TODO check when these servers should be shutdown
+		close(apiDoneChannel)
+		close(oltDoneChannel)
+	}()
+
+	wg := sync.WaitGroup{}
+	wg.Add(5)
+
+	olt := devices.CreateOLT(
 		options.OltID,
 		options.NumNniPerOlt,
 		options.NumPonPerOlt,
 		options.NumOnuPerPon,
 		options.STag,
 		options.CTagInit,
+		&oltDoneChannel,
+		&apiDoneChannel,
 		options.Auth,
 		options.Dhcp,
 		options.Delay,
 		false,
 	)
 
+	go devices.StartOlt(olt, &wg)
 	log.Debugf("Created OLT with id: %d", options.OltID)
-
-	sigs := make(chan os.Signal, 1)
-	// stop API servers on SIGTERM
-	signal.Notify(sigs, syscall.SIGTERM)
-
-	go func() {
-		<-sigs
-		close(apiDoneChannel)
-	}()
-
-	wg := sync.WaitGroup{}
-	wg.Add(4)
-
 	go startApiServer(apiDoneChannel, &wg)
 	go startLegacyApiServer(apiDoneChannel, &wg)
+
 	log.Debugf("Started APIService")
 
 	wg.Wait()

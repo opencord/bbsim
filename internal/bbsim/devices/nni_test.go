@@ -19,10 +19,9 @@ package devices
 
 import (
 	"errors"
-	"testing"
-
 	"github.com/opencord/bbsim/internal/bbsim/types"
 	"gotest.tools/assert"
+	"testing"
 )
 
 func TestSetVethUpSuccess(t *testing.T) {
@@ -50,7 +49,7 @@ func TestCreateNNIPair(t *testing.T) {
 	startDHCPServerCalled := false
 	_startDHCPServer := startDHCPServer
 	defer func() { startDHCPServer = _startDHCPServer }()
-	startDHCPServer = func(upstreamVeth string, dhcpServerIp string) error {
+	startDHCPServer = func() error {
 		startDHCPServerCalled = true
 		return nil
 	}
@@ -68,10 +67,8 @@ func TestCreateNNIPair(t *testing.T) {
 	}
 
 	olt := OltDevice{}
-	nni := NniPort{}
 
-	err := createNNIPair(spy, &olt, &nni)
-	olt.nniPktInChannel, _ = nni.NewVethChan()
+	err := createNNIPair(spy, &olt)
 
 	assert.Equal(t, spy.CommandCallCount, 3)
 	assert.Equal(t, startDHCPServerCalled, true)
