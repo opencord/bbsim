@@ -144,9 +144,11 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 		olt.Pons = append(olt.Pons, &p)
 	}
 
-	if err := olt.InternalState.Event("initialize"); err != nil {
-		log.Errorf("Error initializing OLT: %v", err)
-		return nil
+	if isMock != true {
+		if err := olt.InternalState.Event("initialize"); err != nil {
+			log.Errorf("Error initializing OLT: %v", err)
+			return nil
+		}
 	}
 
 	return &olt

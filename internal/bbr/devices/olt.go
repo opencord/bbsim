@@ -52,6 +52,9 @@ func (o *OltMock) Start() {
 
 	for _, pon := range o.Olt.Pons {
 		for _, onu := range pon.Onus {
+			if err := onu.InternalState.Event("initialize"); err != nil {
+				log.Fatalf("Error initializing ONU: %v", err)
+			}
 			log.Tracef("Created ONU: %s (%d:%d)", onu.Sn(), onu.STag, onu.CTag)
 		}
 	}
