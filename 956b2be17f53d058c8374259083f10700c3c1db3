@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29d5ae6c_28be64c7",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-11-26T20:55:38Z",
+      "side": 1,
+      "message": "Moving the channel creation in here make necessary for all the test to go trough the `initialized` state, see: https://gerrit.opencord.org/#/c/16545/",
+      "range": {
+        "startLine": 144,
+        "startChar": 4,
+        "endLine": 144,
+        "endChar": 40
+      },
+      "revId": "956b2be17f53d058c8374259083f10700c3c1db3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
