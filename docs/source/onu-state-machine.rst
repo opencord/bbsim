@@ -20,8 +20,12 @@ Here is a list of possible state transitions in BBSim:
       -
       - created
       -
+    * - initialize
+      - created, disabled
+      - initialized
+      -
     * - discover
-      - created
+      - initialized
       - discovered
       -
     * - enable
@@ -118,63 +122,92 @@ Below is a diagram of the state machine:
 .. graphviz::
 
     digraph {
+        rankdir=TB
+        newrank=true
         graph [pad="1,1" bgcolor="#cccccc"]
         node [style=filled]
 
-        created [fillcolor="#bee7fa"]
-        discovered [fillcolor="#bee7fa"]
-        enabled [fillcolor="#bee7fa"]
-        disabled [fillcolor="#f9d6ff"]
-        gem_port_added [fillcolor="#bee7fa"]
+        subgraph {
+            node [fillcolor="#bee7fa"]
 
-        eapol_flow_received [fillcolor="#e6ffc2"]
-        auth_started [fillcolor="#e6ffc2"]
-        eap_start_sent [fillcolor="#e6ffc2"]
-        eap_response_identity_sent [fillcolor="#e6ffc2"]
-        eap_response_challenge_sent [fillcolor="#e6ffc2"]
-        eap_response_success_received [fillcolor="#e6ffc2"]
-        auth_failed [fillcolor="#e6ffc2"]
+            created [peripheries=2]
+            initialized
+            discovered
+            { 
+                rank=same
+                enabled
+                disabled [fillcolor="#f9d6ff"]
+            }
+            gem_port_added
 
-        dhcp_started [fillcolor="#fffacc"]
-        dhcp_discovery_sent [fillcolor="#fffacc"]
-        dhcp_request_sent [fillcolor="#fffacc"]
-        dhcp_ack_received [fillcolor="#fffacc"]
-        dhcp_failed [fillcolor="#fffacc"]
+            {created, disabled} -> initialized -> discovered -> enabled
+        }
 
-        created -> discovered -> enabled
+        subgraph cluster_eapol {
+            style=rounded
+            style=dotted
+            node [fillcolor="#e6ffc2"]
+ 
+            eapol_flow_received
+            auth_started
+            eap_start_sent
+            eap_response_identity_sent
+            eap_response_challenge_sent
+            { 
+                rank=same
+                eap_response_success_received
+                auth_failed
+            }
+
+            auth_started -> eap_start_sent -> eap_response_identity_sent -> eap_response_challenge_sent -> eap_response_success_received
+            auth_started -> auth_failed
+            eap_start_sent -> auth_failed
+            eap_response_identity_sent -> auth_failed
+            eap_response_challenge_sent -> auth_failed
+
+            eap_start_sent -> auth_started
+            eap_response_identity_sent -> auth_started
+            eap_response_challenge_sent -> auth_started
+
+            eap_response_success_received -> auth_started
+            auth_failed -> auth_started
+        }
+
+        subgraph cluster_dhcp {
+            node [fillcolor="#fffacc"]
+            style=rounded
+            style=dotted
+            
+            dhcp_started
+            dhcp_discovery_sent
+            dhcp_request_sent
+            { 
+                rank=same
+                dhcp_ack_received
+                dhcp_failed
+            }
+            
+            dhcp_started -> dhcp_discovery_sent -> dhcp_request_sent -> dhcp_ack_received
+            dhcp_started -> dhcp_failed
+            dhcp_discovery_sent -> dhcp_failed
+            dhcp_request_sent -> dhcp_failed
+            dhcp_ack_received dhcp_failed
+
+            dhcp_discovery_sent -> dhcp_started
+            dhcp_request_sent -> dhcp_started
+            dhcp_ack_received -> dhcp_started
+            dhcp_failed -> dhcp_started
+        }
         enabled -> gem_port_added -> eapol_flow_received -> auth_started
         enabled -> eapol_flow_received -> gem_port_added -> auth_started
 
-        auth_started -> eap_start_sent -> eap_response_identity_sent -> eap_response_challenge_sent -> eap_response_success_received
-        auth_started -> auth_failed
-        eap_start_sent -> auth_failed
-        eap_response_identity_sent -> auth_failed
-        eap_response_challenge_sent -> auth_failed
-
-        eap_start_sent -> auth_started
-        eap_response_identity_sent -> auth_started
-        eap_response_challenge_sent -> auth_started
-
-        eap_response_success_received -> auth_started
-        auth_failed -> auth_started
-        dhcp_ack_received -> auth_started
-        dhcp_failed -> auth_started
+        {dhcp_ack_received, dhcp_failed} -> auth_started
 
         eap_response_success_received -> dhcp_started
-        dhcp_started -> dhcp_discovery_sent -> dhcp_request_sent -> dhcp_ack_received
-        dhcp_started -> dhcp_failed
-        dhcp_discovery_sent -> dhcp_failed
-        dhcp_request_sent -> dhcp_failed
-        dhcp_ack_received dhcp_failed
 
         eap_response_success_received -> disabled
         auth_failed -> disabled
         dhcp_ack_received -> disabled
         dhcp_failed -> disabled
         disabled -> enabled
-
-        dhcp_discovery_sent -> dhcp_started
-        dhcp_request_sent -> dhcp_started
-        dhcp_ack_received -> dhcp_started
-        dhcp_failed -> dhcp_started
     }
