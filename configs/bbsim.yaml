@@ -1,0 +1,39 @@
+---
+# CLI arguments override values specified here.
+# Commented values show defaults. 
+
+# BBSim specific settings
+bbsim:
+  enable_dhcp: false
+  enable_auth: false
+  openolt_address: "0.0.0.0:50060"
+  api_address: "0.0.0.0:50070"
+  rest_api_address: "0.0.0.0:50071"
+  legacy_api_address: "0.0.0.0:50072"
+  legacy_rest_api_address: "0.0.0.0:50073"
+  # log_level: "debug" 
+  # log_caller: false
+  # delay: 200
+  # c_tag: 900
+  # s_tag: 900
+
+# OLT device settings
+olt:
+  model: "asfvolt16"
+  vendor: "BBSim"
+  hardware_version: "emulated"
+  device_serial_number: BBSM00000001
+  pon_ports: 1
+  nni_ports: 1
+  onus_per_port: 1 
+  onus_per_port: 1
+  technology: "XGS-PON"
+  id: 1                 # OLT-ID of the device
+  reboot_delay: 10      # reboot delay in seconds
+  # firmware_version: ""
+  # device_id: 0a:0a:0a:0a:0a:<id>
+
+# BBR settings
+bbr:
+  log: bbr.log
+  log_level: debug

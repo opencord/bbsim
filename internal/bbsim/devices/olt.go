@@ -29,6 +29,7 @@ import (
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
+	"github.com/opencord/bbsim/internal/common"
 	omcisim "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
 	"github.com/opencord/voltha-protos/v2/go/tech_profile"
@@ -213,7 +214,8 @@ func (o *OltDevice) disableOlt() error {
 }
 
 func (o *OltDevice) RestartOLT() error {
-	oltLogger.Infof("Simulating OLT restart... (%ds)", OltRebootDelay)
+	rebootDelay := common.Options.Olt.OltRebootDelay
+	oltLogger.Infof("Simulating OLT restart... (%ds)", rebootDelay)
 
 	// transition internal state to disable
 	if !o.InternalState.Is("disabled") {
@@ -223,7 +225,7 @@ func (o *OltDevice) RestartOLT() error {
 		}
 	}
 
-	time.Sleep(OltRebootDelay * time.Second)
+	time.Sleep(time.Duration(rebootDelay) * time.Second)
 
 	if err := o.InternalState.Event("initialize"); err != nil {
 		log.Errorf("Error initializing OLT: %v", err)
@@ -235,8 +237,7 @@ func (o *OltDevice) RestartOLT() error {
 
 // newOltServer launches a new grpc server for OpenOLT
 func newOltServer() (*grpc.Server, error) {
-	// TODO make configurable
-	address := "0.0.0.0:50060"
+	address := common.Options.BBSim.OpenOltAddress
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		oltLogger.Fatalf("OLT failed to listen: %v", err)
@@ -707,11 +708,11 @@ func (o OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.Devi
 		"PonPorts": o.NumPon,
 	}).Info("OLT receives GetDeviceInfo call from VOLTHA")
 	devinfo := new(openolt.DeviceInfo)
-	devinfo.Vendor = "BBSim"
-	devinfo.Model = "asfvolt16"
-	devinfo.HardwareVersion = "emulated"
-	devinfo.FirmwareVersion = ""
-	devinfo.Technology = "xgspon"
+	devinfo.Vendor = common.Options.Olt.Vendor
+	devinfo.Model = common.Options.Olt.Model
+	devinfo.HardwareVersion = common.Options.Olt.HardwareVersion
+	devinfo.FirmwareVersion = common.Options.Olt.FirmwareVersion
+	devinfo.Technology = common.Options.Olt.Technology
 	devinfo.PonPorts = uint32(o.NumPon)
 	devinfo.OnuIdStart = 1
 	devinfo.OnuIdEnd = 255
@@ -722,7 +723,7 @@ func (o OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.Devi
 	devinfo.FlowIdStart = 1
 	devinfo.FlowIdEnd = 16383
 	devinfo.DeviceSerialNumber = o.SerialNumber
-	devinfo.DeviceId = net.HardwareAddr{0xA, 0xA, 0xA, 0xA, 0xA, byte(o.ID)}.String()
+	devinfo.DeviceId = common.Options.Olt.DeviceId
 
 	return devinfo, nil
 }

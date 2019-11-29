@@ -113,3 +113,7 @@ BBSim startup options
            Number of PON ports per OLT device to be emulated (default 1)
      -s_tag int
            S-Tag value (default 900)
+
+``BBSim`` also looks for a configuration file in ``configs/bbsim.yaml`` from which it reads a number of default settings. The command line options listed above override the corresponding coniguration file settings. A sample configuration file is given below:
+
+.. literalinclude:: ../../configs/bbsim.yaml
