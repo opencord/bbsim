@@ -36,7 +36,7 @@ import (
 func main() {
 	options := common.GetBBROpts()
 
-	common.SetLogLevel(log.StandardLogger(), options.LogLevel, options.LogCaller)
+	common.SetLogLevel(log.StandardLogger(), options.BBR.LogLevel, options.BBR.LogCaller)
 
 	if options.LogFile != "" {
 		file, err := os.OpenFile(options.LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
@@ -47,10 +47,10 @@ func main() {
 		}
 	}
 
-	if *options.ProfileCpu != "" {
+	if *options.BBSim.CpuProfile != "" {
 		// start profiling
-		log.Infof("Creating profile file at: %s", *options.ProfileCpu)
-		f, err := os.Create(*options.ProfileCpu)
+		log.Infof("Creating profile file at: %s", *options.BBSim.CpuProfile)
+		f, err := os.Create(*options.BBSim.CpuProfile)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -58,22 +58,22 @@ func main() {
 	}
 
 	log.WithFields(log.Fields{
-		"OltID":        options.OltID,
-		"NumNniPerOlt": options.NumNniPerOlt,
-		"NumPonPerOlt": options.NumPonPerOlt,
-		"NumOnuPerPon": options.NumOnuPerPon,
+		"OltID":        options.Olt.ID,
+		"NumNniPerOlt": options.Olt.NniPorts,
+		"NumPonPerOlt": options.Olt.PonPorts,
+		"NumOnuPerPon": options.Olt.OnusPonPort,
 		"BBSimIp":      options.BBSimIp,
 		"BBSimPort":    options.BBSimPort,
 	}).Info("BroadBand Reflector is on")
 
 	// create the OLT device
 	olt := devices.CreateOLT(
-		options.OltID,
-		options.NumNniPerOlt,
-		options.NumPonPerOlt,
-		options.NumOnuPerPon,
-		options.STag,
-		options.CTagInit,
+		options.Olt.ID,
+		int(options.Olt.NniPorts),
+		int(options.Olt.PonPorts),
+		int(options.Olt.OnusPonPort),
+		options.BBSim.STag,
+		options.BBSim.CTagInit,
 		true, // this parameter is not important in the BBR Case
 		true, // this parameter is not important in the BBR Case
 		0,    // this parameter does not matter in the BBR case
@@ -81,7 +81,7 @@ func main() {
 	)
 	oltMock := bbrdevices.OltMock{
 		Olt:           olt,
-		TargetOnus:    options.NumPonPerOlt * options.NumOnuPerPon,
+		TargetOnus:    int(options.Olt.PonPorts * options.Olt.OnusPonPort),
 		CompletedOnus: 0,
 		BBSimIp:       options.BBSimIp,
 		BBSimPort:     options.BBSimPort,
