@@ -38,8 +38,7 @@ import (
 )
 
 func startApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
-	// TODO make configurable
-	address := "0.0.0.0:50070"
+	address := common.Options.BBSim.ApiAddress
 	log.Debugf("APIServer listening on: %v", address)
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
@@ -69,8 +68,7 @@ func startApiRestServer(apiDoneChannel chan bool, group *sync.WaitGroup, grpcAdd
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	// TODO make configurable
-	address := "0.0.0.0:50071"
+	address := common.Options.BBSim.RestApiAddress
 
 	mux := runtime.NewServeMux()
 	opts := []grpc.DialOption{grpc.WithInsecure()}
@@ -101,9 +99,8 @@ func startApiRestServer(apiDoneChannel chan bool, group *sync.WaitGroup, grpcAdd
 
 // This server aims to provide compatibility with the previous BBSim version. It is deprecated and will be removed in the future.
 func startLegacyApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
-	// TODO make configurable
-	grpcAddress := "0.0.0.0:50072"
-	restAddress := "0.0.0.0:50073"
+	grpcAddress := common.Options.BBSim.LegacyApiAddress
+	restAddress := common.Options.BBSim.LegacyRestApiAddress
 
 	log.Debugf("Legacy APIServer listening on: %v", grpcAddress)
 	listener, err := net.Listen("tcp", grpcAddress)
@@ -131,14 +128,16 @@ func startLegacyApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 }
 
 func main() {
+
 	options := common.GetBBSimOpts()
 
-	common.SetLogLevel(log.StandardLogger(), options.LogLevel, options.LogCaller)
+	common.SetLogLevel(log.StandardLogger(), options.BBSim.LogLevel, options.BBSim.LogCaller)
+	log.Tracef("BBSim options: %+v", options)
 
-	if *options.ProfileCpu != "" {
+	if *options.BBSim.CpuProfile != "" {
 		// start profiling
-		log.Infof("Creating profile file at: %s", *options.ProfileCpu)
-		f, err := os.Create(*options.ProfileCpu)
+		log.Infof("Creating profile file at: %s", *options.BBSim.CpuProfile)
+		f, err := os.Create(*options.BBSim.CpuProfile)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -146,33 +145,33 @@ func main() {
 	}
 
 	log.WithFields(log.Fields{
-		"OltID":        options.OltID,
-		"NumNniPerOlt": options.NumNniPerOlt,
-		"NumPonPerOlt": options.NumPonPerOlt,
-		"NumOnuPerPon": options.NumOnuPerPon,
-		"TotalOnus":    options.NumPonPerOlt * options.NumOnuPerPon,
-		"Auth":         options.Auth,
-		"Dhcp":         options.Dhcp,
-		"Delay":        options.Delay,
+		"OltID":        options.Olt.ID,
+		"NumNniPerOlt": options.Olt.NniPorts,
+		"NumPonPerOlt": options.Olt.PonPorts,
+		"NumOnuPerPon": options.Olt.OnusPonPort,
+		"TotalOnus":    options.Olt.PonPorts * options.Olt.OnusPonPort,
+		"EnableAuth":   options.BBSim.EnableAuth,
+		"Dhcp":         options.BBSim.EnableDhcp,
+		"Delay":        options.BBSim.Delay,
 	}).Info("BroadBand Simulator is on")
 
 	// control channels, they are only closed when the goroutine needs to be terminated
 	apiDoneChannel := make(chan bool)
 
 	devices.CreateOLT(
-		options.OltID,
-		options.NumNniPerOlt,
-		options.NumPonPerOlt,
-		options.NumOnuPerPon,
-		options.STag,
-		options.CTagInit,
-		options.Auth,
-		options.Dhcp,
-		options.Delay,
+		options.Olt.ID,
+		int(options.Olt.NniPorts),
+		int(options.Olt.PonPorts),
+		int(options.Olt.OnusPonPort),
+		options.BBSim.STag,
+		options.BBSim.CTagInit,
+		options.BBSim.EnableAuth,
+		options.BBSim.EnableDhcp,
+		options.BBSim.Delay,
 		false,
 	)
 
-	log.Debugf("Created OLT with id: %d", options.OltID)
+	log.Debugf("Created OLT with id: %d", options.Olt.ID)
 
 	sigs := make(chan os.Signal, 1)
 	// stop API servers on SIGTERM
@@ -194,7 +193,7 @@ func main() {
 
 	defer func() {
 		log.Info("BroadBand Simulator is off")
-		if *options.ProfileCpu != "" {
+		if *options.BBSim.CpuProfile != "" {
 			log.Info("Stopping profiler")
 			pprof.StopCPUProfile()
 		}
