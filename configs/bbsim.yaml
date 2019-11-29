@@ -1,0 +1,25 @@
+---
+
+# BBSim specific settings
+bbsim:
+  enable_auth: false
+  openolt_address: "0.0.0.0:50060"
+  api_address: "0.0.0.0:50070"
+  rest_api_address: "0.0.0.0:50071"
+  legacy_api_address: "0.0.0.0:59972"
+  legacy_rest_api_address: "0.0.0.0:50073"
+
+# OLT device settings
+olt:
+  vendor: "BBSim"
+  hardware_version: "emulated"
+  technology: "XGS-PON"
+  device_serial_number: BBSM00000001
+  pon_ports: 1
+  onus_per_port: 1
+  id: 2                 # OLT-ID of the device
+  reboot_delay: 10      # reboot delay in seconds
+
+bbr:
+  log: bbr.log
+  log_level: debug
