@@ -22,6 +22,30 @@
       "revId": "65782ecfc6be4f0bb73a580cd0ed9dc1356c9340",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a6c939b_d026ccd4",
+        "filename": "configs/bbsim.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1000553
+      },
+      "writtenOn": "2019-12-02T19:02:01Z",
+      "side": 1,
+      "message": "Its supported already if added here. I\u0027ll add it for completeness",
+      "parentUuid": "f78bf39a_5a994d99",
+      "range": {
+        "startLine": 5,
+        "startChar": 2,
+        "endLine": 5,
+        "endChar": 13
+      },
+      "revId": "65782ecfc6be4f0bb73a580cd0ed9dc1356c9340",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
