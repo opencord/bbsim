@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bbd81f70_b801a7f9",
+        "filename": "internal/common/options.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-02T19:32:05Z",
+      "side": 1,
+      "message": "the default should be false, otherwise we are changing the behavior compared to now",
+      "range": {
+        "startLine": 92,
+        "startChar": 3,
+        "endLine": 93,
+        "endChar": 30
+      },
+      "revId": "f8b1d3a99913cfb83b41a4f6549a249ad6442473",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
