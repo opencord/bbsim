@@ -46,6 +46,30 @@
       "revId": "fd4f34c7a10ca67b3c932ea2a8fb9e2d90f3428e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86932f88_ecb05fe6",
+        "filename": "internal/common/options.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1000553
+      },
+      "writtenOn": "2019-12-03T11:02:01Z",
+      "side": 1,
+      "message": "Of course, my bad",
+      "parentUuid": "cd78915a_0ba9b9fd",
+      "range": {
+        "startLine": 162,
+        "startChar": 39,
+        "endLine": 162,
+        "endChar": 48
+      },
+      "revId": "fd4f34c7a10ca67b3c932ea2a8fb9e2d90f3428e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
