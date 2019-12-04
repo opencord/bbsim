@@ -73,7 +73,7 @@ test: clean dep fmt # @HELP Execute unit tests
 fmt:
 	go fmt ./...
 
-docker-build: # @HELP Build the BBSim docker container (contains BBSimCtl too)
+docker-build: local-omci-sim# @HELP Build the BBSim docker container (contains BBSimCtl too)
 	docker build -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} -f build/package/Dockerfile .
 
 docker-push: # @HELP Push the docker container to a registry
@@ -137,6 +137,12 @@ help: # @HELP Print the command options
         {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}; \
     '
 
+## Local Development Helpers
+local-omci-sim:
+ifdef LOCAL_OMCI_SIM
+	mkdir -p vendor/github.com/opencord/omci-sim/
+	cp -r ${LOCAL_OMCI_SIM}/* vendor/github.com/opencord/omci-sim/
+endif
 
 # Internals
 
