@@ -3,24 +3,9 @@
 Development dependencies
 ========================
 
-To use a patched version of the ``omci-sim`` library:
+If you want to test local changes in the ``omci-sim`` library you can
+rebuild the BBSim container using a local version of the library with this command:
 
 .. code:: bash
 
-   make dep
-   cd vendor/github.com/opencord/
-   rm -rf omci-sim/
-   git clone https://gerrit.opencord.org/omci-sim
-   cd omci-sim
-
-Once done, go to ``gerrit.opencord.org`` and locate the patch you want
-to get. Click on the download URL and copy the ``Checkout`` command.
-
-It should look something like:
-
-::
-
-   git fetch ssh://teone@gerrit.opencord.org:29418/omci-sim refs/changes/67/15067/1 && git checkout FETCH_HEAD
-
-Then just execute that command in the ``omci-sim`` folder inside the
-vendored dependencies.
+   LOCAL_OMCI_SIM=<path-to-omci-sim-library> make docker-build

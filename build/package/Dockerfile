@@ -36,13 +36,8 @@ WORKDIR /go/src/github.com/opencord/bbsim
 ENV GO111MODULE=on
 ENV GOPROXY=https://proxy.golang.org
 
-# build the protos
-COPY Makefile ./
-COPY api ./api
-
 # copy and build
 COPY . ./
-RUN make dep  # we cannot vendor dependencies unless the code is there
 RUN make protos
 RUN make build-bbsim
 RUN make build-bbsimctl
