@@ -22,6 +22,30 @@
       "revId": "31c10e73911377c145defea21d25631c84f88082",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfa348ff_b7b405d2",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-06T15:11:03Z",
+      "side": 1,
+      "message": "Good point, I\u0027ll update today but in general this patch required a some more testing.",
+      "parentUuid": "0ee95aa6_d1d28140",
+      "range": {
+        "startLine": 216,
+        "startChar": 13,
+        "endLine": 216,
+        "endChar": 26
+      },
+      "revId": "31c10e73911377c145defea21d25631c84f88082",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
