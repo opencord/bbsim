@@ -31,6 +31,7 @@ import (
 	"github.com/opencord/bbsim/api/legacy"
 	"github.com/opencord/bbsim/internal/bbsim/api"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
+	"github.com/opencord/bbsim/internal/bbsim/responders/sadis"
 	"github.com/opencord/bbsim/internal/common"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -158,7 +159,7 @@ func main() {
 	// control channels, they are only closed when the goroutine needs to be terminated
 	apiDoneChannel := make(chan bool)
 
-	devices.CreateOLT(
+	olt := devices.CreateOLT(
 		options.Olt.ID,
 		int(options.Olt.NniPorts),
 		int(options.Olt.PonPorts),
@@ -188,6 +189,10 @@ func main() {
 	go startApiServer(apiDoneChannel, &wg)
 	go startLegacyApiServer(apiDoneChannel, &wg)
 	log.Debugf("Started APIService")
+	if common.Options.BBSim.SadisServer != false {
+		wg.Add(1)
+		go sadis.StartRestServer(olt, &wg)
+	}
 
 	wg.Wait()
 
