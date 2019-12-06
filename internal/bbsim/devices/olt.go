@@ -96,15 +96,15 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 	olt.InternalState = fsm.NewFSM(
 		"created",
 		fsm.Events{
-			{Name: "initialize", Src: []string{"disabled", "created"}, Dst: "initialized"},
+			{Name: "initialize", Src: []string{"created", "deleted"}, Dst: "initialized"},
 			{Name: "enable", Src: []string{"initialized", "disabled"}, Dst: "enabled"},
 			{Name: "disable", Src: []string{"enabled"}, Dst: "disabled"},
+			{Name: "delete", Src: []string{"disabled"}, Dst: "deleted"},
 		},
 		fsm.Callbacks{
 			"enter_state": func(e *fsm.Event) {
 				oltLogger.Debugf("Changing OLT InternalState from %s to %s", e.Src, e.Dst)
 			},
-			"enter_disabled":    func(e *fsm.Event) { olt.disableOlt() },
 			"enter_initialized": func(e *fsm.Event) { olt.InitOlt() },
 		},
 	)
@@ -158,9 +158,10 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 func (o *OltDevice) InitOlt() error {
 
 	if oltServer == nil {
-		oltServer, _ = newOltServer()
+		oltServer, _ = o.newOltServer()
 	} else {
-		oltLogger.Warn("OLT server already running.")
+		// FIXME there should never be a server running if we are initializing the OLT
+		oltLogger.Fatal("OLT server already running.")
 	}
 
 	// create new channel for processOltMessages Go routine
@@ -189,20 +190,25 @@ func (o *OltDevice) InitOlt() error {
 	return nil
 }
 
-// callback for disable state entry
-func (o *OltDevice) disableOlt() error {
+func (o *OltDevice) RestartOLT() error {
 
-	// disable all onus
-	for i := range o.Pons {
-		for _, onu := range o.Pons[i].Onus {
-			// NOTE order of these is important.
-			onu.OperState.Event("disable")
-			onu.InternalState.Event("disable")
-		}
+	rebootDelay := common.Options.Olt.OltRebootDelay
+
+	oltLogger.WithFields(log.Fields{
+		"oltId": o.ID,
+	}).Infof("Simulating OLT restart... (%ds)", rebootDelay)
+
+	// transition internal state to deleted
+	if err := o.InternalState.Event("delete"); err != nil {
+		oltLogger.WithFields(log.Fields{
+			"oltId": o.ID,
+		}).Errorf("Error deleting OLT: %v", err)
+		return err
 	}
 
 	// TODO handle hard poweroff (i.e. no indications sent to Voltha) vs soft poweroff
-	if err := StopOltServer(); err != nil {
+	time.Sleep(1 * time.Second) // we need to give the OLT the time to respond to all the pending gRPC request before stopping the server
+	if err := o.StopOltServer(); err != nil {
 		return err
 	}
 
@@ -210,33 +216,23 @@ func (o *OltDevice) disableOlt() error {
 	close(o.channel)
 	// terminate the OLT's processNniPacketIns go routine
 	close(o.nniPktInChannel)
-	return nil
-}
-
-func (o *OltDevice) RestartOLT() error {
-	rebootDelay := common.Options.Olt.OltRebootDelay
-	oltLogger.Infof("Simulating OLT restart... (%ds)", rebootDelay)
-
-	// transition internal state to disable
-	if !o.InternalState.Is("disabled") {
-		if err := o.InternalState.Event("disable"); err != nil {
-			log.Errorf("Error disabling OLT: %v", err)
-			return err
-		}
-	}
 
 	time.Sleep(time.Duration(rebootDelay) * time.Second)
 
 	if err := o.InternalState.Event("initialize"); err != nil {
-		log.Errorf("Error initializing OLT: %v", err)
+		oltLogger.WithFields(log.Fields{
+			"oltId": o.ID,
+		}).Errorf("Error initializing OLT: %v", err)
 		return err
 	}
-	oltLogger.Info("OLT restart completed")
+	oltLogger.WithFields(log.Fields{
+		"oltId": o.ID,
+	}).Info("OLT restart completed")
 	return nil
 }
 
 // newOltServer launches a new grpc server for OpenOLT
-func newOltServer() (*grpc.Server, error) {
+func (o *OltDevice) newOltServer() (*grpc.Server, error) {
 	address := common.Options.BBSim.OpenOltAddress
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
@@ -244,7 +240,6 @@ func newOltServer() (*grpc.Server, error) {
 	}
 	grpcServer := grpc.NewServer()
 
-	o := GetOLT()
 	openolt.RegisterOpenoltServer(grpcServer, o)
 
 	reflection.Register(grpcServer)
@@ -256,13 +251,16 @@ func newOltServer() (*grpc.Server, error) {
 }
 
 // StopOltServer stops the OpenOLT grpc server
-func StopOltServer() error {
+func (o *OltDevice) StopOltServer() error {
 	// TODO handle poweroff vs graceful shutdown
 	if oltServer != nil {
-		log.Warnf("Stopping OLT gRPC server")
+		oltLogger.WithFields(log.Fields{
+			"oltId": o.SerialNumber,
+		}).Warnf("Stopping OLT gRPC server")
 		oltServer.Stop()
 		oltServer = nil
 	}
+
 	return nil
 }
 
@@ -273,7 +271,7 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error 
 	oltLogger.Debug("Enable OLT called")
 
 	wg := sync.WaitGroup{}
-	wg.Add(2)
+	wg.Add(3)
 
 	// create Go routine to process all OLT events
 	go o.processOltMessages(stream, &wg)
@@ -322,7 +320,7 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error 
 		}
 	}
 
-	oltLogger.Warn("Enable OLT Done")
+	oltLogger.Debug("Enable OLT Done")
 	wg.Wait()
 	return nil
 }
@@ -614,6 +612,47 @@ func (o OltDevice) DeleteOnu(context.Context, *openolt.Onu) (*openolt.Empty, err
 
 func (o OltDevice) DisableOlt(context.Context, *openolt.Empty) (*openolt.Empty, error) {
 	// NOTE when we disable the OLT should we disable NNI, PONs and ONUs altogether?
+	oltLogger.WithFields(log.Fields{
+		"oltId": o.ID,
+	}).Info("Disabling OLT")
+
+	for i, pon := range o.Pons {
+		// disable all onus
+		for _, onu := range o.Pons[i].Onus {
+			// NOTE order of these is important.
+			if err := onu.OperState.Event("disable"); err != nil {
+				log.Errorf("Error disabling ONU oper state: %v", err)
+			}
+			if err := onu.InternalState.Event("disable"); err != nil {
+				log.Errorf("Error disabling ONU: %v", err)
+			}
+		}
+
+		// disable PONs
+		msg := Message{
+			Type: PonIndication,
+			Data: PonIndicationMessage{
+				OperState: DOWN,
+				PonPortID: pon.ID,
+			},
+		}
+
+		o.channel <- msg
+	}
+
+	// disable NNI
+	for _, nni := range o.Nnis {
+		msg := Message{
+			Type: NniIndication,
+			Data: NniIndicationMessage{
+				OperState: DOWN,
+				NniPortID: nni.ID,
+			},
+		}
+		o.channel <- msg
+	}
+
+	// disable OLT
 	oltMsg := Message{
 		Type: OltIndication,
 		Data: OltIndicationMessage{
@@ -790,8 +829,10 @@ func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) 
 }
 
 func (o OltDevice) Reboot(context.Context, *openolt.Empty) (*openolt.Empty, error) {
-	oltLogger.Info("Shutting down")
-	o.RestartOLT()
+	oltLogger.WithFields(log.Fields{
+		"oltId": o.ID,
+	}).Info("Shutting down")
+	go o.RestartOLT()
 	return new(openolt.Empty), nil
 }
 
