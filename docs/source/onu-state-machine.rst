@@ -6,7 +6,7 @@ ONU State Machine
 In ``BBSim`` the device state is created using a state machine
 library: `fsm <https://github.com/looplab/fsm>`__.
 
-Here is a list of possible state transitions in BBSim:
+Here is a list of possible state transitions for an ONU in BBSim:
 
 .. list-table:: ONU States
     :widths: 10 35 10 45

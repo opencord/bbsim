@@ -12,6 +12,7 @@ Welcome to BBSim's documentation!
 
    operations.rst
    onu-state-machine.rst
+   olt-state-machine.rst
    development-dependencies.rst
    bbr.rst
    bbsimctl.rst

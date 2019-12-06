@@ -411,14 +411,6 @@ func (o *Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt
 		return
 	}
 
-	if err := o.InternalState.Event("discover"); err != nil {
-		oltLogger.WithFields(log.Fields{
-			"IntfId": o.PonPortID,
-			"OnuSn":  o.Sn(),
-			"OnuId":  o.ID,
-		}).Infof("Failed to transition ONU to discovered state: %s", err.Error())
-	}
-
 	onuLogger.WithFields(log.Fields{
 		"IntfId": msg.Onu.PonPortID,
 		"OnuSn":  msg.Onu.Sn(),
