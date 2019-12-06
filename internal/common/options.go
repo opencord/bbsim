@@ -68,6 +68,8 @@ type BBSimConfig struct {
 	RestApiAddress       string  `yaml:"rest_api_address"`
 	LegacyApiAddress     string  `yaml:"legacy_api_address"`
 	LegacyRestApiAddress string  `yaml:"legacy_rest_api_address"`
+	SadisRestAddress     string  `yaml:"sadis_rest_address"`
+	SadisServer          bool    `yaml:"sadis_server"`
 }
 
 type BBRConfig struct {
@@ -99,6 +101,8 @@ func getDefaultOps() *BBSimYamlConfig {
 			RestApiAddress:       "0.0.0.0:50071",
 			LegacyApiAddress:     "0.0.0.0:50072",
 			LegacyRestApiAddress: "0.0.0.0:50073",
+			SadisRestAddress:     "0.0.0.0:50074",
+			SadisServer:          true,
 		},
 		OltConfig{
 			Vendor:             "BBSim",
@@ -181,6 +185,7 @@ func GetBBSimOpts() *BBSimYamlConfig {
 		conf.Olt.DeviceId = net.HardwareAddr{0xA, 0xA, 0xA, 0xA, 0xA, byte(conf.Olt.ID)}.String()
 	}
 
+	Options = conf
 	return conf
 }
 
