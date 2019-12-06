@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1951b873_8a0be114",
+        "filename": "configs/bbsim.yaml",
+        "patchSetId": 6
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-06T15:55:22Z",
+      "side": 1,
+      "message": "we should not change the defaults as other people are relying on this behavior",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 19
+      },
+      "revId": "402f9045a308763c6bec8678eca90200db20d318",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9fb0a13_ddba395c",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-06T15:55:22Z",
+      "side": 1,
+      "message": "if this line is not needed, can we please remove it?",
+      "range": {
+        "startLine": 137,
+        "startChar": 5,
+        "endLine": 137,
+        "endChar": 103
+      },
+      "revId": "402f9045a308763c6bec8678eca90200db20d318",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56eb1c8f_84eda8dd",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-06T15:55:22Z",
+      "side": 1,
+      "message": "needs indentation",
+      "range": {
+        "startLine": 138,
+        "startChar": 0,
+        "endLine": 138,
+        "endChar": 12
+      },
+      "revId": "402f9045a308763c6bec8678eca90200db20d318",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f0e95f8_f0d5ce13",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-06T15:55:22Z",
+      "side": 1,
+      "message": "are these needed?",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 12
+      },
+      "revId": "402f9045a308763c6bec8678eca90200db20d318",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "308ad6b6_1f9e0d1f",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-06T15:55:22Z",
+      "side": 1,
+      "message": "can we reformat this log statement to add informations about the ONU? It also looks like it should be at DEBUG level",
+      "range": {
+        "startLine": 21,
+        "startChar": 1,
+        "endLine": 21,
+        "endChar": 56
+      },
+      "revId": "402f9045a308763c6bec8678eca90200db20d318",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec8f5ece_3305321f",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-06T15:55:22Z",
+      "side": 1,
+      "message": "has this been addressed? it seems like the message is generated at line 47",
+      "range": {
+        "startLine": 35,
+        "startChar": 1,
+        "endLine": 35,
+        "endChar": 49
+      },
+      "revId": "402f9045a308763c6bec8678eca90200db20d318",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e33cc3d9_7021772d",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-06T15:55:22Z",
+      "side": 1,
+      "message": "is the commented out code needed?",
+      "range": {
+        "startLine": 65,
+        "startChar": 5,
+        "endLine": 65,
+        "endChar": 23
+      },
+      "revId": "402f9045a308763c6bec8678eca90200db20d318",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b12c4a60_897e3805",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-06T15:55:22Z",
+      "side": 1,
+      "message": "same as the previous log statement comment",
+      "range": {
+        "startLine": 67,
+        "startChar": 1,
+        "endLine": 67,
+        "endChar": 46
+      },
+      "revId": "402f9045a308763c6bec8678eca90200db20d318",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5114106_e8dc6c84",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-06T15:55:22Z",
+      "side": 1,
+      "message": "it is ok to merge this code in BBSim and remove it once upstreamed to gopacket library",
+      "range": {
+        "startLine": 121,
+        "startChar": 2,
+        "endLine": 121,
+        "endChar": 113
+      },
+      "revId": "402f9045a308763c6bec8678eca90200db20d318",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "910876fe_cb763bb2",
+        "filename": "internal/bbsimctl/commands/onu.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-06T15:55:22Z",
+      "side": 1,
+      "message": "technically the \"else\" statement is not needed, the log message can just be after the \"if\" as we are a \"return\" is called if an error is captured.\n\nAny reason because of why this is a printf and not a log?",
+      "range": {
+        "startLine": 272,
+        "startChar": 3,
+        "endLine": 274,
+        "endChar": 2
+      },
+      "revId": "402f9045a308763c6bec8678eca90200db20d318",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
