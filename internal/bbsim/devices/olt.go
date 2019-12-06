@@ -245,7 +245,7 @@ func (o *OltDevice) newOltServer() (*grpc.Server, error) {
 	reflection.Register(grpcServer)
 
 	go grpcServer.Serve(lis)
-	oltLogger.Debugf("OLT Listening on: %v", address)
+	oltLogger.Debugf("OLT listening on %v", address)
 
 	return grpcServer, nil
 }
