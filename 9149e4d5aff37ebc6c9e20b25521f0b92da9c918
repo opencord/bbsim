@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b7c2011a_5e294c15",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-10T23:10:48Z",
+      "side": 1,
+      "message": "Can we use the .WithFields construct and remove the ----?\neg: https://github.com/opencord/bbsim/blob/master/internal/bbsim/responders/eapol/eapol.go#L44-L47",
+      "range": {
+        "startLine": 34,
+        "startChar": 5,
+        "endLine": 34,
+        "endChar": 11
+      },
+      "revId": "9149e4d5aff37ebc6c9e20b25521f0b92da9c918",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "218f1175_f6421105",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-10T23:10:48Z",
+      "side": 1,
+      "message": "can we add informations about the ONU this packet is generated for? eg: https://github.com/opencord/bbsim/blob/master/internal/bbsim/responders/eapol/eapol.go#L44-L47",
+      "range": {
+        "startLine": 77,
+        "startChar": 1,
+        "endLine": 77,
+        "endChar": 48
+      },
+      "revId": "9149e4d5aff37ebc6c9e20b25521f0b92da9c918",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11241661_de8ee6e3",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-10T23:10:48Z",
+      "side": 1,
+      "message": "do we need the commented code?",
+      "range": {
+        "startLine": 79,
+        "startChar": 2,
+        "endLine": 79,
+        "endChar": 53
+      },
+      "revId": "9149e4d5aff37ebc6c9e20b25521f0b92da9c918",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33c2862d_39a636cd",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-10T23:10:48Z",
+      "side": 1,
+      "message": "do we need the commented code?",
+      "range": {
+        "startLine": 87,
+        "startChar": 1,
+        "endLine": 87,
+        "endChar": 24
+      },
+      "revId": "9149e4d5aff37ebc6c9e20b25521f0b92da9c918",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4999192a_f99f9a1e",
+        "filename": "internal/bbsimctl/commands/onu.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-10T23:10:48Z",
+      "side": 1,
+      "message": "can we use the structured log format?\neg: https://github.com/opencord/bbsim/blob/master/internal/bbsim/responders/eapol/eapol.go#L44-L47",
+      "range": {
+        "startLine": 273,
+        "startChar": 8,
+        "endLine": 273,
+        "endChar": 51
+      },
+      "revId": "9149e4d5aff37ebc6c9e20b25521f0b92da9c918",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
