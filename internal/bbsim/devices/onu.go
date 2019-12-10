@@ -349,8 +349,16 @@ func (o *Onu) processOmciMessage(message omcisim.OmciChMessage) {
 				log.Errorf("Can't go to gem_port_added: %v", err)
 			}
 		} else if o.InternalState.Is("eapol_flow_received") {
-			if err := o.InternalState.Event("start_auth"); err != nil {
-				log.Errorf("Can't go to auth_started: %v", err)
+			if o.Auth == true {
+				if err := o.InternalState.Event("start_auth"); err != nil {
+					log.Warnf("Can't go to auth_started: %v", err)
+				}
+			} else {
+				onuLogger.WithFields(log.Fields{
+					"IntfId":       o.PonPortID,
+					"OnuId":        o.ID,
+					"SerialNumber": o.Sn(),
+				}).Warn("Not starting authentication as Auth bit is not set in CLI parameters")
 			}
 		}
 	}
