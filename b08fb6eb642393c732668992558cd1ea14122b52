@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9fc53b9e_c90dbd80",
+        "filename": "internal/bbsim/responders/sadis/sadis.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-10T23:22:44Z",
+      "side": 1,
+      "message": "Can we use this format to log the ONU SN? https://github.com/opencord/bbsim/blob/master/internal/bbsim/responders/eapol/eapol.go#L44-L47\nIf we\u0027re consistent it\u0027s easier to reconstruct the history of a single device",
+      "range": {
+        "startLine": 198,
+        "startChar": 1,
+        "endLine": 198,
+        "endChar": 19
+      },
+      "revId": "b08fb6eb642393c732668992558cd1ea14122b52",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ec812bf_10b75e8e",
+        "filename": "internal/bbsim/responders/sadis/sadis.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-10T23:22:44Z",
+      "side": 1,
+      "message": "Can we use this format to log the ONU SN? https://github.com/opencord/bbsim/blob/master/internal/bbsim/responders/eapol/eapol.go#L44-L47\nIf we\u0027re consistent it\u0027s easier to reconstruct the history of a single device",
+      "range": {
+        "startLine": 217,
+        "startChar": 13,
+        "endLine": 217,
+        "endChar": 19
+      },
+      "revId": "b08fb6eb642393c732668992558cd1ea14122b52",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
