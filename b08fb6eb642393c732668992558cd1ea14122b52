@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "583efc5d_aeef5538",
+        "filename": "internal/bbsim/responders/sadis/sadis.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-10T23:23:30Z",
+      "side": 1,
+      "message": "can we assign one of the User_Bandwidth profiles?",
+      "range": {
+        "startLine": 154,
+        "startChar": 31,
+        "endLine": 154,
+        "endChar": 38
+      },
+      "revId": "b08fb6eb642393c732668992558cd1ea14122b52",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9fc53b9e_c90dbd80",
         "filename": "internal/bbsim/responders/sadis/sadis.go",
         "patchSetId": 2
