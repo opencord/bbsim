@@ -237,6 +237,12 @@ var listenOnVeth = func(vethName string) (chan *types.PacketMsg, error) {
 			}
 			channel <- &pkt
 		}
+
+		defer func() {
+			if r := recover(); r!= nil {
+				nniLogger.Errorf("Received packets on the NNI but channel already closed %v", r)
+			}
+		}()
 	}()
 
 	return channel, nil
