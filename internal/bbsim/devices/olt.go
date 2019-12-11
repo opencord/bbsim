@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/gopacket/pcap"
 	"net"
 	"sync"
 	"time"
@@ -52,6 +53,7 @@ type OltDevice struct {
 	InternalState   *fsm.FSM
 	channel         chan Message
 	nniPktInChannel chan *bbsim.PacketMsg // packets coming in from the NNI and going to VOLTHA
+	nniHandle       *pcap.Handle          // handle on the NNI interface, close it when shutting down the NNI channel
 
 	Delay int
 
@@ -170,18 +172,28 @@ func (o *OltDevice) InitOlt() error {
 	o.nniPktInChannel = make(chan *bbsim.PacketMsg, 1024)
 	// FIXME we are assuming we have only one NNI
 	if o.Nnis[0] != nil {
-		ch, err := o.Nnis[0].NewVethChan()
+		// NOTE we want to make sure the state is down when we initialize the OLT,
+		// the NNI may be in a bad state after a disable/reboot as we are not disabling it for
+		// in-band management
+		o.Nnis[0].OperState.SetState("down")
+		ch, handle, err := o.Nnis[0].NewVethChan()
 		if err == nil {
+			oltLogger.WithFields(log.Fields{
+				"Type":      o.Nnis[0].Type,
+				"IntfId":    o.Nnis[0].ID,
+				"OperState": o.Nnis[0].OperState.Current(),
+			}).Info("NNI Channel created")
 			o.nniPktInChannel = ch
+			o.nniHandle = handle
 		} else {
-			log.Errorf("Error getting NNI channel: %v", err)
+			oltLogger.Errorf("Error getting NNI channel: %v", err)
 		}
 	}
 
 	for i := range olt.Pons {
 		for _, onu := range olt.Pons[i].Onus {
 			if err := onu.InternalState.Event("initialize"); err != nil {
-				log.Errorf("Error initializing ONU: %v", err)
+				oltLogger.Errorf("Error initializing ONU: %v", err)
 				return err
 			}
 		}
@@ -215,7 +227,15 @@ func (o *OltDevice) RestartOLT() error {
 	// terminate the OLT's processOltMessages go routine
 	close(o.channel)
 	// terminate the OLT's processNniPacketIns go routine
+	o.nniHandle.Close()
 	close(o.nniPktInChannel)
+
+	for i := range olt.Pons {
+		for _, onu := range olt.Pons[i].Onus {
+			// NOTE while the olt is off, restore the ONU to the initial state
+			onu.InternalState.SetState("created")
+		}
+	}
 
 	time.Sleep(time.Duration(rebootDelay) * time.Second)
 
@@ -375,7 +395,23 @@ func (o *OltDevice) sendOltIndication(msg OltIndicationMessage, stream openolt.O
 
 func (o *OltDevice) sendNniIndication(msg NniIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
 	nni, _ := o.getNniById(msg.NniPortID)
-	nni.OperState.Event("enable")
+	if msg.OperState == UP {
+		if err := nni.OperState.Event("enable"); err != nil {
+			log.WithFields(log.Fields{
+				"Type":      nni.Type,
+				"IntfId":    nni.ID,
+				"OperState": nni.OperState.Current(),
+			}).Errorf("Can't move NNI Port to enabled state: %v", err)
+		}
+	} else if msg.OperState == DOWN {
+		if err := nni.OperState.Event("disable"); err != nil {
+			log.WithFields(log.Fields{
+				"Type":      nni.Type,
+				"IntfId":    nni.ID,
+				"OperState": nni.OperState.Current(),
+			}).Errorf("Can't move NNI Port to disable state: %v", err)
+		}
+	}
 	// NOTE Operstate may need to be an integer
 	operData := &openolt.Indication_IntfOperInd{IntfOperInd: &openolt.IntfOperIndication{
 		Type:      nni.Type,
@@ -397,7 +433,23 @@ func (o *OltDevice) sendNniIndication(msg NniIndicationMessage, stream openolt.O
 
 func (o *OltDevice) sendPonIndication(msg PonIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
 	pon, _ := o.GetPonById(msg.PonPortID)
-	pon.OperState.Event("enable")
+	if msg.OperState == UP {
+		if err := pon.OperState.Event("enable"); err != nil {
+			log.WithFields(log.Fields{
+				"Type":      pon.Type,
+				"IntfId":    pon.ID,
+				"OperState": pon.OperState.Current(),
+			}).Errorf("Can't move PON Port to enable state: %v", err)
+		}
+	} else if msg.OperState == DOWN {
+		if err := pon.OperState.Event("disable"); err != nil {
+			log.WithFields(log.Fields{
+				"Type":      pon.Type,
+				"IntfId":    pon.ID,
+				"OperState": pon.OperState.Current(),
+			}).Errorf("Can't move PON Port to disable state: %v", err)
+		}
+	}
 	discoverData := &openolt.Indication_IntfInd{IntfInd: &openolt.IntfIndication{
 		IntfId:    pon.ID,
 		OperState: pon.OperState.Current(),
@@ -471,7 +523,7 @@ func (o *OltDevice) processOltMessages(stream openolt.Openolt_EnableIndicationSe
 func (o *OltDevice) processNniPacketIns(stream openolt.Openolt_EnableIndicationServer, wg *sync.WaitGroup) {
 	oltLogger.WithFields(log.Fields{
 		"nniChannel": o.nniPktInChannel,
-	}).Debug("Started NNI Channel")
+	}).Debug("Started Processing Packets arriving from the NNI")
 	nniId := o.Nnis[0].ID // FIXME we are assuming we have only one NNI
 	for message := range o.nniPktInChannel {
 		oltLogger.Tracef("Received packets on NNI Channel")
@@ -620,18 +672,7 @@ func (o OltDevice) DisableOlt(context.Context, *openolt.Empty) (*openolt.Empty, 
 		"oltId": o.ID,
 	}).Info("Disabling OLT")
 
-	for i, pon := range o.Pons {
-		// disable all onus
-		for _, onu := range o.Pons[i].Onus {
-			// NOTE order of these is important.
-			if err := onu.OperState.Event("disable"); err != nil {
-				log.Errorf("Error disabling ONU oper state: %v", err)
-			}
-			if err := onu.InternalState.Event("disable"); err != nil {
-				log.Errorf("Error disabling ONU: %v", err)
-			}
-		}
-
+	for _, pon := range o.Pons {
 		// disable PONs
 		msg := Message{
 			Type: PonIndication,
@@ -644,17 +685,8 @@ func (o OltDevice) DisableOlt(context.Context, *openolt.Empty) (*openolt.Empty, 
 		o.channel <- msg
 	}
 
-	// disable NNI
-	for _, nni := range o.Nnis {
-		msg := Message{
-			Type: NniIndication,
-			Data: NniIndicationMessage{
-				OperState: DOWN,
-				NniPortID: nni.ID,
-			},
-		}
-		o.channel <- msg
-	}
+	// Note that we are not disabling the NNI as the real OLT does not.
+	// The reason for that is in-band management
 
 	// disable OLT
 	oltMsg := Message{
