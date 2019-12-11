@@ -42,20 +42,21 @@ var onuLogger = log.WithFields(log.Fields{
 })
 
 type Onu struct {
-	ID        uint32
-	PonPortID uint32
-	PonPort   PonPort
-	STag      int
-	CTag      int
-	Auth      bool // automatically start EAPOL if set to true
-	Dhcp      bool // automatically start DHCP if set to true
+	ID                  uint32
+	PonPortID           uint32
+	PonPort             PonPort
+	STag                int
+	CTag                int
+	Auth                bool // automatically start EAPOL if set to true
+	Dhcp                bool // automatically start DHCP if set to true
+	HwAddress           net.HardwareAddr
+	InternalState       *fsm.FSM
+	DiscoveryRetryDelay time.Duration
+
+	// ONU State
 	// PortNo comes with flows and it's used when sending packetIndications,
 	// There is one PortNo per UNI Port, for now we're only storing the first one
 	// FIXME add support for multiple UNIs
-	HwAddress     net.HardwareAddr
-	InternalState *fsm.FSM
-
-	// ONU State
 	PortNo           uint32
 	DhcpFlowReceived bool
 
@@ -80,20 +81,21 @@ func (o *Onu) Sn() string {
 func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth bool, dhcp bool) *Onu {
 
 	o := Onu{
-		ID:               id,
-		PonPortID:        pon.ID,
-		PonPort:          pon,
-		STag:             sTag,
-		CTag:             cTag,
-		Auth:             auth,
-		Dhcp:             dhcp,
-		HwAddress:        net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(id)},
-		PortNo:           0,
-		tid:              0x1,
-		hpTid:            0x8000,
-		seqNumber:        0,
-		DoneChannel:      make(chan bool, 1),
-		DhcpFlowReceived: false,
+		ID:                  id,
+		PonPortID:           pon.ID,
+		PonPort:             pon,
+		STag:                sTag,
+		CTag:                cTag,
+		Auth:                auth,
+		Dhcp:                dhcp,
+		HwAddress:           net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(id)},
+		PortNo:              0,
+		tid:                 0x1,
+		hpTid:               0x8000,
+		seqNumber:           0,
+		DoneChannel:         make(chan bool, 1),
+		DhcpFlowReceived:    false,
+		DiscoveryRetryDelay: 60 * time.Second, // this is used to send OnuDiscoveryIndications until an activate call is received
 	}
 	o.SerialNumber = o.NewSN(olt.ID, pon.ID, o.ID)
 
@@ -416,6 +418,14 @@ func (o *Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt
 		"OnuSn":  msg.Onu.Sn(),
 		"OnuId":  o.ID,
 	}).Debug("Sent Indication_OnuDiscInd")
+
+	// after DiscoveryRetryDelay check if the state is the same and in case send a new OnuDiscIndication
+	go func(delay time.Duration) {
+		if o.InternalState.Current() == "discovered" {
+			time.Sleep(delay)
+			o.sendOnuDiscIndication(msg, stream)
+		}
+	}(o.DiscoveryRetryDelay)
 }
 
 func (o *Onu) sendOnuIndication(msg OnuIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
