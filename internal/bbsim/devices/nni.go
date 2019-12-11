@@ -153,12 +153,12 @@ func deleteNNIPair(executor Executor, nniPort *NniPort) error {
 }
 
 // NewVethChan returns a new channel for receiving packets over the NNI interface
-func (n *NniPort) NewVethChan() (chan *types.PacketMsg, error) {
-	ch, err := listenOnVeth(n.nniVeth)
+func (n *NniPort) NewVethChan() (chan *types.PacketMsg, *pcap.Handle, error) {
+	ch, handle, err := listenOnVeth(n.nniVeth)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return ch, err
+	return ch, handle, err
 }
 
 // setVethUp is responsible to activate a virtual interface
@@ -211,16 +211,17 @@ func getVethHandler(vethName string) (*pcap.Handle, error) {
 	return handle, nil
 }
 
-var listenOnVeth = func(vethName string) (chan *types.PacketMsg, error) {
+var listenOnVeth = func(vethName string) (chan *types.PacketMsg, *pcap.Handle, error) {
 
 	handle, err := getVethHandler(vethName)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	channel := make(chan *types.PacketMsg, 1024)
 
 	go func() {
+		nniLogger.Info("Start listening on NNI for packets")
 		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 		for packet := range packetSource.Packets() {
 
@@ -237,7 +238,8 @@ var listenOnVeth = func(vethName string) (chan *types.PacketMsg, error) {
 			}
 			channel <- &pkt
 		}
+		nniLogger.Info("Stop listening on NNI for packets")
 	}()
 
-	return channel, nil
+	return channel, handle, nil
 }
