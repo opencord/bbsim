@@ -23,6 +23,7 @@ import (
 	"github.com/opencord/voltha-protos/v2/go/tech_profile"
 	"google.golang.org/grpc"
 	"net"
+	"time"
 )
 
 type FlowAddSpy struct {
@@ -131,5 +132,6 @@ func createTestOnu() *Onu {
 	onu := CreateONU(olt, pon, 1, 900, 900, false, false)
 	// NOTE we need this in order to create the OnuChannel
 	onu.InternalState.Event("initialize")
+	onu.DiscoveryRetryDelay = 100 * time.Millisecond
 	return onu
 }
