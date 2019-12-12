@@ -16,6 +16,24 @@
       "revId": "87f921c88d34e92eeaf277f2ee5e5ffff6fdd046",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c2ac8d7_a4d85db5",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 671,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-12T18:24:01Z",
+      "side": 1,
+      "message": "Disabling a PON in the real world won\u0027t change anything in the ONUs (as the OLT won\u0027t be able to communicate with them), what we\u0027ll need to figure out is: in which state should the ONU go when a PON is re-enabled? (I suspect it will go through discovery again but I\u0027ll verify)",
+      "parentUuid": "2a063024_cacb09ca",
+      "revId": "87f921c88d34e92eeaf277f2ee5e5ffff6fdd046",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
