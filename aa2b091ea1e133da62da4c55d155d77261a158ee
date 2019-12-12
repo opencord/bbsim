@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "073850e8_f6e8d380",
+        "filename": "Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-12T18:09:10Z",
+      "side": 1,
+      "message": "why have this been removed?",
+      "range": {
+        "startLine": 140,
+        "startChar": 0,
+        "endLine": 145,
+        "endChar": 5
+      },
+      "revId": "aa2b091ea1e133da62da4c55d155d77261a158ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
