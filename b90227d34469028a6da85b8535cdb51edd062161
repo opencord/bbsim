@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f7bbc3c_ae3e6bea",
+        "filename": ".project",
+        "patchSetId": 11
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-12T17:41:15Z",
+      "side": 1,
+      "message": "What is this file?",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 21
+      },
+      "revId": "b90227d34469028a6da85b8535cdb51edd062161",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1aee9848_5331f966",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-12T17:41:15Z",
+      "side": 1,
+      "message": "is this still a WIP?",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 5
+      },
+      "revId": "b90227d34469028a6da85b8535cdb51edd062161",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75dfaa6b_58f58f88",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-12T17:41:15Z",
+      "side": 1,
+      "message": "Can we remove the dashes?",
+      "range": {
+        "startLine": 39,
+        "startChar": 15,
+        "endLine": 39,
+        "endChar": 19
+      },
+      "revId": "b90227d34469028a6da85b8535cdb51edd062161",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9cf7df01_bab997a3",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-12T17:41:15Z",
+      "side": 1,
+      "message": "Can we remove the dashes?",
+      "range": {
+        "startLine": 86,
+        "startChar": 15,
+        "endLine": 86,
+        "endChar": 19
+      },
+      "revId": "b90227d34469028a6da85b8535cdb51edd062161",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24cd4f4c_812cdac7",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-12T17:41:15Z",
+      "side": 1,
+      "message": "is this still a WIP?",
+      "range": {
+        "startLine": 141,
+        "startChar": 0,
+        "endLine": 141,
+        "endChar": 5
+      },
+      "revId": "b90227d34469028a6da85b8535cdb51edd062161",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4cb3fb1_6822406b",
+        "filename": "internal/bbsimctl/commands/onu.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-12T17:41:15Z",
+      "side": 1,
+      "message": "looks like this is not used",
+      "range": {
+        "startLine": 39,
+        "startChar": 5,
+        "endLine": 39,
+        "endChar": 15
+      },
+      "revId": "b90227d34469028a6da85b8535cdb51edd062161",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a9c95e6_a13c80ca",
+        "filename": "internal/bbsimctl/commands/onu.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-12T17:41:15Z",
+      "side": 1,
+      "message": "shouldn\u0027t this be type \"IgmpSubAction\"?",
+      "range": {
+        "startLine": 42,
+        "startChar": 18,
+        "endLine": 42,
+        "endChar": 24
+      },
+      "revId": "b90227d34469028a6da85b8535cdb51edd062161",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d4f2acb_ebe9763c",
+        "filename": "internal/bbsimctl/commands/onu.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-12T17:41:15Z",
+      "side": 1,
+      "message": "Can we use the structured format?\n.WithFields(log.Fields{\n                        \"SerialNumber\": serialNumber,\n                        \"Err\": err,\n                })",
+      "range": {
+        "startLine": 270,
+        "startChar": 2,
+        "endLine": 270,
+        "endChar": 12
+      },
+      "revId": "b90227d34469028a6da85b8535cdb51edd062161",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1dfe821d_f6ca9cec",
+        "filename": "internal/bbsimctl/commands/onu.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-12T17:41:15Z",
+      "side": 1,
+      "message": "can we use the structured format?",
+      "range": {
+        "startLine": 279,
+        "startChar": 6,
+        "endLine": 279,
+        "endChar": 12
+      },
+      "revId": "b90227d34469028a6da85b8535cdb51edd062161",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
