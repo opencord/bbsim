@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a063024_cacb09ca",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 671,
+      "author": {
+        "id": 1000601
+      },
+      "writtenOn": "2019-12-12T06:54:20Z",
+      "side": 1,
+      "message": "Have a question here, what should be the ONU state when PON port state is set to down?",
+      "revId": "87f921c88d34e92eeaf277f2ee5e5ffff6fdd046",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
