@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49f751aa_808eadeb",
+        "filename": "go.mod",
+        "patchSetId": 6
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-12T18:09:10Z",
+      "side": 1,
+      "message": "why has this been downgraded?",
+      "range": {
+        "startLine": 17,
+        "startChar": 35,
+        "endLine": 17,
+        "endChar": 64
+      },
+      "revId": "dc36d1145024d7bc303ed68ffc66c54d33101748",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e55de57_cb5eb9d3",
+        "filename": "internal/bbsim/responders/sadis/sadis.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-12T18:09:10Z",
+      "side": 1,
+      "message": "what is this IP? I assume this is the IP of the BBSim service, but we have no guarantee this is going to change, I would use the service name and leave the resolution up to kubernetes",
+      "range": {
+        "startLine": 120,
+        "startChar": 27,
+        "endLine": 120,
+        "endChar": 39
+      },
+      "revId": "dc36d1145024d7bc303ed68ffc66c54d33101748",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62f41b3c_4113f0eb",
+        "filename": "internal/bbsim/responders/sadis/sadis.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-12T18:09:10Z",
+      "side": 1,
+      "message": "the port can be configured, we should read it from configuration",
+      "range": {
+        "startLine": 120,
+        "startChar": 40,
+        "endLine": 120,
+        "endChar": 45
+      },
+      "revId": "dc36d1145024d7bc303ed68ffc66c54d33101748",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "205ec05f_54f1e21c",
+        "filename": "internal/bbsim/responders/sadis/sadis.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-12T18:09:10Z",
+      "side": 1,
+      "message": "same as the previous address",
+      "range": {
+        "startLine": 165,
+        "startChar": 27,
+        "endLine": 165,
+        "endChar": 45
+      },
+      "revId": "dc36d1145024d7bc303ed68ffc66c54d33101748",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fce48ea_e0b52315",
+        "filename": "internal/bbsim/responders/sadis/sadis.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-12T18:09:10Z",
+      "side": 1,
+      "message": "Bandwidth profiles across the stack are case sensitive, we should keep it consistent",
+      "range": {
+        "startLine": 257,
+        "startChar": 25,
+        "endLine": 257,
+        "endChar": 57
+      },
+      "revId": "dc36d1145024d7bc303ed68ffc66c54d33101748",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
