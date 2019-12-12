@@ -365,6 +365,7 @@ func (o *OltDevice) sendOltIndication(msg OltIndicationMessage, stream openolt.O
 	data := &openolt.Indication_OltInd{OltInd: &openolt.OltIndication{OperState: msg.OperState.String()}}
 	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
 		oltLogger.Errorf("Failed to send Indication_OltInd: %v", err)
+		return
 	}
 
 	oltLogger.WithFields(log.Fields{
@@ -384,6 +385,7 @@ func (o *OltDevice) sendNniIndication(msg NniIndicationMessage, stream openolt.O
 
 	if err := stream.Send(&openolt.Indication{Data: operData}); err != nil {
 		oltLogger.Errorf("Failed to send Indication_IntfOperInd for NNI: %v", err)
+		return
 	}
 
 	oltLogger.WithFields(log.Fields{
@@ -403,6 +405,7 @@ func (o *OltDevice) sendPonIndication(msg PonIndicationMessage, stream openolt.O
 
 	if err := stream.Send(&openolt.Indication{Data: discoverData}); err != nil {
 		oltLogger.Errorf("Failed to send Indication_IntfInd: %v", err)
+		return
 	}
 
 	oltLogger.WithFields(log.Fields{
@@ -418,6 +421,7 @@ func (o *OltDevice) sendPonIndication(msg PonIndicationMessage, stream openolt.O
 
 	if err := stream.Send(&openolt.Indication{Data: operData}); err != nil {
 		oltLogger.Errorf("Failed to send Indication_IntfOperInd for PON: %v", err)
+		return
 	}
 
 	oltLogger.WithFields(log.Fields{
