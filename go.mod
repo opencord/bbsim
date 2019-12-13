@@ -8,6 +8,7 @@ require (
 	github.com/deckarep/golang-set v1.7.1 // indirect
 	github.com/golang/protobuf v1.3.2
 	github.com/google/gopacket v1.1.17
+	github.com/gorilla/mux v1.7.3
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jhump/protoreflect v1.5.0

@@ -31,6 +31,7 @@ import (
 	"github.com/opencord/bbsim/api/legacy"
 	"github.com/opencord/bbsim/internal/bbsim/api"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
+	"github.com/opencord/bbsim/internal/bbsim/responders/sadis"
 	"github.com/opencord/bbsim/internal/common"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -39,7 +40,7 @@ import (
 
 func startApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 	address := common.Options.BBSim.ApiAddress
-	log.Debugf("APIServer listening on: %v", address)
+	log.Debugf("APIServer listening on %v", address)
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Fatalf("APIServer failed to listen: %v", err)
@@ -81,7 +82,7 @@ func startApiRestServer(apiDoneChannel chan bool, group *sync.WaitGroup, grpcAdd
 	s := &http.Server{Addr: address, Handler: mux}
 
 	go func() {
-		log.Infof("REST API server listening on %s ...", address)
+		log.Infof("REST API server listening on %s", address)
 		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Errorf("Could not start API server: %v", err)
 			return
@@ -102,7 +103,7 @@ func startLegacyApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 	grpcAddress := common.Options.BBSim.LegacyApiAddress
 	restAddress := common.Options.BBSim.LegacyRestApiAddress
 
-	log.Debugf("Legacy APIServer listening on: %v", grpcAddress)
+	log.Debugf("Legacy APIServer listening on %v", grpcAddress)
 	listener, err := net.Listen("tcp", grpcAddress)
 	if err != nil {
 		log.Fatalf("Legacy APIServer failed to listen: %v", err)
@@ -158,7 +159,7 @@ func main() {
 	// control channels, they are only closed when the goroutine needs to be terminated
 	apiDoneChannel := make(chan bool)
 
-	devices.CreateOLT(
+	olt := devices.CreateOLT(
 		options.Olt.ID,
 		int(options.Olt.NniPorts),
 		int(options.Olt.PonPorts),
@@ -188,6 +189,10 @@ func main() {
 	go startApiServer(apiDoneChannel, &wg)
 	go startLegacyApiServer(apiDoneChannel, &wg)
 	log.Debugf("Started APIService")
+	if common.Options.BBSim.SadisServer != false {
+		wg.Add(1)
+		go sadis.StartRestServer(olt, &wg)
+	}
 
 	wg.Wait()
 

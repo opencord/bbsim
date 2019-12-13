@@ -36,8 +36,8 @@ Once ``bbsim`` is up and running you’ll see this on the console:
    time="2019-10-18T00:24:46Z" level=info msg="Successfully activated DHCP Server" module=NNI
    time="2019-10-18T00:24:46Z" level=debug msg="Created OLT with id: 0"
    time="2019-10-18T00:24:46Z" level=debug msg="Started APIService"
-   time="2019-10-18T00:24:46Z" level=debug msg="APIServer Listening on: 0.0.0.0:50070"
-   time="2019-10-18T00:24:46Z" level=debug msg="OLT Listening on: 0.0.0.0:50060" module=OLT
+   time="2019-10-18T00:24:46Z" level=debug msg="APIServer Listening on 0.0.0.0:50070"
+   time="2019-10-18T00:24:46Z" level=debug msg="OLT Listening on 0.0.0.0:50060" module=OLT
 
 At this point you can start ``bbr`` (note that you need to pass the same
 number of ONUs and PON Ports to the two processes):

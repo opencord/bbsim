@@ -21,7 +21,7 @@ DOCKER_TAG  			?= ${VERSION}
 DOCKER_REPOSITORY  		?= ""
 DOCKER_REGISTRY 		?= ""
 DOCKER_RUN_ARGS			?= ""
-DOCKER_PORTS			?= -p 50070:50070 -p 50060:50060 -p 50071:50071 -p 50072:50072 -p 50073:50073
+DOCKER_PORTS			?= -p 50070:50070 -p 50060:50060 -p 50071:50071 -p 50072:50072 -p 50073:50073 -p 50074:50074
 
 ## protobuf related
 VOLTHA_PROTOS			?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/opencord/voltha-protos/v2)

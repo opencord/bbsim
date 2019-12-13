@@ -6,11 +6,12 @@
 bbsim:
   enable_dhcp: false
   enable_auth: false
-  openolt_address: "0.0.0.0:50060"
-  api_address: "0.0.0.0:50070"
-  rest_api_address: "0.0.0.0:50071"
-  legacy_api_address: "0.0.0.0:50072"
-  legacy_rest_api_address: "0.0.0.0:50073"
+  openolt_address: ":50060"
+  api_address: ":50070"
+  rest_api_address: ":50071"
+  # legacy_api_address: ":50072"
+  # legacy_rest_api_address: ":50073"
+  # sadis_rest_address: ":50073"
   # log_level: "debug" 
   # log_caller: false
   # delay: 200

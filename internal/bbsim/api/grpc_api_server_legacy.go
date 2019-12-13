@@ -192,7 +192,7 @@ func StartRestGatewayService(channel chan bool, group *sync.WaitGroup, grpcAddre
 	s := &http.Server{Addr: hostandport, Handler: mux}
 
 	go func() {
-		logger.Infof("legacy REST API server listening on %s ...", hostandport)
+		logger.Infof("legacy REST API server listening on %s", hostandport)
 		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Errorf("Could not start legacy API server: %v", err)
 			return
