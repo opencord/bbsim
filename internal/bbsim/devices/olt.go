@@ -52,6 +52,7 @@ type OltDevice struct {
 	InternalState   *fsm.FSM
 	channel         chan Message
 	nniPktInChannel chan *bbsim.PacketMsg // packets coming in from the NNI and going to VOLTHA
+	omciChannel     chan omcisim.OmciChMessage
 
 	Delay int
 
@@ -105,7 +106,8 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 			"enter_state": func(e *fsm.Event) {
 				oltLogger.Debugf("Changing OLT InternalState from %s to %s", e.Src, e.Dst)
 			},
-			"enter_initialized": func(e *fsm.Event) { olt.InitOlt() },
+			"enter_initialized": func(e *fsm.Event) { olt.initOlt() },
+			"enter_deleted":     func(e *fsm.Event) { olt.deleteOlt() },
 		},
 	)
 
@@ -155,7 +157,23 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 	return &olt
 }
 
-func (o *OltDevice) InitOlt() error {
+func (o *OltDevice) deleteOlt() error {
+	// TODO handle hard poweroff (i.e. no indications sent to Voltha) vs soft poweroff
+
+	time.Sleep(1 * time.Second) // we need to give the OLT the time to respond to all the pending gRPC request before stopping the server
+	if err := o.StopOltServer(); err != nil {
+		return err
+	}
+
+	// terminate the OLT's processOltMessages go routine
+	close(o.channel)
+	// terminate the OLT's processNniPacketIns go routine
+	close(o.nniPktInChannel)
+
+	return nil
+}
+
+func (o *OltDevice) initOlt() error {
 
 	if oltServer == nil {
 		oltServer, _ = o.newOltServer()
@@ -205,17 +223,6 @@ func (o *OltDevice) RestartOLT() error {
 		}).Errorf("Error deleting OLT: %v", err)
 		return err
 	}
-
-	// TODO handle hard poweroff (i.e. no indications sent to Voltha) vs soft poweroff
-	time.Sleep(1 * time.Second) // we need to give the OLT the time to respond to all the pending gRPC request before stopping the server
-	if err := o.StopOltServer(); err != nil {
-		return err
-	}
-
-	// terminate the OLT's processOltMessages go routine
-	close(o.channel)
-	// terminate the OLT's processNniPacketIns go routine
-	close(o.nniPktInChannel)
 
 	time.Sleep(time.Duration(rebootDelay) * time.Second)
 
@@ -326,11 +333,15 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error 
 }
 
 func (o *OltDevice) processOmciMessages() {
-	ch := omcisim.GetChannel()
+	// make sure that this routine is only started once
+	if o.omciChannel != nil {
+		return
+	}
 
+	o.omciChannel = omcisim.GetChannel()
 	oltLogger.Debug("Starting OMCI Indication Channel")
 
-	for message := range ch {
+	for message := range o.omciChannel {
 		onuId := message.Data.OnuId
 		intfId := message.Data.IntfId
 		onu, err := o.FindOnuById(intfId, onuId)
@@ -664,6 +675,12 @@ func (o OltDevice) DisableOlt(context.Context, *openolt.Empty) (*openolt.Empty, 
 		},
 	}
 	o.channel <- oltMsg
+
+	// terminate the OLT's processOltMessages go routine
+	close(o.channel)
+	// terminate the OLT's processNniPacketIns go routine
+	close(o.nniPktInChannel)
+
 	return new(openolt.Empty), nil
 }
 
