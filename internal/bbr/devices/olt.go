@@ -214,7 +214,9 @@ func (o *OltMock) handleOnuIndication(client openolt.OpenoltClient, onuInd *open
 		}).Fatal("Cannot find ONU")
 	}
 
-	go onu.ProcessOnuMessages(nil, client)
+	ctx, cancel := context.WithCancel(context.TODO())
+	go onu.ProcessOnuMessages(ctx, nil, client)
+	defer cancel()
 
 	go func() {
 

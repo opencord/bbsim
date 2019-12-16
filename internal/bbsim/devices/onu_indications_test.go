@@ -17,6 +17,7 @@
 package devices
 
 import (
+	"context"
 	"errors"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
 	"google.golang.org/grpc"
@@ -52,7 +53,8 @@ func Test_Onu_DiscoverIndication_send_on_discovery(t *testing.T) {
 		fail:      false,
 		channel:   make(chan int, 10),
 	}
-	go onu.ProcessOnuMessages(stream, nil)
+	ctx, cancel := context.WithCancel(context.TODO())
+	go onu.ProcessOnuMessages(ctx, stream, nil)
 	onu.InternalState.SetState("initialized")
 	onu.InternalState.Event("discover")
 
@@ -62,6 +64,7 @@ func Test_Onu_DiscoverIndication_send_on_discovery(t *testing.T) {
 		assert.Equal(t, stream.Calls[1].IntfId, onu.PonPortID)
 		assert.Equal(t, stream.Calls[1].SerialNumber, onu.SerialNumber)
 	}
+	cancel()
 }
 
 // test that if the discovery indication is not acknowledge we'll keep sending new ones
@@ -73,7 +76,8 @@ func Test_Onu_DiscoverIndication_retry_on_discovery(t *testing.T) {
 		fail:      false,
 		channel:   make(chan int, 10),
 	}
-	go onu.ProcessOnuMessages(stream, nil)
+	ctx, cancel := context.WithCancel(context.TODO())
+	go onu.ProcessOnuMessages(ctx, stream, nil)
 	onu.InternalState.SetState("initialized")
 	onu.InternalState.Event("discover")
 
@@ -81,6 +85,7 @@ func Test_Onu_DiscoverIndication_retry_on_discovery(t *testing.T) {
 	case <-time.After(400 * time.Millisecond):
 		assert.Equal(t, stream.CallCount, 4)
 	}
+	cancel()
 }
 
 // test that if the discovery indication is not acknowledge we'll send a new one
@@ -93,7 +98,8 @@ func Test_Onu_DiscoverIndication_retry_on_discovery_stops(t *testing.T) {
 		fail:      false,
 		channel:   make(chan int, 10),
 	}
-	go onu.ProcessOnuMessages(stream, nil)
+	ctx, cancel := context.WithCancel(context.TODO())
+	go onu.ProcessOnuMessages(ctx, stream, nil)
 	onu.InternalState.SetState("initialized")
 	onu.InternalState.Event("discover")
 
@@ -110,4 +116,5 @@ func Test_Onu_DiscoverIndication_retry_on_discovery_stops(t *testing.T) {
 
 		assert.Equal(t, stream.CallCount, 2)
 	}
+	cancel()
 }
