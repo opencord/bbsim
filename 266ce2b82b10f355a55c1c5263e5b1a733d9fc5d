@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39b0ee30_d8ac9711",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2019-12-17T18:17:45Z",
+      "side": 1,
+      "message": "wouldn\u0027t be better to have only one way to exit this look?",
+      "range": {
+        "startLine": 479,
+        "startChar": 2,
+        "endLine": 486,
+        "endChar": 4
+      },
+      "revId": "266ce2b82b10f355a55c1c5263e5b1a733d9fc5d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
