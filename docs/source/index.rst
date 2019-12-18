@@ -22,8 +22,8 @@ Welcome to BBSim's documentation!
 Quickstart
 ----------
 
-BBSim (a.k.a. BroadBand Simulator) is a tool designed to emulate an `Openolt <https://github.com/opencord/openolt>`_
-compatible device.
+BBSim (a.k.a. BroadBand Simulator) is a tool designed to emulate an `Openolt
+<https://github.com/opencord/openolt>`_ compatible device.
 
 In order to use BBSim you need to have:
 
@@ -31,7 +31,8 @@ In order to use BBSim you need to have:
 - helm
 - a working installation of VOLTHA
 
-We strongly recommend the utilization of `kind-voltha <https://github.com/ciena/kind-voltha>`_ to setup such environment.
+We strongly recommend the utilization of `kind-voltha
+<https://github.com/ciena/kind-voltha>`_ to setup such environment.
 
 Installation
 ------------
@@ -48,7 +49,8 @@ If you need to specify a custom image for BBSim you can:
 
     helm install -n bbsim cord/bbsim --set images.bbsim.repository=bbsim --set images.bbsim.tag=candidate --set images.bbsim.pullPolicy=Never
 
-The BBSim installation can be customized to emulate multiple ONUs and multiple PON Ports:
+The BBSim installation can be customized to emulate multiple ONUs and multiple
+PON Ports:
 
 .. code:: bash
 
@@ -84,7 +86,8 @@ Enable the device:
 BBSim startup options
 ---------------------
 
-``BBSim`` supports a series of options that can be set at startup, you can see the list via ``./bbsim --help``
+``BBSim`` supports a series of options that can be set at startup, you can see
+the list via ``./bbsim --help``
 
 .. code:: bash
 
@@ -115,20 +118,27 @@ BBSim startup options
      -s_tag int
            S-Tag value (default 900)
 
-``BBSim`` also looks for a configuration file in ``configs/bbsim.yaml`` from which it reads a number of default settings. The command line options listed above override the corresponding coniguration file settings. A sample configuration file is given below:
+``BBSim`` also looks for a configuration file in ``configs/bbsim.yaml`` from
+which it reads a number of default settings. The command line options listed
+above override the corresponding configuration file settings. A sample
+configuration file is given below:
 
 .. literalinclude:: ../../configs/bbsim.yaml
 
 Using the BBSim Sadis server in ONOS
 ------------------------------------
 
-BBSim provides a simple server for testing with the ONOS Sadis app. The server listens on port 50074 by default and provides the endpoints ``subscribers/<id>`` and ``bandwidthprofiles/<id>``.
+BBSim provides a simple server for testing with the ONOS Sadis app. The server
+listens on port 50074 by default and provides the endpoints
+``subscribers/<id>`` and ``bandwidthprofiles/<id>``.
 
-To configure ONOS to use the BBSim ``Sadis`` server endpoints, the Sadis app must use be configured as follows (see ``examples/sadis-in-bbsim.json``):
+To configure ONOS to use the BBSim ``Sadis`` server endpoints, the Sadis app
+must use be configured as follows (see ``examples/sadis-in-bbsim.json``):
 
 .. literalinclude:: ../../examples/sadis-in-bbsim.json
 
-This base configuration may also be obtained directly from the BBSim Sadis server:
+This base configuration may also be obtained directly from the BBSim Sadis
+server:
 
 .. code:: bash
 
@@ -151,4 +161,3 @@ You can verify the current Sadis configuration:
    curl --user karaf:karaf http://localhost:8181/onos/v1/network/configuration/apps/org.opencord.sadis
 
 In ONOS subscriber information can be queried using ``sadis <id>``.
-

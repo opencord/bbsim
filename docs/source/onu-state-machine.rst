@@ -98,10 +98,10 @@ check the previous table to verify when you can trigger those actions and
       - Notes
     * - shutdown
       - disable
-      - Emulates a devide shutdown. Sends a ``DyingGaspInd`` and then an ``OnuIndication{OperState: 'down'}``
+      - Emulates a device shutdown. Sends a ``DyingGaspInd`` and then an ``OnuIndication{OperState: 'down'}``
     * - poweron
       - enable
-      - Emulates a devide power on. Sends a ``OnuDiscInd`` and then an ``OnuIndication{OperState: 'up'}``
+      - Emulates a device power on. Sends a ``OnuDiscInd`` and then an ``OnuIndication{OperState: 'up'}``
     * - auth_restart
       - start_auth
       - Forces the ONU to send a new ``EapStart`` packet.
@@ -133,7 +133,7 @@ Below is a diagram of the state machine:
             created [peripheries=2]
             initialized
             discovered
-            { 
+            {
                 rank=same
                 enabled
                 disabled [fillcolor="#f9d6ff"]
@@ -147,13 +147,13 @@ Below is a diagram of the state machine:
             style=rounded
             style=dotted
             node [fillcolor="#e6ffc2"]
- 
+
             eapol_flow_received
             auth_started
             eap_start_sent
             eap_response_identity_sent
             eap_response_challenge_sent
-            { 
+            {
                 rank=same
                 eap_response_success_received
                 auth_failed
@@ -177,16 +177,16 @@ Below is a diagram of the state machine:
             node [fillcolor="#fffacc"]
             style=rounded
             style=dotted
-            
+
             dhcp_started
             dhcp_discovery_sent
             dhcp_request_sent
-            { 
+            {
                 rank=same
                 dhcp_ack_received
                 dhcp_failed
             }
-            
+
             dhcp_started -> dhcp_discovery_sent -> dhcp_request_sent -> dhcp_ack_received
             dhcp_started -> dhcp_failed
             dhcp_discovery_sent -> dhcp_failed
