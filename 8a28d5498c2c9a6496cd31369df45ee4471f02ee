@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e331154a_f1045a9f",
+        "filename": "docs/Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2019-12-18T22:09:37Z",
+      "side": 1,
+      "message": "You\u0027re correct. \n\nMost of the other Makefiles specify `SHELL \u003d bash -e -o pipefail`,  and there\u0027s also a `set -u` in some places here, so I\u0027ll update to specify bash.",
+      "parentUuid": "bff4986c_91bb9ba0",
+      "range": {
+        "startLine": 14,
+        "startChar": 1,
+        "endLine": 14,
+        "endChar": 7
+      },
+      "revId": "8a28d5498c2c9a6496cd31369df45ee4471f02ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0af9cc5a_b9b07d01",
         "filename": "docs/Makefile",
         "patchSetId": 4
