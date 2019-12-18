@@ -90,10 +90,13 @@ docker-run: # @HELP Runs the container locally (available options: DOCKER_RUN_AR
 docker-run-dev: # @HELP Runs the container locally (intended for development purposes, not in detached mode)
 	docker run ${DOCKER_PORTS} --privileged --rm --name bbsim ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} /app/bbsim ${DOCKER_RUN_ARGS}
 
-.PHONY: docs
+.PHONY: docs docs-lint
 docs: swagger # @HELP Generate docs and opens them in the browser
-	cd docs; make doc_venv; make html; cd -
+	make -C docs html
 	@echo -e "\nBBSim documentation generated in file://${PWD}/docs/build/html/index.html"
+
+docs-lint:
+	make -C docs lint
 
 # Release related items
 # Generates binaries in $RELEASE_DIR with name $RELEASE_NAME-$RELEASE_OS_ARCH

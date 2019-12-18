@@ -7,7 +7,7 @@ BBR (a.k.a BBSim Reflector) is a tool designed to scale test BBSim. It
 is responsible to emulate ONOS and VOLTHA in order to quickly reply to
 any message that BBSim sends.
 
-Here is a graph of the measuraments of BBSim performance captured over
+Here is a graph of the measurements of BBSim performance captured over
 10 runs with different PON Layout
 
 .. figure:: ./_static/bbr_runs.png
@@ -47,7 +47,7 @@ number of ONUs and PON Ports to the two processes):
    $ ./bbr -onu 16 -pon 4
 
 ``bbr`` will run to completion and output the time it took to bring all
-the ONUs to the ``dhcp_ack`` state. If the ``bbr`` process doesn’t exit,
+the ONUs to the ``dhcp_ack`` state. If the ``bbr`` process doesn't exit,
 it means something went wrong.
 
 Debugging and issue reporting
