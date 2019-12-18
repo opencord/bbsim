@@ -19,6 +19,7 @@ package devices
 
 import (
 	"errors"
+	"github.com/google/gopacket/pcap"
 	"testing"
 
 	"github.com/opencord/bbsim/internal/bbsim/types"
@@ -58,9 +59,9 @@ func TestCreateNNIPair(t *testing.T) {
 	listenOnVethCalled := false
 	_listenOnVeth := listenOnVeth
 	defer func() { listenOnVeth = _listenOnVeth }()
-	listenOnVeth = func(vethName string) (chan *types.PacketMsg, error) {
+	listenOnVeth = func(vethName string) (chan *types.PacketMsg, *pcap.Handle, error) {
 		listenOnVethCalled = true
-		return make(chan *types.PacketMsg, 1), nil
+		return make(chan *types.PacketMsg, 1), nil, nil
 	}
 	spy := &ExecutorSpy{
 		failRun: false,
@@ -71,7 +72,7 @@ func TestCreateNNIPair(t *testing.T) {
 	nni := NniPort{}
 
 	err := createNNIPair(spy, &olt, &nni)
-	olt.nniPktInChannel, _ = nni.NewVethChan()
+	olt.nniPktInChannel, olt.nniHandle, _ = nni.NewVethChan()
 
 	assert.Equal(t, spy.CommandCallCount, 3)
 	assert.Equal(t, startDHCPServerCalled, true)
