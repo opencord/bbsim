@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bff4986c_91bb9ba0",
+        "filename": "docs/Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1000553
+      },
+      "writtenOn": "2019-12-18T21:48:10Z",
+      "side": 1,
+      "message": "source is not included in /bin/sh (used in make by default in most distros). I would prefer to change to \u0027.\u0027 which is POSIX compliant",
+      "range": {
+        "startLine": 14,
+        "startChar": 1,
+        "endLine": 14,
+        "endChar": 7
+      },
+      "revId": "8a28d5498c2c9a6496cd31369df45ee4471f02ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0af9cc5a_b9b07d01",
+        "filename": "docs/Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000553
+      },
+      "writtenOn": "2019-12-18T21:48:10Z",
+      "side": 1,
+      "message": "same here, and below",
+      "range": {
+        "startLine": 19,
+        "startChar": 1,
+        "endLine": 19,
+        "endChar": 7
+      },
+      "revId": "8a28d5498c2c9a6496cd31369df45ee4471f02ee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
