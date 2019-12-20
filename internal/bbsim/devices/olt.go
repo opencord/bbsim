@@ -680,26 +680,26 @@ loop:
 					if err := pon.OperState.Event("enable"); err != nil {
 						oltLogger.WithFields(log.Fields{
 							"IntfId": msg.PonPortID,
-							"Err": err,
+							"Err":    err,
 						}).Error("Can't Enable Oper state for PON Port")
 					}
 					if err := pon.InternalState.Event("enable"); err != nil {
 						oltLogger.WithFields(log.Fields{
 							"IntfId": msg.PonPortID,
-							"Err": err,
+							"Err":    err,
 						}).Error("Can't Enable Internal state for PON Port")
 					}
 				} else if msg.OperState == DOWN {
 					if err := pon.OperState.Event("disable"); err != nil {
 						oltLogger.WithFields(log.Fields{
 							"IntfId": msg.PonPortID,
-							"Err": err,
+							"Err":    err,
 						}).Error("Can't Disable Oper state for PON Port")
 					}
 					if err := pon.InternalState.Event("disable"); err != nil {
 						oltLogger.WithFields(log.Fields{
 							"IntfId": msg.PonPortID,
-							"Err": err,
+							"Err":    err,
 						}).Error("Can't Disable Internal state for PON Port")
 					}
 				}

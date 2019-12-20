@@ -17,6 +17,7 @@
 package devices
 
 import (
+	omcisim "github.com/opencord/omci-sim"
 	"gotest.tools/assert"
 	"testing"
 )
@@ -31,7 +32,7 @@ func Test_Onu_CreateOnu(t *testing.T) {
 		Olt: &olt,
 	}
 
-	onu := CreateONU(&olt, pon, 1, 900, 900, true, false,0,false)
+	onu := CreateONU(&olt, pon, 1, 900, 900, true, false, 0, false)
 
 	assert.Equal(t, onu.Sn(), "BBSM00000101")
 	assert.Equal(t, onu.STag, 900)
@@ -39,4 +40,45 @@ func Test_Onu_CreateOnu(t *testing.T) {
 	assert.Equal(t, onu.Auth, true)
 	assert.Equal(t, onu.Dhcp, false)
 	assert.Equal(t, onu.HwAddress.String(), "2e:60:70:00:01:01")
+}
+
+func TestOnu_processOmciMessage_GemPortAdded(t *testing.T) {
+
+	receivedValues := []bool{}
+
+	checker := func(ch chan bool, done chan int) {
+		for v := range ch {
+			receivedValues = append(receivedValues, v)
+		}
+		done <- 0
+	}
+
+	onu := createTestOnu()
+
+	// create two listeners on the GemPortAdded event
+	ch1 := onu.GetGemPortChan()
+	ch2 := onu.GetGemPortChan()
+
+	msg := omcisim.OmciChMessage{
+		Type: omcisim.GemPortAdded,
+		Data: omcisim.OmciChMessageData{
+			IntfId: 1,
+			OnuId:  1,
+		},
+	}
+
+	onu.processOmciMessage(msg, nil)
+
+	done := make(chan int)
+
+	go checker(ch1, done)
+	go checker(ch2, done)
+
+	// wait for the messages to be received on the "done" channel
+	<-done
+	<-done
+
+	// make sure all channel are closed and removed
+	assert.Equal(t, len(onu.GemPortChannels), 0)
+	assert.Equal(t, len(receivedValues), 2)
 }

@@ -65,14 +65,17 @@ type Onu struct {
 	// PortNo comes with flows and it's used when sending packetIndications,
 	// There is one PortNo per UNI Port, for now we're only storing the first one
 	// FIXME add support for multiple UNIs (each UNI has a different PortNo)
-	PortNo           uint32
-	DhcpFlowReceived bool
-	Flows            []FlowKey
+	PortNo            uint32
+	GemPortAdded      bool
+	EapolFlowReceived bool
+	DhcpFlowReceived  bool
+	Flows             []FlowKey
 
 	OperState    *fsm.FSM
 	SerialNumber *openolt.SerialNumber
 
-	Channel chan Message // this Channel is to track state changes OMCI messages, EAPOL and DHCP packets
+	Channel         chan Message // this Channel is to track state changes OMCI messages, EAPOL and DHCP packets
+	GemPortChannels []chan bool  // this channels are used to notify everyone that is interested that a GemPort has been added
 
 	// OMCI params
 	tid        uint16
@@ -86,6 +89,12 @@ type Onu struct {
 
 func (o *Onu) Sn() string {
 	return common.OnuSnToString(o.SerialNumber)
+}
+
+func (o *Onu) GetGemPortChan() chan bool {
+	listener := make(chan bool, 1)
+	o.GemPortChannels = append(o.GemPortChannels, listener)
+	return listener
 }
 
 func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth bool, dhcp bool, delay time.Duration, isMock bool) *Onu {
@@ -105,6 +114,8 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 		seqNumber:           0,
 		DoneChannel:         make(chan bool, 1),
 		DhcpFlowReceived:    false,
+		EapolFlowReceived:   false,
+		GemPortAdded:        false,
 		DiscoveryRetryDelay: 60 * time.Second, // this is used to send OnuDiscoveryIndications until an activate call is received
 		Flows:               []FlowKey{},
 		DiscoveryDelay:      delay,
@@ -130,18 +141,18 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 			{Name: "receive_eapol_flow", Src: []string{"enabled", "gem_port_added"}, Dst: "eapol_flow_received"},
 			{Name: "add_gem_port", Src: []string{"enabled", "eapol_flow_received"}, Dst: "gem_port_added"},
 			// NOTE should disabled state be different for oper_disabled (emulating an error) and admin_disabled (received a disabled call via VOLTHA)?
-			{Name: "disable", Src: []string{"enabled", "eapol_flow_received", "gem_port_added", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed", "pon_disabled"}, Dst: "disabled"},
+			{Name: "disable", Src: []string{"enabled", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed", "pon_disabled"}, Dst: "disabled"},
 			// ONU state when PON port is disabled but ONU is power ON(more states should be added in src?)
-			{Name: "pon_disabled", Src: []string{"enabled", "gem_port_added", "eapol_flow_received", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "pon_disabled"},
+			{Name: "pon_disabled", Src: []string{"enabled", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "pon_disabled"},
 			// EAPOL
-			{Name: "start_auth", Src: []string{"eapol_flow_received", "gem_port_added", "eap_start_sent", "eap_response_identity_sent", "eap_response_challenge_sent", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed", "igmp_join_started", "igmp_left", "igmp_join_error"}, Dst: "auth_started"},
+			{Name: "start_auth", Src: []string{"enabled", "eap_start_sent", "eap_response_identity_sent", "eap_response_challenge_sent", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed", "igmp_join_started", "igmp_left", "igmp_join_error"}, Dst: "auth_started"},
 			{Name: "eap_start_sent", Src: []string{"auth_started"}, Dst: "eap_start_sent"},
 			{Name: "eap_response_identity_sent", Src: []string{"eap_start_sent"}, Dst: "eap_response_identity_sent"},
 			{Name: "eap_response_challenge_sent", Src: []string{"eap_response_identity_sent"}, Dst: "eap_response_challenge_sent"},
 			{Name: "eap_response_success_received", Src: []string{"eap_response_challenge_sent"}, Dst: "eap_response_success_received"},
 			{Name: "auth_failed", Src: []string{"auth_started", "eap_start_sent", "eap_response_identity_sent", "eap_response_challenge_sent"}, Dst: "auth_failed"},
 			// DHCP
-			{Name: "start_dhcp", Src: []string{"eap_response_success_received", "dhcp_discovery_sent", "dhcp_request_sent", "dhcp_ack_received", "dhcp_failed", "igmp_join_started", "igmp_left", "igmp_join_error"}, Dst: "dhcp_started"},
+			{Name: "start_dhcp", Src: []string{"enabled", "eap_response_success_received", "dhcp_discovery_sent", "dhcp_request_sent", "dhcp_ack_received", "dhcp_failed", "igmp_join_started", "igmp_left", "igmp_join_error"}, Dst: "dhcp_started"},
 			{Name: "dhcp_discovery_sent", Src: []string{"dhcp_started"}, Dst: "dhcp_discovery_sent"},
 			{Name: "dhcp_request_sent", Src: []string{"dhcp_discovery_sent"}, Dst: "dhcp_request_sent"},
 			{Name: "dhcp_ack_received", Src: []string{"dhcp_request_sent"}, Dst: "dhcp_ack_received"},
@@ -151,10 +162,10 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 			{Name: "send_eapol_flow", Src: []string{"initialized"}, Dst: "eapol_flow_sent"},
 			{Name: "send_dhcp_flow", Src: []string{"eapol_flow_sent"}, Dst: "dhcp_flow_sent"},
 			// IGMP
-			{Name: "igmp_join_start", Src: []string{"eap_response_success_received", "gem_port_added", "eapol_flow_received", "dhcp_ack_received", "igmp_left", "igmp_join_error", "igmp_join_started"}, Dst: "igmp_join_started"},
-			{Name: "igmp_join_startv3", Src: []string{"eap_response_success_received", "gem_port_added", "eapol_flow_received", "dhcp_ack_received", "igmp_left", "igmp_join_error", "igmp_join_started"}, Dst: "igmp_join_started"},
+			{Name: "igmp_join_start", Src: []string{"eap_response_success_received", "dhcp_ack_received", "igmp_left", "igmp_join_error", "igmp_join_started"}, Dst: "igmp_join_started"},
+			{Name: "igmp_join_startv3", Src: []string{"eap_response_success_received", "dhcp_ack_received", "igmp_left", "igmp_join_error", "igmp_join_started"}, Dst: "igmp_join_started"},
 			{Name: "igmp_join_error", Src: []string{"igmp_join_started"}, Dst: "igmp_join_error"},
-			{Name: "igmp_leave", Src: []string{"igmp_join_started", "gem_port_added", "eapol_flow_received", "eap_response_success_received", "dhcp_ack_received"}, Dst: "igmp_left"},
+			{Name: "igmp_leave", Src: []string{"igmp_join_started", "eap_response_success_received", "dhcp_ack_received"}, Dst: "igmp_left"},
 		},
 		fsm.Callbacks{
 			"enter_state": func(e *fsm.Event) {
@@ -227,6 +238,16 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 				// terminate the ONU's ProcessOnuMessages Go routine
 				close(o.Channel)
 			},
+			"before_start_auth": func(e *fsm.Event) {
+				if o.EapolFlowReceived == false {
+					e.Cancel(errors.New("cannot-go-to-auth-started-as-eapol-flow-is-missing"))
+					return
+				}
+				if o.GemPortAdded == false {
+					e.Cancel(errors.New("cannot-go-to-auth-started-as-gemport-is-missing"))
+					return
+				}
+			},
 			"enter_auth_started": func(e *fsm.Event) {
 				o.logStateChange(e.Src, e.Dst)
 				msg := Message{
@@ -249,8 +270,21 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 				}).Errorf("ONU failed to authenticate!")
 			},
 			"before_start_dhcp": func(e *fsm.Event) {
+
+				// we allow transition from eanbled to dhcp_started only if auth was set to false
+				if o.InternalState.Current() == "enabled" && o.Auth {
+					e.Cancel(errors.New("cannot-go-to-dhcp-started-as-authentication-is-required"))
+					return
+				}
+
 				if o.DhcpFlowReceived == false {
 					e.Cancel(errors.New("cannot-go-to-dhcp-started-as-dhcp-flow-is-missing"))
+					return
+				}
+
+				if o.GemPortAdded == false {
+					e.Cancel(errors.New("cannot-go-to-dhcp-started-as-gemport-is-missing"))
+					return
 				}
 			},
 			"enter_dhcp_started": func(e *fsm.Event) {
@@ -471,25 +505,16 @@ func (o *Onu) processOmciMessage(message omcisim.OmciChMessage, stream openolt.O
 			"OnuSn":  o.Sn(),
 		}).Infof("GemPort Added")
 
-		// NOTE if we receive the GemPort but we don't have EAPOL flows
-		// go an intermediate state, otherwise start auth
-		if o.InternalState.Is("enabled") {
-			if err := o.InternalState.Event("add_gem_port"); err != nil {
-				log.Errorf("Can't go to gem_port_added: %v", err)
-			}
-		} else if o.InternalState.Is("eapol_flow_received") {
-			if o.Auth == true {
-				if err := o.InternalState.Event("start_auth"); err != nil {
-					log.Warnf("Can't go to auth_started: %v", err)
-				}
-			} else {
-				onuLogger.WithFields(log.Fields{
-					"IntfId":       o.PonPortID,
-					"OnuId":        o.ID,
-					"SerialNumber": o.Sn(),
-				}).Warn("Not starting authentication as Auth bit is not set in CLI parameters")
-			}
+		o.GemPortAdded = true
+
+		// broadcast the change to all listeners
+		// and close the channels as once the GemPort is set
+		// it won't change anymore
+		for _, ch := range o.GemPortChannels {
+			ch <- true
+			close(ch)
 		}
+		o.GemPortChannels = []chan bool{}
 	}
 }
 
@@ -721,33 +746,40 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 	if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeEAPOL) && msg.Flow.Classifier.OVid == 4091 {
 		// NOTE storing the PortNO, it's needed when sending PacketIndications
 		o.storePortNumber(uint32(msg.Flow.PortNo))
-
-		// NOTE if we receive the EAPOL flows but we don't have GemPorts
-		// go an intermediate state, otherwise start auth
-		if o.InternalState.Is("enabled") {
-			if err := o.InternalState.Event("receive_eapol_flow"); err != nil {
-				log.Warnf("Can't go to eapol_flow_received: %v", err)
-			}
-		} else if o.InternalState.Is("gem_port_added") {
-
-			if o.Auth == true {
-				if err := o.InternalState.Event("start_auth"); err != nil {
-					log.Warnf("Can't go to auth_started: %v", err)
-				}
+		o.EapolFlowReceived = true
+		// if authentication is not enabled, do nothing
+		if o.Auth {
+			// NOTE if we receive the EAPOL flows but we don't have GemPorts
+			// wait for it before starting auth
+			if !o.GemPortAdded {
+				// wait for Gem and then start auth
+				go func() {
+					for v := range o.GetGemPortChan() {
+						if v == true {
+							if err := o.InternalState.Event("start_auth"); err != nil {
+								onuLogger.Warnf("Can't go to auth_started: %v", err)
+							}
+						}
+					}
+					onuLogger.Trace("GemPortChannel closed")
+				}()
 			} else {
-				onuLogger.WithFields(log.Fields{
-					"IntfId":       o.PonPortID,
-					"OnuId":        o.ID,
-					"SerialNumber": o.Sn(),
-				}).Warn("Not starting authentication as Auth bit is not set in CLI parameters")
+				// start the EAPOL state machine
+				if err := o.InternalState.Event("start_auth"); err != nil {
+					onuLogger.Warnf("Can't go to auth_started: %v", err)
+				}
 			}
-
+		} else {
+			onuLogger.WithFields(log.Fields{
+				"IntfId":       o.PonPortID,
+				"OnuId":        o.ID,
+				"SerialNumber": o.Sn(),
+			}).Warn("Not starting authentication as Auth bit is not set in CLI parameters")
 		}
 	} else if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeIPv4) &&
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
 		msg.Flow.Classifier.DstPort == uint32(67) &&
 		(msg.Flow.Classifier.OPbits == 0 || msg.Flow.Classifier.OPbits == 255) {
-
 
 		if o.Dhcp == true {
 			if o.DhcpFlowReceived == false {
@@ -756,9 +788,22 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 				// this is needed as a check in case someone trigger DHCP from the CLI
 				o.DhcpFlowReceived = true
 
-				// now start the DHCP state machine
-				if err := o.InternalState.Event("start_dhcp"); err != nil {
-					log.Errorf("Can't go to dhcp_started: %v", err)
+				if !o.GemPortAdded {
+					// wait for Gem and then start DHCP
+					go func() {
+						for v := range o.GetGemPortChan() {
+							if v == true {
+								if err := o.InternalState.Event("start_dhcp"); err != nil {
+									log.Errorf("Can't go to dhcp_started: %v", err)
+								}
+							}
+						}
+					}()
+				} else {
+					// start the DHCP state machine
+					if err := o.InternalState.Event("start_dhcp"); err != nil {
+						log.Errorf("Can't go to dhcp_started: %v", err)
+					}
 				}
 			} else {
 				onuLogger.WithFields(log.Fields{

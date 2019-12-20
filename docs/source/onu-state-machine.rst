@@ -32,18 +32,10 @@ Here is a list of possible state transitions for an ONU in BBSim:
       - discovered, disabled, pon_disabled
       - enabled
       -
-    * - receive_eapol_flow
-      - enabled, gem_port_added
-      - eapol_flow_received
-      -
-    * - add_gem_port
-      - enabled, eapol_flow_received
-      - gem_port_added
-      - We need to wait for both the flow and the gem port to come before moving to ``auth_started``
     * - start_auth
-      - eapol_flow_received, gem_port_added, eap_start_sent, eap_response_identity_sent, eap_response_challenge_sent, eap_response_success_received, auth_failed, dhcp_ack_received, dhcp_failed
+      - enabled, eap_start_sent, eap_response_identity_sent, eap_response_challenge_sent, eap_response_success_received, auth_failed, dhcp_ack_received, dhcp_failed
       - auth_started
-      -
+      - Requires that both the EAPOL flow has been received and the GemPort added
     * - eap_start_sent
       - auth_started
       - eap_start_sent
@@ -65,9 +57,9 @@ Here is a list of possible state transitions for an ONU in BBSim:
       - auth_failed
       -
     * - start_dhcp
-      - eap_response_success_received, dhcp_discovery_sent, dhcp_request_sent, dhcp_ack_received, dhcp_failed
+      - enabled, eap_response_success_received, dhcp_discovery_sent, dhcp_request_sent, dhcp_ack_received, dhcp_failed
       - dhcp_started
-      -
+      - Requires that both the DHCP flow has been received and the GemPort added. In addition the transtition from the ``enabled`` state is only allowed if Auth is set to false
     * - dhcp_discovery_sent
       - dhcp_started
       - dhcp_discovery_sent
@@ -169,7 +161,6 @@ Below is a diagram of the state machine:
                 enabled
                 disabled [fillcolor="#f9d6ff"]
             }
-            gem_port_added
 
             {created, disabled} -> initialized -> discovered -> enabled
         }
@@ -179,7 +170,6 @@ Below is a diagram of the state machine:
             style=dotted
             node [fillcolor="#e6ffc2"]
 
-            eapol_flow_received
             auth_started
             eap_start_sent
             eap_response_identity_sent
@@ -229,8 +219,8 @@ Below is a diagram of the state machine:
             dhcp_ack_received -> dhcp_started
             dhcp_failed -> dhcp_started
         }
-        enabled -> gem_port_added -> eapol_flow_received -> auth_started
-        enabled -> eapol_flow_received -> gem_port_added -> auth_started
+        enabled -> auth_started
+        enabled -> dhcp_started
 
         {dhcp_ack_received, dhcp_failed} -> auth_started
 

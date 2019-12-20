@@ -247,43 +247,45 @@ for example:
 .. code:: json
 
    {
-  "id": "BBSM00000003-1",
-  "nasPortId": "BBSM00000003-1",
-  "circuitId": "BBSM00000003-1",
-  "remoteId": "BBSM00000003-1",
-  "uniTagList": [
-    {
-      "DownstreamBandwidthProfile": "User_Bandwidth1",
-      "IsDhcpRequired": true,
-      "IsIgmpRequired": true,
-      "PonCTag": 903,
-      "PonSTag": 900,
-      "TechnologyProfileID": 64,
-      "UpstreamBandwidthProfile": "Default"
-    }
-  ]
-}
+     "id": "BBSM00000003-1",
+     "nasPortId": "BBSM00000003-1",
+     "circuitId": "BBSM00000003-1",
+     "remoteId": "BBSM00000003-1",
+     "uniTagList": [
+       {
+         "DownstreamBandwidthProfile": "User_Bandwidth1",
+         "IsDhcpRequired": true,
+         "IsIgmpRequired": true,
+         "PonCTag": 903,
+         "PonSTag": 900,
+         "TechnologyProfileID": 64,
+         "UpstreamBandwidthProfile": "Default"
+       }
+     ]
+   }
+
 
 **DT**
 
 .. code:: json
 
    {
-  "id": "BBSM00000003-1",
-  "nasPortId": "BBSM00000003-1",
-  "circuitId": "BBSM00000003-1",
-  "remoteId": "BBSM00000003-1",
-  "uniTagList": [
-    {
-      "DownstreamBandwidthProfile": "User_Bandwidth1",
-      "PonCTag": 4096,
-      "PonSTag": 903,
-      "TechnologyProfileID": 64,
-      "UniTagMatch": 4096,
-      "UpstreamBandwidthProfile": "Default"
-    }
-  ]
-}
+     "id": "BBSM00000003-1",
+     "nasPortId": "BBSM00000003-1",
+     "circuitId": "BBSM00000003-1",
+     "remoteId": "BBSM00000003-1",
+     "uniTagList": [
+       {
+         "DownstreamBandwidthProfile": "User_Bandwidth1",
+         "PonCTag": 4096,
+         "PonSTag": 903,
+         "TechnologyProfileID": 64,
+         "UniTagMatch": 4096,
+         "UpstreamBandwidthProfile": "Default"
+       }
+     ]
+   }
+
 
 **TT**
 

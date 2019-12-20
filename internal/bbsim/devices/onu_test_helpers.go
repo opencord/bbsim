@@ -106,19 +106,20 @@ func (s *mockClient) EnableIndication(ctx context.Context, in *openolt.Empty, op
 }
 
 // this method creates a fake ONU used in the tests
-func createMockOnu(id uint32, ponPortId uint32, sTag int, cTag int, auth bool, dhcp bool) Onu {
+func createMockOnu(id uint32, ponPortId uint32, sTag int, cTag int, auth bool, dhcp bool) *Onu {
 	o := Onu{
-		ID:        id,
-		PonPortID: ponPortId,
-		STag:      sTag,
-		CTag:      cTag,
-		HwAddress: net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(ponPortId), byte(id)},
-		PortNo:    0,
-		Auth:      auth,
-		Dhcp:      dhcp,
+		ID:           id,
+		PonPortID:    ponPortId,
+		STag:         sTag,
+		CTag:         cTag,
+		HwAddress:    net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(ponPortId), byte(id)},
+		PortNo:       0,
+		Auth:         auth,
+		Dhcp:         dhcp,
+		GemPortAdded: true,
 	}
 	o.SerialNumber = o.NewSN(0, ponPortId, o.ID)
-	return o
+	return &o
 }
 
 // this method creates a real ONU to be used in the tests
