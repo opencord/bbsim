@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "284b082d_4d6faef3",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T21:56:22Z",
+      "side": 1,
+      "message": "Don\u0027t use sleeps.  Instead, add a mutex or channel so that execution can only continue when there are no in-progress requests.  Also consider gRPC\u0027s GraceFullStop().",
+      "revId": "8f6b6d22ca538661a3d744124bde7256d517cd42",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
