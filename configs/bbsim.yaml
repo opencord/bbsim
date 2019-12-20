@@ -29,7 +29,7 @@ olt:
   onus_per_port: 1 
   onus_per_port: 1
   technology: "XGS-PON"
-  id: 1                 # OLT-ID of the device
+  id: 0                 # OLT-ID of the device
   reboot_delay: 10      # reboot delay in seconds
   # firmware_version: ""
   # device_id: 0a:0a:0a:0a:0a:<id>

@@ -66,10 +66,18 @@ build: # @HELP Build the binaries (it runs inside a docker container and output 
 	docker build -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim-builder:${DOCKER_TAG} -f build/ci/Dockerfile.builder .
 	docker run --rm -v $(shell pwd):/bbsim ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim-builder:${DOCKER_TAG} /bin/sh -c "cd /bbsim; make _build"
 
-test: clean dep fmt # @HELP Execute unit tests
+test: test-unit test-bbr
+
+test-unit: clean dep fmt # @HELP Execute unit tests
 	GO111MODULE=on go test -v -mod vendor $(TEST_PACKAGES) -timeout 10s -covermode count -coverprofile ./tests/results/go-test-coverage.out 2>&1 | tee ./tests/results/go-test-results.out
 	go-junit-report < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml
 	gocover-cobertura < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml
+
+test-bbr: build-bbr docker-build # @HELP Validate that BBSim and BBR are working together
+	DOCKER_RUN_ARGS="-auth -dhcp" make docker-run
+	sleep 5
+	./bbr
+	docker rm -f bbsim
 
 fmt:
 	go fmt ./...

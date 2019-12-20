@@ -216,7 +216,6 @@ func (o *OltMock) handleOnuIndication(client openolt.OpenoltClient, onuInd *open
 
 	ctx, cancel := context.WithCancel(context.TODO())
 	go onu.ProcessOnuMessages(ctx, nil, client)
-	defer cancel()
 
 	go func() {
 
@@ -227,6 +226,8 @@ func (o *OltMock) handleOnuIndication(client openolt.OpenoltClient, onuInd *open
 				"TargetOnus":    o.TargetOnus,
 			}).Debugf("Onu done")
 
+			// close the ONU channel
+			cancel()
 		}()
 
 		for message := range onu.DoneChannel {
