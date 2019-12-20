@@ -1,0 +1,293 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "314464e4_3a37ea18",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "This else block is unnecessary, no need to indent everything.\n\nhttps://github.com/golang/go/wiki/CodeReviewComments#indent-error-flow",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6229303a_146c7d09",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "Can combine these into one line like:\n\n`if err :\u003d onu.InternalState.Event(event); err !\u003d nil{`\n\nThis saves a line, and allows you to redeclare err in a local scope.",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "96482531_294c9a91",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "No need to declare as a local variable, can just call omci.GetGemPortId directly.",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b15b467d_22c27914",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "Unnecessary if",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d4fe57b_695eb25e",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "No need to declare as a local variable, can just call omci.GetGemPortId directly.",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4a36848_da9ee8e1",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "Unnecessary if.",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4cdc6a2b_98a32627",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "No need to declare as a local variable, can just call omci.GetGemPortId directly.",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ff8dbed_3a39fd4a",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "Can just\n`return IGMP{...`\nno need to declare a variable \u0026 return separately.",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b4df80f_1e7f4a2e",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "Can just\n`return IGMP{...`\nno need to declare a variable \u0026 return separately.",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80d2ff7c_8d57ea01",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "Can `return buffer.Bytes(), nil` on one line.",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69cdb85c_c376bfea",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "Remove commented code.",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd920164_e5fd9b3d",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "Remove commented code.",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffbb26e6_8f2b19b3",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "Should use tabs not spaces for formatting.",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4beb20ba_3115dd52",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "`(i IGMP)`: i unused, can write just `(IGMP)`.",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "350fb57d_988930d3",
+        "filename": "internal/bbsimctl/commands/onu.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "Fatalf will exit the program with status code 1.  Is this what you want here?\n\nIf so, the `return err` is unnecessary.",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92d8e850_89ef06f2",
+        "filename": "internal/bbsimctl/commands/onu.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "Fatalf again.",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50db1749_e5824826",
+        "filename": "internal/bbsimctl/commands/onu.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2019-12-20T16:31:19Z",
+      "side": 1,
+      "message": "Unnecessary else block.",
+      "revId": "e9968c1b5026309f711109f46984fe3ea83f6aee",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
