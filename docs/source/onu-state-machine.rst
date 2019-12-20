@@ -65,7 +65,7 @@ Here is a list of possible state transitions for an ONU in BBSim:
       - auth_failed
       -
     * - start_dhcp
-      - eap_response_success_received, dhcp_discovery_sent, dhcp_request_sent, dhcp_ack_received, dhcp_failed
+      - eapol_flow_received, gem_port_added, eap_response_success_received, dhcp_discovery_sent, dhcp_request_sent, dhcp_ack_received, dhcp_failed
       - dhcp_started
       -
     * - dhcp_discovery_sent
@@ -172,6 +172,9 @@ Below is a diagram of the state machine:
             eap_response_success_received -> auth_started
             auth_failed -> auth_started
         }
+
+        eapol_flow_received -> dhcp_started
+        gem_port_added -> dhcp_started
 
         subgraph cluster_dhcp {
             node [fillcolor="#fffacc"]
