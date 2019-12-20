@@ -438,8 +438,8 @@ func (o *Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt
 
 	// after DiscoveryRetryDelay check if the state is the same and in case send a new OnuDiscIndication
 	go func(delay time.Duration) {
+		time.Sleep(delay)
 		if o.InternalState.Current() == "discovered" {
-			time.Sleep(delay)
 			o.sendOnuDiscIndication(msg, stream)
 		}
 	}(o.DiscoveryRetryDelay)

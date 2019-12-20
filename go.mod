@@ -15,7 +15,7 @@ require (
 	github.com/looplab/fsm v0.1.0
 	github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4
 	github.com/opencord/omci-sim v0.0.1
-	github.com/opencord/voltha-protos/v2 v2.1.0
+	github.com/opencord/voltha-protos/v2 v2.1.2
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.4.0 // indirect
