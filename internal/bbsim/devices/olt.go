@@ -20,11 +20,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/gopacket/pcap"
 	"net"
 	"sync"
 	"time"
 
+	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
@@ -130,27 +130,16 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 	// create PON ports
 	availableCTag := cTagInit
 	for i := 0; i < pon; i++ {
-		p := PonPort{
-			NumOnu: olt.NumOnuPerPon,
-			ID:     uint32(i),
-			Type:   "pon",
-			Olt:    olt,
-			Onus:   []*Onu{},
-		}
-		p.OperState = getOperStateFSM(func(e *fsm.Event) {
-			oltLogger.WithFields(log.Fields{
-				"ID": p.ID,
-			}).Debugf("Changing PON Port OperState from %s to %s", e.Src, e.Dst)
-		})
+		p := CreatePonPort(olt, uint32(i))
 
 		// create ONU devices
 		for j := 0; j < onuPerPon; j++ {
-			o := CreateONU(olt, p, uint32(j+1), sTag, availableCTag, auth, dhcp)
+			o := CreateONU(olt, *p, uint32(j+1), sTag, availableCTag, auth, dhcp)
 			p.Onus = append(p.Onus, o)
 			availableCTag = availableCTag + 1
 		}
 
-		olt.Pons = append(olt.Pons, &p)
+		olt.Pons = append(olt.Pons, p)
 	}
 
 	if isMock != true {
@@ -639,6 +628,26 @@ loop:
 	}).Warn("Stopped handling NNI Channel")
 }
 
+func (o *OltDevice) handleReenableOlt() {
+	// enable OLT
+	oltMsg := Message{
+		Type: OltIndication,
+		Data: OltIndicationMessage{
+			OperState: UP,
+		},
+	}
+	o.channel <- oltMsg
+
+	for i := range olt.Pons {
+		for _, onu := range olt.Pons[i].Onus {
+			if err := onu.InternalState.Event("discover"); err != nil {
+				log.Errorf("Error discover ONU: %v", err)
+			}
+		}
+	}
+
+}
+
 // returns an ONU with a given Serial Number
 func (o OltDevice) FindOnuBySn(serialNumber string) (*Onu, error) {
 	// TODO this function can be a performance bottleneck when we have many ONUs,
@@ -933,7 +942,25 @@ func (o OltDevice) Reboot(context.Context, *openolt.Empty) (*openolt.Empty, erro
 }
 
 func (o OltDevice) ReenableOlt(context.Context, *openolt.Empty) (*openolt.Empty, error) {
-	oltLogger.Error("ReenableOlt not implemented")
+	oltLogger.WithFields(log.Fields{
+		"oltId": o.ID,
+	}).Info("Received ReenableOlt request from VOLTHA")
+
+	for _, pon := range o.Pons {
+		msg := Message{
+			Type: PonIndication,
+			Data: PonIndicationMessage{
+				OperState: UP,
+				PonPortID: pon.ID,
+			},
+		}
+		o.channel <- msg
+	}
+
+	// Openolt adapter will start processing indications only after success reponse of ReenableOlt
+	// thats why need to send OLT and ONU indications after return of this function
+	go o.handleReenableOlt()
+
 	return new(openolt.Empty), nil
 }
 

@@ -23,6 +23,7 @@ import (
 
 	"github.com/looplab/fsm"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
+	log "github.com/sirupsen/logrus"
 )
 
 type PonPort struct {
@@ -37,6 +38,45 @@ type PonPort struct {
 	Type      string
 
 	// NOTE do we need a state machine for the PON Ports?
+}
+
+// CreatePonPort creates pon port object
+func CreatePonPort(olt OltDevice, id uint32) *PonPort {
+
+	ponPort := PonPort{
+		NumOnu: olt.NumOnuPerPon,
+		ID:     id,
+		Type:   "pon",
+		Olt:    olt,
+		Onus:   []*Onu{},
+	}
+
+	ponPort.OperState = fsm.NewFSM(
+		"down",
+		fsm.Events{
+			{Name: "enable", Src: []string{"down"}, Dst: "up"},
+			{Name: "disable", Src: []string{"up"}, Dst: "down"},
+		},
+		fsm.Callbacks{
+			"enter_up": func(e *fsm.Event) {
+				oltLogger.WithFields(log.Fields{
+					"ID": ponPort.ID,
+				}).Debugf("Changing PON Port OperState from %s to %s", e.Src, e.Dst)
+			},
+			"enter_down": func(e *fsm.Event) {
+				oltLogger.WithFields(log.Fields{
+					"ID": ponPort.ID,
+				}).Debugf("Changing PON Port OperState from %s to %s", e.Src, e.Dst)
+
+				for _, onu := range ponPort.Onus {
+					if err := onu.InternalState.Event("pon_disabled"); err != nil {
+						oltLogger.Errorf("Failed to move ONU in pon_disabled states: %v", err)
+					}
+				}
+			},
+		},
+	)
+	return &ponPort
 }
 
 func (p PonPort) GetOnuBySn(sn *openolt.SerialNumber) (*Onu, error) {
