@@ -113,12 +113,14 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth b
 		fsm.Events{
 			// DEVICE Lifecycle
 			{Name: "initialize", Src: []string{"created", "disabled"}, Dst: "initialized"},
-			{Name: "discover", Src: []string{"initialized"}, Dst: "discovered"},
+			{Name: "discover", Src: []string{"initialized", "pon_disabled"}, Dst: "discovered"},
 			{Name: "enable", Src: []string{"discovered", "disabled"}, Dst: "enabled"},
 			{Name: "receive_eapol_flow", Src: []string{"enabled", "gem_port_added"}, Dst: "eapol_flow_received"},
 			{Name: "add_gem_port", Src: []string{"enabled", "eapol_flow_received"}, Dst: "gem_port_added"},
 			// NOTE should disabled state be different for oper_disabled (emulating an error) and admin_disabled (received a disabled call via VOLTHA)?
 			{Name: "disable", Src: []string{"enabled", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "disabled"},
+			// ONU state when PON port is disabled but ONU is power ON(more states should be added in src?)
+			{Name: "pon_disabled", Src: []string{"enabled", "gem_port_added", "eapol_flow_received", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst:"pon_disabled"},
 			// EAPOL
 			{Name: "start_auth", Src: []string{"eapol_flow_received", "gem_port_added", "eap_start_sent", "eap_response_identity_sent", "eap_response_challenge_sent", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "auth_started"},
 			{Name: "eap_start_sent", Src: []string{"auth_started"}, Dst: "eap_start_sent"},
