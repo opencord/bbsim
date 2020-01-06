@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4ae4a617_ce1d318f",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-06T18:21:21Z",
+      "side": 1,
+      "message": "If a sleep is need to postpone the request until a state is valid, then this needs to be in a \"retry\" loop as opposed to just a blank sleep. Sleeps should not be used to mask out timing issues.",
+      "parentUuid": "3d6895d4_b4ad13c5",
+      "range": {
+        "startLine": 631,
+        "startChar": 1,
+        "endLine": 631,
+        "endChar": 28
+      },
+      "revId": "5f3066e44ab67ca4a3dd2da45449529491044954",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5f6ba736_33d56b77",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 1
