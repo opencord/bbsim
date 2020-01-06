@@ -106,7 +106,8 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 			{Name: "initialize", Src: []string{"created", "deleted"}, Dst: "initialized"},
 			{Name: "enable", Src: []string{"initialized", "disabled"}, Dst: "enabled"},
 			{Name: "disable", Src: []string{"enabled"}, Dst: "disabled"},
-			{Name: "delete", Src: []string{"disabled"}, Dst: "deleted"},
+			//delete event in enabled state below is for reboot OLT case.
+			{Name: "delete", Src: []string{"disabled", "enabled"}, Dst: "deleted"},
 		},
 		fsm.Callbacks{
 			"enter_state": func(e *fsm.Event) {
