@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "5b90e04a_9ba73f2c",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1000601
+      },
+      "writtenOn": "2020-01-07T09:59:15Z",
+      "side": 1,
+      "message": "As per discussion with David, opened this bug VOL-2427, till this is fixed we can keep this sleep as workaround for testing purposes.",
+      "parentUuid": "4ae4a617_ce1d318f",
+      "range": {
+        "startLine": 631,
+        "startChar": 1,
+        "endLine": 631,
+        "endChar": 28
+      },
+      "revId": "5f3066e44ab67ca4a3dd2da45449529491044954",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5f6ba736_33d56b77",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 1
