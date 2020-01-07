@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "b9fa4713_eaf9a578",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-07T17:19:12Z",
+      "side": 1,
+      "message": "i would almost rather have the test fail until the adapter is fixed as unless something fails it won\u0027t be fixed.",
+      "parentUuid": "5b90e04a_9ba73f2c",
+      "range": {
+        "startLine": 631,
+        "startChar": 1,
+        "endLine": 631,
+        "endChar": 28
+      },
+      "revId": "5f3066e44ab67ca4a3dd2da45449529491044954",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5f6ba736_33d56b77",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 1
