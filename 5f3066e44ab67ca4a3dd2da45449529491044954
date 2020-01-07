@@ -188,6 +188,30 @@
       "revId": "5f3066e44ab67ca4a3dd2da45449529491044954",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad4651a9_74fb7f0e",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-01-07T17:21:35Z",
+      "side": 1,
+      "message": "not that refactoring may not be the correct solution in this case, but as per go proverbs \"A little copying is better than a little dependency.\". Is there real benefit in refactoring out 10 lines to a common method?",
+      "parentUuid": "4535447a_d168639c",
+      "range": {
+        "startLine": 949,
+        "startChar": 1,
+        "endLine": 958,
+        "endChar": 2
+      },
+      "revId": "5f3066e44ab67ca4a3dd2da45449529491044954",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
