@@ -18,6 +18,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
@@ -133,30 +134,23 @@ func (s BBSimServer) PoweronONU(ctx context.Context, req *bbsim.ONURequest) (*bb
 	}).Infof("Received request to poweron ONU")
 
 	olt := devices.GetOLT()
-
-	onu, err := olt.FindOnuBySn(req.SerialNumber)
-
-	if err != nil {
-		res.StatusCode = int32(codes.NotFound)
-		res.Message = err.Error()
-		return res, err
-	}
-
-	if err := onu.InternalState.Event("enable"); err != nil {
+	if olt == nil {
 		logger.WithFields(log.Fields{
-			"OnuId":  onu.ID,
-			"IntfId": onu.PonPortID,
-			"OnuSn":  onu.Sn(),
-		}).Errorf("Cannot poweron ONU: %s", err.Error())
+			"OnuSn": req.SerialNumber,
+		}).Errorf("Cannot reinitialize ONU: unknown OLT")
 		res.StatusCode = int32(codes.FailedPrecondition)
-		res.Message = err.Error()
-		return res, err
+		res.Message = fmt.Sprintf("ONU %s reinitialization failed.", req.SerialNumber)
+		return res, errors.New(fmt.Sprintf("cannot-find-olt"))
 	}
+	reslt, err := olt.ReInitializeONU(req.SerialNumber)
+	if err != nil {
+		res.Message = err.Error()
+	} else {
+		res.Message = fmt.Sprintf("ONU %s successfully reinitialized.", req.SerialNumber)
+	}
+	res.StatusCode = int32(reslt)
 
-	res.StatusCode = int32(codes.OK)
-	res.Message = fmt.Sprintf("ONU %s successfully powered on.", onu.Sn())
-
-	return res, nil
+	return res, err
 }
 
 func (s BBSimServer) RestartEapol(ctx context.Context, req *bbsim.ONURequest) (*bbsim.Response, error) {

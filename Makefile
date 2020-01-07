@@ -160,6 +160,10 @@ ifdef LOCAL_OMCI_SIM
 	cp -r ${LOCAL_OMCI_SIM}/* vendor/github.com/opencord/omci-sim/
 endif
 
+ifdef LOCAL_PROTOS
+	mkdir -p vendor/github.com/opencord/voltha-protos/
+	cp -r ${LOCAL_PROTOS}/* vendor/github.com/opencord/voltha-protos/
+endif
 # Internals
 
 clean:

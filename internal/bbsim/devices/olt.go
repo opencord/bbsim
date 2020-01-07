@@ -36,6 +36,7 @@ import (
 	"github.com/opencord/voltha-protos/v2/go/tech_profile"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -67,6 +68,7 @@ type OltDevice struct {
 
 	enableContext       context.Context
 	enableContextCancel context.CancelFunc
+	stream              openolt.Openolt_EnableIndicationServer
 }
 
 var olt OltDevice
@@ -308,7 +310,7 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error 
 
 	wg := sync.WaitGroup{}
 	wg.Add(3)
-
+	o.stream = stream
 	// create Go routine to process all OLT events
 	go o.processOltMessages(o.enableContext, stream, &wg)
 	go o.processNniPacketIns(o.enableContext, stream, &wg)
@@ -944,6 +946,48 @@ func (o OltDevice) UplinkPacketOut(context context.Context, packet *openolt.Upli
 	return new(openolt.Empty), nil
 }
 
+func (o OltDevice) ReInitializeONU(serialNumber string) (codes.Code, error) {
+	oltLogger.WithFields(log.Fields{
+		"OnuSn": serialNumber,
+	}).Infof("Reinitialize ONU")
+
+	onu, err := o.FindOnuBySn(serialNumber)
+
+	if err != nil {
+		return codes.NotFound, err
+	}
+
+	if err := onu.InternalState.Event("initialize"); err != nil {
+		oltLogger.WithFields(log.Fields{
+			"OnuId":  onu.ID,
+			"IntfId": onu.PonPortID,
+			"OnuSn":  onu.Sn(),
+		}).Errorf("Cannot reinitialize ONU: %s, unable transit state to initialize", err.Error())
+		return codes.FailedPrecondition, err
+	}
+	time.Sleep(1 * time.Second)
+	go onu.ProcessOnuMessages(o.enableContext, o.stream, nil)
+
+	if err := onu.InternalState.Event("discover"); err != nil {
+		oltLogger.WithFields(log.Fields{
+			"OnuId":  onu.ID,
+			"IntfId": onu.PonPortID,
+			"OnuSn":  onu.Sn(),
+		}).Errorf("Cannot reinitialize ONU: %s, unable transit state to discover", err.Error())
+		return codes.FailedPrecondition, err
+	}
+	time.Sleep(1 * time.Second)
+	if err := onu.InternalState.Event("enable"); err != nil {
+		oltLogger.WithFields(log.Fields{
+			"OnuId":  onu.ID,
+			"IntfId": onu.PonPortID,
+			"OnuSn":  onu.Sn(),
+		}).Errorf("Cannot reinitialize ONU: %s, unable transit state to enable", err.Error())
+		return codes.FailedPrecondition, err
+	}
+
+	return codes.OK, nil
+}
 func (o OltDevice) CollectStatistics(context.Context, *openolt.Empty) (*openolt.Empty, error) {
 	oltLogger.Error("CollectStatistics not implemented")
 	return new(openolt.Empty), nil
