@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "c4a4d41b_03d460cf",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 643,
+      "author": {
+        "id": 1000601
+      },
+      "writtenOn": "2020-01-07T06:59:46Z",
+      "side": 1,
+      "message": "because here ONUs previous state was pon_disabled state(in which onu channels were not closed so need not to go in \"initialized\")\npon_disabled state is introduced to show that pon port is disabled but ONUs are still in powered ON",
+      "parentUuid": "5f6ba736_33d56b77",
+      "range": {
+        "startLine": 643,
+        "startChar": 38,
+        "endLine": 643,
+        "endChar": 46
+      },
+      "revId": "5f3066e44ab67ca4a3dd2da45449529491044954",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b5aaf427_308c4743",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 1
@@ -83,6 +107,30 @@
       "writtenOn": "2020-01-06T17:43:08Z",
       "side": 1,
       "message": "This same code is used in the \"Enable\" method, we may want to refactor it in an external method (eg: sendPonIdications)",
+      "range": {
+        "startLine": 949,
+        "startChar": 1,
+        "endLine": 958,
+        "endChar": 2
+      },
+      "revId": "5f3066e44ab67ca4a3dd2da45449529491044954",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4535447a_d168639c",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1000601
+      },
+      "writtenOn": "2020-01-07T06:59:46Z",
+      "side": 1,
+      "message": "yes we can refactor it.",
+      "parentUuid": "b5aaf427_308c4743",
       "range": {
         "startLine": 949,
         "startChar": 1,
