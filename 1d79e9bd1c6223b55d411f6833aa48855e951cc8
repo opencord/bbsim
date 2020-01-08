@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7afa3ce_ea86f185",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-01-08T17:58:19Z",
+      "side": 1,
+      "message": "We can just add the \"enabled\" state as a source in the line above (Src is a list), see https://godoc.org/github.com/looplab/fsm#EventDesc",
+      "range": {
+        "startLine": 110,
+        "startChar": 35,
+        "endLine": 110,
+        "endChar": 42
+      },
+      "revId": "1d79e9bd1c6223b55d411f6833aa48855e951cc8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
