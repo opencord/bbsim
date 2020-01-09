@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33e8a702_5ffb475a",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-01-09T23:02:16Z",
+      "side": 1,
+      "message": "is there a case in which we can have BBSim without an OLT?",
+      "range": {
+        "startLine": 137,
+        "startChar": 1,
+        "endLine": 137,
+        "endChar": 16
+      },
+      "revId": "03ace2f6b0e73724b10bd6b662fad8bbd4549cf3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e674f60_4437162b",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 968,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-01-09T23:02:16Z",
+      "side": 1,
+      "message": "why do we need a sleep here? any reason because of why we can\u0027t immediately start processing messages?",
+      "range": {
+        "startLine": 968,
+        "startChar": 1,
+        "endLine": 968,
+        "endChar": 28
+      },
+      "revId": "03ace2f6b0e73724b10bd6b662fad8bbd4549cf3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee0ed705_6dbda46d",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 987,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-01-09T23:02:16Z",
+      "side": 1,
+      "message": "the ONU should be enabled when VOLTHA sends an ActivateONU call, not on its own",
+      "range": {
+        "startLine": 980,
+        "startChar": 1,
+        "endLine": 987,
+        "endChar": 2
+      },
+      "revId": "03ace2f6b0e73724b10bd6b662fad8bbd4549cf3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
