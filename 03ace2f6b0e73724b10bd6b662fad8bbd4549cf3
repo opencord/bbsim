@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0d304554_6c85b7b0",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-01-10T21:37:10Z",
+      "side": 1,
+      "message": "Shouldn\u0027t be. It is put there only for software errors; to guarantee that we have an OLT before proceeding.",
+      "parentUuid": "33e8a702_5ffb475a",
+      "range": {
+        "startLine": 137,
+        "startChar": 1,
+        "endLine": 137,
+        "endChar": 16
+      },
+      "revId": "03ace2f6b0e73724b10bd6b662fad8bbd4549cf3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e674f60_4437162b",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "e7a91acd_38e111c4",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 968,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-01-10T21:37:10Z",
+      "side": 1,
+      "message": "For two purposes. Firstly to simulate it close to real life, secondly ProcessOnuMessages sometimes fails, probably because of a race to initializing the channel and writting to it.",
+      "parentUuid": "5e674f60_4437162b",
+      "range": {
+        "startLine": 968,
+        "startChar": 1,
+        "endLine": 968,
+        "endChar": 28
+      },
+      "revId": "03ace2f6b0e73724b10bd6b662fad8bbd4549cf3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ee0ed705_6dbda46d",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 1
@@ -59,6 +107,30 @@
       "writtenOn": "2020-01-09T23:02:16Z",
       "side": 1,
       "message": "the ONU should be enabled when VOLTHA sends an ActivateONU call, not on its own",
+      "range": {
+        "startLine": 980,
+        "startChar": 1,
+        "endLine": 987,
+        "endChar": 2
+      },
+      "revId": "03ace2f6b0e73724b10bd6b662fad8bbd4549cf3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6df8c05_75285105",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 987,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2020-01-10T21:37:10Z",
+      "side": 1,
+      "message": "As I know this is not the case in BAL 3.x. In BAL 3.x OLT sends OnuIndication without waiting for OnuActivation. In olt-adapter also, it never  sends ActivateOnu after the first Discovery done.",
+      "parentUuid": "ee0ed705_6dbda46d",
       "range": {
         "startLine": 980,
         "startChar": 1,
