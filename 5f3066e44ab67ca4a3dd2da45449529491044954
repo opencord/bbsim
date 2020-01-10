@@ -121,6 +121,30 @@
     },
     {
       "key": {
+        "uuid": "8bf8cdc3_5d4f3656",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1000601
+      },
+      "writtenOn": "2020-01-10T11:25:31Z",
+      "side": 1,
+      "message": "ReenableOlt is now working without sleep, tested with VOL-2427 fix",
+      "parentUuid": "8704c477_806953e9",
+      "range": {
+        "startLine": 631,
+        "startChar": 1,
+        "endLine": 631,
+        "endChar": 28
+      },
+      "revId": "5f3066e44ab67ca4a3dd2da45449529491044954",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5f6ba736_33d56b77",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 1
