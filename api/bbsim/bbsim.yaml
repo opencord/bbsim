@@ -27,4 +27,7 @@ http:
     get: "/v1/olt/onus"
   - selector: bbsim.BBSim.GetONU
     get: "/v1/olt/onus/{SerialNumber}"
-
+  - selector: bbsim.BBSim.ShutdownONU
+    delete: "/v1/olt/onus/{SerialNumber}"
+  - selector: bbsim.BBSim.PoweronONU
+    post: "/v1/olt/onus/{SerialNumber}"
