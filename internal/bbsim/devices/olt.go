@@ -67,6 +67,8 @@ type OltDevice struct {
 
 	enableContext       context.Context
 	enableContextCancel context.CancelFunc
+
+	OpenoltStream *openolt.Openolt_EnableIndicationServer
 }
 
 var olt OltDevice
@@ -134,7 +136,7 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 
 		// create ONU devices
 		for j := 0; j < onuPerPon; j++ {
-			o := CreateONU(olt, *p, uint32(j+1), sTag, availableCTag, auth, dhcp)
+			o := CreateONU(&olt, *p, uint32(j+1), sTag, availableCTag, auth, dhcp, isMock)
 			p.Onus = append(p.Onus, o)
 			availableCTag = availableCTag + 1
 		}
@@ -182,15 +184,6 @@ func (o *OltDevice) InitOlt() error {
 			o.nniHandle = handle
 		} else {
 			oltLogger.Errorf("Error getting NNI channel: %v", err)
-		}
-	}
-
-	for i := range olt.Pons {
-		for _, onu := range olt.Pons[i].Onus {
-			if err := onu.InternalState.Event("initialize"); err != nil {
-				oltLogger.Errorf("Error initializing ONU: %v", err)
-				return err
-			}
 		}
 	}
 
@@ -299,6 +292,8 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error 
 	wg := sync.WaitGroup{}
 	wg.Add(3)
 
+	o.OpenoltStream = &stream
+
 	// create Go routine to process all OLT events
 	go o.processOltMessages(o.enableContext, stream, &wg)
 	go o.processNniPacketIns(o.enableContext, stream, &wg)
@@ -338,8 +333,8 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error 
 		o.channel <- msg
 
 		for _, onu := range o.Pons[i].Onus {
-			go onu.ProcessOnuMessages(o.enableContext, stream, nil)
-			if onu.InternalState.Current() != "initialized" {
+			if err := onu.InternalState.Event("initialize"); err != nil {
+				log.Errorf("Error initializing ONU: %v", err)
 				continue
 			}
 			if err := onu.InternalState.Event("discover"); err != nil {
@@ -752,8 +747,37 @@ func (o OltDevice) DeactivateOnu(context.Context, *openolt.Onu) (*openolt.Empty,
 	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) DeleteOnu(context.Context, *openolt.Onu) (*openolt.Empty, error) {
-	oltLogger.Error("DeleteOnu not implemented")
+func (o OltDevice) DeleteOnu(_ context.Context, onu *openolt.Onu) (*openolt.Empty, error) {
+	oltLogger.WithFields(log.Fields{
+		"IntfId": onu.IntfId,
+		"OnuId":  onu.OnuId,
+	}).Info("Received DeleteOnu call from VOLTHA")
+
+	pon, err := o.GetPonById(onu.IntfId)
+	if err != nil {
+		oltLogger.WithFields(log.Fields{
+			"OnuId":  onu.OnuId,
+			"IntfId": onu.IntfId,
+			"err":    err,
+		}).Error("Can't find PonPort")
+	}
+	_onu, err := pon.GetOnuById(onu.OnuId)
+	if err != nil {
+		oltLogger.WithFields(log.Fields{
+			"OnuId":  onu.OnuId,
+			"IntfId": onu.IntfId,
+			"err":    err,
+		}).Error("Can't find Onu")
+	}
+
+	if err := _onu.InternalState.Event("initialize"); err != nil {
+		oltLogger.WithFields(log.Fields{
+			"IntfId": _onu.PonPortID,
+			"OnuSn":  _onu.Sn(),
+			"OnuId":  _onu.ID,
+		}).Infof("Failed to transition ONU to initialized state: %s", err.Error())
+	}
+
 	return new(openolt.Empty), nil
 }
 

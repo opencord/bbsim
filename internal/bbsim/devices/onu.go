@@ -78,7 +78,7 @@ func (o *Onu) Sn() string {
 	return common.OnuSnToString(o.SerialNumber)
 }
 
-func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth bool, dhcp bool) *Onu {
+func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth bool, dhcp bool, isMock bool) *Onu {
 
 	o := Onu{
 		ID:                  id,
@@ -118,7 +118,7 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth b
 			{Name: "receive_eapol_flow", Src: []string{"enabled", "gem_port_added"}, Dst: "eapol_flow_received"},
 			{Name: "add_gem_port", Src: []string{"enabled", "eapol_flow_received"}, Dst: "gem_port_added"},
 			// NOTE should disabled state be different for oper_disabled (emulating an error) and admin_disabled (received a disabled call via VOLTHA)?
-			{Name: "disable", Src: []string{"enabled", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "disabled"},
+			{Name: "disable", Src: []string{"enabled", "eapol_flow_received", "gem_port_added", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "disabled"},
 			// ONU state when PON port is disabled but ONU is power ON(more states should be added in src?)
 			{Name: "pon_disabled", Src: []string{"enabled", "gem_port_added", "eapol_flow_received", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "pon_disabled"},
 			// EAPOL
@@ -146,6 +146,10 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth b
 			"enter_initialized": func(e *fsm.Event) {
 				// create new channel for ProcessOnuMessages Go routine
 				o.Channel = make(chan Message, 2048)
+				if !isMock {
+					// start ProcessOnuMessages Go routine
+					go o.ProcessOnuMessages(olt.enableContext, *olt.OpenoltStream, nil)
+				}
 			},
 			"enter_discovered": func(e *fsm.Event) {
 				msg := Message{

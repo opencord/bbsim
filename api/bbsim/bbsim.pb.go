@@ -8,6 +8,8 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -1042,6 +1044,50 @@ type BBSimServer interface {
 	RestartEapol(context.Context, *ONURequest) (*Response, error)
 	RestartDhcp(context.Context, *ONURequest) (*Response, error)
 	SetAlarmIndication(context.Context, *AlarmRequest) (*Response, error)
+}
+
+// UnimplementedBBSimServer can be embedded to have forward compatible implementations.
+type UnimplementedBBSimServer struct {
+}
+
+func (*UnimplementedBBSimServer) Version(ctx context.Context, req *Empty) (*VersionNumber, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Version not implemented")
+}
+func (*UnimplementedBBSimServer) GetOlt(ctx context.Context, req *Empty) (*Olt, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOlt not implemented")
+}
+func (*UnimplementedBBSimServer) PoweronOlt(ctx context.Context, req *Empty) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PoweronOlt not implemented")
+}
+func (*UnimplementedBBSimServer) ShutdownOlt(ctx context.Context, req *Empty) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ShutdownOlt not implemented")
+}
+func (*UnimplementedBBSimServer) RebootOlt(ctx context.Context, req *Empty) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RebootOlt not implemented")
+}
+func (*UnimplementedBBSimServer) GetONUs(ctx context.Context, req *Empty) (*ONUs, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetONUs not implemented")
+}
+func (*UnimplementedBBSimServer) GetONU(ctx context.Context, req *ONURequest) (*ONU, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetONU not implemented")
+}
+func (*UnimplementedBBSimServer) SetLogLevel(ctx context.Context, req *LogLevel) (*LogLevel, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetLogLevel not implemented")
+}
+func (*UnimplementedBBSimServer) ShutdownONU(ctx context.Context, req *ONURequest) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ShutdownONU not implemented")
+}
+func (*UnimplementedBBSimServer) PoweronONU(ctx context.Context, req *ONURequest) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PoweronONU not implemented")
+}
+func (*UnimplementedBBSimServer) RestartEapol(ctx context.Context, req *ONURequest) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RestartEapol not implemented")
+}
+func (*UnimplementedBBSimServer) RestartDhcp(ctx context.Context, req *ONURequest) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RestartDhcp not implemented")
+}
+func (*UnimplementedBBSimServer) SetAlarmIndication(ctx context.Context, req *AlarmRequest) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetAlarmIndication not implemented")
 }
 
 func RegisterBBSimServer(s *grpc.Server, srv BBSimServer) {
