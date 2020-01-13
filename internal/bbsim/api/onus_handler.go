@@ -19,6 +19,7 @@ package api
 import (
 	"context"
 	"fmt"
+
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	log "github.com/sirupsen/logrus"
@@ -142,7 +143,7 @@ func (s BBSimServer) PoweronONU(ctx context.Context, req *bbsim.ONURequest) (*bb
 		return res, err
 	}
 
-	if err := onu.InternalState.Event("enable"); err != nil {
+	if err := onu.InternalState.Event("discover"); err != nil {
 		logger.WithFields(log.Fields{
 			"OnuId":  onu.ID,
 			"IntfId": onu.PonPortID,
