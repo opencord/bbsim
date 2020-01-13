@@ -46,6 +46,7 @@ const (
 	//IGMP
 	IGMPMembershipReportV2 MessageType = 15 // Version 2 Membership Report (JOIN)
 	IGMPLeaveGroup         MessageType = 16 // Leave Group
+	IGMPMembershipReportV3 MessageType = 17 // Version 3 Membership Report (JOIN)
 )
 
 func (m MessageType) String() string {
@@ -67,6 +68,8 @@ func (m MessageType) String() string {
 		"OnuPacketIn",
 		"IGMPMembershipReportV2",
 		"IGMPLeaveGroup",
+		"IGMPMembershipReportV3",
+		
 	}
 	return names[m]
 }

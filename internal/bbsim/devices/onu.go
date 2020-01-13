@@ -138,7 +138,7 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth b
 			{Name: "send_eapol_flow", Src: []string{"initialized"}, Dst: "eapol_flow_sent"},
 			{Name: "send_dhcp_flow", Src: []string{"eapol_flow_sent"}, Dst: "dhcp_flow_sent"},
 			// IGMP
-                        {Name: "igmp_join_start", Src: []string{"gem_port_added", "eapol_flow_received"}, Dst: "igmp_join_start"},
+            {Name: "igmp_join_start", Src: []string{"gem_port_added", "eapol_flow_received"}, Dst: "igmp_join_start"},
 			{Name: "igmp_join_done", Src: []string{"igmp_join_start"}, Dst: "igmp_join_done"},
 			{Name: "igmp_join_error", Src: []string{"igmp_join_start"}, Dst: "igmp_join_error"},
 			{Name: "igmp_leave", Src: []string{"igmp_join_start"}, Dst: "igmp_left"},
@@ -239,7 +239,7 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth b
 			},
 			"igmp_join_start": func(e *fsm.Event) {
 				msg := Message{
-					Type: IGMPMembershipReportV2,
+					Type: IGMPMembershipReportV3,
 				}
 				o.Channel <- msg
 			},
@@ -362,12 +362,15 @@ loop:
 			case IGMPMembershipReportV2:
 				log.Infof("Recieved IGMPMembershipReportV2 message on ONU channel")
 				igmp.SendIGMPMembershipReportV2(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.HwAddress, stream)
+			case IGMPMembershipReportV3:
+				log.Infof("Recieved IGMPMembershipReportV3 message on ONU channel")
+				igmp.SendIGMPMembershipReportV3(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.HwAddress, stream)
 			case IGMPLeaveGroup:
 	                        log.Infof("Recieved IGMPLeaveGroupV2 message on ONU channel")
 				igmp.SendIGMPLeaveGroupV2(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.HwAddress, stream)
 			default:
 				onuLogger.Warnf("Received unknown message data %v for type %v in OLT Channel", message.Data, message.Type)
-		    }
+			}
 		}
 	}
 	onuLogger.WithFields(log.Fields{
