@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "10170109_1d226726",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1000601
+      },
+      "writtenOn": "2020-01-14T05:59:22Z",
+      "side": 1,
+      "message": "consider we will reset ONU to \"initialized\" state on DeleteOnu\nhttps://gerrit.opencord.org/#/c/16986/1/internal/bbsim/devices/olt.go",
+      "parentUuid": "837a0724_a6ffef49",
+      "range": {
+        "startLine": 145,
+        "startChar": 15,
+        "endLine": 145,
+        "endChar": 52
+      },
+      "revId": "03ace2f6b0e73724b10bd6b662fad8bbd4549cf3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e674f60_4437162b",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 1
