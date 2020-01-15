@@ -841,8 +841,11 @@ func (o OltDevice) FlowRemove(context.Context, *openolt.Flow) (*openolt.Empty, e
 }
 
 func (o OltDevice) HeartbeatCheck(context.Context, *openolt.Empty) (*openolt.Heartbeat, error) {
-	oltLogger.Error("HeartbeatCheck not implemented")
-	return new(openolt.Heartbeat), nil
+	res := openolt.Heartbeat{HeartbeatSignature: uint32(time.Now().Unix())}
+	oltLogger.WithFields(log.Fields{
+		"signature": res.HeartbeatSignature,
+	}).Trace("HeartbeatCheck")
+	return &res, nil
 }
 
 func (o OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.DeviceInfo, error) {
