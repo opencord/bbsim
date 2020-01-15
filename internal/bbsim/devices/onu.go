@@ -120,7 +120,7 @@ func CreateONU(olt OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth b
 			// NOTE should disabled state be different for oper_disabled (emulating an error) and admin_disabled (received a disabled call via VOLTHA)?
 			{Name: "disable", Src: []string{"enabled", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "disabled"},
 			// ONU state when PON port is disabled but ONU is power ON(more states should be added in src?)
-			{Name: "pon_disabled", Src: []string{"enabled", "gem_port_added", "eapol_flow_received", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst:"pon_disabled"},
+			{Name: "pon_disabled", Src: []string{"enabled", "gem_port_added", "eapol_flow_received", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "pon_disabled"},
 			// EAPOL
 			{Name: "start_auth", Src: []string{"eapol_flow_received", "gem_port_added", "eap_start_sent", "eap_response_identity_sent", "eap_response_challenge_sent", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "auth_started"},
 			{Name: "eap_start_sent", Src: []string{"auth_started"}, Dst: "eap_start_sent"},
@@ -355,8 +355,40 @@ loop:
 	}).Debug("Stopped handling ONU Indication Channel")
 }
 
-func (o *Onu) processOmciMessage(message omcisim.OmciChMessage) {
+func (o *Onu) processOmciMessage(message omcisim.OmciChMessage, stream openolt.Openolt_EnableIndicationServer) {
 	switch message.Type {
+	case omcisim.UniLinkUp, omcisim.UniLinkDown:
+		onuLogger.WithFields(log.Fields{
+			"OnuId":  message.Data.OnuId,
+			"IntfId": message.Data.IntfId,
+			"Type":   message.Type,
+		}).Infof("UNI Link Alarm")
+		// TODO send to OLT
+
+		omciInd := openolt.OmciIndication{
+			IntfId: message.Data.IntfId,
+			OnuId:  message.Data.OnuId,
+			Pkt:    message.Packet,
+		}
+
+		omci := &openolt.Indication_OmciInd{OmciInd: &omciInd}
+		if err := stream.Send(&openolt.Indication{Data: omci}); err != nil {
+			onuLogger.WithFields(log.Fields{
+				"IntfId":       o.PonPortID,
+				"SerialNumber": o.Sn(),
+				"Type":         message.Type,
+				"omciPacket":   omciInd.Pkt,
+			}).Errorf("Failed to send UNI Link Alarm: %v", err)
+			return
+		}
+
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"SerialNumber": o.Sn(),
+			"Type":         message.Type,
+			"omciPacket":   omciInd.Pkt,
+		}).Info("UNI Link alarm sent")
+
 	case omcisim.GemPortAdded:
 		log.WithFields(log.Fields{
 			"OnuId":  message.Data.OnuId,

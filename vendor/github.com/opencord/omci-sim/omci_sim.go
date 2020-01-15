@@ -21,7 +21,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var omciCh = make(chan OmciChMessage)
+var omciCh = make(chan OmciChMessage, 4096)
 
 func GetChannel() chan OmciChMessage {
 	return omciCh
@@ -48,7 +48,7 @@ func OmciSim(intfId uint32, onuId uint32, request []byte) ([]byte, error) {
 		"MeInstance": instance,
 		//"Conent": content,
 		"omciMsg": fmt.Sprintf("%x", content),
-	}).Tracef("Processing OMCI pakcet")
+	}).Tracef("Processing OMCI packet")
 
 	key := OnuKey{intfId, onuId}
 	OnuOmciStateMapLock.Lock()
@@ -102,6 +102,62 @@ func OmciSim(intfId uint32, onuId uint32, request []byte) ([]byte, error) {
 		} else if (class == 0x138) && ((msgType & 0x0F) == Get) {
 			resp[9] = content[0] // 0xBE
 			resp[10] = 0x00
+		}
+	}
+
+	if (class == 11 && instance == 257 && msgType == Set) {
+		// This is a set on a PPTP instance 257 (lan port 1)
+		// Determine if its setting admin up or down and alarm appropriately
+
+		// attrmask for what specifically sets/gets is 2 bytes
+		attrmask := content[0:2]
+		// actual content is the rest, as specified by attrmask.  but for this case we are only interested in 1 byte
+		firstattr := content[2:3]
+
+		// attribute bit 5 (admin state) in the PPTP is being set, its value is 1, lock
+		if (attrmask[0] == 0x08 && firstattr[0] == 0x01) {
+			log.Info("Send UNI Link Down Alarm on OMCI Sim channel")
+
+			linkMsgDown := []byte{
+				0x00, 0x00, 0x10, 0x0a, 0x00, 0x0b, 0x01, 0x01,
+				0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+
+			msg := OmciChMessage{
+				Type: UniLinkDown,
+				Data: OmciChMessageData{
+					OnuId:  key.OnuId,
+					IntfId: key.IntfId,
+				},
+				Packet: linkMsgDown,
+			}
+			omciCh <- msg
+		}
+
+		// attribute bit 5 (admin state) in the PPTP is being set, its value is 0, unlock
+		if (attrmask[0] == 0x08 && firstattr[0] == 0x00) {
+			log.Info("Send UNI Link Up Alarm on OMCI Sim channel")
+
+			linkMsgUp := []byte{
+				0x00, 0x00, 0x10, 0x0a, 0x00, 0x0b, 0x01, 0x01,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+
+			msg := OmciChMessage{
+				Type: UniLinkUp,
+				Data: OmciChMessageData{
+					OnuId:  key.OnuId,
+					IntfId: key.IntfId,
+				},
+				Packet: linkMsgUp,
+			}
+			omciCh <- msg
 		}
 	}
 

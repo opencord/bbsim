@@ -24,9 +24,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/pcap"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
@@ -324,7 +324,7 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error 
 		o.channel <- msg
 	}
 
-	go o.processOmciMessages(o.enableContext, &wg)
+	go o.processOmciMessages(o.enableContext, stream, &wg)
 
 	// send PON Port indications
 	for i, pon := range o.Pons {
@@ -354,7 +354,7 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error 
 	return nil
 }
 
-func (o *OltDevice) processOmciMessages(ctx context.Context, wg *sync.WaitGroup) {
+func (o *OltDevice) processOmciMessages(ctx context.Context, stream openolt.Openolt_EnableIndicationServer, wg *sync.WaitGroup) {
 	ch := omcisim.GetChannel()
 
 	oltLogger.Debug("Starting OMCI Indication Channel")
@@ -370,6 +370,13 @@ loop:
 				oltLogger.Debug("OMCI processing canceled via channel close")
 				break loop
 			}
+
+			oltLogger.WithFields(log.Fields{
+				"messageType": message.Type,
+				"OnuId":       message.Data.OnuId,
+				"IntfId":      message.Data.IntfId,
+			}).Info("Received message on OMCI Sim channel")
+
 			onuId := message.Data.OnuId
 			intfId := message.Data.IntfId
 			onu, err := o.FindOnuById(intfId, onuId)
@@ -377,7 +384,7 @@ loop:
 				oltLogger.Errorf("Failed to find onu: %v", err)
 				continue
 			}
-			go onu.processOmciMessage(message)
+			go onu.processOmciMessage(message, stream)
 		}
 	}
 
