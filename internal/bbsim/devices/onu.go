@@ -355,8 +355,40 @@ loop:
 	}).Debug("Stopped handling ONU Indication Channel")
 }
 
-func (o *Onu) processOmciMessage(message omcisim.OmciChMessage) {
+func (o *Onu) processOmciMessage(message omcisim.OmciChMessage, stream openolt.Openolt_EnableIndicationServer) {
 	switch message.Type {
+	case omcisim.UniLinkUp, omcisim.UniLinkDown:
+		onuLogger.WithFields(log.Fields{
+			"OnuId":  message.Data.OnuId,
+			"IntfId": message.Data.IntfId,
+			"Type": message.Type,
+		}).Infof("UNI Link Alarm")
+		// TODO send to OLT
+
+		omciInd := openolt.OmciIndication{
+			IntfId: message.Data.IntfId,
+			OnuId: message.Data.OnuId,
+			Pkt: message.Packet,
+		}
+
+		omci := &openolt.Indication_OmciInd{OmciInd: &omciInd}
+		if err := stream.Send(&openolt.Indication{Data: omci}); err != nil {
+			onuLogger.WithFields(log.Fields{
+				"IntfId":       o.PonPortID,
+				"SerialNumber": o.Sn(),
+				"Type": message.Type,
+				"omciPacket":   omciInd.Pkt,
+			}).Errorf("Failed to send UNI Link Alarm: %v", err)
+			return
+		}
+
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"SerialNumber": o.Sn(),
+			"Type": message.Type,
+			"omciPacket":   omciInd.Pkt,
+		}).Info("UNI Link alarm sent")
+
 	case omcisim.GemPortAdded:
 		log.WithFields(log.Fields{
 			"OnuId":  message.Data.OnuId,
