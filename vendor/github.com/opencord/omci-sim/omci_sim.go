@@ -21,7 +21,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var omciCh = make(chan OmciChMessage)
+var omciCh = make(chan OmciChMessage, 4096)
 
 func GetChannel() chan OmciChMessage {
 	return omciCh
@@ -48,7 +48,7 @@ func OmciSim(intfId uint32, onuId uint32, request []byte) ([]byte, error) {
 		"MeInstance": instance,
 		//"Conent": content,
 		"omciMsg": fmt.Sprintf("%x", content),
-	}).Tracef("Processing OMCI pakcet")
+	}).Tracef("Processing OMCI packet")
 
 	key := OnuKey{intfId, onuId}
 	OnuOmciStateMapLock.Lock()
@@ -102,6 +102,18 @@ func OmciSim(intfId uint32, onuId uint32, request []byte) ([]byte, error) {
 		} else if (class == 0x138) && ((msgType & 0x0F) == Get) {
 			resp[9] = content[0] // 0xBE
 			resp[10] = 0x00
+		}
+	}
+
+	if (class == 24 && instance == 260 && msgType == Get ) {
+		log.Info("Send UNI Link Up on OMCI Sim channel")
+		omciCh <- OmciChMessage{
+			Type: UniLinkUp,
+			Data: OmciChMessageData{
+				OnuId: key.OnuId,
+				IntfId: key.IntfId,
+			},
+			Packet: []byte("0000100a000b0101000000000000000000000000000000000000000000000000000000000000000100000028c7ae1129"),
 		}
 	}
 

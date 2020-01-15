@@ -28,12 +28,14 @@ import (
 type ChMessageType int
 
 const (
-	GemPortAdded ChMessageType = iota
+	GemPortAdded ChMessageType = 0
+	UniLinkUp ChMessageType = 1
 )
 
 func (m ChMessageType) String() string {
 	names := [...]string{
 		"GemPortAdded",
+		"UniLinkUp",
 	}
 	return names[m]
 }
@@ -46,6 +48,7 @@ type OmciChMessageData struct {
 type OmciChMessage struct {
 	Type ChMessageType
 	Data OmciChMessageData
+	Packet []byte
 }
 
 //
