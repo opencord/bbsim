@@ -68,7 +68,7 @@ build: # @HELP Build the binaries (it runs inside a docker container and output 
 
 test: test-unit test-bbr
 
-test-unit: clean dep fmt # @HELP Execute unit tests
+test-unit: clean dep fmt local-omci-sim # @HELP Execute unit tests
 	GO111MODULE=on go test -v -mod vendor $(TEST_PACKAGES) -timeout 10s -covermode count -coverprofile ./tests/results/go-test-coverage.out 2>&1 | tee ./tests/results/go-test-results.out
 	go-junit-report < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml
 	gocover-cobertura < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml
@@ -168,7 +168,7 @@ clean:
 	rm -f bbr
 	rm -rf tools/bin
 
-build-bbr:
+build-bbr: local-omci-sim
 	GO111MODULE=on go build -i -v -mod vendor \
     	-ldflags "-w -X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
     		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
