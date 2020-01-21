@@ -222,7 +222,7 @@ func (o *OltDevice) RestartOLT() error {
 	// terminate the OLT's processOltMessages go routine
 	close(o.channel)
 	// terminate the OLT's processNniPacketIns go routine
-	o.nniHandle.Close()
+	go o.nniHandle.Close()
 	close(o.nniPktInChannel)
 
 	for i := range olt.Pons {
