@@ -84,6 +84,14 @@ Here is a list of possible state transitions for an ONU in BBSim:
       - dhcp_started, dhcp_discovery_sent, dhcp_request_sent
       - dhcp_failed
       -
+    * - disable
+      - enabled, eap_response_success_received, auth_failed, dhcp_ack_received, dhcp_failed
+      - disabled
+      -
+    * - pon_disabled
+      - enabled, gem_port_added, eapol_flow_received, eap_response_success_received, auth_failed, dhcp_ack_received, dhcp_failed
+      - pon_disabled
+      -
 
 In addition some transition can be forced via the API,
 check the previous table to verify when you can trigger those actions and
@@ -100,14 +108,37 @@ check the previous table to verify when you can trigger those actions and
       - disable
       - Emulates a device shutdown. Sends a ``DyingGaspInd`` and then an ``OnuIndication{OperState: 'down'}``
     * - poweron
-      - enable
-      - Emulates a device power on. Sends a ``OnuDiscInd`` and then an ``OnuIndication{OperState: 'up'}``
+      - discover
+      - Emulates a device power on. Sends a ``OnuDiscInd``
     * - auth_restart
       - start_auth
       - Forces the ONU to send a new ``EapStart`` packet.
     * - dhcp_restart
       - start_dhcp
       - Forces the ONU to send a new ``DHCPDiscovery`` packet.
+    * - softReboot
+      - disable
+      - Emulates a device soft reboot. Sends ``LosIndication{status: 'on'}`` and then after reboot delay ``LosIndication{status: 'off'}``
+    * - hardReboot
+      - disable
+      - Emulates a device hard reboot. Sends a ``DyingGaspInd`` and ``OnuIndication{OperState: 'down'}`` and raise necessary alarmIndications and after reboot delay sends ``OnuDiscInd`` and clear alarm indications.
+    * - onuAlarms
+      - TBD
+      -
+
+.. list-table:: 
+    :widths: 15 15 70
+    :header-rows: 1
+
+    * - OpenOlt request
+      - Transitions To
+      - Notes
+    * - ActivateOnu
+      - enable
+      - VOLTHA assigns ID to ONU and then BBSim sends a ``OnuIndication{OperState: 'up'}``
+    * - DeleteOnu
+      - initialized
+      - Reset ONU-ID to zero and move ONU to initialized state so that its ready to poweron again when required
 
 Below is a diagram of the state machine:
 
