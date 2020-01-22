@@ -58,6 +58,23 @@ message ONURequest {
     string SerialNumber = 1;
 }
 
+// Alarms
+
+message AlarmParameter {
+    string Key = 1;
+    string Value = 2;
+}
+
+// ONUAlarmRequest includes fields common to every alarm,
+// plus an options list of AlarmParemter list that can be used
+// to set additional fields in alarms that support them.
+message ONUAlarmRequest {
+    string AlarmName = 1;      // name of alarm to raise
+    string SerialNumber = 2;   // serial number of ONU
+    string Status = 3;         // status of Alarm
+    repeated AlarmParameter Parameters = 4; // optional list of additional parameters
+}
+
 // Utils
 
 message VersionNumber {
@@ -92,4 +109,5 @@ service BBSim {
     rpc PoweronONU (ONURequest) returns (Response) {}
     rpc RestartEapol (ONURequest) returns (Response) {}
     rpc RestartDhcp (ONURequest) returns (Response) {}
+    rpc SetONUAlarmIndication (ONUAlarmRequest) returns (Response) {}
 }
