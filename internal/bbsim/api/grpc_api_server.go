@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/opencord/bbsim/api/bbsim"
+	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"github.com/opencord/bbsim/internal/common"
 	log "github.com/sirupsen/logrus"
@@ -128,4 +129,17 @@ func (s BBSimServer) SetLogLevel(ctx context.Context, req *bbsim.LogLevel) (*bbs
 		Level:  log.StandardLogger().Level.String(),
 		Caller: log.StandardLogger().ReportCaller,
 	}, nil
+}
+
+func (s BBSimServer) SetAlarmIndication(ctx context.Context, req *bbsim.AlarmRequest) (*bbsim.Response, error) {
+	o := devices.GetOLT()
+	err := alarmsim.SimulateAlarm(ctx, req, o)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &bbsim.Response{}
+	res.StatusCode = int32(codes.OK)
+	res.Message = fmt.Sprintf("Alarm Indication Sent.")
+	return res, nil
 }

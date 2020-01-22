@@ -12,8 +12,6 @@ import (
 	tech_profile "github.com/opencord/voltha-protos/v2/go/tech_profile"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -1045,38 +1043,6 @@ type BBSimServiceServer interface {
 	PerformDeviceAction(context.Context, *DeviceAction) (*BBSimResponse, error)
 	// Get flows
 	GetFlows(context.Context, *ONUInfo) (*Flows, error)
-}
-
-// UnimplementedBBSimServiceServer can be embedded to have forward compatible implementations.
-type UnimplementedBBSimServiceServer struct {
-}
-
-func (*UnimplementedBBSimServiceServer) OLTStatus(ctx context.Context, req *Empty) (*OLTStatusResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method OLTStatus not implemented")
-}
-func (*UnimplementedBBSimServiceServer) PortStatus(ctx context.Context, req *PortInfo) (*Ports, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PortStatus not implemented")
-}
-func (*UnimplementedBBSimServiceServer) ONUStatus(ctx context.Context, req *ONURequest) (*ONUs, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ONUStatus not implemented")
-}
-func (*UnimplementedBBSimServiceServer) ONUActivate(ctx context.Context, req *ONURequest) (*BBSimResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ONUActivate not implemented")
-}
-func (*UnimplementedBBSimServiceServer) ONUDeactivate(ctx context.Context, req *ONURequest) (*BBSimResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ONUDeactivate not implemented")
-}
-func (*UnimplementedBBSimServiceServer) GenerateONUAlarm(ctx context.Context, req *ONUAlarmRequest) (*BBSimResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GenerateONUAlarm not implemented")
-}
-func (*UnimplementedBBSimServiceServer) GenerateOLTAlarm(ctx context.Context, req *OLTAlarmRequest) (*BBSimResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GenerateOLTAlarm not implemented")
-}
-func (*UnimplementedBBSimServiceServer) PerformDeviceAction(ctx context.Context, req *DeviceAction) (*BBSimResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PerformDeviceAction not implemented")
-}
-func (*UnimplementedBBSimServiceServer) GetFlows(ctx context.Context, req *ONUInfo) (*Flows, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetFlows not implemented")
 }
 
 func RegisterBBSimServiceServer(s *grpc.Server, srv BBSimServiceServer) {

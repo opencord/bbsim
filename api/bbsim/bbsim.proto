@@ -58,6 +58,52 @@ message ONURequest {
     string SerialNumber = 1;
 }
 
+// Alarms
+
+message AlarmType {
+    // These types correspond to the messages permitted in the oneof
+    // in AlarmIndication in the openolt protos
+    enum Types {
+        LOS = 0; // LOS is an OLT alarm for an entire PON
+        DYING_GASP = 1;
+        ONU_ALARM = 2;
+        ONU_STARTUP_FAILURE = 3;
+        ONU_SIGNAL_DEGRADE = 4;
+        ONU_DRIFT_OF_WINDOW = 5;
+        ONU_LOSS_OF_OMCI_CHANNEL = 6;
+        ONU_SIGNALS_FAILURE = 7;
+        ONU_TRANSMISSION_INTERFERENCE_WARNING = 8;
+        ONU_ACTIVATION_FAILURE = 9;
+        ONU_PROCESSING_ERROR = 10;
+        ONU_LOSS_OF_KEY_SYNC_FAILURE = 11;
+        ONU_ITU_PON_STATS = 12;
+
+        // These break out ONU_ALARM, which is a single message, but
+        // includes statuses for these six alarms.
+        ONU_ALARM_LOS = 13;
+        ONU_ALARM_LOB = 14;
+        ONU_ALARM_LOPC_MISS = 15;
+        ONU_ALARM_LOPC_MIC_ERROR = 16;
+        ONU_ALARM_LOFI = 17;
+        ONU_ALARM_LOAMI = 18;
+    }
+}
+
+message AlarmParameter {
+    string Key = 1;
+    string Value = 2;
+}
+
+// AlarmRequest includes fields common to every alarm,
+// plus an optional list of AlarmParemter list that can be used
+// to set additional fields in alarms that support them.
+message AlarmRequest {
+    AlarmType.Types AlarmType = 1;          // name of alarm to raise
+    string SerialNumber = 2;                // serial number of ONU
+    string Status = 3;                      // status of Alarm
+    repeated AlarmParameter Parameters = 4; // optional list of additional parameters
+}
+
 // Utils
 
 message VersionNumber {
@@ -92,4 +138,5 @@ service BBSim {
     rpc PoweronONU (ONURequest) returns (Response) {}
     rpc RestartEapol (ONURequest) returns (Response) {}
     rpc RestartDhcp (ONURequest) returns (Response) {}
+    rpc SetAlarmIndication (AlarmRequest) returns (Response) {}
 }
