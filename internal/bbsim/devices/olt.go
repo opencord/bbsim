@@ -411,6 +411,18 @@ func (o OltDevice) getNniById(id uint32) (*NniPort, error) {
 	return nil, errors.New(fmt.Sprintf("Cannot find NniPort with id %d in OLT %d", id, o.ID))
 }
 
+func (o *OltDevice) sendAlarmIndication(alarmInd *openolt.AlarmIndication, stream openolt.Openolt_EnableIndicationServer) {
+	data := &openolt.Indication_AlarmInd{AlarmInd: alarmInd}
+	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
+		oltLogger.Errorf("Failed to send Alarm Indication: %v", err)
+		return
+	}
+
+	oltLogger.WithFields(log.Fields{
+		"AlarmIndication": alarmInd,
+	}).Debug("Sent Indication_AlarmInd")
+}
+
 func (o *OltDevice) sendOltIndication(msg OltIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
 	data := &openolt.Indication_OltInd{OltInd: &openolt.OltIndication{OperState: msg.OperState.String()}}
 	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
@@ -546,6 +558,9 @@ loop:
 					o.OperState.Event("disable")
 				}
 				o.sendOltIndication(msg, stream)
+			case AlarmIndication:
+				alarmInd, _ := message.Data.(*openolt.AlarmIndication)
+				o.sendAlarmIndication(alarmInd, stream)
 			case NniIndication:
 				msg, _ := message.Data.(NniIndicationMessage)
 				o.sendNniIndication(msg, stream)
@@ -1015,4 +1030,15 @@ func (s OltDevice) CreateTrafficSchedulers(context.Context, *tech_profile.Traffi
 func (s OltDevice) RemoveTrafficSchedulers(context.Context, *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
 	oltLogger.Info("received RemoveTrafficSchedulers")
 	return new(openolt.Empty), nil
+}
+
+// assumes caller has properly formulated an openolt.AlarmIndication
+func (o OltDevice) SendAlarmIndication(context context.Context, ind *openolt.AlarmIndication) error {
+	msg := Message{
+		Type: AlarmIndication,
+		Data: ind,
+	}
+
+	o.channel <- msg
+	return nil
 }

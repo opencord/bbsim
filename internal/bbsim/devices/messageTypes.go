@@ -42,6 +42,8 @@ const (
 	SendEapolFlow  MessageType = 12
 	SendDhcpFlow   MessageType = 13
 	OnuPacketIn    MessageType = 14
+
+	AlarmIndication MessageType = 15 // message data is an openolt.AlarmIndication
 )
 
 func (m MessageType) String() string {
