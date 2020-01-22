@@ -39,6 +39,7 @@ func main() {
 	commands.RegisterONUCommands(parser)
 	commands.RegisterCompletionCommands(parser)
 	commands.RegisterLoggingCommands(parser)
+	commands.RegisterAlarmCommands(parser)
 
 	_, err = parser.ParseArgs(os.Args[1:])
 	if err != nil {
