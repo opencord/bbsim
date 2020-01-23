@@ -33,6 +33,8 @@ const (
 	DEFAULT_ALARM_LIST_FORMAT = "table{{ .Name }}"
 )
 
+type AlarmNameString string
+
 type AlarmListOutput struct {
 	Name string
 }
@@ -40,16 +42,16 @@ type AlarmListOutput struct {
 type AlarmRaise struct {
 	Parameters []string `short:"p" description:"Additional Alarm Parameter in name=value form"`
 	Args       struct {
-		Name         string
-		SerialNumber string
+		Name         AlarmNameString
+		SerialNumber OnuSnString
 	} `positional-args:"yes" required:"yes"`
 }
 
 type AlarmClear struct {
 	Parameters []string `short:"p" description:"Additional Alarm Parameter in name=value form"`
 	Args       struct {
-		Name         string
-		SerialNumber string
+		Name         AlarmNameString
+		SerialNumber OnuSnString
 	} `positional-args:"yes" required:"yes"`
 }
 
@@ -111,7 +113,7 @@ func RegisterAlarmCommands(parser *flags.Parser) {
 }
 
 func (o *AlarmRaise) Execute(args []string) error {
-	alarmType, err := alarmNameToEnum(o.Args.Name)
+	alarmType, err := alarmNameToEnum(string(o.Args.Name))
 	if err != nil {
 		return err
 	}
@@ -123,7 +125,7 @@ func (o *AlarmRaise) Execute(args []string) error {
 	defer cancel()
 
 	req := pb.AlarmRequest{AlarmType: *alarmType,
-		SerialNumber: o.Args.SerialNumber,
+		SerialNumber: string(o.Args.SerialNumber),
 		Status:       "on"}
 
 	err = addParameters(o.Parameters, &req)
@@ -143,7 +145,7 @@ func (o *AlarmRaise) Execute(args []string) error {
 }
 
 func (o *AlarmClear) Execute(args []string) error {
-	alarmType, err := alarmNameToEnum(o.Args.Name)
+	alarmType, err := alarmNameToEnum(string(o.Args.Name))
 	if err != nil {
 		return err
 	}
@@ -155,7 +157,7 @@ func (o *AlarmClear) Execute(args []string) error {
 	defer cancel()
 
 	req := pb.AlarmRequest{AlarmType: *alarmType,
-		SerialNumber: o.Args.SerialNumber,
+		SerialNumber: string(o.Args.SerialNumber),
 		Status:       "off"}
 
 	err = addParameters(o.Parameters, &req)
@@ -185,4 +187,15 @@ func (o *AlarmList) Execute(args []string) error {
 	tableFormat := format.Format(DEFAULT_ALARM_LIST_FORMAT)
 	tableFormat.Execute(os.Stdout, true, alarmNames)
 	return nil
+}
+
+func (onuSn *AlarmNameString) Complete(match string) []flags.Completion {
+	list := make([]flags.Completion, 0)
+	for k := range AlarmNameMap {
+		if strings.HasPrefix(k, match) {
+			list = append(list, flags.Completion{Item: k})
+		}
+	}
+
+	return list
 }
