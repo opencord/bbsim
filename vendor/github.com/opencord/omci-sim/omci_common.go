@@ -49,10 +49,26 @@ func GetAttributes(class OmciClass, content OmciContent, key OnuKey, pkt []byte)
 		pkt, _ = GetANIGAttributes(&pos, pkt, content)
 		return pkt
 
+	case SoftwareImage:
+		pos := uint(11)
+		pkt, _ = GetSoftwareImageAttributes(&pos, pkt, content)
+		return pkt
+
+	case ONUG:
+		pos := uint(11)
+		pkt, _ = GetOnuGAttributes(&pos, pkt, content)
+		return pkt
+
+	case ONU2G:
+		pos := uint(11)
+		pkt, _ = GetOnu2GAttributes(&pos, pkt, content)
+		return pkt
+
 	case EthernetPMHistoryData:
 		pos := uint(11)
 		pkt, _ = GetEthernetPMHistoryDataAttributes(&pos, pkt, content)
 		return pkt
+
 	default:
 		// For unimplemented MEs, just fill in the attribute mask and return 0 values for the requested attributes
 		// TODO implement Get for unimplemented MEs as well

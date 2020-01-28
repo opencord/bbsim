@@ -159,10 +159,14 @@ type OmciClass uint16
 
 func (c OmciClass) PrettyPrint() string {
 	switch c {
+	case SoftwareImage:
+		return "SoftwareImage"
 	case EthernetPMHistoryData:
 		return "EthernetPMHistoryData"
 	case ONUG:
 		return "ONUG"
+	case ONU2G:
+		return "ONU2G"
 	case ANIG:
 		return "ANIG"
 	case GEMPortNetworkCTP:
@@ -175,8 +179,10 @@ func (c OmciClass) PrettyPrint() string {
 
 const (
 	// Managed Entity Class values
+	SoftwareImage         OmciClass = 7
 	EthernetPMHistoryData OmciClass = 24
 	ONUG                  OmciClass = 256
+	ONU2G                 OmciClass = 257
 	ANIG                  OmciClass = 263
 	GEMPortNetworkCTP     OmciClass = 268
 )
