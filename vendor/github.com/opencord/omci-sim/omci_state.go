@@ -41,6 +41,7 @@ type istate int
 const (
 	INCOMPLETE istate = iota
 	DONE
+	LOCKED
 )
 
 var OnuOmciStateMap = map[OnuKey]*OnuOmciState{}

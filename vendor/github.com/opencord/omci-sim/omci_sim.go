@@ -135,6 +135,12 @@ func OmciSim(intfId uint32, onuId uint32, request []byte) ([]byte, error) {
 				Packet: linkMsgDown,
 			}
 			omciCh <- msg
+
+			OnuOmciStateMapLock.Lock()
+			if OnuOmciState, ok := OnuOmciStateMap[key]; ok {
+				OnuOmciState.state = LOCKED
+			}
+			OnuOmciStateMapLock.Unlock()
 		}
 
 		// attribute bit 5 (admin state) in the PPTP is being set, its value is 0, unlock
@@ -158,6 +164,12 @@ func OmciSim(intfId uint32, onuId uint32, request []byte) ([]byte, error) {
 				Packet: linkMsgUp,
 			}
 			omciCh <- msg
+
+			OnuOmciStateMapLock.Lock()
+			if OnuOmciState, ok := OnuOmciStateMap[key]; ok {
+				OnuOmciState.state = DONE
+			}
+			OnuOmciStateMapLock.Unlock()
 		}
 	}
 
