@@ -22,6 +22,24 @@ import (
 	"strconv"
 )
 
+type mode int
+
+// Constants for Controlled Activation modes
+const (
+	Default mode = iota
+	OnlyONU
+	OnlyPON
+	Both
+)
+
+// ControlledActivationModes maps string to int value of mode
+var ControlledActivationModes = map[string]mode{
+	"default":  Default,
+	"only-onu": OnlyONU,
+	"only-pon": OnlyPON,
+	"both":     Both,
+}
+
 var newFSM = fsm.NewFSM
 
 func getOperStateFSM(cb fsm.Callback) *fsm.FSM {
