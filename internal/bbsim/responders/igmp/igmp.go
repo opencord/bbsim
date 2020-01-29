@@ -64,6 +64,7 @@ func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, p
 	}
 	//Sending IGMP packets
 	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
+<<<<<<< HEAD
 		log.WithFields(log.Fields{
 			"OnuId":        onuId,
 			"SerialNumber": serialNumber,
@@ -71,6 +72,9 @@ func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, p
 			"IntfId":       ponPortId,
 			"err":          err,
 		}).Error("Fail to send IGMP PktInd indication for ONU")
+=======
+		log.Errorf("Fail to send IGMP PktInd indication for ONU: %d, IntfId: %d, SerialNumber: %s,  error: %v", onuId, ponPortId, serialNumber, err)
+>>>>>>> 706e0c9... SEBA-910 Implementation of Create/Remove TrafficSchedulers
 		return err
 	}
 	return nil
@@ -115,6 +119,7 @@ func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber str
 	}
 	//Sending IGMP packets
 	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
+<<<<<<< HEAD
 		log.WithFields(log.Fields{
 			"OnuId":        onuId,
 			"SerialNumber": serialNumber,
@@ -122,6 +127,9 @@ func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber str
 			"IntfId":       ponPortId,
 			"err":          err,
 		}).Errorf("Fail to send IGMP PktInd indication")
+=======
+		log.Errorf("Fail to send IGMP PktInd indication for ONU: %d, IntfId: %d, SerialNumber: %s,  error: %v", onuId, ponPortId, serialNumber, err)
+>>>>>>> 706e0c9... SEBA-910 Implementation of Create/Remove TrafficSchedulers
 		return err
 	}
 	return nil
