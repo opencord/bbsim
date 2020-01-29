@@ -19,6 +19,7 @@ package commands
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/jessevdk/go-flags"
 	pb "github.com/opencord/bbsim/api/bbsim"
@@ -32,6 +33,7 @@ import (
 
 const (
 	DEFAULT_ONU_DEVICE_HEADER_FORMAT = "table{{ .PonPortID }}\t{{ .ID }}\t{{ .PortNo }}\t{{ .SerialNumber }}\t{{ .HwAddress }}\t{{ .STag }}\t{{ .CTag }}\t{{ .OperState }}\t{{ .InternalState }}"
+	DEFAULT_ONU_TS_HEADER_FORMAT = "table{{.}}"
 )
 
 type OnuSnString string
@@ -87,6 +89,13 @@ type ONUOptions struct {
 	RestartEapol ONUEapolRestart `command:"auth_restart"`
 	RestartDchp  ONUDhcpRestart  `command:"dhcp_restart"`
 	Igmp         ONUIgmp         `command:"igmp"`
+	TrafficSchedulers ONUTrafficSchedulers `command:"traffic_schedulers"`
+}
+
+type ONUTrafficSchedulers struct {
+	Args struct {
+		OnuSn OnuSnString
+	} `positional-args:"yes" required:"yes"`
 }
 
 func RegisterONUCommands(parser *flags.Parser) {
@@ -309,4 +318,34 @@ func (onuSn *OnuSnString) Complete(match string) []flags.Completion {
 	}
 
 	return list
+}
+
+func (options *ONUTrafficSchedulers) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+	req := pb.ONURequest{
+		SerialNumber: string(options.Args.OnuSn),
+	}
+	res, err := client.GetOnuTrafficSchedulers(ctx, &req)
+
+	if err != nil {
+		log.Fatalf("Cannot get traffic schedulers for ONU %s: %v", options.Args.OnuSn, err)
+		return err
+	}
+
+	//Convert proto message to json fir display in bbsimctl
+	jma, err := json.Marshal(res)
+	if err != nil {
+		log.Fatalf("couldn't convert proto buffer to json: %v", err)
+	}
+
+	tableFormat := format.Format(DEFAULT_ONU_TS_HEADER_FORMAT)
+	if err := tableFormat.Execute(os.Stdout, true, string(jma)); err != nil {
+		log.Fatalf("Error while formatting ONU Traffic Schedulers table: %s", err)
+	}
+
+	return nil
 }
