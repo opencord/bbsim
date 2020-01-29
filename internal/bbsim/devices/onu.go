@@ -34,6 +34,7 @@ import (
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
 	omcisim "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
+	tech_profile "github.com/opencord/voltha-protos/v2/go/tech_profile"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -72,6 +73,7 @@ type Onu struct {
 	HasGemPort bool
 
 	DoneChannel chan bool // this channel is used to signal once the onu is complete (when the struct is used by BBR)
+    TrafficSchedulers     *tech_profile.TrafficSchedulers
 }
 
 func (o *Onu) Sn() string {
@@ -599,6 +601,7 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 			"SerialNumber": o.Sn(),
 		}).Debug("Ignoring flow as it's not for the first UNI")
 		return
+
 	}
 
 	if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeEAPOL) && msg.Flow.Classifier.OVid == 4091 {

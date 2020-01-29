@@ -15,6 +15,7 @@
 syntax = "proto3";
 package bbsim;
 
+import "voltha_protos/tech_profile.proto";
 // Models
 
 message PONPort {
@@ -46,6 +47,7 @@ message ONU {
     int32 CTag = 7;
     string HwAddress = 8;
     int32 PortNo = 9;
+    tech_profile.TrafficSchedulers TrafficSchedulers = 10;
 }
 
 message ONUs {

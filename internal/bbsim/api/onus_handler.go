@@ -44,6 +44,7 @@ func (s BBSimServer) GetONUs(ctx context.Context, req *bbsim.Empty) (*bbsim.ONUs
 				CTag:          int32(o.CTag),
 				HwAddress:     o.HwAddress.String(),
 				PortNo:        int32(o.PortNo),
+				TrafficSchedulers: o.TrafficSchedulers,
 			}
 			onus.Items = append(onus.Items, &onu)
 		}
@@ -53,7 +54,6 @@ func (s BBSimServer) GetONUs(ctx context.Context, req *bbsim.Empty) (*bbsim.ONUs
 
 func (s BBSimServer) GetONU(ctx context.Context, req *bbsim.ONURequest) (*bbsim.ONU, error) {
 	olt := devices.GetOLT()
-
 	onu, err := olt.FindOnuBySn(req.SerialNumber)
 
 	if err != nil {
@@ -71,6 +71,7 @@ func (s BBSimServer) GetONU(ctx context.Context, req *bbsim.ONURequest) (*bbsim.
 		CTag:          int32(onu.CTag),
 		HwAddress:     onu.HwAddress.String(),
 		PortNo:        int32(onu.PortNo),
+		TrafficSchedulers: onu.TrafficSchedulers,
 	}
 	return &res, nil
 }

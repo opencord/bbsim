@@ -7,6 +7,7 @@ import (
 	context "context"
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
+	tech_profile "github.com/opencord/voltha-protos/v2/go/tech_profile"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -278,18 +279,19 @@ func (m *Olt) GetPONPorts() []*PONPort {
 }
 
 type ONU struct {
-	ID                   int32    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	SerialNumber         string   `protobuf:"bytes,2,opt,name=SerialNumber,proto3" json:"SerialNumber,omitempty"`
-	OperState            string   `protobuf:"bytes,3,opt,name=OperState,proto3" json:"OperState,omitempty"`
-	InternalState        string   `protobuf:"bytes,4,opt,name=InternalState,proto3" json:"InternalState,omitempty"`
-	PonPortID            int32    `protobuf:"varint,5,opt,name=PonPortID,proto3" json:"PonPortID,omitempty"`
-	STag                 int32    `protobuf:"varint,6,opt,name=STag,proto3" json:"STag,omitempty"`
-	CTag                 int32    `protobuf:"varint,7,opt,name=CTag,proto3" json:"CTag,omitempty"`
-	HwAddress            string   `protobuf:"bytes,8,opt,name=HwAddress,proto3" json:"HwAddress,omitempty"`
-	PortNo               int32    `protobuf:"varint,9,opt,name=PortNo,proto3" json:"PortNo,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	ID                   int32                           `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	SerialNumber         string                          `protobuf:"bytes,2,opt,name=SerialNumber,proto3" json:"SerialNumber,omitempty"`
+	OperState            string                          `protobuf:"bytes,3,opt,name=OperState,proto3" json:"OperState,omitempty"`
+	InternalState        string                          `protobuf:"bytes,4,opt,name=InternalState,proto3" json:"InternalState,omitempty"`
+	PonPortID            int32                           `protobuf:"varint,5,opt,name=PonPortID,proto3" json:"PonPortID,omitempty"`
+	STag                 int32                           `protobuf:"varint,6,opt,name=STag,proto3" json:"STag,omitempty"`
+	CTag                 int32                           `protobuf:"varint,7,opt,name=CTag,proto3" json:"CTag,omitempty"`
+	HwAddress            string                          `protobuf:"bytes,8,opt,name=HwAddress,proto3" json:"HwAddress,omitempty"`
+	PortNo               int32                           `protobuf:"varint,9,opt,name=PortNo,proto3" json:"PortNo,omitempty"`
+	TrafficSchedulers    *tech_profile.TrafficSchedulers `protobuf:"bytes,10,opt,name=TrafficSchedulers,proto3" json:"TrafficSchedulers,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                        `json:"-"`
+	XXX_unrecognized     []byte                          `json:"-"`
+	XXX_sizecache        int32                           `json:"-"`
 }
 
 func (m *ONU) Reset()         { *m = ONU{} }
@@ -378,6 +380,13 @@ func (m *ONU) GetPortNo() int32 {
 		return m.PortNo
 	}
 	return 0
+}
+
+func (m *ONU) GetTrafficSchedulers() *tech_profile.TrafficSchedulers {
+	if m != nil {
+		return m.TrafficSchedulers
+	}
+	return nil
 }
 
 type ONUs struct {

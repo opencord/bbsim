@@ -33,7 +33,7 @@ import (
 	"github.com/opencord/bbsim/internal/common"
 	omcisim "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
-	"github.com/opencord/voltha-protos/v2/go/tech_profile"
+	tech_profile "github.com/opencord/voltha-protos/v2/go/tech_profile"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -1046,13 +1046,42 @@ func (s OltDevice) RemoveTrafficQueues(context.Context, *tech_profile.TrafficQue
 	return new(openolt.Empty), nil
 }
 
-func (s OltDevice) CreateTrafficSchedulers(context.Context, *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
-	oltLogger.Info("received CreateTrafficSchedulers")
+func (s OltDevice) CreateTrafficSchedulers(context context.Context, trafficSchedulers *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
+	oltLogger.WithFields(log.Fields{
+		"Interface Id": trafficSchedulers.IntfId,
+		"Onu Id": trafficSchedulers.OnuId,
+		"Port No": trafficSchedulers.PortNo,
+	}).Info("received CreateTrafficSchedulers")
+	pon, err := s.GetPonById(trafficSchedulers.IntfId)
+	if err != nil {
+		return new(openolt.Empty), err
+	}
+    onu, err := pon.GetOnuById(trafficSchedulers.OnuId)
+	if err != nil {
+		return new(openolt.Empty), err
+	}
+    onu.PortNo = trafficSchedulers.PortNo
+    onu.TrafficSchedulers = trafficSchedulers
+
 	return new(openolt.Empty), nil
 }
 
-func (s OltDevice) RemoveTrafficSchedulers(context.Context, *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
-	oltLogger.Info("received RemoveTrafficSchedulers")
+func (s OltDevice) RemoveTrafficSchedulers(context context.Context, trafficSchedulers *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
+	oltLogger.WithFields(log.Fields{
+		"Interface Id": trafficSchedulers.IntfId,
+		"Onu Id": trafficSchedulers.OnuId,
+		"Port No": trafficSchedulers.PortNo,
+	}).Info("received RemoveTrafficSchedulers")
+	pon, err := s.GetPonById(trafficSchedulers.IntfId)
+	if err != nil {
+		return new(openolt.Empty), err
+	}
+	onu, err := pon.GetOnuById(trafficSchedulers.OnuId)
+	if err != nil {
+		return new(openolt.Empty), err
+	}
+
+	onu.TrafficSchedulers = nil
 	return new(openolt.Empty), nil
 }
 
