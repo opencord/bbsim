@@ -74,9 +74,10 @@ func main() {
 		int(options.Olt.OnusPonPort),
 		options.BBSim.STag,
 		options.BBSim.CTagInit,
-		true, // this parameter is not important in the BBR Case
-		true, // this parameter is not important in the BBR Case
-		0,    // this parameter does not matter in the BBR case
+		true,  // this parameter is not important in the BBR Case
+		true,  // this parameter is not important in the BBR Case
+		0,     // this parameter does not matter in the BBR case
+		false, // this parameter does not matter in the BBR case
 		true,
 	)
 	oltMock := bbrdevices.OltMock{

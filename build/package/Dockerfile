@@ -50,7 +50,7 @@ FROM golang:1.12-stretch
 # debian symlinks it to 0.8 for historical reasons:
 # https://packages.debian.org/stretch/libpcap0.8-dev
 RUN apt-get update \
- && apt-get install -y libpcap-dev isc-dhcp-server network-manager tcpdump\
+ && apt-get install -y libpcap-dev isc-dhcp-server network-manager tcpdump jq\
  && ln -s /usr/lib/libpcap.so.1.8.1 /usr/lib/libpcap.so.0.8
 
 COPY ./configs/dhcpd.conf /etc/dhcp/
