@@ -63,6 +63,10 @@ github.com/jhump/protoreflect/internal
 github.com/konsorten/go-windows-terminal-sequences
 # github.com/looplab/fsm v0.1.0
 github.com/looplab/fsm
+# github.com/mattn/go-runewidth v0.0.7
+github.com/mattn/go-runewidth
+# github.com/olekukonko/tablewriter v0.0.4
+github.com/olekukonko/tablewriter
 # github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4
 github.com/opencord/cordctl/pkg/format
 # github.com/opencord/omci-sim v0.0.4

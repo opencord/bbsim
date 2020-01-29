@@ -53,7 +53,6 @@ func (s BBSimServer) GetONUs(ctx context.Context, req *bbsim.Empty) (*bbsim.ONUs
 
 func (s BBSimServer) GetONU(ctx context.Context, req *bbsim.ONURequest) (*bbsim.ONU, error) {
 	olt := devices.GetOLT()
-
 	onu, err := olt.FindOnuBySn(req.SerialNumber)
 
 	if err != nil {
@@ -76,7 +75,7 @@ func (s BBSimServer) GetONU(ctx context.Context, req *bbsim.ONURequest) (*bbsim.
 }
 
 func (s BBSimServer) ShutdownONU(ctx context.Context, req *bbsim.ONURequest) (*bbsim.Response, error) {
-	// NOTE this method is now sendying a Dying Gasp and then disabling the device (operState: down, adminState: up),
+	// NOTE this method is now sending a Dying Gasp and then disabling the device (operState: down, adminState: up),
 	// is this the only way to do? Should we address other cases?
 	// Investigate what happens when:
 	// - a fiber is pulled
@@ -209,8 +208,8 @@ func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest
 			event = "igmp_join_start"
 		case bbsim.SubActionTypes_LEAVE:
 			event = "igmp_leave"
-                case bbsim.SubActionTypes_JOINV3:
-                        event = "igmp_join_startv3"
+		case bbsim.SubActionTypes_JOINV3:
+			event = "igmp_join_startv3"
 		}
 
 		if igmpErr := onu.InternalState.Event(event); igmpErr != nil {
@@ -294,4 +293,22 @@ func (s BBSimServer) RestartDhcp(ctx context.Context, req *bbsim.ONURequest) (*b
 	res.Message = fmt.Sprintf("DHCP restarted for ONU %s.", onu.Sn())
 
 	return res, nil
+}
+
+func (s BBSimServer) GetOnuTrafficSchedulers(ctx context.Context, req *bbsim.ONURequest) (*bbsim.ONUTrafficSchedulers, error) {
+	olt := devices.GetOLT()
+	ts := bbsim.ONUTrafficSchedulers{}
+
+	onu, err := olt.FindOnuBySn(req.SerialNumber)
+	if err != nil {
+		return &ts, err
+	}
+
+	if onu.TrafficSchedulers != nil {
+		ts.TraffSchedulers = onu.TrafficSchedulers
+		return &ts, nil
+	} else {
+		ts.TraffSchedulers = nil
+		return &ts, nil
+	}
 }

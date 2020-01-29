@@ -33,3 +33,5 @@ http:
     post: "/v1/olt/onus/{SerialNumber}"
   - selector: bbsim.BBSim.SetAlarmIndication
     post: "/v1/olt/onus/{SerialNumber}/alarms/{AlarmType}/{Status}"
+  - selector: bbsim.BBSim.GetOnuTrafficSchedulers
+    get: "/v1/olt/onus/{SerialNumber}/trafficschedulers"

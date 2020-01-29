@@ -48,6 +48,7 @@ TEST_PACKAGES := github.com/opencord/bbsim/cmd/... \
                  github.com/opencord/bbsim/internal/...
 
 setup_tools: $(GO_TOOLS_BIN)
+	GO111MODULE=on go mod download all
 
 $(GO_TOOLS_BIN): $(GO_TOOLS_VENDOR)
 	GO111MODULE=on GOBIN="$(PWD)/$(TOOLS_BIN)" go install $(GO_TOOLS)
@@ -201,6 +202,7 @@ api/openolt/openolt.pb.go: api/openolt/openolt.proto
 api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go: api/bbsim/bbsim.proto api/bbsim/bbsim.yaml
 	@protoc -I. \
 		-I${GOOGLEAPI}/third_party/googleapis \
+		-I${VOLTHA_PROTOS}/protos/ \
     	--go_out=plugins=grpc:./ \
 		--grpc-gateway_out=logtostderr=true,grpc_api_configuration=api/bbsim/bbsim.yaml,allow_delete_body=true:./ \
     	$<

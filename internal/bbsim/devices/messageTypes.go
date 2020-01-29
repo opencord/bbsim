@@ -47,8 +47,8 @@ const (
 	IGMPMembershipReportV2 MessageType = 15 // Version 2 Membership Report (JOIN)
 	IGMPLeaveGroup         MessageType = 16 // Leave Group
 
-	AlarmIndication MessageType = 17 // message data is an openolt.AlarmIndication
-        IGMPMembershipReportV3 MessageType = 18// Version 3 Membership Report
+	AlarmIndication        MessageType = 17 // message data is an openolt.AlarmIndication
+	IGMPMembershipReportV3 MessageType = 18 // Version 3 Membership Report
 )
 
 func (m MessageType) String() string {
@@ -70,7 +70,7 @@ func (m MessageType) String() string {
 		"OnuPacketIn",
 		"IGMPMembershipReportV2",
 		"IGMPLeaveGroup",
-                "IGMPMembershipReportV3",
+		"IGMPMembershipReportV3",
 	}
 	return names[m]
 }

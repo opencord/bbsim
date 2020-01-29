@@ -15,6 +15,7 @@
 syntax = "proto3";
 package bbsim;
 
+import "voltha_protos/tech_profile.proto";
 // Models
 
 message PONPort {
@@ -46,6 +47,10 @@ message ONU {
     int32 CTag = 7;
     string HwAddress = 8;
     int32 PortNo = 9;
+}
+
+message ONUTrafficSchedulers {
+    tech_profile.TrafficSchedulers traffSchedulers = 1;
 }
 
 message ONUs {
@@ -95,7 +100,7 @@ message AlarmParameter {
 }
 
 // AlarmRequest includes fields common to every alarm,
-// plus an optional list of AlarmParemter list that can be used
+// plus an optional list of AlarmParameter list that can be used
 // to set additional fields in alarms that support them.
 message AlarmRequest {
     string AlarmType = 1;                   // name of alarm to raise
@@ -151,4 +156,5 @@ service BBSim {
     rpc RestartDhcp (ONURequest) returns (Response) {}
     rpc SetAlarmIndication (AlarmRequest) returns (Response) {}
     rpc ChangeIgmpState (IgmpRequest) returns (Response) {}
+    rpc GetOnuTrafficSchedulers (ONURequest) returns (ONUTrafficSchedulers) {}
 }

@@ -155,6 +155,7 @@ func main() {
 		"Dhcp":                 options.BBSim.EnableDhcp,
 		"Delay":                options.BBSim.Delay,
 		"ControlledActivation": options.BBSim.ControlledActivation,
+		"EnablePerf":           options.BBSim.EnablePerf,
 	}).Info("BroadBand Simulator is on")
 
 	// control channels, they are only closed when the goroutine needs to be terminated
@@ -171,6 +172,7 @@ func main() {
 		options.BBSim.EnableDhcp,
 		options.BBSim.Delay,
 		options.BBSim.ControlledActivation,
+		options.BBSim.EnablePerf,
 		false,
 	)
 

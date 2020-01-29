@@ -10,6 +10,7 @@ bbsim:
   api_address: ":50070"
   rest_api_address: ":50071"
   controlled_activation: "default"
+  enable_perf: false
   # legacy_api_address: ":50072"
   # legacy_rest_api_address: ":50073"
   # sadis_rest_address: ":50073"

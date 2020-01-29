@@ -20,14 +20,17 @@ package commands
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
+
 	"github.com/jessevdk/go-flags"
+	"github.com/olekukonko/tablewriter"
 	pb "github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
 	"github.com/opencord/cordctl/pkg/format"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"os"
-	"strings"
 )
 
 const (
@@ -81,13 +84,20 @@ type ONUIgmp struct {
 }
 
 type ONUOptions struct {
-	List         ONUList         `command:"list"`
-	Get          ONUGet          `command:"get"`
-	ShutDown     ONUShutDown     `command:"shutdown"`
-	PowerOn      ONUPowerOn      `command:"poweron"`
-	RestartEapol ONUEapolRestart `command:"auth_restart"`
-	RestartDchp  ONUDhcpRestart  `command:"dhcp_restart"`
-	Igmp         ONUIgmp         `command:"igmp"`
+	List              ONUList              `command:"list"`
+	Get               ONUGet               `command:"get"`
+	ShutDown          ONUShutDown          `command:"shutdown"`
+	PowerOn           ONUPowerOn           `command:"poweron"`
+	RestartEapol      ONUEapolRestart      `command:"auth_restart"`
+	RestartDchp       ONUDhcpRestart       `command:"dhcp_restart"`
+	Igmp              ONUIgmp              `command:"igmp"`
+	TrafficSchedulers ONUTrafficSchedulers `command:"traffic_schedulers"`
+}
+
+type ONUTrafficSchedulers struct {
+	Args struct {
+		OnuSn OnuSnString
+	} `positional-args:"yes" required:"yes"`
 }
 
 func RegisterONUCommands(parser *flags.Parser) {
@@ -258,9 +268,9 @@ func (options *ONUIgmp) Execute(args []string) error {
 		subActionVal = pb.SubActionTypes_JOIN
 	} else if string(options.Args.SubAction) == IgmpLeaveKey {
 		subActionVal = pb.SubActionTypes_LEAVE
-        } else if string(options.Args.SubAction) == IgmpJoinKeyV3 {
-                subActionVal = pb.SubActionTypes_JOINV3
-        }
+	} else if string(options.Args.SubAction) == IgmpJoinKeyV3 {
+		subActionVal = pb.SubActionTypes_JOINV3
+	}
 
 	igmpReq := pb.IgmpRequest{
 		OnuReq:       &req,
@@ -312,4 +322,87 @@ func (onuSn *OnuSnString) Complete(match string) []flags.Completion {
 	}
 
 	return list
+}
+
+func (options *ONUTrafficSchedulers) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+	req := pb.ONURequest{
+		SerialNumber: string(options.Args.OnuSn),
+	}
+	res, err := client.GetOnuTrafficSchedulers(ctx, &req)
+	if err != nil {
+		log.Fatalf("Cannot get traffic schedulers for ONU %s: %v", options.Args.OnuSn, err)
+		return err
+	}
+
+	if res.TraffSchedulers == nil {
+		log.Fatalf("Cannot get traffic schedulers for ONU: %s (unavailable)", options.Args.OnuSn)
+		return nil
+	}
+
+	SchedulerHeader := []string{"Direction",
+		"AllocId",
+		"Scheduler.Direction",
+		"Scheduler.AdditionalBw",
+		"Scheduler.Priority",
+		"Scheduler.Weight",
+		"Scheduler.SchedPolicy",
+	}
+
+	ShapingInfoHeader := []string{"InferredAdditionBwIndication",
+		"Cbs",
+		"Cir",
+		"Gir",
+		"Pbs",
+		"Pir",
+	}
+
+	SchedulerVals := []string{}
+	ShapingInfoVals := []string{}
+	for _, v := range res.TraffSchedulers.TrafficScheds {
+		SchedulerVals = append(SchedulerVals,
+			v.GetDirection().String(),
+			strconv.Itoa(int(v.GetAllocId())),
+			v.Scheduler.GetDirection().String(),
+			v.Scheduler.GetAdditionalBw().String(),
+			strconv.Itoa(int(v.Scheduler.GetPriority())),
+			strconv.Itoa(int(v.Scheduler.GetWeight())),
+			v.GetScheduler().GetSchedPolicy().String(),
+		)
+
+		ShapingInfoVals = append(ShapingInfoVals,
+			v.TrafficShapingInfo.GetAddBwInd().String(),
+			strconv.Itoa(int(v.TrafficShapingInfo.GetCbs())),
+			strconv.Itoa(int(v.TrafficShapingInfo.GetCir())),
+			strconv.Itoa(int(v.TrafficShapingInfo.GetGir())),
+			strconv.Itoa(int(v.TrafficShapingInfo.GetPbs())),
+			strconv.Itoa(int(v.TrafficShapingInfo.GetPir())),
+		)
+	}
+
+	fmt.Fprintf(os.Stdout, "OnuId: %d \n", int(res.TraffSchedulers.OnuId))
+	fmt.Fprintf(os.Stdout, "IntfId: %d \n", int(res.TraffSchedulers.IntfId))
+	fmt.Fprintf(os.Stdout, "UniId: %d \n", int(res.TraffSchedulers.UniId))
+	fmt.Fprintf(os.Stdout, "OnuPortNo: %d \n", int(res.TraffSchedulers.PortNo))
+
+	tableSched := tablewriter.NewWriter(os.Stdout)
+	tableSched.SetRowLine(true)
+	fmt.Fprintf(os.Stdout, "Traffic Schedulers Info:\n")
+	tableSched.SetHeader(SchedulerHeader)
+	tableSched.Append(SchedulerVals)
+	tableSched.Render()
+	tableSched.SetNewLine("")
+
+	tableShap := tablewriter.NewWriter(os.Stdout)
+	tableShap.SetRowLine(true)
+	fmt.Fprintf(os.Stdout, "Traffic Shaping Info:\n")
+	tableShap.SetHeader(ShapingInfoHeader)
+	tableShap.Append(ShapingInfoVals)
+	tableShap.Render()
+
+	return nil
 }
