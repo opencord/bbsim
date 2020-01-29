@@ -33,7 +33,7 @@ import (
 	"github.com/opencord/bbsim/internal/common"
 	omcisim "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
-	"github.com/opencord/voltha-protos/v2/go/tech_profile"
+	tech_profile "github.com/opencord/voltha-protos/v2/go/tech_profile"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -69,6 +69,7 @@ type OltDevice struct {
 	enableContextCancel context.CancelFunc
 
 	OpenoltStream *openolt.Openolt_EnableIndicationServer
+	enablePerf    bool
 }
 
 var olt OltDevice
@@ -78,7 +79,7 @@ func GetOLT() *OltDevice {
 	return &olt
 }
 
-func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit int, auth bool, dhcp bool, delay int, isMock bool) *OltDevice {
+func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit int, auth bool, dhcp bool, delay int, enablePerf bool, isMock bool) *OltDevice {
 	oltLogger.WithFields(log.Fields{
 		"ID":           oltId,
 		"NumNni":       nni,
@@ -98,6 +99,7 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 		Pons:         []*PonPort{},
 		Nnis:         []*NniPort{},
 		Delay:        delay,
+		enablePerf:   enablePerf,
 	}
 
 	// OLT State machine
@@ -1046,13 +1048,46 @@ func (s OltDevice) RemoveTrafficQueues(context.Context, *tech_profile.TrafficQue
 	return new(openolt.Empty), nil
 }
 
-func (s OltDevice) CreateTrafficSchedulers(context.Context, *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
-	oltLogger.Info("received CreateTrafficSchedulers")
+func (s OltDevice) CreateTrafficSchedulers(context context.Context, trafficSchedulers *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
+	oltLogger.WithFields(log.Fields{
+		"Interface Id": trafficSchedulers.IntfId,
+		"Onu Id":       trafficSchedulers.OnuId,
+		"Port No":      trafficSchedulers.PortNo,
+	}).Info("received CreateTrafficSchedulers")
+
+	if !s.enablePerf {
+		pon, err := s.GetPonById(trafficSchedulers.IntfId)
+		if err != nil {
+			return new(openolt.Empty), err
+		}
+		onu, err := pon.GetOnuById(trafficSchedulers.OnuId)
+		if err != nil {
+			return new(openolt.Empty), err
+		}
+		onu.PortNo = trafficSchedulers.PortNo
+		onu.TrafficSchedulers = trafficSchedulers
+	}
 	return new(openolt.Empty), nil
 }
 
-func (s OltDevice) RemoveTrafficSchedulers(context.Context, *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
-	oltLogger.Info("received RemoveTrafficSchedulers")
+func (s OltDevice) RemoveTrafficSchedulers(context context.Context, trafficSchedulers *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
+	oltLogger.WithFields(log.Fields{
+		"Interface Id": trafficSchedulers.IntfId,
+		"Onu Id":       trafficSchedulers.OnuId,
+		"Port No":      trafficSchedulers.PortNo,
+	}).Info("received RemoveTrafficSchedulers")
+	if !s.enablePerf {
+		pon, err := s.GetPonById(trafficSchedulers.IntfId)
+		if err != nil {
+			return new(openolt.Empty), err
+		}
+		onu, err := pon.GetOnuById(trafficSchedulers.OnuId)
+		if err != nil {
+			return new(openolt.Empty), err
+		}
+
+		onu.TrafficSchedulers = nil
+	}
 	return new(openolt.Empty), nil
 }
 
