@@ -70,6 +70,7 @@ type BBSimConfig struct {
 	LegacyRestApiAddress string  `yaml:"legacy_rest_api_address"`
 	SadisRestAddress     string  `yaml:"sadis_rest_address"`
 	SadisServer          bool    `yaml:"sadis_server"`
+	EnablePerf           bool    `yaml:"enable_perf"`
 }
 
 type BBRConfig struct {
@@ -103,6 +104,7 @@ func getDefaultOps() *BBSimYamlConfig {
 			LegacyRestApiAddress: ":50073",
 			SadisRestAddress:     ":50074",
 			SadisServer:          true,
+			EnablePerf:           false,
 		},
 		OltConfig{
 			Vendor:             "BBSim",
@@ -143,7 +145,7 @@ func LoadBBSimConf(filename string) (*BBSimYamlConfig, error) {
 	return yamlConfig, nil
 }
 
-// GetBBSimOpts loads the BBSim configuration file and overides options with corresponding CLI flags if set
+// GetBBSimOpts loads the BBSim configuration file and over-rides options with corresponding CLI flags if set
 func GetBBSimOpts() *BBSimYamlConfig {
 	conf := Options
 
@@ -165,6 +167,7 @@ func GetBBSimOpts() *BBSimYamlConfig {
 
 	delay := flag.Int("delay", conf.BBSim.Delay, "The delay between ONU DISCOVERY batches in milliseconds (1 ONU per each PON PORT at a time")
 
+	enablePerf := flag.Bool("enableperf", conf.BBSim.EnablePerf, "Setting this flag will cause BBSim to not store data like traffic schedulers, flows of ONUs etc..")
 	flag.Parse()
 
 	conf.Olt.ID = int(*olt_id)
@@ -179,6 +182,7 @@ func GetBBSimOpts() *BBSimYamlConfig {
 	conf.BBSim.EnableAuth = *auth
 	conf.BBSim.EnableDhcp = *dhcp
 	conf.BBSim.Delay = *delay
+	conf.BBSim.EnablePerf = *enablePerf
 
 	// update device id if not set
 	if conf.Olt.DeviceId == "" {
