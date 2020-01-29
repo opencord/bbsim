@@ -31,17 +31,18 @@ type PonPort struct {
 	ID     uint32
 	NumOnu int
 	Onus   []*Onu
-	Olt    OltDevice
+	Olt    *OltDevice
 
 	// PON Attributes
 	OperState *fsm.FSM
 	Type      string
 
 	// NOTE do we need a state machine for the PON Ports?
+	InternalState *fsm.FSM
 }
 
 // CreatePonPort creates pon port object
-func CreatePonPort(olt OltDevice, id uint32) *PonPort {
+func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 
 	ponPort := PonPort{
 		NumOnu: olt.NumOnuPerPon,
@@ -50,6 +51,61 @@ func CreatePonPort(olt OltDevice, id uint32) *PonPort {
 		Olt:    olt,
 		Onus:   []*Onu{},
 	}
+
+	ponPort.InternalState = fsm.NewFSM(
+		"created",
+		fsm.Events{
+			{Name: "enable", Src: []string{"created", "disabled"}, Dst: "enabled"},
+			{Name: "disable", Src: []string{"enabled"}, Dst: "disabled"},
+		},
+		fsm.Callbacks{
+			"enter_enabled": func(e *fsm.Event) {
+				oltLogger.WithFields(log.Fields{
+					"ID": ponPort.ID,
+				}).Debugf("Changing PON Port InternalState from %s to %s", e.Src, e.Dst)
+
+				if e.Src == "created" {
+					if olt.ControlledActivation == Default || olt.ControlledActivation == OnlyPON {
+						for _, onu := range ponPort.Onus {
+							if err := onu.InternalState.Event("initialize"); err != nil {
+								log.Errorf("Error initializing ONU: %v", err)
+								continue
+							}
+							if err := onu.InternalState.Event("discover"); err != nil {
+								log.Errorf("Error discover ONU: %v", err)
+							}
+						}
+					}
+				} else if e.Src == "disabled" {
+					for _, onu := range ponPort.Onus {
+						if onu.InternalState.Current() == "pon_disabled" {
+							if err := onu.InternalState.Event("discover"); err != nil {
+								log.Errorf("Error discover ONU: %v", err)
+							}
+						} else if onu.InternalState.Current() == "disabled" {
+							if err := onu.InternalState.Event("initialize"); err != nil {
+								log.Errorf("Error initialize ONU: %v", err)
+								continue
+							}
+							if err := onu.InternalState.Event("discover"); err != nil {
+								log.Errorf("Error discover ONU: %v", err)
+							}
+						}
+					}
+				}
+			},
+			"enter_disabled": func(e *fsm.Event) {
+				for _, onu := range ponPort.Onus {
+					if onu.InternalState.Current() == "initialized" {
+						continue
+					}
+					if err := onu.InternalState.Event("pon_disabled"); err != nil {
+						oltLogger.Errorf("Failed to move ONU in pon_disabled states: %v", err)
+					}
+				}
+			},
+		},
+	)
 
 	ponPort.OperState = fsm.NewFSM(
 		"down",
@@ -62,17 +118,13 @@ func CreatePonPort(olt OltDevice, id uint32) *PonPort {
 				oltLogger.WithFields(log.Fields{
 					"ID": ponPort.ID,
 				}).Debugf("Changing PON Port OperState from %s to %s", e.Src, e.Dst)
+				olt.sendPonIndication(ponPort.ID)
 			},
 			"enter_down": func(e *fsm.Event) {
 				oltLogger.WithFields(log.Fields{
 					"ID": ponPort.ID,
 				}).Debugf("Changing PON Port OperState from %s to %s", e.Src, e.Dst)
-
-				for _, onu := range ponPort.Onus {
-					if err := onu.InternalState.Event("pon_disabled"); err != nil {
-						oltLogger.Errorf("Failed to move ONU in pon_disabled states: %v", err)
-					}
-				}
+				olt.sendPonIndication(ponPort.ID)
 			},
 		},
 	)

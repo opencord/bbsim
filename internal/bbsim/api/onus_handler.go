@@ -136,11 +136,37 @@ func (s BBSimServer) PoweronONU(ctx context.Context, req *bbsim.ONURequest) (*bb
 	olt := devices.GetOLT()
 
 	onu, err := olt.FindOnuBySn(req.SerialNumber)
-
 	if err != nil {
 		res.StatusCode = int32(codes.NotFound)
 		res.Message = err.Error()
 		return res, err
+	}
+
+	pon, _ := olt.GetPonById(onu.PonPortID)
+	if pon.InternalState.Current() != "enabled" {
+		err := fmt.Errorf("PON port %d not enabled", onu.PonPortID)
+		logger.WithFields(log.Fields{
+			"OnuId":  onu.ID,
+			"IntfId": onu.PonPortID,
+			"OnuSn":  onu.Sn(),
+		}).Errorf("Cannot poweron ONU: %s", err.Error())
+
+		res.StatusCode = int32(codes.FailedPrecondition)
+		res.Message = err.Error()
+		return res, err
+	}
+
+	if onu.InternalState.Current() == "created" {
+		if err := onu.InternalState.Event("initialize"); err != nil {
+			logger.WithFields(log.Fields{
+				"OnuId":  onu.ID,
+				"IntfId": onu.PonPortID,
+				"OnuSn":  onu.Sn(),
+			}).Errorf("Cannot poweron ONU: %s", err.Error())
+			res.StatusCode = int32(codes.FailedPrecondition)
+			res.Message = err.Error()
+			return res, err
+		}
 	}
 
 	if err := onu.InternalState.Event("discover"); err != nil {
