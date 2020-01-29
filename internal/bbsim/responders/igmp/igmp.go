@@ -15,14 +15,15 @@ package igmp
 
 import (
 	"encoding/binary"
+	"net"
+	"time"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	omci "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
 	log "github.com/sirupsen/logrus"
-	"net"
-	"time"
 )
 
 func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, macAddress net.HardwareAddr, stream bbsim.Stream) error {
