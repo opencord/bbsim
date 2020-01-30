@@ -126,7 +126,7 @@ check the previous table to verify when you can trigger those actions and
       - TBD
       -
 
-.. list-table:: 
+.. list-table::
     :widths: 15 15 70
     :header-rows: 1
 
