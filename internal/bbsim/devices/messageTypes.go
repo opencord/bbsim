@@ -43,7 +43,11 @@ const (
 	SendDhcpFlow   MessageType = 13
 	OnuPacketIn    MessageType = 14
 
-	AlarmIndication MessageType = 15 // message data is an openolt.AlarmIndication
+	//IGMP
+	IGMPMembershipReportV2 MessageType = 15 // Version 2 Membership Report (JOIN)
+	IGMPLeaveGroup         MessageType = 16 // Leave Group
+
+	AlarmIndication MessageType = 17 // message data is an openolt.AlarmIndication
 )
 
 func (m MessageType) String() string {
@@ -63,6 +67,8 @@ func (m MessageType) String() string {
 		"SendEapolFlow",
 		"SendDhcpFlow",
 		"OnuPacketIn",
+		"IGMPMembershipReportV2",
+		"IGMPLeaveGroup",
 	}
 	return names[m]
 }
