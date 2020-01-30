@@ -123,6 +123,16 @@ message Response {
     string message = 2;
 }
 
+enum SubActionTypes {
+    JOIN = 0;
+    LEAVE = 1;
+}
+
+message IgmpRequest {
+	ONURequest OnuReq = 1;
+	SubActionTypes SubActionVal = 2;
+}
+
 message Empty {}
 
 service BBSim {
@@ -139,4 +149,5 @@ service BBSim {
     rpc RestartEapol (ONURequest) returns (Response) {}
     rpc RestartDhcp (ONURequest) returns (Response) {}
     rpc SetAlarmIndication (AlarmRequest) returns (Response) {}
+    rpc ChangeIgmpState (IgmpRequest) returns (Response) {}
 }
