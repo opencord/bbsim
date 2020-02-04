@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab4cfcdb_cc3f1203",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-02-04T17:41:15Z",
+      "side": 1,
+      "message": "why is the ONU ID hardcoded to 0?",
+      "range": {
+        "startLine": 84,
+        "startChar": 2,
+        "endLine": 84,
+        "endChar": 25
+      },
+      "revId": "7abfdba9cb4565ad452b6bd471636687b691f768",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08254364_148f156f",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-02-04T17:41:15Z",
+      "side": 1,
+      "message": "why has \"int(o.ID)\" been removed? This means that all ONUs on the same PON will now be discovered at the same time",
+      "range": {
+        "startLine": 289,
+        "startChar": 4,
+        "endLine": 289,
+        "endChar": 69
+      },
+      "revId": "7abfdba9cb4565ad452b6bd471636687b691f768",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90bc22ab_09ed09db",
+        "filename": "internal/common/options.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-02-04T17:41:15Z",
+      "side": 1,
+      "message": "Can we make this an Enum instead of a string?\nhttps://blog.learngoprogramming.com/golang-const-type-enums-iota-bc4befd096d3",
+      "range": {
+        "startLine": 73,
+        "startChar": 22,
+        "endLine": 73,
+        "endChar": 28
+      },
+      "revId": "7abfdba9cb4565ad452b6bd471636687b691f768",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
