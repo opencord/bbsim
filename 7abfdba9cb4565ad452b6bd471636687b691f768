@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "aedad87b_4b0473de",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1000601
+      },
+      "writtenOn": "2020-02-05T04:31:30Z",
+      "side": 1,
+      "message": "ONU ID is assigned by VOLTHA when we send discovery indication.\nIssue with this BBSim preassigned ID:\nLets say we have two ONUs on PON 0 \nBBSM00040001 -- preassigned ONU ID \u003d 1\nBBSM00040002 -- preassigned ONU ID \u003d 2\nif we power on second ONU(BBSM00040002) first, then voltha will assign it ID 1\nNow both ONUs have ID 1, and when you do get ONU by ID, it will always return first ONU. that was the problem\nthats why initially we should not assign any ID to ONU",
+      "parentUuid": "ab4cfcdb_cc3f1203",
+      "range": {
+        "startLine": 84,
+        "startChar": 2,
+        "endLine": 84,
+        "endChar": 25
+      },
+      "revId": "7abfdba9cb4565ad452b6bd471636687b691f768",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "08254364_148f156f",
         "filename": "internal/bbsim/devices/onu.go",
         "patchSetId": 2
