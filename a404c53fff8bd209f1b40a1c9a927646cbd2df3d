@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16068446_dac44ba9",
+        "filename": "cmd/bbr/bbr.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-02-05T18:06:57Z",
+      "side": 1,
+      "message": "indent please",
+      "range": {
+        "startLine": 80,
+        "startChar": 8,
+        "endLine": 80,
+        "endChar": 63
+      },
+      "revId": "a404c53fff8bd209f1b40a1c9a927646cbd2df3d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07c318d4_2164dcdd",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1055,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-02-05T18:06:57Z",
+      "side": 1,
+      "message": "we should be consistent with the other log messages for easier filtering:\n- Onu Id -\u003e OnuId\n- Interface Id -\u003e IntfId\n- PortNo -\u003e OnuPortNo",
+      "range": {
+        "startLine": 1053,
+        "startChar": 2,
+        "endLine": 1055,
+        "endChar": 43
+      },
+      "revId": "a404c53fff8bd209f1b40a1c9a927646cbd2df3d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "190afcfc_96c038c6",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1066,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-02-05T18:06:57Z",
+      "side": 1,
+      "message": "do we need to log errors ?",
+      "range": {
+        "startLine": 1060,
+        "startChar": 2,
+        "endLine": 1066,
+        "endChar": 3
+      },
+      "revId": "a404c53fff8bd209f1b40a1c9a927646cbd2df3d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f17f3d58_9c66117f",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1090,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-02-05T18:06:57Z",
+      "side": 1,
+      "message": "same comments as above",
+      "range": {
+        "startLine": 1074,
+        "startChar": 1,
+        "endLine": 1090,
+        "endChar": 2
+      },
+      "revId": "a404c53fff8bd209f1b40a1c9a927646cbd2df3d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f29ea886_8c1308c5",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-02-05T18:06:57Z",
+      "side": 1,
+      "message": "indent please",
+      "range": {
+        "startLine": 77,
+        "startChar": 4,
+        "endLine": 77,
+        "endChar": 57
+      },
+      "revId": "a404c53fff8bd209f1b40a1c9a927646cbd2df3d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3447a214_a97d03d1",
+        "filename": "internal/bbsimctl/commands/onu.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-02-05T18:06:57Z",
+      "side": 1,
+      "message": "Is it possible to format the output?\n\nThe current format is not very human readable:\n\n$bbsimctl onu traffic_schedulers BBSM00000001\n{\"traffSchedulers\":{\"onu_id\":1,\"port_no\":16,\"traffic_scheds\":[{\"direction\":1,\"alloc_id\":1024,\"scheduler\":{\"direction\":1,\"additional_bw\":2,\"sched_policy\":2},\"traffic_shaping_info\":{\"cir\":1000000,\"cbs\":1001,\"pir\":1001002,\"pbs\":2004}}]}}",
+      "range": {
+        "startLine": 36,
+        "startChar": 1,
+        "endLine": 36,
+        "endChar": 29
+      },
+      "revId": "a404c53fff8bd209f1b40a1c9a927646cbd2df3d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
