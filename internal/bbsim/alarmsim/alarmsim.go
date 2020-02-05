@@ -86,6 +86,15 @@ func BuildAlarmIndication(req *bbsim.AlarmRequest, o *devices.OltDevice) (*openo
 				InverseBitErrorRate: uint32(extractInt(req.Parameters, "InverseBitErrorRate", 0)),
 			}},
 		}
+	case bbsim.AlarmType_ONU_SIGNALS_FAILURE:
+		alarm = &openolt.AlarmIndication{
+			Data: &openolt.AlarmIndication_OnuSignalsFailInd{&openolt.OnuSignalsFailureIndication{
+				Status:              req.Status,
+				OnuId:               onu.ID,
+				IntfId:              onu.PonPortID,
+				InverseBitErrorRate: uint32(extractInt(req.Parameters, "InverseBitErrorRate", 0)),
+			}},
+		}
 	case bbsim.AlarmType_ONU_DRIFT_OF_WINDOW:
 		alarm = &openolt.AlarmIndication{
 			Data: &openolt.AlarmIndication_OnuDriftOfWindowInd{&openolt.OnuDriftOfWindowIndication{
