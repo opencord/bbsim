@@ -92,6 +92,30 @@
       "revId": "7abfdba9cb4565ad452b6bd471636687b691f768",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e957174a_7ed6f611",
+        "filename": "internal/common/options.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000601
+      },
+      "writtenOn": "2020-02-05T12:10:42Z",
+      "side": 1,
+      "message": "I think user input we should keep string only, internally in code we can update this to enum or we can define constants for these modes",
+      "parentUuid": "90bc22ab_09ed09db",
+      "range": {
+        "startLine": 73,
+        "startChar": 22,
+        "endLine": 73,
+        "endChar": 28
+      },
+      "revId": "7abfdba9cb4565ad452b6bd471636687b691f768",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
