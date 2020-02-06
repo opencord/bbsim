@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "449b1fdb_e8af73b9",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1000601
+      },
+      "writtenOn": "2020-02-06T16:52:21Z",
+      "side": 1,
+      "message": "because onuID is initially zero now(reason explained above), for delay should we have some other variable ?",
+      "parentUuid": "08254364_148f156f",
+      "range": {
+        "startLine": 289,
+        "startChar": 4,
+        "endLine": 289,
+        "endChar": 69
+      },
+      "revId": "7abfdba9cb4565ad452b6bd471636687b691f768",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "90bc22ab_09ed09db",
         "filename": "internal/common/options.go",
         "patchSetId": 2
