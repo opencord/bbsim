@@ -126,6 +126,7 @@ message Response {
 enum SubActionTypes {
     JOIN = 0;
     LEAVE = 1;
+    JOINV3 = 2;
 }
 
 message IgmpRequest {
