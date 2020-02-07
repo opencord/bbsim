@@ -115,6 +115,80 @@ func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber str
 	return nil
 }
 
+func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, macAddress net.HardwareAddr, stream bbsim.Stream) error {
+       log.WithFields(log.Fields{
+               "OnuId": onuId,
+               "SerialNumber": serialNumber,
+               "PortNo": portNo,
+    }).Debugf("Entered SendIGMPMembershipReportV3")
+    igmp := createIGMPV3MembershipReportPacket()
+       pkt, err := serializeIgmpPacket(ponPortId, onuId, macAddress, igmp)
+
+       if err != nil {
+               log.WithFields(log.Fields{
+                        "OnuId":  onuId,
+                        "IntfId": ponPortId,
+                        "SerialNumber": serialNumber,
+                }).Errorf("Seriliazation of igmp packet failed :  %s", err)
+                return err
+       }
+
+       gemid, err := omci.GetGemPortId(ponPortId, onuId)
+       if err != nil {
+               log.WithFields(log.Fields{
+                       "OnuId":  onuId,
+                       "IntfId": ponPortId,
+                        "SerialNumber": serialNumber,
+               }).Errorf("Can't retrieve GemPortId for IGMP: %s", err)
+               return err
+       }
+
+       data := &openolt.Indication_PktInd{
+               PktInd: &openolt.PacketIndication{
+                       IntfType:  "pon",
+                       IntfId:    ponPortId,
+                       GemportId: uint32(gemid),
+                       Pkt:       pkt,
+                       PortNo:    portNo,
+               },
+       }
+        //Sending IGMP packets
+        if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
+                log.Errorf("Fail to send IGMP PktInd indication for ONU: %s, IntfId: %s, SerialNumber: %s,  error: %v", onuId, ponPortId, serialNumber, err)
+                return err
+        }
+        return nil
+}
+
+func createIGMPV3MembershipReportPacket() IGMP {
+
+       groupRecord:= IGMPv3GroupRecord{
+           Type:             IGMPv3GroupRecordType(IGMPIsIn),
+           AuxDataLen:       0, // this should always be 0 as per IGMPv3 spec.
+           NumberOfSources:  1,
+           MulticastAddress: net.IPv4(224, 0, 0, 22),
+           SourceAddresses:  []net.IP{net.IPv4(224, 0, 0, 24)},
+           AuxData:          0, // NOT USED
+       }
+
+       igmpDefault := IGMP{
+               Type:                    0x22, //IGMPV3 Membership Report
+               MaxResponseTime:         time.Duration(1),
+               Checksum:                0,
+               GroupAddress:            net.IPv4(224, 0, 0, 22),
+               SupressRouterProcessing: false,
+               RobustnessValue:         0,
+               IntervalTime:            time.Duration(1),
+               SourceAddresses:         []net.IP{net.IPv4(224, 0, 0, 24)},
+               NumberOfGroupRecords:    1,
+               NumberOfSources:         1,
+               GroupRecords:            []IGMPv3GroupRecord{groupRecord},
+               Version:                 3,
+       }
+
+       return igmpDefault
+}
+
 //func serializeIgmpPacket(intfId uint32, onuId uint32, srcMac net.HardwareAddr, igmp *layers.IGMP) ([]byte, error) {
 func createIGMPV2MembershipReportPacket() IGMP {
 	return IGMP{
@@ -195,7 +269,48 @@ type IGMP struct {
 	SourceAddresses         []net.IP
 	NumberOfGroupRecords    uint16
 	NumberOfSources         uint16
+        GroupRecords            []IGMPv3GroupRecord
 	Version                 uint8 // IGMP protocol version
+}
+
+// IGMPv3GroupRecord stores individual group records for a V3 Membership Report message.
+type IGMPv3GroupRecord struct {
+       Type             IGMPv3GroupRecordType
+       AuxDataLen       uint8 // this should always be 0 as per IGMPv3 spec.
+       NumberOfSources  uint16
+       MulticastAddress net.IP
+       SourceAddresses  []net.IP
+       AuxData          uint32 // NOT USED
+}
+
+type IGMPv3GroupRecordType uint8
+
+const (
+       IGMPIsIn  IGMPv3GroupRecordType = 0x01 // Type MODE_IS_INCLUDE, source addresses x
+       IGMPIsEx  IGMPv3GroupRecordType = 0x02 // Type MODE_IS_EXCLUDE, source addresses x
+       IGMPToIn  IGMPv3GroupRecordType = 0x03 // Type CHANGE_TO_INCLUDE_MODE, source addresses x
+       IGMPToEx  IGMPv3GroupRecordType = 0x04 // Type CHANGE_TO_EXCLUDE_MODE, source addresses x
+       IGMPAllow IGMPv3GroupRecordType = 0x05 // Type ALLOW_NEW_SOURCES, source addresses x
+       IGMPBlock IGMPv3GroupRecordType = 0x06 // Type BLOCK_OLD_SOURCES, source addresses x
+)
+
+func (i IGMPv3GroupRecordType) String() string {
+       switch i {
+       case IGMPIsIn:
+               return "MODE_IS_INCLUDE"
+       case IGMPIsEx:
+               return "MODE_IS_EXCLUDE"
+       case IGMPToIn:
+               return "CHANGE_TO_INCLUDE_MODE"
+       case IGMPToEx:
+               return "CHANGE_TO_EXCLUDE_MODE"
+       case IGMPAllow:
+               return "ALLOW_NEW_SOURCES"
+       case IGMPBlock:
+               return "BLOCK_OLD_SOURCES"
+       default:
+               return ""
+       }
 }
 
 // SerializeTo writes the serialized form of this layer into the

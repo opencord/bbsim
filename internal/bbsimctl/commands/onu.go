@@ -39,6 +39,7 @@ type IgmpSubAction string
 
 const IgmpJoinKey string = "join"
 const IgmpLeaveKey string = "leave"
+const IgmpJoinKeyV3 string = "joinv3"
 
 type ONUList struct{}
 
@@ -257,7 +258,9 @@ func (options *ONUIgmp) Execute(args []string) error {
 		subActionVal = pb.SubActionTypes_JOIN
 	} else if string(options.Args.SubAction) == IgmpLeaveKey {
 		subActionVal = pb.SubActionTypes_LEAVE
-	}
+        } else if string(options.Args.SubAction) == IgmpJoinKeyV3 {
+                subActionVal = pb.SubActionTypes_JOINV3
+        }
 
 	igmpReq := pb.IgmpRequest{
 		OnuReq:       &req,
