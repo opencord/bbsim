@@ -209,6 +209,8 @@ func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest
 			event = "igmp_join_start"
 		case bbsim.SubActionTypes_LEAVE:
 			event = "igmp_leave"
+                case bbsim.SubActionTypes_JOINV3:
+                        event = "igmp_join_startv3"
 		}
 
 		if igmpErr := onu.InternalState.Event(event); igmpErr != nil {
