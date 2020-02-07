@@ -141,9 +141,10 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 			{Name: "send_dhcp_flow", Src: []string{"eapol_flow_sent"}, Dst: "dhcp_flow_sent"},
 			// IGMP
 			{Name: "igmp_join_start", Src: []string{"eap_response_success_received", "gem_port_added", "eapol_flow_received"}, Dst: "igmp_join_start"},
-			{Name: "igmp_join_done", Src: []string{"igmp_join_start"}, Dst: "igmp_join_done"},
-			{Name: "igmp_join_error", Src: []string{"igmp_join_start"}, Dst: "igmp_join_error"},
-			{Name: "igmp_leave", Src: []string{"igmp_join_start"}, Dst: "igmp_left"},
+                        {Name: "igmp_join_startv3", Src: []string{"eap_response_success_received", "gem_port_added", "eapol_flow_received"}, Dst: "igmp_join_startv3"},
+			{Name: "igmp_join_done", Src: []string{"igmp_join_start", "igmp_join_startv3"}, Dst: "igmp_join_done"},
+			{Name: "igmp_join_error", Src: []string{"igmp_join_start", "igmp_join_startv3"}, Dst: "igmp_join_error"},
+			{Name: "igmp_leave", Src: []string{"igmp_join_start", "igmp_join_startv3"}, Dst: "igmp_left"},
 		},
 		fsm.Callbacks{
 			"enter_state": func(e *fsm.Event) {
@@ -254,6 +255,12 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 					Type: IGMPLeaveGroup}
 				o.Channel <- msg
 			},
+                        "igmp_join_startv3": func(e *fsm.Event) {
+                                msg := Message{
+                                        Type: IGMPMembershipReportV3,
+                                }
+                                o.Channel <- msg
+                        },
 		},
 	)
 
@@ -371,6 +378,9 @@ loop:
 			case IGMPLeaveGroup:
 				log.Infof("Recieved IGMPLeaveGroupV2 message on ONU channel")
 				igmp.SendIGMPLeaveGroupV2(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.HwAddress, stream)
+                        case IGMPMembershipReportV3:
+                                log.Infof("Recieved IGMPMembershipReportV3 message on ONU channel")
+                                igmp.SendIGMPMembershipReportV3(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.HwAddress, stream)
 			default:
 				onuLogger.Warnf("Received unknown message data %v for type %v in OLT Channel", message.Data, message.Type)
 			}
