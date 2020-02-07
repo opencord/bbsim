@@ -31,3 +31,5 @@ http:
     delete: "/v1/olt/onus/{SerialNumber}"
   - selector: bbsim.BBSim.PoweronONU
     post: "/v1/olt/onus/{SerialNumber}"
+  - selector: bbsim.BBSim.SetAlarmIndication
+    post: "/v1/olt/onus/{SerialNumber}/alarms/{AlarmType}/{Status}"

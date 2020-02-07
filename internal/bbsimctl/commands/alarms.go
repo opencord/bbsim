@@ -23,6 +23,7 @@ import (
 	"github.com/jessevdk/go-flags"
 	pb "github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
+	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
 	"github.com/opencord/cordctl/pkg/format"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -63,38 +64,6 @@ type AlarmOptions struct {
 	List  AlarmList  `command:"list"`
 }
 
-var AlarmNameMap = map[string]pb.AlarmType_Types{"DyingGasp": pb.AlarmType_DYING_GASP,
-	"StartupFailure":           pb.AlarmType_ONU_STARTUP_FAILURE,
-	"SignalDegrade":            pb.AlarmType_ONU_SIGNAL_DEGRADE,
-	"DriftOfWindow":            pb.AlarmType_ONU_DRIFT_OF_WINDOW,
-	"LossOfOmciChannel":        pb.AlarmType_ONU_LOSS_OF_OMCI_CHANNEL,
-	"SignalsFailure":           pb.AlarmType_ONU_SIGNALS_FAILURE,
-	"TransmissionInterference": pb.AlarmType_ONU_TRANSMISSION_INTERFERENCE_WARNING,
-	"ActivationFailure":        pb.AlarmType_ONU_ACTIVATION_FAILURE,
-	"ProcessingError":          pb.AlarmType_ONU_PROCESSING_ERROR,
-	"LossOfKeySyncFailure":     pb.AlarmType_ONU_LOSS_OF_KEY_SYNC_FAILURE,
-
-	// Break out OnuAlarm into its subcases.
-	"LossOfSignal":   pb.AlarmType_ONU_ALARM_LOS,
-	"LossOfBurst":    pb.AlarmType_ONU_ALARM_LOB,
-	"LOPC_MISS":      pb.AlarmType_ONU_ALARM_LOPC_MISS,
-	"LOPC_MIC_ERROR": pb.AlarmType_ONU_ALARM_LOPC_MIC_ERROR,
-	"LossOfFrame":    pb.AlarmType_ONU_ALARM_LOFI,
-	"LossOfPloam":    pb.AlarmType_ONU_ALARM_LOAMI,
-
-	// Whole-PON / Non-onu-specific
-	"PonLossOfSignal": pb.AlarmType_LOS,
-}
-
-func alarmNameToEnum(name string) (*pb.AlarmType_Types, error) {
-	v, okay := AlarmNameMap[name]
-	if !okay {
-		return nil, fmt.Errorf("Unknown Alarm Name: %v", name)
-	}
-
-	return &v, nil
-}
-
 // add optional parameters from the command-line to the AlarmRequest
 func addParameters(parameters []string, req *pb.AlarmRequest) error {
 	req.Parameters = make([]*pb.AlarmParameter, len(parameters))
@@ -112,29 +81,24 @@ func RegisterAlarmCommands(parser *flags.Parser) {
 	parser.AddCommand("alarm", "Alarm Commands", "Commands to raise and clear alarms", &AlarmOptions{})
 }
 
+// Execute alarm raise
 func (o *AlarmRaise) Execute(args []string) error {
-	alarmType, err := alarmNameToEnum(string(o.Args.Name))
-	if err != nil {
-		return err
-	}
-
 	client, conn := connect()
 	defer conn.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 
-	req := pb.AlarmRequest{AlarmType: *alarmType,
+	req := pb.AlarmRequest{AlarmType: string(o.Args.Name),
 		SerialNumber: string(o.Args.SerialNumber),
 		Status:       "on"}
 
-	err = addParameters(o.Parameters, &req)
+	err := addParameters(o.Parameters, &req)
 	if err != nil {
 		return err
 	}
 
 	res, err := client.SetAlarmIndication(ctx, &req)
-
 	if err != nil {
 		log.Fatalf("Cannot raise alarm: %v", err)
 		return err
@@ -144,23 +108,19 @@ func (o *AlarmRaise) Execute(args []string) error {
 	return nil
 }
 
+// Execute alarm clear
 func (o *AlarmClear) Execute(args []string) error {
-	alarmType, err := alarmNameToEnum(string(o.Args.Name))
-	if err != nil {
-		return err
-	}
-
 	client, conn := connect()
 	defer conn.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 
-	req := pb.AlarmRequest{AlarmType: *alarmType,
+	req := pb.AlarmRequest{AlarmType: string(o.Args.Name),
 		SerialNumber: string(o.Args.SerialNumber),
 		Status:       "off"}
 
-	err = addParameters(o.Parameters, &req)
+	err := addParameters(o.Parameters, &req)
 	if err != nil {
 		return err
 	}
@@ -176,10 +136,11 @@ func (o *AlarmClear) Execute(args []string) error {
 	return nil
 }
 
+// Execute alarm list
 func (o *AlarmList) Execute(args []string) error {
-	alarmNames := make([]AlarmListOutput, len(AlarmNameMap))
+	alarmNames := make([]AlarmListOutput, len(alarmsim.AlarmNameMap))
 	i := 0
-	for k := range AlarmNameMap {
+	for k := range alarmsim.AlarmNameMap {
 		alarmNames[i] = AlarmListOutput{Name: k}
 		i++
 	}
@@ -191,7 +152,7 @@ func (o *AlarmList) Execute(args []string) error {
 
 func (onuSn *AlarmNameString) Complete(match string) []flags.Completion {
 	list := make([]flags.Completion, 0)
-	for k := range AlarmNameMap {
+	for k := range alarmsim.AlarmNameMap {
 		if strings.HasPrefix(k, match) {
 			list = append(list, flags.Completion{Item: k})
 		}

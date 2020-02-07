@@ -98,7 +98,7 @@ message AlarmParameter {
 // plus an optional list of AlarmParemter list that can be used
 // to set additional fields in alarms that support them.
 message AlarmRequest {
-    AlarmType.Types AlarmType = 1;          // name of alarm to raise
+    string AlarmType = 1;                   // name of alarm to raise
     string SerialNumber = 2;                // serial number of ONU
     string Status = 3;                      // status of Alarm
     repeated AlarmParameter Parameters = 4; // optional list of additional parameters

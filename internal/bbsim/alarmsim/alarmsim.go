@@ -25,6 +25,40 @@ import (
 	"strconv"
 )
 
+// AlarmNameMap string to enum map
+var AlarmNameMap = map[string]bbsim.AlarmType_Types{
+	"DyingGasp":                bbsim.AlarmType_DYING_GASP,
+	"StartupFailure":           bbsim.AlarmType_ONU_STARTUP_FAILURE,
+	"SignalDegrade":            bbsim.AlarmType_ONU_SIGNAL_DEGRADE,
+	"DriftOfWindow":            bbsim.AlarmType_ONU_DRIFT_OF_WINDOW,
+	"LossOfOmciChannel":        bbsim.AlarmType_ONU_LOSS_OF_OMCI_CHANNEL,
+	"SignalsFailure":           bbsim.AlarmType_ONU_SIGNALS_FAILURE,
+	"TransmissionInterference": bbsim.AlarmType_ONU_TRANSMISSION_INTERFERENCE_WARNING,
+	"ActivationFailure":        bbsim.AlarmType_ONU_ACTIVATION_FAILURE,
+	"ProcessingError":          bbsim.AlarmType_ONU_PROCESSING_ERROR,
+	"LossOfKeySyncFailure":     bbsim.AlarmType_ONU_LOSS_OF_KEY_SYNC_FAILURE,
+
+	// Break out OnuAlarm into its subcases.
+	"LossOfSignal":   bbsim.AlarmType_ONU_ALARM_LOS,
+	"LossOfBurst":    bbsim.AlarmType_ONU_ALARM_LOB,
+	"LOPC_MISS":      bbsim.AlarmType_ONU_ALARM_LOPC_MISS,
+	"LOPC_MIC_ERROR": bbsim.AlarmType_ONU_ALARM_LOPC_MIC_ERROR,
+	"LossOfFrame":    bbsim.AlarmType_ONU_ALARM_LOFI,
+	"LossOfPloam":    bbsim.AlarmType_ONU_ALARM_LOAMI,
+
+	// Whole-PON / Non-onu-specific
+	"PonLossOfSignal": bbsim.AlarmType_LOS,
+}
+
+func AlarmNameToEnum(name string) (*bbsim.AlarmType_Types, error) {
+	v, okay := AlarmNameMap[name]
+	if !okay {
+		return nil, fmt.Errorf("Unknown Alarm Name: %v", name)
+	}
+
+	return &v, nil
+}
+
 // Find a key in the optional AlarmParameters, convert it to an integer,
 // return 'def' if no key exists or it cannot be converted.
 func extractInt(params []*bbsim.AlarmParameter, name string, def int) int {
@@ -39,12 +73,18 @@ func extractInt(params []*bbsim.AlarmParameter, name string, def int) int {
 	return def
 }
 
+// BuildAlarmIndication function forms openolt alarmIndication as per AlarmRequest
 func BuildAlarmIndication(req *bbsim.AlarmRequest, o *devices.OltDevice) (*openolt.AlarmIndication, error) {
 	var alarm *openolt.AlarmIndication
 	var onu *devices.Onu
 	var err error
 
-	if req.AlarmType != bbsim.AlarmType_LOS {
+	alarmType, err := AlarmNameToEnum(req.AlarmType)
+	if err != nil {
+		return nil, err
+	}
+
+	if *alarmType != bbsim.AlarmType_LOS {
 		// No ONU Id for LOS
 		onu, err = o.FindOnuBySn(req.SerialNumber)
 		if err != nil {
@@ -52,7 +92,7 @@ func BuildAlarmIndication(req *bbsim.AlarmRequest, o *devices.OltDevice) (*openo
 		}
 	}
 
-	switch req.AlarmType {
+	switch *alarmType {
 	case bbsim.AlarmType_LOS:
 		alarm = &openolt.AlarmIndication{
 			Data: &openolt.AlarmIndication_LosInd{&openolt.LosIndication{
@@ -208,6 +248,7 @@ func BuildAlarmIndication(req *bbsim.AlarmRequest, o *devices.OltDevice) (*openo
 	return alarm, nil
 }
 
+// SimulateAlarm accept request for alarms and send proper alarmIndication to openolt stream
 func SimulateAlarm(ctx context.Context, req *bbsim.AlarmRequest, o *devices.OltDevice) error {
 	alarmIndication, err := BuildAlarmIndication(req, o)
 	if err != nil {
