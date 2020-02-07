@@ -146,15 +146,14 @@ func main() {
 	}
 
 	log.WithFields(log.Fields{
-		"OltID":                options.Olt.ID,
-		"NumNniPerOlt":         options.Olt.NniPorts,
-		"NumPonPerOlt":         options.Olt.PonPorts,
-		"NumOnuPerPon":         options.Olt.OnusPonPort,
-		"TotalOnus":            options.Olt.PonPorts * options.Olt.OnusPonPort,
-		"EnableAuth":           options.BBSim.EnableAuth,
-		"Dhcp":                 options.BBSim.EnableDhcp,
-		"Delay":                options.BBSim.Delay,
-		"ControlledActivation": options.BBSim.ControlledActivation,
+		"OltID":        options.Olt.ID,
+		"NumNniPerOlt": options.Olt.NniPorts,
+		"NumPonPerOlt": options.Olt.PonPorts,
+		"NumOnuPerPon": options.Olt.OnusPonPort,
+		"TotalOnus":    options.Olt.PonPorts * options.Olt.OnusPonPort,
+		"EnableAuth":   options.BBSim.EnableAuth,
+		"Dhcp":         options.BBSim.EnableDhcp,
+		"Delay":        options.BBSim.Delay,
 	}).Info("BroadBand Simulator is on")
 
 	// control channels, they are only closed when the goroutine needs to be terminated
@@ -170,7 +169,6 @@ func main() {
 		options.BBSim.EnableAuth,
 		options.BBSim.EnableDhcp,
 		options.BBSim.Delay,
-		options.BBSim.ControlledActivation,
 		false,
 	)
 

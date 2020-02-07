@@ -70,7 +70,6 @@ type BBSimConfig struct {
 	LegacyRestApiAddress string  `yaml:"legacy_rest_api_address"`
 	SadisRestAddress     string  `yaml:"sadis_rest_address"`
 	SadisServer          bool    `yaml:"sadis_server"`
-	ControlledActivation string  `yaml:"controlled_activation"`
 }
 
 type BBRConfig struct {
@@ -104,7 +103,6 @@ func getDefaultOps() *BBSimYamlConfig {
 			LegacyRestApiAddress: ":50073",
 			SadisRestAddress:     ":50074",
 			SadisServer:          true,
-			ControlledActivation: "default",
 		},
 		OltConfig{
 			Vendor:             "BBSim",
@@ -167,7 +165,6 @@ func GetBBSimOpts() *BBSimYamlConfig {
 
 	delay := flag.Int("delay", conf.BBSim.Delay, "The delay between ONU DISCOVERY batches in milliseconds (1 ONU per each PON PORT at a time")
 
-	controlledActivation := flag.String("ca", conf.BBSim.ControlledActivation, "Set the mode for controlled activation of PON ports and ONUs")
 	flag.Parse()
 
 	conf.Olt.ID = int(*olt_id)
@@ -182,7 +179,6 @@ func GetBBSimOpts() *BBSimYamlConfig {
 	conf.BBSim.EnableAuth = *auth
 	conf.BBSim.EnableDhcp = *dhcp
 	conf.BBSim.Delay = *delay
-	conf.BBSim.ControlledActivation = *controlledActivation
 
 	// update device id if not set
 	if conf.Olt.DeviceId == "" {

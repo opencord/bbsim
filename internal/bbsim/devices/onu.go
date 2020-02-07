@@ -82,7 +82,7 @@ func (o *Onu) Sn() string {
 func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth bool, dhcp bool, isMock bool) *Onu {
 
 	o := Onu{
-		ID:                  0,
+		ID:                  id,
 		PonPortID:           pon.ID,
 		PonPort:             pon,
 		STag:                sTag,
@@ -98,7 +98,7 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 		DhcpFlowReceived:    false,
 		DiscoveryRetryDelay: 60 * time.Second, // this is used to send OnuDiscoveryIndications until an activate call is received
 	}
-	o.SerialNumber = o.NewSN(olt.ID, pon.ID, id)
+	o.SerialNumber = o.NewSN(olt.ID, pon.ID, o.ID)
 
 	// NOTE this state machine is used to track the operational
 	// state as requested by VOLTHA
@@ -119,7 +119,7 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 			{Name: "receive_eapol_flow", Src: []string{"enabled", "gem_port_added"}, Dst: "eapol_flow_received"},
 			{Name: "add_gem_port", Src: []string{"enabled", "eapol_flow_received"}, Dst: "gem_port_added"},
 			// NOTE should disabled state be different for oper_disabled (emulating an error) and admin_disabled (received a disabled call via VOLTHA)?
-			{Name: "disable", Src: []string{"enabled", "eapol_flow_received", "gem_port_added", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed", "pon_disabled"}, Dst: "disabled"},
+			{Name: "disable", Src: []string{"enabled", "eapol_flow_received", "gem_port_added", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "disabled"},
 			// ONU state when PON port is disabled but ONU is power ON(more states should be added in src?)
 			{Name: "pon_disabled", Src: []string{"enabled", "gem_port_added", "eapol_flow_received", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "pon_disabled"},
 			// EAPOL
@@ -303,7 +303,7 @@ loop:
 			case OnuDiscIndication:
 				msg, _ := message.Data.(OnuDiscIndicationMessage)
 				// NOTE we need to slow down and send ONU Discovery Indication in batches to better emulate a real scenario
-				time.Sleep(time.Duration(o.PonPort.Olt.Delay) * time.Millisecond)
+				time.Sleep(time.Duration(int(o.ID)*o.PonPort.Olt.Delay) * time.Millisecond)
 				o.sendOnuDiscIndication(msg, stream)
 			case OnuIndication:
 				msg, _ := message.Data.(OnuIndicationMessage)
