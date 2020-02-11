@@ -23,21 +23,34 @@ http:
     get: "/v1/olt"
     additional_bindings:
       - get: "/v1/olt/status"
+
   - selector: bbsim.BBSim.GetONUs
     get: "/v1/olt/onus"
   - selector: bbsim.BBSim.GetONU
     get: "/v1/olt/onus/{SerialNumber}"
+
   - selector: bbsim.BBSim.ShutdownONU
     delete: "/v1/olt/onus/{SerialNumber}"
+  - selector: bbsim.BBSim.ShutdownONUsOnPON
+    delete: "/v1/olt/port/{PonPortId}/onus"
+  - selector: bbsim.BBSim.ShutdownAllONUs
+    delete: "/v1/olt/onus"
+
   - selector: bbsim.BBSim.PoweronONU
     post: "/v1/olt/onus/{SerialNumber}"
+  - selector: bbsim.BBSim.PoweronONUsOnPON
+    post: "/v1/olt/port/{PonPortId}/onus"
+  - selector: bbsim.BBSim.PoweronAllONUs
+    post: "/v1/olt/onus"
+
   - selector: bbsim.BBSim.GetFlows
     get: "/v1/olt/onus/{SerialNumber}/flows"
     additional_bindings:
       - get: "/v1/olt/flows"
-  - selector: bbsim.BBSim.SetOnuAlarmIndication
-    post: "/v1/olt/onus/{SerialNumber}/alarms/{AlarmType}/{Status}"
   - selector: bbsim.BBSim.GetOnuTrafficSchedulers
     get: "/v1/olt/onus/{SerialNumber}/trafficschedulers"
+
+  - selector: bbsim.BBSim.SetOnuAlarmIndication
+    post: "/v1/olt/onus/{SerialNumber}/alarms/{AlarmType}/{Status}"
   - selector: bbsim.BBSim.SetOltAlarmIndication
     post: "/v1/olt/ports/{InterfaceType}/{InterfaceID}/alarms/los/{Status}"

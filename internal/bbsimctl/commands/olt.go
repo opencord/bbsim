@@ -51,15 +51,21 @@ type OltReboot struct{}
 
 type OltFlows struct{}
 
+type OltPoweronAllOnus struct{}
+
+type OltShutdownAllOnus struct{}
+
 type oltOptions struct {
-	Get      OltGet          `command:"get"`
-	NNI      OltNNIs         `command:"nnis"`
-	PON      OltPONs         `command:"pons"`
-	Shutdown OltShutdown     `command:"shutdown"`
-	Poweron  OltPoweron      `command:"poweron"`
-	Reboot   OltReboot       `command:"reboot"`
-	Alarms   OltAlarmOptions `command:"alarms"`
-	Flows    OltFlows        `command:"flows"`
+	Get             OltGet             `command:"get"`
+	NNI             OltNNIs            `command:"nnis"`
+	PON             OltPONs            `command:"pons"`
+	Shutdown        OltShutdown        `command:"shutdown"`
+	Poweron         OltPoweron         `command:"poweron"`
+	Reboot          OltReboot          `command:"reboot"`
+	Alarms          OltAlarmOptions    `command:"alarms"`
+	Flows           OltFlows           `command:"flows"`
+	PoweronAllOnus  OltPoweronAllOnus  `command:"poweronAllONUs"`
+	ShutdownAllOnus OltShutdownAllOnus `command:"shutdownAllONUs"`
 }
 
 func RegisterOltCommands(parser *flags.Parser) {
@@ -241,5 +247,41 @@ func (o *OltFlows) Execute(args []string) error {
 	}
 	tableFlow.Render()
 	tableFlow.SetNewLine("")
+	return nil
+}
+
+func (o *OltPoweronAllOnus) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+
+	res, err := client.PoweronAllONUs(ctx, &pb.Empty{})
+
+	if err != nil {
+		log.Errorf("Cannot poweron all ONUs: %v", err)
+		return err
+	}
+
+	fmt.Println(fmt.Sprintf("[Status: %d] %s", res.StatusCode, res.Message))
+	return nil
+}
+
+func (o *OltShutdownAllOnus) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+
+	res, err := client.ShutdownAllONUs(ctx, &pb.Empty{})
+
+	if err != nil {
+		log.Errorf("Cannot shutdown all ONUs: %v", err)
+		return err
+	}
+
+	fmt.Println(fmt.Sprintf("[Status: %d] %s", res.StatusCode, res.Message))
 	return nil
 }
