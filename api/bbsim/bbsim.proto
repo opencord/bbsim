@@ -56,6 +56,7 @@ message ONUs {
 
 message ONURequest {
     string SerialNumber = 1;
+    uint32 PortId = 2;
 }
 
 // Alarms
@@ -137,15 +138,19 @@ message Empty {}
 
 service BBSim {
     rpc Version(Empty) returns (VersionNumber) {}
+    rpc SetLogLevel(LogLevel) returns (LogLevel) {}
+
     rpc GetOlt(Empty) returns (Olt) {}
     rpc PoweronOlt(Empty) returns (Response) {}
     rpc ShutdownOlt(Empty) returns (Response) {}
     rpc RebootOlt(Empty) returns (Response) {}
-    rpc GetONUs(Empty) returns (ONUs) {}
+
     rpc GetONU(ONURequest) returns (ONU) {}
-    rpc SetLogLevel(LogLevel) returns (LogLevel) {}
+    rpc GetONUs(Empty) returns (ONUs) {}
     rpc ShutdownONU (ONURequest) returns (Response) {}
+    rpc ShutdownAllONUs (Empty) returns (Response) {}
     rpc PoweronONU (ONURequest) returns (Response) {}
+    rpc PoweronAllONUs (Empty) returns (Response) {}
     rpc RestartEapol (ONURequest) returns (Response) {}
     rpc RestartDhcp (ONURequest) returns (Response) {}
     rpc SetAlarmIndication (AlarmRequest) returns (Response) {}

@@ -75,6 +75,7 @@ func (s BBSimServer) GetONU(ctx context.Context, req *bbsim.ONURequest) (*bbsim.
 	return &res, nil
 }
 
+// ShutdownONU sends DyingGasp indication for specified ONUs and mark ONUs as disabled.
 func (s BBSimServer) ShutdownONU(ctx context.Context, req *bbsim.ONURequest) (*bbsim.Response, error) {
 	// NOTE this method is now sendying a Dying Gasp and then disabling the device (operState: down, adminState: up),
 	// is this the only way to do? Should we address other cases?
@@ -83,105 +84,160 @@ func (s BBSimServer) ShutdownONU(ctx context.Context, req *bbsim.ONURequest) (*b
 	// - ONU malfunction
 	// - ONU shutdown
 	res := &bbsim.Response{}
-
-	logger.WithFields(log.Fields{
-		"OnuSn": req.SerialNumber,
-	}).Infof("Received request to shutdown ONU")
-
 	olt := devices.GetOLT()
 
-	onu, err := olt.FindOnuBySn(req.SerialNumber)
-
-	if err != nil {
-		res.StatusCode = int32(codes.NotFound)
-		res.Message = err.Error()
-		return res, err
-	}
-
-	dyingGasp := devices.Message{
-		Type: devices.DyingGaspIndication,
-		Data: devices.DyingGaspIndicationMessage{
-			OnuID:     onu.ID,
-			PonPortID: onu.PonPortID,
-			Status:    "on", // TODO do we need a type for Dying Gasp Indication?
-		},
-	}
-
-	onu.Channel <- dyingGasp
-
-	if err := onu.InternalState.Event("disable"); err != nil {
+	if req.SerialNumber != "" {
 		logger.WithFields(log.Fields{
-			"OnuId":  onu.ID,
-			"IntfId": onu.PonPortID,
-			"OnuSn":  onu.Sn(),
-		}).Errorf("Cannot shutdown ONU: %s", err.Error())
-		res.StatusCode = int32(codes.FailedPrecondition)
-		res.Message = err.Error()
-		return res, err
-	}
+			"OnuSn": req.SerialNumber,
+		}).Infof("Received request to shutdown ONU")
 
+		onu, err := olt.FindOnuBySn(req.SerialNumber)
+		if err != nil {
+			res.StatusCode = int32(codes.NotFound)
+			res.Message = err.Error()
+			return res, err
+		}
+
+		if err := onu.InternalState.Event("disable"); err != nil {
+			logger.WithFields(log.Fields{
+				"OnuId":  onu.ID,
+				"IntfId": onu.PonPortID,
+				"OnuSn":  onu.Sn(),
+			}).Errorf("Cannot shutdown ONU: %s", err.Error())
+			res.StatusCode = int32(codes.FailedPrecondition)
+			res.Message = err.Error()
+			return res, err
+		}
+
+		res.StatusCode = int32(codes.OK)
+		res.Message = fmt.Sprintf("ONU %s successfully shut down.", onu.Sn())
+	} else {
+		logger.WithFields(log.Fields{
+			"IntfId": req.PortId,
+		}).Infof("Received request to shutdown all ONUs on PON")
+
+		pon, _ := olt.GetPonById(req.PortId)
+		go func() {
+			for _, onu := range pon.Onus {
+				if err := onu.InternalState.Event("disable"); err != nil {
+					logger.WithFields(log.Fields{
+						"OnuId":  onu.ID,
+						"IntfId": onu.PonPortID,
+						"OnuSn":  onu.Sn(),
+					}).Errorf("Cannot shutdown ONU: %s", err.Error())
+				}
+			}
+		}()
+		res.StatusCode = int32(codes.OK)
+		res.Message = fmt.Sprintf("Request accepted for shutdown all ONUs on PON port %d", pon.ID)
+	}
+	return res, nil
+}
+
+// ShutdownAllONUs sends DyingGasp indication for all ONUs and mark ONUs as disabled.
+func (s BBSimServer) ShutdownAllONUs(context.Context, *bbsim.Empty) (*bbsim.Response, error) {
+	res := &bbsim.Response{}
+	logger.Infof("Received request to shutdown all ONUs")
+	olt := devices.GetOLT()
+
+	go func() {
+		for _, pon := range olt.Pons {
+			for _, onu := range pon.Onus {
+				if err := onu.InternalState.Event("disable"); err != nil {
+					logger.WithFields(log.Fields{
+						"OnuId":  onu.ID,
+						"IntfId": onu.PonPortID,
+						"OnuSn":  onu.Sn(),
+					}).Errorf("Cannot shutdown ONU: %s", err.Error())
+				}
+			}
+		}
+	}()
 	res.StatusCode = int32(codes.OK)
-	res.Message = fmt.Sprintf("ONU %s successfully shut down.", onu.Sn())
+	res.Message = fmt.Sprintf("Request Accepted for shutdown all ONUs in OLT %d", olt.ID)
 
 	return res, nil
 }
 
+// PoweronONU simulates ONU power on and start sending discovery indications to VOLTHA
 func (s BBSimServer) PoweronONU(ctx context.Context, req *bbsim.ONURequest) (*bbsim.Response, error) {
 	res := &bbsim.Response{}
-
-	logger.WithFields(log.Fields{
-		"OnuSn": req.SerialNumber,
-	}).Infof("Received request to poweron ONU")
-
 	olt := devices.GetOLT()
 
-	onu, err := olt.FindOnuBySn(req.SerialNumber)
-	if err != nil {
-		res.StatusCode = int32(codes.NotFound)
-		res.Message = err.Error()
-		return res, err
-	}
-
-	pon, _ := olt.GetPonById(onu.PonPortID)
-	if pon.InternalState.Current() != "enabled" {
-		err := fmt.Errorf("PON port %d not enabled", onu.PonPortID)
+	if req.SerialNumber != "" {
 		logger.WithFields(log.Fields{
-			"OnuId":  onu.ID,
-			"IntfId": onu.PonPortID,
-			"OnuSn":  onu.Sn(),
-		}).Errorf("Cannot poweron ONU: %s", err.Error())
+			"OnuSn": req.SerialNumber,
+		}).Infof("Received request to poweron ONU")
 
-		res.StatusCode = int32(codes.FailedPrecondition)
-		res.Message = err.Error()
-		return res, err
-	}
+		onu, err := olt.FindOnuBySn(req.SerialNumber)
+		if err != nil {
+			res.StatusCode = int32(codes.NotFound)
+			res.Message = err.Error()
+			return res, err
+		}
 
-	if onu.InternalState.Current() == "created" {
-		if err := onu.InternalState.Event("initialize"); err != nil {
+		pon, _ := olt.GetPonById(onu.PonPortID)
+		if pon.InternalState.Current() != "enabled" {
+			err := fmt.Errorf("PON port %d not enabled", onu.PonPortID)
 			logger.WithFields(log.Fields{
 				"OnuId":  onu.ID,
 				"IntfId": onu.PonPortID,
 				"OnuSn":  onu.Sn(),
 			}).Errorf("Cannot poweron ONU: %s", err.Error())
+
 			res.StatusCode = int32(codes.FailedPrecondition)
 			res.Message = err.Error()
 			return res, err
 		}
-	}
+		return handlePoweronONU(onu)
 
-	if err := onu.InternalState.Event("discover"); err != nil {
+	} else {
 		logger.WithFields(log.Fields{
-			"OnuId":  onu.ID,
-			"IntfId": onu.PonPortID,
-			"OnuSn":  onu.Sn(),
-		}).Errorf("Cannot poweron ONU: %s", err.Error())
-		res.StatusCode = int32(codes.FailedPrecondition)
-		res.Message = err.Error()
-		return res, err
+			"IntfId": req.PortId,
+		}).Infof("Received request to poweron all ONUs on PON")
+
+		pon, _ := olt.GetPonById(req.PortId)
+		if pon.InternalState.Current() != "enabled" {
+			err := fmt.Errorf("PON port %d not enabled", pon.ID)
+			logger.WithFields(log.Fields{
+				"IntfId": pon.ID,
+			}).Errorf("Cannot poweron ONUs on PON: %s", err.Error())
+
+			res.StatusCode = int32(codes.FailedPrecondition)
+			res.Message = err.Error()
+			return res, err
+		}
+
+		go func() {
+			for _, onu := range pon.Onus {
+				res, _ = handlePoweronONU(onu)
+			}
+		}()
+		res.StatusCode = int32(codes.OK)
+		res.Message = fmt.Sprintf("Request Accepted for power on all ONUs on PON port %d", pon.ID)
 	}
 
+	return res, nil
+}
+
+// PoweronAllONUs simulates ONU power on for all ONUs on all PON ports
+func (s BBSimServer) PoweronAllONUs(context.Context, *bbsim.Empty) (*bbsim.Response, error) {
+	res := &bbsim.Response{}
+
+	logger.Infof("Received request to poweron all ONUs")
+	olt := devices.GetOLT()
+
+	go func() {
+		for _, pon := range olt.Pons {
+			if pon.InternalState.Current() == "enabled" {
+				for _, onu := range pon.Onus {
+					res, _ = handlePoweronONU(onu)
+				}
+			}
+		}
+	}()
 	res.StatusCode = int32(codes.OK)
-	res.Message = fmt.Sprintf("ONU %s successfully powered on.", onu.Sn())
+	res.Message = fmt.Sprintf("Request Accepted for power on all ONUs in OLT %d", olt.ID)
 
 	return res, nil
 }
@@ -290,6 +346,39 @@ func (s BBSimServer) RestartDhcp(ctx context.Context, req *bbsim.ONURequest) (*b
 
 	res.StatusCode = int32(codes.OK)
 	res.Message = fmt.Sprintf("DHCP restarted for ONU %s.", onu.Sn())
+
+	return res, nil
+}
+
+func handlePoweronONU(onu *devices.Onu) (*bbsim.Response, error) {
+	res := &bbsim.Response{}
+
+	if onu.InternalState.Current() == "created" {
+		if err := onu.InternalState.Event("initialize"); err != nil {
+			logger.WithFields(log.Fields{
+				"OnuId":  onu.ID,
+				"IntfId": onu.PonPortID,
+				"OnuSn":  onu.Sn(),
+			}).Errorf("Cannot poweron ONU: %s", err.Error())
+			res.StatusCode = int32(codes.FailedPrecondition)
+			res.Message = err.Error()
+			return res, err
+		}
+	}
+
+	if err := onu.InternalState.Event("discover"); err != nil {
+		logger.WithFields(log.Fields{
+			"OnuId":  onu.ID,
+			"IntfId": onu.PonPortID,
+			"OnuSn":  onu.Sn(),
+		}).Errorf("Cannot poweron ONU: %s", err.Error())
+		res.StatusCode = int32(codes.FailedPrecondition)
+		res.Message = err.Error()
+		return res, err
+	}
+
+	res.StatusCode = int32(codes.OK)
+	res.Message = fmt.Sprintf("ONU %s successfully powered on.", onu.Sn())
 
 	return res, nil
 }

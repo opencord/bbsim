@@ -29,7 +29,15 @@ http:
     get: "/v1/olt/onus/{SerialNumber}"
   - selector: bbsim.BBSim.ShutdownONU
     delete: "/v1/olt/onus/{SerialNumber}"
+    additional_bindings:
+      - delete: "/v1/olt/port/{PortId}/onus"
+  - selector: bbsim.BBSim.ShutdownAllONUs
+    delete: "/v1/olt/onus"
   - selector: bbsim.BBSim.PoweronONU
     post: "/v1/olt/onus/{SerialNumber}"
+    additional_bindings:
+      - post: "/v1/olt/port/{PortId}/onus"
+  - selector: bbsim.BBSim.PoweronAllONUs
+    post: "/v1/olt/onus"    
   - selector: bbsim.BBSim.SetAlarmIndication
     post: "/v1/olt/onus/{SerialNumber}/alarms/{AlarmType}/{Status}"
