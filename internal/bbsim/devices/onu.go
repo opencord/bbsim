@@ -183,6 +183,17 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 				o.Channel <- msg
 			},
 			"enter_disabled": func(event *fsm.Event) {
+				dyingGasp := Message{
+					Type: DyingGaspIndication,
+					Data: DyingGaspIndicationMessage{
+						OnuID:     o.ID,
+						PonPortID: o.PonPortID,
+						Status:    "on", // TODO do we need a type for Dying Gasp Indication?
+					},
+				}
+
+				o.Channel <- dyingGasp
+
 				msg := Message{
 					Type: OnuIndication,
 					Data: OnuIndicationMessage{

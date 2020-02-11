@@ -152,6 +152,7 @@ func (options *ONUGet) Execute(args []string) error {
 	req := pb.ONURequest{
 		SerialNumber: string(options.Args.OnuSn),
 	}
+
 	res, err := client.GetONU(ctx, &req)
 
 	if err != nil {
@@ -283,7 +284,7 @@ func (options *ONUIgmp) Execute(args []string) error {
 		}).Errorf("Cannot not get details on ONU error: %v", err)
 	}
 	log.WithFields(log.Fields{
-		"SerialNumber": igmpReq.OnuReq.SerialNumber,
+		"SerialNumber": igmpReq.OnuReq.GetSerialNumber(),
 	}).Debugf("ONU has indentified : %s", res)
 
 	igmpRes, igmpErr := client.ChangeIgmpState(ctx, &igmpReq)
