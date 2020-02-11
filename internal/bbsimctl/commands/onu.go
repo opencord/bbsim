@@ -139,7 +139,7 @@ func (options *ONUGet) Execute(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 	req := pb.ONURequest{
-		SerialNumber: string(options.Args.OnuSn),
+		Data: &pb.ONURequest_SerialNumber{SerialNumber: string(options.Args.OnuSn)},
 	}
 	res, err := client.GetONU(ctx, &req)
 
@@ -164,7 +164,7 @@ func (options *ONUShutDown) Execute(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 	req := pb.ONURequest{
-		SerialNumber: string(options.Args.OnuSn),
+		Data: &pb.ONURequest_SerialNumber{SerialNumber: string(options.Args.OnuSn)},
 	}
 	res, err := client.ShutdownONU(ctx, &req)
 
@@ -185,7 +185,7 @@ func (options *ONUPowerOn) Execute(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 	req := pb.ONURequest{
-		SerialNumber: string(options.Args.OnuSn),
+		Data: &pb.ONURequest_SerialNumber{SerialNumber: string(options.Args.OnuSn)},
 	}
 	res, err := client.PoweronONU(ctx, &req)
 
@@ -206,7 +206,7 @@ func (options *ONUEapolRestart) Execute(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 	req := pb.ONURequest{
-		SerialNumber: string(options.Args.OnuSn),
+		Data: &pb.ONURequest_SerialNumber{SerialNumber: string(options.Args.OnuSn)},
 	}
 	res, err := client.RestartEapol(ctx, &req)
 
@@ -227,7 +227,7 @@ func (options *ONUDhcpRestart) Execute(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 	req := pb.ONURequest{
-		SerialNumber: string(options.Args.OnuSn),
+		Data: &pb.ONURequest_SerialNumber{SerialNumber: string(options.Args.OnuSn)},
 	}
 	res, err := client.RestartDhcp(ctx, &req)
 
@@ -249,7 +249,7 @@ func (options *ONUIgmp) Execute(args []string) error {
 	defer cancel()
 
 	req := pb.ONURequest{
-		SerialNumber: string(options.Args.OnuSn),
+		Data: &pb.ONURequest_SerialNumber{SerialNumber: string(options.Args.OnuSn)},
 	}
 
 	var subActionVal pb.SubActionTypes
@@ -270,7 +270,7 @@ func (options *ONUIgmp) Execute(args []string) error {
 		}).Errorf("Cannot not get details on ONU error: %v", err)
 	}
 	log.WithFields(log.Fields{
-		"SerialNumber": igmpReq.OnuReq.SerialNumber,
+		"SerialNumber": igmpReq.OnuReq.GetSerialNumber(),
 	}).Debugf("ONU has indentified : %s", res)
 
 	igmpRes, igmpErr := client.ChangeIgmpState(ctx, &igmpReq)
