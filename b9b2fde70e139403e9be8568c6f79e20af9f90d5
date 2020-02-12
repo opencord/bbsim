@@ -22,6 +22,30 @@
       "revId": "b9b2fde70e139403e9be8568c6f79e20af9f90d5",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af437717_70ee8006",
+        "filename": "api/bbsim/bbsim.proto",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2020-02-12T18:57:23Z",
+      "side": 1,
+      "message": "An alternative would be to use a \"oneof\" proto construct to indicate the fields are mutually exclusive. I think I favor two separate messages / two separate RPCs.",
+      "parentUuid": "1289922f_4bd13ae4",
+      "range": {
+        "startLine": 59,
+        "startChar": 11,
+        "endLine": 59,
+        "endChar": 17
+      },
+      "revId": "b9b2fde70e139403e9be8568c6f79e20af9f90d5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
