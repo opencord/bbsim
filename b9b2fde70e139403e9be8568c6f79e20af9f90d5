@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1289922f_4bd13ae4",
+        "filename": "api/bbsim/bbsim.proto",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-02-12T18:40:29Z",
+      "side": 1,
+      "message": "Is this the UNI PortId or the OnuID?\n\nI think we should create a new type OnuIdRequest instead of considering struct field optional.\n\nIf instead we\u0027re talking about the PonPortId then it\u0027s referenced across the entire codebase as IntfId and we should definitely create a different request type",
+      "range": {
+        "startLine": 59,
+        "startChar": 11,
+        "endLine": 59,
+        "endChar": 17
+      },
+      "revId": "b9b2fde70e139403e9be8568c6f79e20af9f90d5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
