@@ -46,6 +46,30 @@
       "revId": "b9b2fde70e139403e9be8568c6f79e20af9f90d5",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76f3cfe7_0145c5dd",
+        "filename": "api/bbsim/bbsim.proto",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000601
+      },
+      "writtenOn": "2020-02-13T04:51:20Z",
+      "side": 1,
+      "message": "Yes it is Pon port ID, I will rename this to PonPortID as used in ONU proto Message, and I can make use \"oneof\" as suggested by Scott.\nConcern with implementing two separate RPCs is only that we will have some ugly names like \"PoweronAllONUsOnPON\"/\"ShutdownAllONUsOnPON\"\nIf we are OK with these names or you have better suggestion let me know.",
+      "parentUuid": "af437717_70ee8006",
+      "range": {
+        "startLine": 59,
+        "startChar": 11,
+        "endLine": 59,
+        "endChar": 17
+      },
+      "revId": "b9b2fde70e139403e9be8568c6f79e20af9f90d5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
