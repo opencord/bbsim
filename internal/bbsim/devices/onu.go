@@ -595,6 +595,11 @@ func (o *Onu) storePortNumber(portNo uint32) {
 }
 
 func (o *Onu) SetID(id uint32) {
+	onuLogger.WithFields(log.Fields{
+		"IntfId":       o.PonPortID,
+		"OnuId":        id,
+		"SerialNumber": o.Sn(),
+	}).Debug("Storing OnuId ")
 	o.ID = id
 }
 

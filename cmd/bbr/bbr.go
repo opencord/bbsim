@@ -64,6 +64,8 @@ func main() {
 		"NumOnuPerPon": options.Olt.OnusPonPort,
 		"BBSimIp":      options.BBSimIp,
 		"BBSimPort":    options.BBSimPort,
+		"LogLevel":     options.BBR.LogLevel,
+		"TotalOnus":    options.Olt.PonPorts * options.Olt.OnusPonPort,
 	}).Info("BroadBand Reflector is on")
 
 	// create the OLT device
@@ -80,6 +82,9 @@ func main() {
 		options.BBSim.ControlledActivation,
 		true,
 	)
+
+	onuIdMap := make(map[uint32]uint32, options.Olt.PonPorts)
+
 	oltMock := bbrdevices.OltMock{
 		Olt:           olt,
 		TargetOnus:    int(options.Olt.PonPorts * options.Olt.OnusPonPort),
@@ -87,6 +92,7 @@ func main() {
 		BBSimIp:       options.BBSimIp,
 		BBSimPort:     options.BBSimPort,
 		BBSimApiPort:  options.BBSimApiPort,
+		LastUsedOnuId: onuIdMap,
 	}
 
 	// start the enable sequence

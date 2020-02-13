@@ -34,10 +34,11 @@ import (
 )
 
 type OltMock struct {
-	Olt          *devices.OltDevice
-	BBSimIp      string
-	BBSimPort    string
-	BBSimApiPort string
+	LastUsedOnuId map[uint32]uint32
+	Olt           *devices.OltDevice
+	BBSimIp       string
+	BBSimPort     string
+	BBSimApiPort  string
 
 	conn *grpc.ClientConn
 
@@ -55,7 +56,7 @@ func (o *OltMock) Start() {
 			if err := onu.InternalState.Event("initialize"); err != nil {
 				log.Fatalf("Error initializing ONU: %v", err)
 			}
-			log.Tracef("Created ONU: %s (%d:%d)", onu.Sn(), onu.STag, onu.CTag)
+			log.Debugf("Created ONU: %s (%d:%d)", onu.Sn(), onu.STag, onu.CTag)
 		}
 	}
 
@@ -180,13 +181,19 @@ func (o *OltMock) handleOnuDiscIndication(client openolt.OpenoltClient, onuDiscI
 		log.WithFields(log.Fields{
 			"IntfId":       onuDiscInd.IntfId,
 			"SerialNumber": common.OnuSnToString(onuDiscInd.SerialNumber),
+			"Err":          err,
 		}).Fatal("Cannot find ONU")
 	}
+
+	// creating and storing ONU IDs
+	id := o.LastUsedOnuId[onuDiscInd.IntfId] + 1
+	o.LastUsedOnuId[onuDiscInd.IntfId] = o.LastUsedOnuId[onuDiscInd.IntfId] + 1
+	onu.SetID(id)
 
 	var pir uint32 = 1000000
 	Onu := openolt.Onu{
 		IntfId:       onu.PonPortID,
-		OnuId:        onu.ID,
+		OnuId:        id,
 		SerialNumber: onu.SerialNumber,
 		Pir:          pir,
 	}
