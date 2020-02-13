@@ -64,7 +64,13 @@ func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, p
 	}
 	//Sending IGMP packets
 	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
-		log.Errorf("Fail to send IGMP PktInd indication for ONU: %s, IntfId: %s, SerialNumber: %s,  error: %v", onuId, ponPortId, serialNumber, err)
+		log.WithFields(log.Fields{
+			"OnuId":        onuId,
+			"SerialNumber": serialNumber,
+			"PortNo":       portNo,
+			"IntfId":       ponPortId,
+			"err":          err,
+		}).Error("Fail to send IGMP PktInd indication for ONU")
 		return err
 	}
 	return nil
@@ -109,7 +115,13 @@ func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber str
 	}
 	//Sending IGMP packets
 	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
-		log.Errorf("Fail to send IGMP PktInd indication for ONU: %s, IntfId: %s, SerialNumber: %s,  error: %v", onuId, ponPortId, serialNumber, err)
+		log.WithFields(log.Fields{
+			"OnuId":        onuId,
+			"SerialNumber": serialNumber,
+			"PortNo":       portNo,
+			"IntfId":       ponPortId,
+			"err":          err,
+		}).Errorf("Fail to send IGMP PktInd indication")
 		return err
 	}
 	return nil

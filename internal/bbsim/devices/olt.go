@@ -143,7 +143,7 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 
 		// create ONU devices
 		for j := 0; j < onuPerPon; j++ {
-			delay := time.Duration(olt.Delay * j) * time.Millisecond
+			delay := time.Duration(olt.Delay*j) * time.Millisecond
 			o := CreateONU(&olt, *p, uint32(j+1), sTag, availableCTag, auth, dhcp, delay, isMock)
 			p.Onus = append(p.Onus, o)
 			availableCTag = availableCTag + 1

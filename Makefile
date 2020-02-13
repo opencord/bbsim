@@ -74,9 +74,9 @@ test-unit: clean dep fmt local-omci-sim # @HELP Execute unit tests
 	gocover-cobertura < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml
 
 test-bbr: build-bbr docker-build # @HELP Validate that BBSim and BBR are working together
-	DOCKER_RUN_ARGS="-auth -dhcp" make docker-run
+	DOCKER_RUN_ARGS="-auth -dhcp -pon 2 -onu 2" make docker-run
 	sleep 5
-	./bbr
+	./bbr -pon 2 -onu 2
 	docker rm -f bbsim
 
 fmt:
