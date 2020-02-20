@@ -70,6 +70,8 @@ type BBSimConfig struct {
 	LegacyRestApiAddress string  `yaml:"legacy_rest_api_address"`
 	SadisRestAddress     string  `yaml:"sadis_rest_address"`
 	SadisServer          bool    `yaml:"sadis_server"`
+	KafkaAddress         string  `yaml:"kafka_address"`
+	Events               bool    `yaml:"enable_events"`
 	ControlledActivation string  `yaml:"controlled_activation"`
 	EnablePerf           bool    `yaml:"enable_perf"`
 }
@@ -105,6 +107,8 @@ func getDefaultOps() *BBSimYamlConfig {
 			LegacyRestApiAddress: ":50073",
 			SadisRestAddress:     ":50074",
 			SadisServer:          true,
+			KafkaAddress:         ":9092",
+			Events:               false,
 			ControlledActivation: "default",
 			EnablePerf:           false,
 		},
@@ -171,6 +175,8 @@ func GetBBSimOpts() *BBSimYamlConfig {
 
 	controlledActivation := flag.String("ca", conf.BBSim.ControlledActivation, "Set the mode for controlled activation of PON ports and ONUs")
 	enablePerf := flag.Bool("enableperf", conf.BBSim.EnablePerf, "Setting this flag will cause BBSim to not store data like traffic schedulers, flows of ONUs etc..")
+	enableEvents := flag.Bool("enableEvents", conf.BBSim.Events, "Enable sending BBSim events on configured kafka server")
+	kafkaAddress := flag.String("kafkaAddress", conf.BBSim.KafkaAddress, "IP:Port for kafka")
 	flag.Parse()
 
 	conf.Olt.ID = int(*olt_id)
@@ -187,6 +193,8 @@ func GetBBSimOpts() *BBSimYamlConfig {
 	conf.BBSim.Delay = *delay
 	conf.BBSim.ControlledActivation = *controlledActivation
 	conf.BBSim.EnablePerf = *enablePerf
+	conf.BBSim.Events = *enableEvents
+	conf.BBSim.KafkaAddress = *kafkaAddress
 
 	// update device id if not set
 	if conf.Olt.DeviceId == "" {

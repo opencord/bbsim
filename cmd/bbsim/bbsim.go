@@ -154,6 +154,7 @@ func main() {
 		"EnableAuth":           options.BBSim.EnableAuth,
 		"Dhcp":                 options.BBSim.EnableDhcp,
 		"Delay":                options.BBSim.Delay,
+		"Events":               options.BBSim.Events,
 		"ControlledActivation": options.BBSim.ControlledActivation,
 		"EnablePerf":           options.BBSim.EnablePerf,
 	}).Info("BroadBand Simulator is on")
@@ -173,6 +174,7 @@ func main() {
 		options.BBSim.Delay,
 		options.BBSim.ControlledActivation,
 		options.BBSim.EnablePerf,
+		options.BBSim.Events,
 		false,
 	)
 
@@ -196,6 +198,16 @@ func main() {
 	if common.Options.BBSim.SadisServer != false {
 		wg.Add(1)
 		go sadis.StartRestServer(olt, &wg)
+	}
+
+	if options.BBSim.Events {
+		// initialize a publisher
+		if err := common.InitializePublisher(olt.ID); err == nil {
+			// start a go routine which will read from channel and publish on kafka
+			go common.KafkaPublisher(olt.EventChannel)
+		} else {
+			log.Errorf("Failed to start kafka publisher: %v", err)
+		}
 	}
 
 	wg.Wait()
