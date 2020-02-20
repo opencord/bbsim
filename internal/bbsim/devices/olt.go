@@ -58,6 +58,7 @@ type OltDevice struct {
 	nniHandle            *pcap.Handle          // handle on the NNI interface, close it when shutting down the NNI channel
 	Delay                int
 	ControlledActivation mode
+	EventChannel         chan common.Event
 
 	Pons []*PonPort
 	Nnis []*NniPort
@@ -78,7 +79,7 @@ func GetOLT() *OltDevice {
 	return &olt
 }
 
-func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit int, auth bool, dhcp bool, delay int, ca string, isMock bool) *OltDevice {
+func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit int, auth bool, dhcp bool, delay int, ca string, event bool, isMock bool) *OltDevice {
 	oltLogger.WithFields(log.Fields{
 		"ID":           oltId,
 		"NumNni":       nni,
@@ -157,6 +158,12 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 			log.Errorf("Error initializing OLT: %v", err)
 			return nil
 		}
+	}
+
+	if event {
+		log.Debugf("BBSim event publishing is enabled")
+		// Create a channel to write event messages
+		olt.EventChannel = make(chan common.Event, 100)
 	}
 
 	return &olt
@@ -722,6 +729,7 @@ func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*open
 	oltLogger.WithFields(log.Fields{
 		"OnuSn": onuSnToString(onu.SerialNumber),
 	}).Info("Received ActivateOnu call from VOLTHA")
+	publishEvent("ONU-activate-indication-received", int32(onu.IntfId), int32(onu.OnuId), onuSnToString(onu.SerialNumber))
 
 	pon, _ := o.GetPonById(onu.IntfId)
 	_onu, _ := pon.GetOnuBySn(onu.SerialNumber)
@@ -791,6 +799,7 @@ func (o OltDevice) DisableOlt(context.Context, *openolt.Empty) (*openolt.Empty, 
 	oltLogger.WithFields(log.Fields{
 		"oltId": o.ID,
 	}).Info("Disabling OLT")
+	publishEvent("OLT-disable-received", -1, -1, "")
 
 	for _, pon := range o.Pons {
 		if pon.InternalState.Current() == "enabled" {
@@ -827,6 +836,7 @@ func (o OltDevice) DisablePonIf(context.Context, *openolt.Interface) (*openolt.E
 
 func (o *OltDevice) EnableIndication(_ *openolt.Empty, stream openolt.Openolt_EnableIndicationServer) error {
 	oltLogger.WithField("oltId", o.ID).Info("OLT receives EnableIndication call from VOLTHA")
+	publishEvent("OLT-enable-received", -1, -1, "")
 	o.Enable(stream)
 	return nil
 }
@@ -1002,6 +1012,7 @@ func (o OltDevice) Reboot(context.Context, *openolt.Empty) (*openolt.Empty, erro
 	oltLogger.WithFields(log.Fields{
 		"oltId": o.ID,
 	}).Info("Shutting down")
+	publishEvent("OLT-reboot-received", -1, -1, "")
 	go o.RestartOLT()
 	return new(openolt.Empty), nil
 }
@@ -1010,6 +1021,7 @@ func (o OltDevice) ReenableOlt(context.Context, *openolt.Empty) (*openolt.Empty,
 	oltLogger.WithFields(log.Fields{
 		"oltId": o.ID,
 	}).Info("Received ReenableOlt request from VOLTHA")
+	publishEvent("OLT-reenable-received", -1, -1, "")
 
 	// enable OLT
 	oltMsg := Message{

@@ -13,6 +13,7 @@ bbsim:
   # legacy_api_address: ":50072"
   # legacy_rest_api_address: ":50073"
   # sadis_rest_address: ":50073"
+  # kafka_address: ":9092"
   # log_level: "debug" 
   # log_caller: false
   # delay: 200
