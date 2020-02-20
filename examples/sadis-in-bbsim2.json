@@ -1,7 +1,7 @@
 {
   "sadis": {
     "integration": {
-      "url": "http://bbsim.voltha.svc:50074/v1/subscribers/%s",
+      "url": "http://bbsim.voltha.svc:50074/v2/subscribers/%s",
       "cache": {
         "enabled": true,
         "maxsize": 50,
@@ -11,7 +11,7 @@
   },
   "bandwidthprofile": {
     "integration": {
-      "url": "http://bbsim.voltha.svc:50074/v1/bandwidthprofiles/%s",
+      "url": "http://bbsim.voltha.svc:50074/v2/bandwidthprofiles/%s",
       "cache": {
         "enabled": true,
         "maxsize": 40,

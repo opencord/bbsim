@@ -88,6 +88,32 @@ type SadisOnuEntry struct {
 	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile"`
 }
 
+type SadisOnuEntryV2 struct {
+	ID         string        `json:"id"`
+	NasPortID  string        `json:"nasPortId"`
+	CircuitID  string        `json:"circuitId"`
+	RemoteID   string        `json:"remoteId"`
+	UniTagList []SadisUniTag `json:"uniTagList"`
+}
+
+type SadisUniTag struct {
+	UniTagMatch                int    `json:"uniTagMatch"`
+	PonCTag                    int    `json:"ponCTag"`
+	PonSTag                    int    `json:"ponSTag"`
+	UsPonCTagPriority          int    `json:"usPonCTagPriority"`
+	DsPonCTagPriority          int    `json:"dsPonCTagPriority"`
+	UsPonSTagPriority          int    `json:"usPonSTagPriority"`
+	DsPonSTagPriority          int    `json:"dsPonSTagPriority"`
+	EnableMacLearning          string `json:"enableMacLearning"`
+	ConfiguredDacAddress       string `json:"configuredDacAddress"`
+	TechnologyProfileID        int    `json:"technologyProfileId"`
+	UpstreamBandwidthProfile   string `json:"upstreamBandwidthProfile"`
+	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile"`
+	IsDhcpRequired             string `json:"isDhcpRequired"`
+	IsIgmpRequired             string `json:"isIgmpRequired"`
+	ServiceName                string `json:"serviceName"`
+}
+
 // SADIS BandwithProfile Entry
 type SadisBWPEntry struct {
 	ID  string `json:"id"`
@@ -99,9 +125,9 @@ type SadisBWPEntry struct {
 }
 
 // GetSadisConfig returns a full SADIS configuration struct ready to be marshalled into JSON
-func GetSadisConfig(olt *devices.OltDevice) *SadisConfig {
-	sadisEntries, _ := GetSadisEntries(olt)
-	bwpEntries := getBWPEntries()
+func GetSadisConfig(olt *devices.OltDevice, version string) *SadisConfig {
+	sadisEntries, _ := GetSadisEntries(olt, version)
+	bwpEntries := getBWPEntries(version)
 
 	conf := &SadisConfig{}
 	conf.Sadis = *sadisEntries
@@ -110,7 +136,7 @@ func GetSadisConfig(olt *devices.OltDevice) *SadisConfig {
 	return conf
 }
 
-func GetSadisEntries(olt *devices.OltDevice) (*SadisEntries, error) {
+func GetSadisEntries(olt *devices.OltDevice, version string) (*SadisEntries, error) {
 	solt, _ := GetOltEntry(olt)
 
 	entries := []interface{}{}
@@ -120,7 +146,7 @@ func GetSadisEntries(olt *devices.OltDevice) (*SadisEntries, error) {
 	port := a[len(a)-1]
 
 	integration := SadisIntegration{}
-	integration.URL = "http://bbsim:" + port + "/subscribers/%s"
+	integration.URL = "http://bbsim:" + port + "/" + version + "/subscribers/%s"
 	integration.Cache.Enabled = false
 	integration.Cache.MaxSize = 50
 	integration.Cache.TTL = "PT0m"
@@ -140,12 +166,12 @@ func GetOltEntry(olt *devices.OltDevice) (*SadisOltEntry, error) {
 		HardwareIdentifier: common.Options.Olt.DeviceId,
 		IPAddress:          ip,
 		NasID:              olt.SerialNumber,
-		UplinkPort:         1048576, // TODO currently assumes we only have on NNI port
+		UplinkPort:         1048576, // TODO currently assumes we only have one NNI port
 	}
 	return solt, nil
 }
 
-func GetOnuEntry(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*SadisOnuEntry, error) {
+func GetOnuEntryV1(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*SadisOnuEntry, error) {
 	uniSuffix := "-" + uniId
 	sonu := &SadisOnuEntry{
 		ID:                         onu.Sn() + uniSuffix,
@@ -158,16 +184,45 @@ func GetOnuEntry(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*Sadis
 		UpstreamBandwidthProfile:   "User_Bandwidth1",
 		DownstreamBandwidthProfile: "Default",
 	}
-
 	return sonu, nil
 }
 
-func getBWPEntries() *BandwidthProfileEntries {
+func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*SadisOnuEntryV2, error) {
+	uniSuffix := "-" + uniId
+
+	sonuv2 := &SadisOnuEntryV2{
+		ID:        onu.Sn() + uniSuffix,
+		NasPortID: onu.Sn() + uniSuffix,
+		CircuitID: onu.Sn() + uniSuffix,
+		RemoteID:  olt.SerialNumber,
+	}
+	sonuUniTag := SadisUniTag{
+		UniTagMatch:                0,
+		PonCTag:                    onu.CTag,
+		PonSTag:                    onu.STag,
+		UsPonCTagPriority:          1,
+		DsPonCTagPriority:          1,
+		UsPonSTagPriority:          1,
+		DsPonSTagPriority:          1,
+		EnableMacLearning:          "true",
+		ConfiguredDacAddress:       "0.0.0.0",
+		TechnologyProfileID:        64,
+		UpstreamBandwidthProfile:   "User_Bandwidth1",
+		DownstreamBandwidthProfile: "Default",
+		IsDhcpRequired:             "true",
+		IsIgmpRequired:             "true",
+		ServiceName:                "Default",
+	}
+	sonuv2.UniTagList = append(sonuv2.UniTagList, sonuUniTag)
+	return sonuv2, nil
+}
+
+func getBWPEntries(version string) *BandwidthProfileEntries {
 	a := strings.Split(common.Options.BBSim.SadisRestAddress, ":")
 	port := a[len(a)-1]
 
 	integration := SadisIntegration{}
-	integration.URL = "http://bbsim:" + port + "/bandwidthprofiles/%s"
+	integration.URL = "http://bbsim:" + port + "/" + version + "/bandwidthprofiles/%s"
 	integration.Cache.Enabled = true
 	integration.Cache.MaxSize = 40
 	integration.Cache.TTL = "PT1m"
@@ -182,7 +237,15 @@ func getBWPEntries() *BandwidthProfileEntries {
 func (s *sadisServer) ServeBaseConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	sadisConf := GetSadisConfig(s.olt)
+	vars := mux.Vars(r)
+
+	if vars["version"] != "v1" && vars["version"] != "v2" {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("{}"))
+		return
+	}
+
+	sadisConf := GetSadisConfig(s.olt, vars["version"])
 
 	sadisJSON, _ := json.Marshal(sadisConf)
 	sadisLogger.Tracef("SADIS JSON: %s", sadisJSON)
@@ -194,14 +257,21 @@ func (s *sadisServer) ServeBaseConfig(w http.ResponseWriter, r *http.Request) {
 func (s *sadisServer) ServeStaticConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	sadisConf := GetSadisConfig(s.olt)
+	vars := mux.Vars(r)
+	sadisConf := GetSadisConfig(s.olt, vars["version"])
 
 	sadisConf.Sadis.Integration.URL = ""
 	for i := range s.olt.Pons {
 		for _, onu := range s.olt.Pons[i].Onus {
 			// FIXME currently we only support one UNI per ONU
-			sonu, _ := GetOnuEntry(s.olt, onu, "1")
-			sadisConf.Sadis.Entries = append(sadisConf.Sadis.Entries, sonu)
+			if vars["version"] == "v1" {
+				sonuV1, _ := GetOnuEntryV1(s.olt, onu, "1")
+				sadisConf.Sadis.Entries = append(sadisConf.Sadis.Entries, sonuV1)
+			} else if vars["version"] == "v2" {
+				sonuV2, _ := GetOnuEntryV2(s.olt, onu, "1")
+				sadisConf.Sadis.Entries = append(sadisConf.Sadis.Entries, sonuV2)
+
+			}
 		}
 	}
 
@@ -236,7 +306,7 @@ func (s *sadisServer) ServeEntry(w http.ResponseWriter, r *http.Request) {
 	if len(i) != 2 {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		w.Write([]byte("{}"))
-		sadisLogger.Warnf("Received invalid SADIS subscriber request: %s", vars["ID"])
+		sadisLogger.Warnf("Received invalid SADIS SubscriberId: %s", vars["ID"])
 		return
 	}
 	sn, uni := i[0], i[len(i)-1]
@@ -248,7 +318,7 @@ func (s *sadisServer) ServeEntry(w http.ResponseWriter, r *http.Request) {
 		sadisLogger.WithFields(log.Fields{
 			"OnuSn": sn,
 			"OnuId": "NA",
-		}).Warnf("Received invalid SADIS subscriber request: %s", vars["ID"])
+		}).Warnf("Requested Subscriber entry not found for OnuSn: %s", vars["ID"])
 		return
 	}
 
@@ -258,16 +328,28 @@ func (s *sadisServer) ServeEntry(w http.ResponseWriter, r *http.Request) {
 		"OnuPortNo": uni,
 	}).Debug("Received SADIS request")
 
-	sadisConf, err := GetOnuEntry(s.olt, onu, uni)
-
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(sadisConf)
+	if vars["version"] == "v1" {
+		sadisConf, _ := GetOnuEntryV1(s.olt, onu, uni)
+		json.NewEncoder(w).Encode(sadisConf)
+	} else if vars["version"] == "v2" {
+		sadisConf, _ := GetOnuEntryV2(s.olt, onu, uni)
+		json.NewEncoder(w).Encode(sadisConf)
+	}
+
 }
 
 func (s *sadisServer) ServeBWPEntry(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(r)
 	id := vars["ID"]
+
+	if vars["version"] != "v1" && vars["version"] != "v2" {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("{}"))
+		return
+	}
+
 	sadisLogger.Debugf("Received request for SADIS bandwidth profile %s", id)
 
 	for _, e := range bandwidthProfiles {
@@ -292,10 +374,10 @@ func StartRestServer(olt *devices.OltDevice, wg *sync.WaitGroup) {
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/cfg", s.ServeBaseConfig)
-	router.HandleFunc("/static", s.ServeStaticConfig)
-	router.HandleFunc("/subscribers/{ID}", s.ServeEntry)
-	router.HandleFunc("/bandwidthprofiles/{ID}", s.ServeBWPEntry)
+	router.HandleFunc("/{version}/cfg", s.ServeBaseConfig)
+	router.HandleFunc("/{version}/static", s.ServeStaticConfig)
+	router.HandleFunc("/{version}/subscribers/{ID}", s.ServeEntry)
+	router.HandleFunc("/{version}/bandwidthprofiles/{ID}", s.ServeBWPEntry)
 
 	log.Fatal(http.ListenAndServe(addr, router))
 
