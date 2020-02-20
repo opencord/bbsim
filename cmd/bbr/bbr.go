@@ -81,6 +81,7 @@ func main() {
 		0,    // this parameter does not matter in the BBR case
 		options.BBSim.ControlledActivation,
 		false, // this parameter is not important in the BBR Case
+		false,
 		true,
 	)
 

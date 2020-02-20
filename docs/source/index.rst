@@ -117,6 +117,10 @@ the list via ``./bbsim --help``
            Number of PON ports per OLT device to be emulated (default 1)
      -s_tag int
            S-Tag value (default 900)
+     -enableEvents
+           Set this flag for publishing BBSim events on configured kafkaAddress
+     -kafkaAddress string
+           IP:Port for kafka, used only when bbsimEvents flag is set (default ":9092")
 
 ``BBSim`` also looks for a configuration file in ``configs/bbsim.yaml`` from
 which it reads a number of default settings. The command line options listed
@@ -161,3 +165,33 @@ You can verify the current Sadis configuration:
    curl --user karaf:karaf http://localhost:8181/onos/v1/network/configuration/apps/org.opencord.sadis
 
 In ONOS subscriber information can be queried using ``sadis <id>``.
+
+Publishing BBSim Events on kafka
+--------------------------------
+
+BBSim provides option for publishing events on kafka. To publish events on kafka, set BBSimEvents flag and configure kafkaAddress.
+Once BBSim is started, it will publish events (as and when they happen) on topic ``BBSim-OLT-<id>-Events``.
+
+Types of Events:
+  - OLT-enable-received
+  - OLT-disable-received
+  - OLT-reboot-received
+  - OLT-reenable-received
+  - ONU-discovery-indication-sent
+  - ONU-activate-indication-received
+  - MIB-upload-received
+  - MIB-upload-done
+  - Flow-add-received
+  - Flow-remove-received
+  - ONU-authentication-done
+  - ONU-DHCP-ACK-received
+
+Sample output of kafkacat consumer for BBSim with OLT-ID 4:
+
+.. code:: bash
+
+      $ kafkacat -b localhost:9092 -t BBSim-OLT-4-Events -C
+      {"EventType":"OLT-enable-received","OnuSerial":"","OltID":4,"IntfID":-1,"OnuID":-1,"EpochTime":1583152243144,"Timestamp":"2020-03-02 12:30:43.144449453"}
+      {"EventType":"ONU-discovery-indication-sent","OnuSerial":"BBSM00040001","OltID":4,"IntfID":0,"OnuID":0,"EpochTime":1583152243227,"Timestamp":"2020-03-02 12:30:43.227183506"}
+      {"EventType":"ONU-activate-indication-received","OnuSerial":"BBSM00040001","OltID":4,"IntfID":0,"OnuID":1,"EpochTime":1583152243248,"Timestamp":"2020-03-02 12:30:43.248225467"}
+      {"EventType":"MIB-upload-received","OnuSerial":"BBSM00040001","OltID":4,"IntfID":0,"OnuID":1,"EpochTime":1583152243299,"Timestamp":"2020-03-02 12:30:43.299480183"}

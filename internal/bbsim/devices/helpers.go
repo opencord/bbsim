@@ -17,9 +17,12 @@
 package devices
 
 import (
-	"github.com/looplab/fsm"
-	"github.com/opencord/voltha-protos/v2/go/openolt"
 	"strconv"
+	"time"
+
+	"github.com/looplab/fsm"
+	"github.com/opencord/bbsim/internal/common"
+	"github.com/opencord/voltha-protos/v2/go/openolt"
 )
 
 type mode int
@@ -64,4 +67,21 @@ func onuSnToString(sn *openolt.SerialNumber) string {
 		s = s + strconv.FormatInt(int64(i/16), 16) + strconv.FormatInt(int64(i%16), 16)
 	}
 	return s
+}
+
+func publishEvent(eventType string, intfID int32, onuID int32, onuSerial string) {
+	if olt.PublishEvents {
+		currentTime := time.Now()
+
+		event := common.Event{
+			EventType: eventType,
+			OltID:     olt.ID,
+			IntfID:    intfID,
+			OnuID:     onuID,
+			OnuSerial: onuSerial,
+			Timestamp: currentTime.Format("2006-01-02 15:04:05.000000000"),
+			EpochTime: currentTime.UnixNano() / 1000000,
+		}
+		olt.EventChannel <- event
+	}
 }

@@ -213,6 +213,9 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 				}
 				o.Channel <- msg
 			},
+			"enter_eap_response_success_received": func(e *fsm.Event) {
+				publishEvent("ONU-authentication-done", int32(o.PonPortID), int32(o.ID), o.Sn())
+			},
 			"enter_auth_failed": func(e *fsm.Event) {
 				onuLogger.WithFields(log.Fields{
 					"OnuId":  o.ID,
@@ -234,6 +237,9 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 					},
 				}
 				o.Channel <- msg
+			},
+			"enter_dhcp_ack_received": func(e *fsm.Event) {
+				publishEvent("ONU-DHCP-ACK-received", int32(o.PonPortID), int32(o.ID), o.Sn())
 			},
 			"enter_dhcp_failed": func(e *fsm.Event) {
 				onuLogger.WithFields(log.Fields{
@@ -516,6 +522,7 @@ func (o *Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt
 		"OnuSn":  msg.Onu.Sn(),
 		"OnuId":  o.ID,
 	}).Debug("Sent Indication_OnuDiscInd")
+	publishEvent("ONU-discovery-indication-sent", int32(msg.Onu.PonPortID), int32(o.ID), msg.Onu.Sn())
 
 	// after DiscoveryRetryDelay check if the state is the same and in case send a new OnuDiscIndication
 	go func(delay time.Duration) {
@@ -553,6 +560,25 @@ func (o *Onu) sendOnuIndication(msg OnuIndicationMessage, stream openolt.Openolt
 
 }
 
+func (o *Onu) publishOmciEvent(msg OmciMessage) {
+	if olt.PublishEvents {
+		_, _, msgType, _, _, _, err := omcisim.ParsePkt(HexDecode(msg.omciMsg.Pkt))
+		if err != nil {
+			log.Errorf("error in getting msgType %v", err)
+			return
+		}
+		if msgType == omcisim.MibUpload {
+			o.seqNumber = 0
+			publishEvent("MIB-upload-received", int32(o.PonPortID), int32(o.ID), common.OnuSnToString(o.SerialNumber))
+		} else if msgType == omcisim.MibUploadNext {
+			o.seqNumber++
+			if o.seqNumber > 290 {
+				publishEvent("MIB-upload-done", int32(o.PonPortID), int32(o.ID), common.OnuSnToString(o.SerialNumber))
+			}
+		}
+	}
+}
+
 func (o *Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableIndicationServer) {
 
 	onuLogger.WithFields(log.Fields{
@@ -560,6 +586,8 @@ func (o *Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableIn
 		"SerialNumber": o.Sn(),
 		"omciPacket":   msg.omciMsg.Pkt,
 	}).Tracef("Received OMCI message")
+
+	o.publishOmciEvent(msg)
 
 	var omciInd openolt.OmciIndication
 	respPkt, err := omcisim.OmciSim(o.PonPortID, o.ID, HexDecode(msg.omciMsg.Pkt))
