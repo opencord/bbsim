@@ -12,7 +12,7 @@ bbsim:
   controlled_activation: "default"
   # legacy_api_address: ":50072"
   # legacy_rest_api_address: ":50073"
-  # sadis_rest_address: ":50073"
+  # sadis_rest_address: ":50074"
   # log_level: "debug" 
   # log_caller: false
   # delay: 200
