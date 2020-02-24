@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "40ec86ba_2633936e",
+        "filename": "api/bbsim/bbsim.proto",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-02-24T18:02:11Z",
+      "side": 1,
+      "message": "if the request is for an entire PonPort then we should create a new type of request.",
+      "range": {
+        "startLine": 60,
+        "startChar": 15,
+        "endLine": 60,
+        "endChar": 24
+      },
+      "revId": "2ec9755cc70e722a56e5a436c470ce9c4b15457d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
