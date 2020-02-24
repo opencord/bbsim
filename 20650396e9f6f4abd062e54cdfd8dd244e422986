@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "555e9f94_2743db65",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 1092,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-02-24T18:47:45Z",
+      "side": 1,
+      "message": "why are we overriding the PortNo?",
+      "range": {
+        "startLine": 1092,
+        "startChar": 2,
+        "endLine": 1092,
+        "endChar": 39
+      },
+      "revId": "20650396e9f6f4abd062e54cdfd8dd244e422986",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
