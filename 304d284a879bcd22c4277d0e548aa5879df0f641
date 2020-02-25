@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2453a8af_a162152c",
+        "filename": "cmd/bbsim/bbsim.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1000601
+      },
+      "writtenOn": "2020-02-25T07:35:51Z",
+      "side": 1,
+      "message": "will update this.",
+      "parentUuid": "2ff90c43_c69d99e4",
+      "range": {
+        "startLine": 157,
+        "startChar": 40,
+        "endLine": 157,
+        "endChar": 51
+      },
+      "revId": "304d284a879bcd22c4277d0e548aa5879df0f641",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "164e955e_7bbf19d9",
         "filename": "configs/bbsim.yaml",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2020-02-25T01:15:54Z",
       "side": 1,
       "message": "should this be \"voltha-kafka:9092\"?",
+      "range": {
+        "startLine": 16,
+        "startChar": 20,
+        "endLine": 16,
+        "endChar": 25
+      },
+      "revId": "304d284a879bcd22c4277d0e548aa5879df0f641",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "214ae695_a6bff422",
+        "filename": "configs/bbsim.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1000601
+      },
+      "writtenOn": "2020-02-25T07:35:51Z",
+      "side": 1,
+      "message": "User can configure IP address of kafka, on which they want to publish event.",
+      "parentUuid": "164e955e_7bbf19d9",
       "range": {
         "startLine": 16,
         "startChar": 20,
