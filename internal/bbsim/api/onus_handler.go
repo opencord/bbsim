@@ -19,6 +19,8 @@ package api
 import (
 	"context"
 	"fmt"
+	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
+	"time"
 
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
@@ -97,16 +99,44 @@ func (s BBSimServer) ShutdownONU(ctx context.Context, req *bbsim.ONURequest) (*b
 		return res, err
 	}
 
-	dyingGasp := devices.Message{
-		Type: devices.DyingGaspIndication,
-		Data: devices.DyingGaspIndicationMessage{
-			OnuID:     onu.ID,
-			PonPortID: onu.PonPortID,
-			Status:    "on", // TODO do we need a type for Dying Gasp Indication?
-		},
+	dyingGasp := bbsim.AlarmRequest{
+		AlarmType: "DyingGasp",
+		SerialNumber: onu.Sn(),
+		Status:       "on",
 	}
 
-	onu.Channel <- dyingGasp
+	if err := alarmsim.SimulateAlarm(context.TODO(), &dyingGasp, olt); err != nil {
+		logger.WithFields(log.Fields{
+			"OnuId":  onu.ID,
+			"IntfId": onu.PonPortID,
+			"OnuSn":  onu.Sn(),
+		}).Errorf("Cannot send Dying Gasp: %s", err.Error())
+		res.StatusCode = int32(codes.FailedPrecondition)
+		res.Message = err.Error()
+		return res, err
+	}
+
+
+	losReq := bbsim.AlarmRequest{
+		AlarmType: "LossOfSignal",
+		SerialNumber: onu.Sn(),
+		Status:       "on",
+	}
+
+	if err := alarmsim.SimulateAlarm(context.TODO(), &losReq, olt); err != nil {
+		logger.WithFields(log.Fields{
+			"OnuId":  onu.ID,
+			"IntfId": onu.PonPortID,
+			"OnuSn":  onu.Sn(),
+		}).Errorf("Cannot send LOS: %s", err.Error())
+		res.StatusCode = int32(codes.FailedPrecondition)
+		res.Message = err.Error()
+		return res, err
+	}
+
+	// TODO if it's the last ONU on the PON, then send a PON LOS
+
+	// FIXME why ChildDeviceLost is not invoked ????
 
 	if err := onu.InternalState.Event("disable"); err != nil {
 		logger.WithFields(log.Fields{
@@ -155,7 +185,7 @@ func (s BBSimServer) PoweronONU(ctx context.Context, req *bbsim.ONURequest) (*bb
 		return res, err
 	}
 
-	if onu.InternalState.Current() == "created" {
+	if onu.InternalState.Current() == "created" || onu.InternalState.Current() == "disabled" {
 		if err := onu.InternalState.Event("initialize"); err != nil {
 			logger.WithFields(log.Fields{
 				"OnuId":  onu.ID,
@@ -167,6 +197,27 @@ func (s BBSimServer) PoweronONU(ctx context.Context, req *bbsim.ONURequest) (*bb
 			return res, err
 		}
 	}
+
+	losReq := bbsim.AlarmRequest{
+		AlarmType: "LossOfSignal",
+		SerialNumber: onu.Sn(),
+		Status:       "off",
+	}
+
+	if err := alarmsim.SimulateAlarm(context.TODO(), &losReq, olt); err != nil {
+		logger.WithFields(log.Fields{
+			"OnuId":  onu.ID,
+			"IntfId": onu.PonPortID,
+			"OnuSn":  onu.Sn(),
+		}).Errorf("Cannot send LOS: %s", err.Error())
+		res.StatusCode = int32(codes.FailedPrecondition)
+		res.Message = err.Error()
+		return res, err
+	}
+
+	// give the LOS clear time to arrive to VOLTHA
+	// FIXME we shouldn't use sleep in the code
+	time.Sleep(1 * time.Second)
 
 	if err := onu.InternalState.Event("discover"); err != nil {
 		logger.WithFields(log.Fields{

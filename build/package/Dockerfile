@@ -65,4 +65,5 @@ RUN mv /usr/sbin/tcpdump /usr/bin/tcpdump
 RUN chmod a+x /app/bbsim
 RUN chmod a+x /usr/bin/bbsimctl
 RUN bbsimctl completion bash >> $HOME/.bashrc
+COPY ./configs/bbsim.yaml ./configs/bbsim.yaml
 CMD [ '/app/bbsim' ]

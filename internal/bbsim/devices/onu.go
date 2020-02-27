@@ -119,7 +119,7 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 			// DEVICE Lifecycle
 			{Name: "initialize", Src: []string{"created", "disabled"}, Dst: "initialized"},
 			{Name: "discover", Src: []string{"initialized", "pon_disabled"}, Dst: "discovered"},
-			{Name: "enable", Src: []string{"discovered", "disabled"}, Dst: "enabled"},
+			{Name: "enable", Src: []string{"discovered"}, Dst: "enabled"},
 			{Name: "receive_eapol_flow", Src: []string{"enabled", "gem_port_added"}, Dst: "eapol_flow_received"},
 			{Name: "add_gem_port", Src: []string{"enabled", "eapol_flow_received"}, Dst: "gem_port_added"},
 			// NOTE should disabled state be different for oper_disabled (emulating an error) and admin_disabled (received a disabled call via VOLTHA)?
@@ -365,9 +365,6 @@ loop:
 				} else if msg.Type == packetHandlers.DHCP {
 					dhcp.HandleNextBbrPacket(o.ID, o.PonPortID, o.Sn(), o.STag, o.HwAddress, o.DoneChannel, msg.Packet, client)
 				}
-			case DyingGaspIndication:
-				msg, _ := message.Data.(DyingGaspIndicationMessage)
-				o.sendDyingGaspInd(msg, stream)
 			case OmciIndication:
 				msg, _ := message.Data.(OmciIndicationMessage)
 				o.handleOmci(msg, client)
@@ -466,31 +463,6 @@ func (o Onu) NewSN(oltid int, intfid uint32, onuid uint32) *openolt.SerialNumber
 	sn.VendorSpecific = []byte{0, byte(oltid % 256), byte(intfid), byte(onuid)}
 
 	return sn
-}
-
-// NOTE handle_/process methods can change the ONU internal state as they are receiving messages
-// send method should not change the ONU state
-
-func (o *Onu) sendDyingGaspInd(msg DyingGaspIndicationMessage, stream openolt.Openolt_EnableIndicationServer) error {
-	alarmData := &openolt.AlarmIndication_DyingGaspInd{
-		DyingGaspInd: &openolt.DyingGaspIndication{
-			IntfId: msg.PonPortID,
-			OnuId:  msg.OnuID,
-			Status: "on",
-		},
-	}
-	data := &openolt.Indication_AlarmInd{AlarmInd: &openolt.AlarmIndication{Data: alarmData}}
-
-	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
-		onuLogger.Errorf("Failed to send DyingGaspInd : %v", err)
-		return err
-	}
-	onuLogger.WithFields(log.Fields{
-		"IntfId": msg.PonPortID,
-		"OnuSn":  o.Sn(),
-		"OnuId":  msg.OnuID,
-	}).Info("sendDyingGaspInd")
-	return nil
 }
 
 func (o *Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
