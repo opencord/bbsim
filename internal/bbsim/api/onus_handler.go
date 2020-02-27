@@ -155,7 +155,7 @@ func (s BBSimServer) PoweronONU(ctx context.Context, req *bbsim.ONURequest) (*bb
 		return res, err
 	}
 
-	if onu.InternalState.Current() == "created" {
+	if onu.InternalState.Current() == "created" || onu.InternalState.Current() == "disabled" {
 		if err := onu.InternalState.Event("initialize"); err != nil {
 			logger.WithFields(log.Fields{
 				"OnuId":  onu.ID,
