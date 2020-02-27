@@ -25,30 +25,29 @@ import (
 type MessageType int
 
 const (
-	OltIndication       MessageType = 0
-	NniIndication       MessageType = 1
-	PonIndication       MessageType = 2
-	OnuDiscIndication   MessageType = 3
-	OnuIndication       MessageType = 4
-	OMCI                MessageType = 5
-	FlowUpdate          MessageType = 6
-	StartEAPOL          MessageType = 7
-	StartDHCP           MessageType = 8
-	OnuPacketOut        MessageType = 9
-	DyingGaspIndication MessageType = 10
+	OltIndication     MessageType = 0
+	NniIndication     MessageType = 1
+	PonIndication     MessageType = 2
+	OnuDiscIndication MessageType = 3
+	OnuIndication     MessageType = 4
+	OMCI              MessageType = 5
+	FlowUpdate        MessageType = 6
+	StartEAPOL        MessageType = 7
+	StartDHCP         MessageType = 8
+	OnuPacketOut      MessageType = 9
 
 	// BBR messages
-	OmciIndication MessageType = 11 // this are OMCI messages going from the OLT to VOLTHA
-	SendEapolFlow  MessageType = 12
-	SendDhcpFlow   MessageType = 13
-	OnuPacketIn    MessageType = 14
+	OmciIndication MessageType = 10 // this are OMCI messages going from the OLT to VOLTHA
+	SendEapolFlow  MessageType = 11
+	SendDhcpFlow   MessageType = 12
+	OnuPacketIn    MessageType = 13
 
 	//IGMP
-	IGMPMembershipReportV2 MessageType = 15 // Version 2 Membership Report (JOIN)
-	IGMPLeaveGroup         MessageType = 16 // Leave Group
+	IGMPMembershipReportV2 MessageType = 14 // Version 2 Membership Report (JOIN)
+	IGMPLeaveGroup         MessageType = 15 // Leave Group
 
-	AlarmIndication        MessageType = 17 // message data is an openolt.AlarmIndication
-	IGMPMembershipReportV3 MessageType = 18 // Version 3 Membership Report
+	AlarmIndication        MessageType = 16 // message data is an openolt.AlarmIndication
+	IGMPMembershipReportV3 MessageType = 17 // Version 3 Membership Report
 )
 
 func (m MessageType) String() string {
@@ -63,7 +62,6 @@ func (m MessageType) String() string {
 		"StartEAPOL",
 		"StartDHCP",
 		"OnuPacketOut",
-		"DyingGaspIndication",
 		"OmciIndication",
 		"SendEapolFlow",
 		"SendDhcpFlow",
@@ -134,12 +132,6 @@ type OnuPacketMessage struct {
 	OnuId  uint32
 	Packet gopacket.Packet
 	Type   packetHandlers.PacketType
-}
-
-type DyingGaspIndicationMessage struct {
-	PonPortID uint32
-	OnuID     uint32
-	Status    string
 }
 
 type OperState int

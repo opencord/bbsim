@@ -98,14 +98,14 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 		OperState: getOperStateFSM(func(e *fsm.Event) {
 			oltLogger.Debugf("Changing OLT OperState from %s to %s", e.Src, e.Dst)
 		}),
-		NumNni:       nni,
-		NumPon:       pon,
-		NumOnuPerPon: onuPerPon,
-		Pons:         []*PonPort{},
-		Nnis:         []*NniPort{},
-		Delay:        delay,
-		Flows:        make(map[FlowKey]openolt.Flow),
-		enablePerf:   enablePerf,
+		NumNni:        nni,
+		NumPon:        pon,
+		NumOnuPerPon:  onuPerPon,
+		Pons:          []*PonPort{},
+		Nnis:          []*NniPort{},
+		Delay:         delay,
+		Flows:         make(map[FlowKey]openolt.Flow),
+		enablePerf:    enablePerf,
 		PublishEvents: event,
 	}
 
