@@ -36,7 +36,9 @@ import (
 	tech_profile "github.com/opencord/voltha-protos/v2/go/tech_profile"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 )
 
 var oltLogger = log.WithFields(log.Fields{
@@ -56,6 +58,7 @@ type OltDevice struct {
 	channel              chan Message
 	nniPktInChannel      chan *bbsim.PacketMsg // packets coming in from the NNI and going to VOLTHA
 	nniHandle            *pcap.Handle          // handle on the NNI interface, close it when shutting down the NNI channel
+	Flows                map[FlowKey]openolt.Flow
 	Delay                int
 	ControlledActivation mode
 
@@ -99,6 +102,7 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 		Pons:         []*PonPort{},
 		Nnis:         []*NniPort{},
 		Delay:        delay,
+		Flows:        make(map[FlowKey]openolt.Flow),
 		enablePerf:   enablePerf,
 	}
 
@@ -859,8 +863,13 @@ func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Em
 		"FlowId":    flow.FlowId,
 		"UniID":     flow.UniId,
 		"PortNo":    flow.PortNo,
-	}).Tracef("OLT receives Flow")
-	// TODO optionally store flows somewhere
+	}).Tracef("OLT receives FlowAdd")
+
+	flowKey := FlowKey{}
+	if !o.enablePerf {
+		flowKey = FlowKey{ID: flow.FlowId, Direction: flow.FlowType}
+		olt.Flows[flowKey] = *flow
+	}
 
 	if flow.AccessIntfId == -1 {
 		oltLogger.WithFields(log.Fields{
@@ -883,6 +892,9 @@ func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Em
 				"err":    err,
 			}).Error("Can't find Onu")
 		}
+		if !o.enablePerf {
+			onu.Flows = append(onu.Flows, flowKey)
+		}
 
 		msg := Message{
 			Type: FlowUpdate,
@@ -898,9 +910,44 @@ func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Em
 	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) FlowRemove(context.Context, *openolt.Flow) (*openolt.Empty, error) {
-	oltLogger.Tracef("received FlowRemove")
-	// TODO store flows somewhere
+// FlowRemove request from VOLTHA
+func (o OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.Empty, error) {
+	oltLogger.WithFields(log.Fields{
+		"FlowId":   flow.FlowId,
+		"FlowType": flow.FlowType,
+	}).Tracef("OLT receives FlowRemove")
+
+	if !o.enablePerf { // remove only if flow were stored
+		flowKey := FlowKey{
+			ID:        flow.FlowId,
+			Direction: flow.FlowType,
+		}
+
+		// Check if flow exists
+		storedFlow, ok := o.Flows[flowKey]
+		if !ok {
+			oltLogger.Errorf("Flow %v not found", flow)
+			return new(openolt.Empty), status.Errorf(codes.NotFound, "Flow not found")
+		}
+
+		// if its ONU flow remove it from ONU also
+		if storedFlow.AccessIntfId != -1 {
+			pon := o.Pons[uint32(storedFlow.AccessIntfId)]
+			onu, err := pon.GetOnuById(uint32(storedFlow.OnuId))
+			if err != nil {
+				oltLogger.WithFields(log.Fields{
+					"OnuId":  storedFlow.OnuId,
+					"IntfId": storedFlow.AccessIntfId,
+					"err":    err,
+				}).Error("ONU not found")
+				return new(openolt.Empty), nil
+			}
+			onu.DeleteFlow(flowKey)
+		}
+
+		// delete from olt flows
+		delete(o.Flows, flowKey)
+	}
 	return new(openolt.Empty), nil
 }
 
