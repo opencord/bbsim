@@ -20,13 +20,16 @@ package commands
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
+
 	"github.com/jessevdk/go-flags"
+	"github.com/olekukonko/tablewriter"
 	pb "github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
 	"github.com/opencord/cordctl/pkg/format"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"os"
 )
 
 const (
@@ -46,6 +49,8 @@ type OltPoweron struct{}
 
 type OltReboot struct{}
 
+type OltFlows struct{}
+
 type oltOptions struct {
 	Get      OltGet          `command:"get"`
 	NNI      OltNNIs         `command:"nnis"`
@@ -54,6 +59,7 @@ type oltOptions struct {
 	Poweron  OltPoweron      `command:"poweron"`
 	Reboot   OltReboot       `command:"reboot"`
 	Alarms   OltAlarmOptions `command:"alarms"`
+	Flows    OltFlows        `command:"flows"`
 }
 
 func RegisterOltCommands(parser *flags.Parser) {
@@ -169,5 +175,71 @@ func (o *OltReboot) Execute(args []string) error {
 	}
 
 	fmt.Println(fmt.Sprintf("[Status: %d] %s", res.StatusCode, res.Message))
+	return nil
+}
+
+func (o *OltFlows) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+
+	req := pb.ONURequest{}
+	res, err := client.GetFlows(ctx, &req)
+	if err != nil {
+		log.Errorf("Cannot get flows for OLT: %v", err)
+		return err
+	}
+
+	if res.Flows == nil {
+		fmt.Println("OLT has no flows")
+		return nil
+	}
+
+	flowHeader := []string{
+		"access_intf_id",
+		"onu_id",
+		"uni_id",
+		"flow_id",
+		"flow_type",
+		"eth_type",
+		"alloc_id",
+		"network_intf_id",
+		"gemport_id",
+		"classifier",
+		"action",
+		"priority",
+		"cookie",
+		"port_no",
+	}
+
+	tableFlow := tablewriter.NewWriter(os.Stdout)
+	tableFlow.SetRowLine(true)
+	fmt.Fprintf(os.Stdout, "OLT Flows:\n")
+	tableFlow.SetHeader(flowHeader)
+
+	for _, flow := range res.Flows {
+		flowInfo := []string{}
+		flowInfo = append(flowInfo,
+			strconv.Itoa(int(flow.AccessIntfId)),
+			strconv.Itoa(int(flow.OnuId)),
+			strconv.Itoa(int(flow.UniId)),
+			strconv.Itoa(int(flow.FlowId)),
+			flow.FlowType,
+			fmt.Sprintf("%x", flow.Classifier.EthType),
+			strconv.Itoa(int(flow.AllocId)),
+			strconv.Itoa(int(flow.NetworkIntfId)),
+			strconv.Itoa(int(flow.GemportId)),
+			flow.Classifier.String(),
+			flow.Action.String(),
+			strconv.Itoa(int(flow.Priority)),
+			strconv.Itoa(int(flow.Cookie)),
+			strconv.Itoa(int(flow.PortNo)),
+		)
+		tableFlow.Append(flowInfo)
+	}
+	tableFlow.Render()
+	tableFlow.SetNewLine("")
 	return nil
 }

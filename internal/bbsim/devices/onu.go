@@ -43,6 +43,11 @@ var onuLogger = log.WithFields(log.Fields{
 	"module": "ONU",
 })
 
+type FlowKey struct {
+	ID        uint32
+	Direction string
+}
+
 type Onu struct {
 	ID                  uint32
 	PonPortID           uint32
@@ -62,6 +67,7 @@ type Onu struct {
 	// FIXME add support for multiple UNIs
 	PortNo           uint32
 	DhcpFlowReceived bool
+	Flows            []FlowKey
 
 	OperState    *fsm.FSM
 	SerialNumber *openolt.SerialNumber
@@ -100,6 +106,7 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 		DoneChannel:         make(chan bool, 1),
 		DhcpFlowReceived:    false,
 		DiscoveryRetryDelay: 60 * time.Second, // this is used to send OnuDiscoveryIndications until an activate call is received
+		Flows:               []FlowKey{},
 		DiscoveryDelay:      delay,
 	}
 	o.SerialNumber = o.NewSN(olt.ID, pon.ID, id)
@@ -896,4 +903,18 @@ func (o *Onu) sendDhcpFlow(client openolt.OpenoltClient) {
 		"PortNo":       downstreamFlow.PortNo,
 		"SerialNumber": common.OnuSnToString(o.SerialNumber),
 	}).Info("Sent DHCP Flow")
+}
+
+// DeleteFlow method search and delete flowKey from the onu flows slice
+func (onu *Onu) DeleteFlow(key FlowKey) {
+	for pos, flowKey := range onu.Flows {
+		if flowKey == key {
+			// delete the flowKey by shifting all flowKeys by one
+			onu.Flows = append(onu.Flows[:pos], onu.Flows[pos+1:]...)
+			t := make([]FlowKey, len(onu.Flows))
+			copy(t, onu.Flows)
+			onu.Flows = t
+			break
+		}
+	}
 }

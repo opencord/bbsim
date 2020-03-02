@@ -15,6 +15,7 @@
 syntax = "proto3";
 package bbsim;
 
+import "voltha_protos/openolt.proto";
 import "voltha_protos/tech_profile.proto";
 // Models
 
@@ -146,6 +147,11 @@ message IgmpRequest {
 	SubActionTypes SubActionVal = 2;
 }
 
+message Flows {
+    uint32 flow_count = 1;
+    repeated openolt.Flow flows = 2;
+}
+
 message Empty {}
 
 service BBSim {
@@ -163,6 +169,7 @@ service BBSim {
     rpc RestartDhcp (ONURequest) returns (Response) {}
     rpc SetOnuAlarmIndication (ONUAlarmRequest) returns (Response) {}
     rpc SetOltAlarmIndication (OLTAlarmRequest) returns (Response) {}
+    rpc GetFlows(ONURequest) returns(Flows) {} 
     rpc ChangeIgmpState (IgmpRequest) returns (Response) {}
     rpc GetOnuTrafficSchedulers (ONURequest) returns (ONUTrafficSchedulers) {}
 }
