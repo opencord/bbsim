@@ -31,6 +31,10 @@ http:
     delete: "/v1/olt/onus/{SerialNumber}"
   - selector: bbsim.BBSim.PoweronONU
     post: "/v1/olt/onus/{SerialNumber}"
+  - selector: bbsim.BBSim.GetFlows
+    get: "/v1/olt/onus/{SerialNumber}/flows"
+    additional_bindings:
+      - get: "/v1/olt/flows"
   - selector: bbsim.BBSim.SetOnuAlarmIndication
     post: "/v1/olt/onus/{SerialNumber}/alarms/{AlarmType}/{Status}"
   - selector: bbsim.BBSim.GetOnuTrafficSchedulers
