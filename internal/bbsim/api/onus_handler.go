@@ -295,6 +295,35 @@ func (s BBSimServer) RestartDhcp(ctx context.Context, req *bbsim.ONURequest) (*b
 	return res, nil
 }
 
+// GetFlows for OLT/ONUs
+func (s BBSimServer) GetFlows(ctx context.Context, req *bbsim.ONURequest) (*bbsim.Flows, error) {
+	logger.WithFields(log.Fields{
+		"OnuSn": req.SerialNumber,
+	}).Infof("Received GetFlows request")
+
+	olt := devices.GetOLT()
+	res := &bbsim.Flows{}
+
+	if req.SerialNumber == "" {
+		for flowKey := range olt.Flows {
+			flow := olt.Flows[flowKey]
+			res.Flows = append(res.Flows, &flow)
+		}
+		res.FlowCount = uint32(len(olt.Flows))
+	} else {
+		onu, err := olt.FindOnuBySn(req.SerialNumber)
+		if err != nil {
+			return nil, err
+		}
+		for _, flowKey := range onu.Flows {
+			flow := olt.Flows[flowKey]
+			res.Flows = append(res.Flows, &flow)
+		}
+		res.FlowCount = uint32(len(onu.Flows))
+	}
+	return res, nil
+}
+
 func (s BBSimServer) GetOnuTrafficSchedulers(ctx context.Context, req *bbsim.ONURequest) (*bbsim.ONUTrafficSchedulers, error) {
 	olt := devices.GetOLT()
 	ts := bbsim.ONUTrafficSchedulers{}
