@@ -16,6 +16,24 @@
       "revId": "a6836375a580b363253a70db54cc516bcfdfba84",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c7028dc_43813e0e",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-03-02T18:34:45Z",
+      "side": 1,
+      "message": "Ok, that makes sense. Updated to patch to follow the correct state transitions",
+      "parentUuid": "f5cc092c_3a54e712",
+      "revId": "a6836375a580b363253a70db54cc516bcfdfba84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
