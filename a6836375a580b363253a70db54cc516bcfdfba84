@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5cc092c_3a54e712",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1000601
+      },
+      "writtenOn": "2020-03-02T08:52:25Z",
+      "side": 1,
+      "message": "we can not move from disabled state to discovered, because in enter_disabled callback, ProcessOnuMessages is being terminated.\nAs per my understanding, voltha should send DeleteOnu after receiving DyingGasp indication, thats why once DeleteOnu is invoked we are moving ONU to initialized state, so that ONU can be powered ON again when required.",
+      "revId": "a6836375a580b363253a70db54cc516bcfdfba84",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
