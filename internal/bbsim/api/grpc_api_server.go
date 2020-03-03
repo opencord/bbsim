@@ -131,15 +131,29 @@ func (s BBSimServer) SetLogLevel(ctx context.Context, req *bbsim.LogLevel) (*bbs
 	}, nil
 }
 
-func (s BBSimServer) SetAlarmIndication(ctx context.Context, req *bbsim.AlarmRequest) (*bbsim.Response, error) {
+func (s BBSimServer) SetOnuAlarmIndication(ctx context.Context, req *bbsim.ONUAlarmRequest) (*bbsim.Response, error) {
 	o := devices.GetOLT()
-	err := alarmsim.SimulateAlarm(ctx, req, o)
+	err := alarmsim.SimulateOnuAlarm(ctx, req, o)
 	if err != nil {
 		return nil, err
 	}
 
 	res := &bbsim.Response{}
 	res.StatusCode = int32(codes.OK)
-	res.Message = fmt.Sprintf("Alarm Indication Sent.")
+	res.Message = fmt.Sprintf("Onu Alarm Indication Sent.")
+	return res, nil
+}
+
+// SetOltAlarmIndication generates OLT Alarms for LOS
+func (s BBSimServer) SetOltAlarmIndication(ctx context.Context, req *bbsim.OLTAlarmRequest) (*bbsim.Response, error) {
+	o := devices.GetOLT()
+	err := alarmsim.SimulateOltAlarm(ctx, req, o)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &bbsim.Response{}
+	res.StatusCode = int32(codes.OK)
+	res.Message = fmt.Sprintf("Olt Alarm Indication Sent.")
 	return res, nil
 }

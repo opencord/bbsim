@@ -47,12 +47,13 @@ type OltPoweron struct{}
 type OltReboot struct{}
 
 type oltOptions struct {
-	Get      OltGet      `command:"get"`
-	NNI      OltNNIs     `command:"nnis"`
-	PON      OltPONs     `command:"pons"`
-	Shutdown OltShutdown `command:"shutdown"`
-	Poweron  OltPoweron  `command:"poweron"`
-	Reboot   OltReboot   `command:"reboot"`
+	Get      OltGet          `command:"get"`
+	NNI      OltNNIs         `command:"nnis"`
+	PON      OltPONs         `command:"pons"`
+	Shutdown OltShutdown     `command:"shutdown"`
+	Poweron  OltPoweron      `command:"poweron"`
+	Reboot   OltReboot       `command:"reboot"`
+	Alarms   OltAlarmOptions `command:"alarms"`
 }
 
 func RegisterOltCommands(parser *flags.Parser) {

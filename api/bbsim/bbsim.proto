@@ -99,14 +99,21 @@ message AlarmParameter {
     string Value = 2;
 }
 
-// AlarmRequest includes fields common to every alarm,
+// ONUAlarmRequest includes fields common to every Onu alarm,
 // plus an optional list of AlarmParameter list that can be used
 // to set additional fields in alarms that support them.
-message AlarmRequest {
+message ONUAlarmRequest {
     string AlarmType = 1;                   // name of alarm to raise
     string SerialNumber = 2;                // serial number of ONU
     string Status = 3;                      // status of Alarm
     repeated AlarmParameter Parameters = 4; // optional list of additional parameters
+}
+
+// OLT alarm request
+message OLTAlarmRequest {
+    uint32 InterfaceID = 1;                 // Switch Interface Id
+    string InterfaceType = 2;                // PON or NNI Type
+    string Status = 3;                      // Interface Operstatus
 }
 
 // Utils
@@ -154,7 +161,8 @@ service BBSim {
     rpc PoweronONU (ONURequest) returns (Response) {}
     rpc RestartEapol (ONURequest) returns (Response) {}
     rpc RestartDhcp (ONURequest) returns (Response) {}
-    rpc SetAlarmIndication (AlarmRequest) returns (Response) {}
+    rpc SetOnuAlarmIndication (ONUAlarmRequest) returns (Response) {}
+    rpc SetOltAlarmIndication (OLTAlarmRequest) returns (Response) {}
     rpc ChangeIgmpState (IgmpRequest) returns (Response) {}
     rpc GetOnuTrafficSchedulers (ONURequest) returns (ONUTrafficSchedulers) {}
 }

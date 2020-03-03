@@ -20,14 +20,15 @@ package commands
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/jessevdk/go-flags"
 	pb "github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
 	"github.com/opencord/cordctl/pkg/format"
 	log "github.com/sirupsen/logrus"
-	"os"
-	"strings"
 )
 
 const (
@@ -64,8 +65,8 @@ type AlarmOptions struct {
 	List  AlarmList  `command:"list"`
 }
 
-// add optional parameters from the command-line to the AlarmRequest
-func addParameters(parameters []string, req *pb.AlarmRequest) error {
+// add optional parameters from the command-line to the ONUAlarmRequest
+func addParameters(parameters []string, req *pb.ONUAlarmRequest) error {
 	req.Parameters = make([]*pb.AlarmParameter, len(parameters))
 	for i, kv := range parameters {
 		parts := strings.Split(kv, "=")
@@ -89,7 +90,7 @@ func (o *AlarmRaise) Execute(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 
-	req := pb.AlarmRequest{AlarmType: string(o.Args.Name),
+	req := pb.ONUAlarmRequest{AlarmType: string(o.Args.Name),
 		SerialNumber: string(o.Args.SerialNumber),
 		Status:       "on"}
 
@@ -98,7 +99,7 @@ func (o *AlarmRaise) Execute(args []string) error {
 		return err
 	}
 
-	res, err := client.SetAlarmIndication(ctx, &req)
+	res, err := client.SetOnuAlarmIndication(ctx, &req)
 	if err != nil {
 		log.Fatalf("Cannot raise alarm: %v", err)
 		return err
@@ -116,7 +117,7 @@ func (o *AlarmClear) Execute(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 
-	req := pb.AlarmRequest{AlarmType: string(o.Args.Name),
+	req := pb.ONUAlarmRequest{AlarmType: string(o.Args.Name),
 		SerialNumber: string(o.Args.SerialNumber),
 		Status:       "off"}
 
@@ -125,7 +126,7 @@ func (o *AlarmClear) Execute(args []string) error {
 		return err
 	}
 
-	res, err := client.SetAlarmIndication(ctx, &req)
+	res, err := client.SetOnuAlarmIndication(ctx, &req)
 
 	if err != nil {
 		log.Fatalf("Cannot clear alarm: %v", err)

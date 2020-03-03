@@ -92,6 +92,7 @@ type ONUOptions struct {
 	RestartDchp       ONUDhcpRestart       `command:"dhcp_restart"`
 	Igmp              ONUIgmp              `command:"igmp"`
 	TrafficSchedulers ONUTrafficSchedulers `command:"traffic_schedulers"`
+	Alarms            AlarmOptions         `command:"alarms"`
 }
 
 type ONUTrafficSchedulers struct {
