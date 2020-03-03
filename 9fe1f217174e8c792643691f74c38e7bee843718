@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6e149f3_5a553959",
+        "filename": "cmd/bbsimctl/bbsimctl.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-03-03T18:36:14Z",
+      "side": 1,
+      "message": "how are commands registered?",
+      "range": {
+        "startLine": 42,
+        "startChar": 3,
+        "endLine": 42,
+        "endChar": 41
+      },
+      "revId": "9fe1f217174e8c792643691f74c38e7bee843718",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9ca2136_2f54b548",
+        "filename": "internal/bbsim/alarmsim/alarmsim.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-03-03T18:36:14Z",
+      "side": 1,
+      "message": "does this need to be OnuAlarmNameMap?",
+      "range": {
+        "startLine": 32,
+        "startChar": 4,
+        "endLine": 32,
+        "endChar": 16
+      },
+      "revId": "9fe1f217174e8c792643691f74c38e7bee843718",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1a50597_c86884df",
+        "filename": "internal/bbsim/alarmsim/alarmsim.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-03-03T18:36:14Z",
+      "side": 1,
+      "message": "BuildOnuAlarmIndication?",
+      "range": {
+        "startLine": 85,
+        "startChar": 5,
+        "endLine": 85,
+        "endChar": 25
+      },
+      "revId": "9fe1f217174e8c792643691f74c38e7bee843718",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbc99701_19c9160b",
+        "filename": "internal/bbsimctl/commands/alarms.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-03-03T18:36:14Z",
+      "side": 1,
+      "message": "do we need to move the ONU specific parts in an \"OnuAlarms\" file?",
+      "revId": "9fe1f217174e8c792643691f74c38e7bee843718",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
