@@ -18,11 +18,12 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path"
+
 	"github.com/jessevdk/go-flags"
 	"github.com/opencord/bbsim/internal/bbsimctl/commands"
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
-	"os"
-	"path"
 )
 
 func main() {
@@ -39,7 +40,6 @@ func main() {
 	commands.RegisterONUCommands(parser)
 	commands.RegisterCompletionCommands(parser)
 	commands.RegisterLoggingCommands(parser)
-	commands.RegisterAlarmCommands(parser)
 
 	_, err = parser.ParseArgs(os.Args[1:])
 	if err != nil {

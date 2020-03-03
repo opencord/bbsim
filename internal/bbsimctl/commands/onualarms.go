@@ -20,18 +20,15 @@ package commands
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/jessevdk/go-flags"
+	"github.com/olekukonko/tablewriter"
 	pb "github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
-	"github.com/opencord/cordctl/pkg/format"
 	log "github.com/sirupsen/logrus"
-	"os"
-	"strings"
-)
-
-const (
-	DEFAULT_ALARM_LIST_FORMAT = "table{{ .Name }}"
 )
 
 type AlarmNameString string
@@ -64,8 +61,8 @@ type AlarmOptions struct {
 	List  AlarmList  `command:"list"`
 }
 
-// add optional parameters from the command-line to the AlarmRequest
-func addParameters(parameters []string, req *pb.AlarmRequest) error {
+// add optional parameters from the command-line to the ONUAlarmRequest
+func addParameters(parameters []string, req *pb.ONUAlarmRequest) error {
 	req.Parameters = make([]*pb.AlarmParameter, len(parameters))
 	for i, kv := range parameters {
 		parts := strings.Split(kv, "=")
@@ -77,10 +74,6 @@ func addParameters(parameters []string, req *pb.AlarmRequest) error {
 	return nil
 }
 
-func RegisterAlarmCommands(parser *flags.Parser) {
-	parser.AddCommand("alarm", "Alarm Commands", "Commands to raise and clear alarms", &AlarmOptions{})
-}
-
 // Execute alarm raise
 func (o *AlarmRaise) Execute(args []string) error {
 	client, conn := connect()
@@ -89,7 +82,7 @@ func (o *AlarmRaise) Execute(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 
-	req := pb.AlarmRequest{AlarmType: string(o.Args.Name),
+	req := pb.ONUAlarmRequest{AlarmType: string(o.Args.Name),
 		SerialNumber: string(o.Args.SerialNumber),
 		Status:       "on"}
 
@@ -98,7 +91,7 @@ func (o *AlarmRaise) Execute(args []string) error {
 		return err
 	}
 
-	res, err := client.SetAlarmIndication(ctx, &req)
+	res, err := client.SetOnuAlarmIndication(ctx, &req)
 	if err != nil {
 		log.Fatalf("Cannot raise alarm: %v", err)
 		return err
@@ -116,7 +109,7 @@ func (o *AlarmClear) Execute(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 
-	req := pb.AlarmRequest{AlarmType: string(o.Args.Name),
+	req := pb.ONUAlarmRequest{AlarmType: string(o.Args.Name),
 		SerialNumber: string(o.Args.SerialNumber),
 		Status:       "off"}
 
@@ -125,7 +118,7 @@ func (o *AlarmClear) Execute(args []string) error {
 		return err
 	}
 
-	res, err := client.SetAlarmIndication(ctx, &req)
+	res, err := client.SetOnuAlarmIndication(ctx, &req)
 
 	if err != nil {
 		log.Fatalf("Cannot clear alarm: %v", err)
@@ -136,23 +129,30 @@ func (o *AlarmClear) Execute(args []string) error {
 	return nil
 }
 
-// Execute alarm list
+// Execute OLT alarm list
 func (o *AlarmList) Execute(args []string) error {
-	alarmNames := make([]AlarmListOutput, len(alarmsim.AlarmNameMap))
+	OnuAlarmsValue := [][]string{}
+	OnuAlarmstable := tablewriter.NewWriter(os.Stdout)
+	fmt.Fprintf(os.Stdout, "ONU Alarms List:\n")
+	OnuAlarmstable.SetHeader([]string{"ONU Alarms"})
+
+	alarmNames := make([]AlarmListOutput, len(alarmsim.OnuAlarmNameMap))
 	i := 0
-	for k := range alarmsim.AlarmNameMap {
+	for k := range alarmsim.OnuAlarmNameMap {
 		alarmNames[i] = AlarmListOutput{Name: k}
+		OnuAlarmsValue = append(OnuAlarmsValue, []string{k})
 		i++
 	}
-	// print out
-	tableFormat := format.Format(DEFAULT_ALARM_LIST_FORMAT)
-	tableFormat.Execute(os.Stdout, true, alarmNames)
+	for _, v := range OnuAlarmsValue {
+		OnuAlarmstable.Append(v)
+	}
+	OnuAlarmstable.Render()
 	return nil
 }
 
 func (onuSn *AlarmNameString) Complete(match string) []flags.Completion {
 	list := make([]flags.Completion, 0)
-	for k := range alarmsim.AlarmNameMap {
+	for k := range alarmsim.OnuAlarmNameMap {
 		if strings.HasPrefix(k, match) {
 			list = append(list, flags.Completion{Item: k})
 		}
