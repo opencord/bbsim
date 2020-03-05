@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc060868_2387c8dc",
+        "filename": "cmd/bbsim/bbsim.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-03-05T17:50:29Z",
+      "side": 1,
+      "message": "this fails if BBSim starts before Kafka is ready. We should retry if it fails",
+      "range": {
+        "startLine": 203,
+        "startChar": 1,
+        "endLine": 211,
+        "endChar": 2
+      },
+      "revId": "d9506066d5526a489f0ff899437273b42996a725",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f170502c_357c66e6",
+        "filename": "docs/source/index.rst",
+        "patchSetId": 4
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-03-05T17:50:29Z",
+      "side": 1,
+      "message": "enableEvents",
+      "range": {
+        "startLine": 120,
+        "startChar": 6,
+        "endLine": 120,
+        "endChar": 17
+      },
+      "revId": "d9506066d5526a489f0ff899437273b42996a725",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
