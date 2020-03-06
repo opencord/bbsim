@@ -19,6 +19,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
@@ -73,11 +74,17 @@ func (s BBSimServer) GetOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Olt, 
 		pons = append(pons, &p)
 	}
 
+	oltAddress := strings.Split(common.Options.BBSim.OpenOltAddress, ":")[0]
+	if oltAddress == "" {
+		oltAddress = getOltIP().String()
+	}
+
 	res := bbsim.Olt{
 		ID:            int32(olt.ID),
 		SerialNumber:  olt.SerialNumber,
 		OperState:     olt.OperState.Current(),
 		InternalState: olt.InternalState.Current(),
+		IP:            oltAddress,
 		NNIPorts:      nnis,
 		PONPorts:      pons,
 	}
