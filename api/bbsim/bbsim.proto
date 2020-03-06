@@ -34,6 +34,7 @@ message Olt {
     string SerialNumber = 2;
     string OperState = 3;
     string InternalState = 4;
+    string IP = 7;
     repeated NNIPort NNIPorts = 5;
     repeated PONPort PONPorts = 6;
 }

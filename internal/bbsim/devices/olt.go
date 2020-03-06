@@ -98,14 +98,14 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 		OperState: getOperStateFSM(func(e *fsm.Event) {
 			oltLogger.Debugf("Changing OLT OperState from %s to %s", e.Src, e.Dst)
 		}),
-		NumNni:       nni,
-		NumPon:       pon,
-		NumOnuPerPon: onuPerPon,
-		Pons:         []*PonPort{},
-		Nnis:         []*NniPort{},
-		Delay:        delay,
-		Flows:        make(map[FlowKey]openolt.Flow),
-		enablePerf:   enablePerf,
+		NumNni:        nni,
+		NumPon:        pon,
+		NumOnuPerPon:  onuPerPon,
+		Pons:          []*PonPort{},
+		Nnis:          []*NniPort{},
+		Delay:         delay,
+		Flows:         make(map[FlowKey]openolt.Flow),
+		enablePerf:    enablePerf,
 		PublishEvents: event,
 	}
 
@@ -1187,4 +1187,22 @@ func (o OltDevice) SendAlarmIndication(context context.Context, ind *openolt.Ala
 
 	o.channel <- msg
 	return nil
+}
+
+func getOltIP() net.IP {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		oltLogger.Error(err.Error())
+		return net.IP{}
+	}
+	defer func() {
+		err := conn.Close()
+		if err != nil {
+			oltLogger.Error(err.Error())
+		}
+	}()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+
+	return localAddr.IP
 }
