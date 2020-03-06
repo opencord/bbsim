@@ -628,6 +628,7 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 		"EthType":   fmt.Sprintf("%x", msg.Flow.Classifier.EthType),
 		"FlowId":    msg.Flow.FlowId,
 		"FlowType":  msg.Flow.FlowType,
+		"GemportId": msg.Flow.GemportId,
 		"InnerVlan": msg.Flow.Classifier.IVid,
 		"IntfId":    msg.Flow.AccessIntfId,
 		"IpProto":   msg.Flow.Classifier.IpProto,
@@ -637,6 +638,7 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 		"PortNo":    msg.Flow.PortNo,
 		"SrcPort":   msg.Flow.Classifier.SrcPort,
 		"UniID":     msg.Flow.UniId,
+		"ClassifierOPbits": msg.Flow.Classifier.OPbits,
 	}).Debug("ONU receives Flow")
 
 	if msg.Flow.UniId != 0 {
@@ -676,7 +678,8 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 		}
 	} else if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeIPv4) &&
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
-		msg.Flow.Classifier.DstPort == uint32(67) {
+		msg.Flow.Classifier.DstPort == uint32(67) &&
+		msg.Flow.Classifier.OPbits == 0 {
 
 		// keep track that we received the DHCP Flows so that we can transition the state to dhcp_started
 		o.DhcpFlowReceived = true
