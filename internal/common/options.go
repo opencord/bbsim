@@ -160,6 +160,10 @@ func GetBBSimOpts() *BBSimYamlConfig {
 	pon := flag.Int("pon", int(conf.Olt.PonPorts), "Number of PON ports per OLT device to be emulated")
 	onu := flag.Int("onu", int(conf.Olt.OnusPonPort), "Number of ONU devices per PON port to be emulated")
 
+	openolt_address := flag.String("openolt_address", conf.BBSim.OpenOltAddress, "IP address:port")
+	api_address := flag.String("api_address", conf.BBSim.ApiAddress, "IP address:port")
+	rest_api_address := flag.String("rest_api_address", conf.BBSim.RestApiAddress, "IP address:port")
+
 	s_tag := flag.Int("s_tag", conf.BBSim.STag, "S-Tag initial value")
 	c_tag_init := flag.Int("c_tag", conf.BBSim.CTagInit, "C-Tag starting value, each ONU will get a sequential one (targeting 1024 ONUs per BBSim instance the range is big enough)")
 
@@ -195,6 +199,9 @@ func GetBBSimOpts() *BBSimYamlConfig {
 	conf.BBSim.EnablePerf = *enablePerf
 	conf.BBSim.Events = *enableEvents
 	conf.BBSim.KafkaAddress = *kafkaAddress
+	conf.BBSim.OpenOltAddress = *openolt_address
+	conf.BBSim.ApiAddress = *api_address
+	conf.BBSim.RestApiAddress = *rest_api_address
 
 	// update device id if not set
 	if conf.Olt.DeviceId == "" {

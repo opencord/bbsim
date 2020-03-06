@@ -1188,3 +1188,21 @@ func (o OltDevice) SendAlarmIndication(context context.Context, ind *openolt.Ala
 	o.channel <- msg
 	return nil
 }
+
+func getOltIP() net.IP {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		oltLogger.Error(err.Error())
+		return net.IP{}
+	}
+	defer func() {
+		err := conn.Close()
+		if err != nil {
+			oltLogger.Error(err.Error())
+		}
+	}()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+
+	return localAddr.IP
+}
