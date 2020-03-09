@@ -17,6 +17,7 @@
 package devices
 
 import (
+	"math/rand"
 	"strconv"
 	"time"
 
@@ -84,4 +85,49 @@ func publishEvent(eventType string, intfID int32, onuID int32, onuSerial string)
 		}
 		olt.EventChannel <- event
 	}
+}
+
+func getPortStats(PacketCount *uint64, incrementStat bool) *openolt.PortStatistics {
+	pkts := *PacketCount
+	// increment current packet count by random number
+	if incrementStat {
+		pkts = *PacketCount + uint64(rand.Intn(50)+1*10)
+		*PacketCount = pkts
+	}
+
+	// fill all other stats based on packet count
+	portStats := &openolt.PortStatistics{
+		RxBytes:        pkts * 64,
+		RxPackets:      pkts,
+		RxUcastPackets: pkts * 40 / 100,
+		RxMcastPackets: pkts * 30 / 100,
+		RxBcastPackets: pkts * 30 / 100,
+		RxErrorPackets: 0,
+		TxBytes:        pkts * 64,
+		TxPackets:      pkts,
+		TxUcastPackets: pkts * 40 / 100,
+		TxMcastPackets: pkts * 30 / 100,
+		TxBcastPackets: pkts * 30 / 100,
+		TxErrorPackets: 0,
+		RxCrcErrors:    0,
+		BipErrors:      0,
+		Timestamp:      uint32(time.Now().Unix()),
+	}
+
+	return portStats
+}
+
+// InterfaceIDToPortNo converts InterfaceID to voltha PortID
+// Refer openolt adapter code(master) voltha-openolt-adapter/adaptercore/olt_platform.go: IntfIDToPortNo()
+func InterfaceIDToPortNo(intfID uint32, intfType string) uint32 {
+	// Converts interface-id to port-numbers that can be understood by the VOLTHA
+	if intfType == "nni" {
+		// nni at voltha starts with 1,048,576
+		// nni = 1,048,576 + InterfaceID
+		return 0x1<<20 + intfID
+	} else if intfType == "pon" {
+		// pon = 536,870,912 + InterfaceID
+		return (0x2 << 28) + intfID
+	}
+	return 0
 }

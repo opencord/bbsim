@@ -54,6 +54,7 @@ type NniPort struct {
 	ID           uint32
 	nniVeth      string
 	upstreamVeth string
+	PacketCount  uint64
 
 	// PON Attributes
 	OperState *fsm.FSM

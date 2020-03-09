@@ -163,18 +163,7 @@ func main() {
 	apiDoneChannel := make(chan bool)
 
 	olt := devices.CreateOLT(
-		options.Olt.ID,
-		int(options.Olt.NniPorts),
-		int(options.Olt.PonPorts),
-		int(options.Olt.OnusPonPort),
-		options.BBSim.STag,
-		options.BBSim.CTagInit,
-		options.BBSim.EnableAuth,
-		options.BBSim.EnableDhcp,
-		options.BBSim.Delay,
-		options.BBSim.ControlledActivation,
-		options.BBSim.EnablePerf,
-		options.BBSim.Events,
+		*options,
 		false,
 	)
 

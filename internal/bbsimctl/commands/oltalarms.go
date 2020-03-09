@@ -75,9 +75,17 @@ func (o *OltAlarmRaise) Execute(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 
-	req := pb.OLTAlarmRequest{InterfaceType: string(o.Args.Name),
+	req := pb.OLTAlarmRequest{
 		InterfaceID: uint32(o.Args.IntfID),
 		Status:      "on"}
+
+	if string(o.Args.Name) == "PonLossOfSignal" {
+		req.InterfaceType = "pon"
+	} else if string(o.Args.Name) == "NniLossOfSignal" {
+		req.InterfaceType = "nni"
+	} else {
+		return fmt.Errorf("Unknown alarm type")
+	}
 
 	res, err := client.SetOltAlarmIndication(ctx, &req)
 	if err != nil {
@@ -97,9 +105,17 @@ func (o *OltAlarmClear) Execute(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 
-	req := pb.OLTAlarmRequest{InterfaceType: string(o.Args.Name),
+	req := pb.OLTAlarmRequest{
 		InterfaceID: uint32(o.Args.IntfID),
 		Status:      "off"}
+
+	if string(o.Args.Name) == "PonLossOfSignal" {
+		req.InterfaceType = "pon"
+	} else if string(o.Args.Name) == "NniLossOfSignal" {
+		req.InterfaceType = "nni"
+	} else {
+		return fmt.Errorf("Unknown alarm type")
+	}
 
 	res, err := client.SetOltAlarmIndication(ctx, &req)
 
