@@ -63,6 +63,7 @@ type OltDevice struct {
 	ControlledActivation mode
 	EventChannel         chan common.Event
 	PublishEvents        bool
+	PortStatsInterval    int
 
 	Pons []*PonPort
 	Nnis []*NniPort
@@ -84,32 +85,33 @@ func GetOLT() *OltDevice {
 	return &olt
 }
 
-func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit int, auth bool, dhcp bool, delay int, ca string, enablePerf bool, event bool, isMock bool) *OltDevice {
+func CreateOLT(options common.BBSimYamlConfig, isMock bool) *OltDevice {
 	oltLogger.WithFields(log.Fields{
-		"ID":           oltId,
-		"NumNni":       nni,
-		"NumPon":       pon,
-		"NumOnuPerPon": onuPerPon,
+		"ID":           options.Olt.ID,
+		"NumNni":       options.Olt.NniPorts,
+		"NumPon":       options.Olt.PonPorts,
+		"NumOnuPerPon": options.Olt.OnusPonPort,
 	}).Debug("CreateOLT")
 
 	olt = OltDevice{
-		ID:           oltId,
-		SerialNumber: fmt.Sprintf("BBSIM_OLT_%d", oltId),
+		ID:           options.Olt.ID,
+		SerialNumber: fmt.Sprintf("BBSIM_OLT_%d", options.Olt.ID),
 		OperState: getOperStateFSM(func(e *fsm.Event) {
 			oltLogger.Debugf("Changing OLT OperState from %s to %s", e.Src, e.Dst)
 		}),
-		NumNni:        nni,
-		NumPon:        pon,
-		NumOnuPerPon:  onuPerPon,
-		Pons:          []*PonPort{},
-		Nnis:          []*NniPort{},
-		Delay:         delay,
-		Flows:         make(map[FlowKey]openolt.Flow),
-		enablePerf:    enablePerf,
-		PublishEvents: event,
+		NumNni:            int(options.Olt.NniPorts),
+		NumPon:            int(options.Olt.PonPorts),
+		NumOnuPerPon:      int(options.Olt.OnusPonPort),
+		Pons:              []*PonPort{},
+		Nnis:              []*NniPort{},
+		Delay:             options.BBSim.Delay,
+		Flows:             make(map[FlowKey]openolt.Flow),
+		enablePerf:        options.BBSim.EnablePerf,
+		PublishEvents:     options.BBSim.Events,
+		PortStatsInterval: options.Olt.PortStatsInterval,
 	}
 
-	if val, ok := ControlledActivationModes[ca]; ok {
+	if val, ok := ControlledActivationModes[options.BBSim.ControlledActivation]; ok {
 		olt.ControlledActivation = val
 	} else {
 		oltLogger.Warn("Unknown ControlledActivation Mode given, running in Default mode")
@@ -146,14 +148,14 @@ func CreateOLT(oltId int, nni int, pon int, onuPerPon int, sTag int, cTagInit in
 	}
 
 	// create PON ports
-	availableCTag := cTagInit
-	for i := 0; i < pon; i++ {
+	availableCTag := options.BBSim.CTagInit
+	for i := 0; i < olt.NumPon; i++ {
 		p := CreatePonPort(&olt, uint32(i))
 
 		// create ONU devices
-		for j := 0; j < onuPerPon; j++ {
+		for j := 0; j < olt.NumOnuPerPon; j++ {
 			delay := time.Duration(olt.Delay*j) * time.Millisecond
-			o := CreateONU(&olt, *p, uint32(j+1), sTag, availableCTag, auth, dhcp, delay, isMock)
+			o := CreateONU(&olt, *p, uint32(j+1), options.BBSim.STag, availableCTag, options.BBSim.EnableAuth, options.BBSim.EnableDhcp, delay, isMock)
 			p.Onus = append(p.Onus, o)
 			availableCTag = availableCTag + 1
 		}
@@ -391,6 +393,12 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error 
 	}
 
 	oltLogger.Debug("Enable OLT Done")
+
+	if !o.enablePerf {
+		// Start a go routine to send periodic port stats to openolt adapter
+		go o.periodicPortStats(o.enableContext)
+	}
+
 	wg.Wait()
 	return nil
 }
@@ -430,6 +438,39 @@ loop:
 	}
 
 	wg.Done()
+}
+
+func (o *OltDevice) periodicPortStats(ctx context.Context) {
+	var portStats *openolt.PortStatistics
+	for {
+		select {
+		case <-time.After(time.Duration(o.PortStatsInterval) * time.Second):
+			// send NNI port stats
+			for _, port := range o.Nnis {
+				incrementStat := true
+				if port.OperState.Current() == "down" {
+					incrementStat = false
+				}
+				portStats, port.PacketCount = getPortStats(port.PacketCount, incrementStat)
+				o.sendPortStatsIndication(portStats, port.ID, port.Type)
+			}
+
+			// send PON port stats
+			for _, port := range o.Pons {
+				incrementStat := true
+				// do not increment port stats if PON port is down or no ONU is activated on PON port
+				if port.OperState.Current() == "down" || port.GetNumOfActiveOnus() < 1 {
+					incrementStat = false
+				}
+				portStats, port.PacketCount = getPortStats(port.PacketCount, incrementStat)
+				o.sendPortStatsIndication(portStats, port.ID, port.Type)
+			}
+		case <-ctx.Done():
+			log.Debug("Stop sending port stats")
+			return
+		}
+
+	}
 }
 
 // Helpers method
@@ -551,6 +592,22 @@ func (o *OltDevice) sendPonIndication(ponPortID uint32) {
 		"IntfId":    pon.ID,
 		"OperState": pon.OperState.Current(),
 	}).Debug("Sent Indication_IntfOperInd for PON")
+}
+
+func (o *OltDevice) sendPortStatsIndication(stats *openolt.PortStatistics, portID uint32, portType string) {
+	oltLogger.WithFields(log.Fields{
+		"Type":   portType,
+		"IntfId": portID,
+	}).Trace("Sending port stats")
+	stats.IntfId = InterfaceIDToPortNo(portID, portType)
+	data := &openolt.Indication_PortStats{
+		PortStats: stats,
+	}
+	stream := *o.OpenoltStream
+	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
+		oltLogger.Errorf("Failed to send PortStats: %v", err)
+		return
+	}
 }
 
 // processOltMessages handles messages received over the OpenOLT interface

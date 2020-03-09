@@ -263,22 +263,6 @@ func SimulateOnuAlarm(ctx context.Context, req *bbsim.ONUAlarmRequest, o *device
 	return nil
 }
 
-// InterfaceIDToPortNo converts InterfaceID to voltha PortID
-// Refer openolt adapter code(master) voltha-openolt-adapter/adaptercore/olt_platform.go: IntfIDToPortNo()
-func InterfaceIDToPortNo(req *bbsim.OLTAlarmRequest) uint32 {
-	// Converts interface-id to port-numbers that can be understood by the VOLTHA
-	if req.InterfaceType == "nni" || req.InterfaceType == "PonLossOfSignal" {
-		// nni at voltha starts with 1,048,576
-		// nni = 1,048,576 + InterfaceID
-		return 0x1<<20 + req.InterfaceID
-	} else if req.InterfaceType == "pon" || req.InterfaceType == "NniLossOfSignal" {
-		// pon = 536,870,912 + InterfaceID
-		return (0x2 << 28) + req.InterfaceID
-		// In bbsim, pon starts from 1
-	}
-	return 0
-}
-
 // IsPonPortPresentInOlt verifies if given Pon port is present in olt
 func IsPonPortPresentInOlt(PonPort uint32) bool {
 	o := devices.GetOLT()
@@ -321,7 +305,7 @@ func SimulateOltAlarm(ctx context.Context, req *bbsim.OLTAlarmRequest, o *device
 	alarmIndication = &openolt.AlarmIndication{
 		Data: &openolt.AlarmIndication_LosInd{&openolt.LosIndication{
 			Status: req.Status,
-			IntfId: InterfaceIDToPortNo(req),
+			IntfId: devices.InterfaceIDToPortNo(req.InterfaceID, req.InterfaceType),
 		}},
 	}
 

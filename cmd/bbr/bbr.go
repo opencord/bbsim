@@ -70,18 +70,7 @@ func main() {
 
 	// create the OLT device
 	olt := devices.CreateOLT(
-		options.Olt.ID,
-		int(options.Olt.NniPorts),
-		int(options.Olt.PonPorts),
-		int(options.Olt.OnusPonPort),
-		options.BBSim.STag,
-		options.BBSim.CTagInit,
-		true, // this parameter is not important in the BBR Case
-		true, // this parameter is not important in the BBR Case
-		0,    // this parameter does not matter in the BBR case
-		options.BBSim.ControlledActivation,
-		false, // this parameter is not important in the BBR Case
-		false,
+		*options.BBSimYamlConfig,
 		true,
 	)
 

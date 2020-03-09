@@ -52,6 +52,7 @@ type OltConfig struct {
 	Technology         string `yaml:"technology"`
 	ID                 int    `yaml:"id"`
 	OltRebootDelay     int    `yaml:"reboot_delay"`
+	PortStatsInterval  int    `yaml: "port_stats_interval"`
 }
 
 type BBSimConfig struct {
@@ -124,6 +125,7 @@ func getDefaultOps() *BBSimYamlConfig {
 			Technology:         "XGS-PON",
 			ID:                 0,
 			OltRebootDelay:     10,
+			PortStatsInterval:  20,
 		},
 		BBRConfig{
 			LogLevel:  "debug",

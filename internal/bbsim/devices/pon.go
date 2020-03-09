@@ -28,17 +28,16 @@ import (
 
 type PonPort struct {
 	// BBSIM Internals
-	ID     uint32
-	NumOnu int
-	Onus   []*Onu
-	Olt    *OltDevice
+	ID            uint32
+	NumOnu        int
+	Onus          []*Onu
+	Olt           *OltDevice
+	PacketCount   uint64
+	InternalState *fsm.FSM
 
 	// PON Attributes
 	OperState *fsm.FSM
 	Type      string
-
-	// NOTE do we need a state machine for the PON Ports?
-	InternalState *fsm.FSM
 }
 
 // CreatePonPort creates pon port object
@@ -147,4 +146,16 @@ func (p PonPort) GetOnuById(id uint32) (*Onu, error) {
 		}
 	}
 	return nil, errors.New(fmt.Sprintf("Cannot find Onu with id %d in PonPort %d", id, p.ID))
+}
+
+// GetNumOfActiveOnus returns number of active ONUs for PON port
+func (p PonPort) GetNumOfActiveOnus() uint32 {
+	var count uint32 = 0
+	for _, onu := range p.Onus {
+		if onu.InternalState.Current() == "initialized" || onu.InternalState.Current() == "created" || onu.InternalState.Current() == "disabled" {
+			continue
+		}
+		count++
+	}
+	return count
 }
