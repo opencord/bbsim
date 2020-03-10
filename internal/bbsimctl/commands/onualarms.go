@@ -26,7 +26,6 @@ import (
 	"github.com/jessevdk/go-flags"
 	"github.com/olekukonko/tablewriter"
 	pb "github.com/opencord/bbsim/api/bbsim"
-	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
 	log "github.com/sirupsen/logrus"
 )
@@ -136,9 +135,9 @@ func (o *AlarmList) Execute(args []string) error {
 	fmt.Fprintf(os.Stdout, "ONU Alarms List:\n")
 	OnuAlarmstable.SetHeader([]string{"ONU Alarms"})
 
-	alarmNames := make([]AlarmListOutput, len(alarmsim.OnuAlarmNameMap))
+	alarmNames := make([]AlarmListOutput, len(pb.AlarmType_Types_value))
 	i := 0
-	for k := range alarmsim.OnuAlarmNameMap {
+	for k := range pb.AlarmType_Types_value {
 		alarmNames[i] = AlarmListOutput{Name: k}
 		OnuAlarmsValue = append(OnuAlarmsValue, []string{k})
 		i++
@@ -152,7 +151,7 @@ func (o *AlarmList) Execute(args []string) error {
 
 func (onuSn *AlarmNameString) Complete(match string) []flags.Completion {
 	list := make([]flags.Completion, 0)
-	for k := range alarmsim.OnuAlarmNameMap {
+	for k := range pb.AlarmType_Types_value {
 		if strings.HasPrefix(k, match) {
 			list = append(list, flags.Completion{Item: k})
 		}
