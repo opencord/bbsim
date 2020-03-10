@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c0daaf46_c67264a9",
+        "filename": "internal/bbsim/devices/helpers.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-03-10T22:06:06Z",
+      "side": 1,
+      "message": "this assignment is a little hard to follow, passing a pointer to the entire port or returning the value and explicitly assigning it would be a little clearer",
+      "range": {
+        "startLine": 95,
+        "startChar": 2,
+        "endLine": 95,
+        "endChar": 21
+      },
+      "revId": "6932f1cb8655a9805b5d87b5d32f9cfa7c791a5c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce7a1077_3de37694",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-03-10T22:06:06Z",
+      "side": 1,
+      "message": "we should add a log (level trace) in case someone needs to debug",
+      "range": {
+        "startLine": 596,
+        "startChar": 20,
+        "endLine": 596,
+        "endChar": 43
+      },
+      "revId": "6932f1cb8655a9805b5d87b5d32f9cfa7c791a5c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
