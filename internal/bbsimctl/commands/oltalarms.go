@@ -26,7 +26,6 @@ import (
 	"github.com/jessevdk/go-flags"
 	"github.com/olekukonko/tablewriter"
 	pb "github.com/opencord/bbsim/api/bbsim"
-	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
 	log "github.com/sirupsen/logrus"
 )
@@ -119,9 +118,9 @@ func (o *OltAlarmList) Execute(args []string) error {
 	fmt.Fprintf(os.Stdout, "OLT Alarms List:\n")
 	OltAlarmstable.SetHeader([]string{"OLT Alarms"})
 
-	alarmNames := make([]AlarmListOutput, len(alarmsim.OltAlarmNameMap))
+	alarmNames := make([]AlarmListOutput, len(OltAlarmNameMap))
 	i := 0
-	for k := range alarmsim.OltAlarmNameMap {
+	for k := range OltAlarmNameMap {
 		alarmNames[i] = AlarmListOutput{Name: k}
 		OltAlarmsValue = append(OltAlarmsValue, []string{k})
 		i++
@@ -135,11 +134,16 @@ func (o *OltAlarmList) Execute(args []string) error {
 
 func (o *OltAlarmNameString) Complete(match string) []flags.Completion {
 	list := make([]flags.Completion, 0)
-	for k := range alarmsim.OltAlarmNameMap {
+	for k := range OltAlarmNameMap {
 		if strings.HasPrefix(k, match) {
 			list = append(list, flags.Completion{Item: k})
 		}
 	}
 
 	return list
+}
+
+// OltAlarmNameMap string to enum map
+var OltAlarmNameMap = map[string]pb.AlarmType_Types{
+	pb.AlarmType_Types_name[int32(pb.AlarmType_LOS)]: pb.AlarmType_LOS,
 }
