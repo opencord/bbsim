@@ -16,20 +16,11 @@ github.com/eapache/go-resiliency/breaker
 github.com/eapache/go-xerial-snappy
 # github.com/eapache/queue v1.1.0
 github.com/eapache/queue
-# github.com/ghodss/yaml v1.0.0
-github.com/ghodss/yaml
-# github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-github.com/golang/glog
 # github.com/golang/protobuf v1.3.2
 github.com/golang/protobuf/descriptor
 github.com/golang/protobuf/jsonpb
 github.com/golang/protobuf/proto
-github.com/golang/protobuf/protoc-gen-go
 github.com/golang/protobuf/protoc-gen-go/descriptor
-github.com/golang/protobuf/protoc-gen-go/generator
-github.com/golang/protobuf/protoc-gen-go/generator/internal/remap
-github.com/golang/protobuf/protoc-gen-go/grpc
-github.com/golang/protobuf/protoc-gen-go/plugin
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
@@ -52,15 +43,7 @@ github.com/google/gopacket/pcap
 # github.com/gorilla/mux v1.7.3
 github.com/gorilla/mux
 # github.com/grpc-ecosystem/grpc-gateway v1.12.2
-github.com/grpc-ecosystem/grpc-gateway/codegenerator
 github.com/grpc-ecosystem/grpc-gateway/internal
-github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor
-github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/generator
-github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/gengateway
-github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/httprule
-github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
-github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/genswagger
 github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options
 github.com/grpc-ecosystem/grpc-gateway/runtime
 github.com/grpc-ecosystem/grpc-gateway/utilities

@@ -24,67 +24,90 @@ DOCKER_RUN_ARGS			?= ""
 DOCKER_PORTS			?= -p 50070:50070 -p 50060:50060 -p 50071:50071 -p 50072:50072 -p 50073:50073 -p 50074:50074
 TYPE                            ?= minimal
 
-## protobuf related
-VOLTHA_PROTOS			?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/opencord/voltha-protos/v2)
-GOOGLEAPI				?= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
-TOOLS_DIR := tools
-TOOLS_BIN := $(TOOLS_DIR)/bin/
+# tool containers
+VOLTHA_TOOLS_VERSION ?= 2.1.0
 
-export PATH=$(shell echo $$PATH):$(PWD)/$(TOOLS_BIN)
+GO                = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golang go
+GO_SH             = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golang sh -c '
+BBSIM_BUILDER     = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg bbsim-builder go
+GO_JUNIT_REPORT   = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app -i voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-go-junit-report go-junit-report
+GOCOVER_COBERTURA = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app -i voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-gocover-cobertura gocover-cobertura
+BBSIM_LINTER      = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg bbsim-linter:${VOLTHA_TOOLS_VERSION}-golangci-lint golangci-lint
+HADOLINT          = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-hadolint hadolint
+PROTOC            = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-protoc protoc
+
+builder:
+	@docker build -t bbsim-builder:latest -f build/ci/builder.Dockerfile build/ci/
+
+linter:
+	# since this repo depends on C libs (libpcap), they are first added into a local container
+	@[[ "$(docker images -q bbsim-linter:${VOLTHA_TOOLS_VERSION}-golangci-lint 2> /dev/null)" != "" ]] || \
+	  docker build --build-arg=VOLTHA_TOOLS_VERSION=${VOLTHA_TOOLS_VERSION} -t bbsim-linter:${VOLTHA_TOOLS_VERSION}-golangci-lint -f build/ci/linter.Dockerfile build/ci/
+
 
 # Public targets
 all: help
 
-# go installed tools.go
-GO_TOOLS := github.com/golang/protobuf/protoc-gen-go \
-            github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway \
-            github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
-
-# tools
-GO_TOOLS_BIN := $(addprefix $(TOOLS_BIN), $(notdir $(GO_TOOLS)))
-GO_TOOLS_VENDOR := $(addprefix vendor/, $(GO_TOOLS))
-
-TEST_PACKAGES := github.com/opencord/bbsim/cmd/... \
-                 github.com/opencord/bbsim/internal/...
-
-setup_tools: $(GO_TOOLS_BIN)
-	GO111MODULE=on go mod download all
-
-$(GO_TOOLS_BIN): $(GO_TOOLS_VENDOR)
-	GO111MODULE=on GOBIN="$(PWD)/$(TOOLS_BIN)" go install $(GO_TOOLS)
-
-protos: setup_tools api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go # @HELP Build proto files
-
-dep: protos # @HELP Download the dependencies to the vendor folder
-	GO111MODULE=on go mod vendor
-	GO111MODULE=on go mod tidy
-	GO111MODULE=on go mod verify
-
-_build: dep protos fmt build-bbsim build-bbsimctl build-bbr
+protos: api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go # @HELP Build proto files
 
 .PHONY: build
-build: # @HELP Build the binaries (it runs inside a docker container and output the built code on your local file system)
-	docker build -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim-builder:${DOCKER_TAG} -f build/ci/Dockerfile.builder .
-	docker run --rm -v $(shell pwd):/bbsim ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim-builder:${DOCKER_TAG} /bin/sh -c "cd /bbsim; make _build"
+build: protos build-bbsim build-bbsimctl build-bbr
+
+## lint and unit tests
+
+lint-dockerfile:
+	@echo "Running Dockerfile lint check..."
+	@${HADOLINT} $$(find ./build -name "Dockerfile*")
+	@echo "Dockerfile lint check OK"
+
+lint-mod:
+	@echo "Running dependency check..."
+	@${GO} mod verify
+	@echo "Dependency check OK. Running vendor check..."
+	@git status > /dev/null
+	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Staged or modified files must be committed before running this test" && git status -- go.mod go.sum vendor && exit 1)
+	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files must be cleaned up before running this test" && git status -- go.mod go.sum vendor && exit 1)
+	${GO} mod tidy
+	${GO} mod vendor
+	@git status > /dev/null
+	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Modified files detected after running go mod tidy / go mod vendor" && git status -- go.mod go.sum vendor && git checkout -- go.mod go.sum vendor && exit 1)
+	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files detected after running go mod tidy / go mod vendor" && git status -- go.mod go.sum vendor && git checkout -- go.mod go.sum vendor && exit 1)
+	@echo "Vendor check OK."
+
+lint: lint-mod lint-dockerfile
+
+sca: linter
+	@rm -rf ./sca-report
+	@mkdir -p ./sca-report
+	@echo "Running static code analysis..."
+	@${BBSIM_LINTER} run --deadline=4m --out-format junit-xml ./... | tee ./sca-report/sca-report.xml
+	@echo ""
+	@echo "Static code analysis OK"
 
 test: test-unit test-bbr
 
-test-unit: clean dep fmt local-omci-sim # @HELP Execute unit tests
-	GO111MODULE=on go test -v -mod vendor $(TEST_PACKAGES) -timeout 10s -covermode count -coverprofile ./tests/results/go-test-coverage.out 2>&1 | tee ./tests/results/go-test-results.out
-	go-junit-report < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml
-	gocover-cobertura < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml
+test-unit: clean local-omci-sim builder # @HELP Execute unit tests
+	@mkdir -p ./tests/results
+	@${BBSIM_BUILDER} test -mod=vendor -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee ./tests/results/go-test-results.out ;\
+	RETURN=$$? ;\
+	${GO_JUNIT_REPORT} < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml ;\
+	${GOCOVER_COBERTURA} < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml ;\
+	exit $$RETURN
 
-test-bbr: build-bbr docker-build # @HELP Validate that BBSim and BBR are working together
+test-bbr: release-bbr docker-build # @HELP Validate that BBSim and BBR are working together
 	DOCKER_RUN_ARGS="-auth -dhcp -pon 2 -onu 2" make docker-run
 	sleep 5
-	./bbr -pon 2 -onu 2
+	./$(RELEASE_DIR)/$(RELEASE_BBR_NAME)-linux-amd64 -pon 2 -onu 2
 	docker rm -f bbsim
 
-fmt:
-	go fmt ./...
+mod-update: # @HELP Download the dependencies to the vendor folder
+	${GO} mod tidy
+	${GO} mod vendor
 
 docker-build: local-omci-sim# @HELP Build the BBSim docker container (contains BBSimCtl too)
-	docker build -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} -f build/package/Dockerfile .
+	docker build \
+	  -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} \
+	  -f build/package/Dockerfile .
 
 docker-push: # @HELP Push the docker container to a registry
 	docker push ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG}
@@ -113,31 +136,42 @@ docs-lint:
 RELEASE_DIR     ?= release
 RELEASE_OS_ARCH ?= linux-amd64 linux-arm64 windows-amd64 darwin-amd64
 
-RELEASE_BBR_NAME    ?= bbr
-RELEASE_BBR_BINS    := $(foreach rel,$(RELEASE_OS_ARCH),$(RELEASE_DIR)/$(RELEASE_BBR_NAME)-$(rel))
-RELEASE_BBSIM_NAME    ?= bbsimctl
-RELEASE_BBSIM_BINS    := $(foreach rel,$(RELEASE_OS_ARCH),$(RELEASE_DIR)/$(RELEASE_BBSIM_NAME)-$(rel))
+RELEASE_BBR_NAME      ?= bbr
+RELEASE_BBSIM_NAME    ?= bbsim
+RELEASE_BBSIMCTL_NAME ?= bbsimctl
 
-$(RELEASE_BBR_BINS):
-	export GOOS=$(rel_os) ;\
-	export GOARCH=$(rel_arch) ;\
-	GO111MODULE=on go build -i -v -mod vendor \
-        	-ldflags "-w -X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
-        		-X main.gitStatus=${GIT_STATUS} \
-        		-X main.version=${VERSION}" \
-        	-o "$@" ./cmd/bbr
+release-bbr: builder
+	@echo "$(RELEASE_BBR_NAME)-linux-amd64"
+	@${BBSIM_BUILDER} build -mod vendor \
+	  -ldflags "-w -X main.buildTime=$(shell date +%Y/%m/%d-%H:%M:%S) \
+	    -X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
+	    -X main.gitStatus=${GIT_STATUS} \
+	    -X main.version=${VERSION}" \
+	  -o "$(RELEASE_DIR)/$(RELEASE_BBR_NAME)-linux-amd64" ./cmd/bbr
 
-$(RELEASE_BBSIM_BINS):
-	export GOOS=$(rel_os) ;\
-	export GOARCH=$(rel_arch) ;\
-	GO111MODULE=on go build -i -v -mod vendor \
-        	-ldflags "-w -X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
-        		-X main.gitStatus=${GIT_STATUS} \
-        		-X main.version=${VERSION}" \
-        	-o "$@" ./cmd/bbsim
+release-bbsim: builder
+	@echo "$(RELEASE_BBSIM_NAME)-linux-amd64"
+	@${BBSIM_BUILDER} build -mod vendor \
+	  -ldflags "-w -X main.buildTime=$(shell date +%Y/%m/%d-%H:%M:%S) \
+	    -X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
+	    -X main.gitStatus=${GIT_STATUS} \
+	    -X main.version=${VERSION}" \
+	  -o "$(RELEASE_DIR)/$(RELEASE_BBSIM_NAME)-linux-amd64" ./cmd/bbsim
 
-.PHONY: release $(RELEASE_BBR_BINS) $(RELEASE_BBSIM_BINS)
-release: dep protos $(RELEASE_BBR_BINS) $(RELEASE_BBSIM_BINS) # @HELP Creates release ready bynaries for BBSimctl and BBR artifacts
+release-bbsimctl:
+	@${GO_SH} set -eo pipefail; \
+	  for os_arch in ${RELEASE_OS_ARCH}; do \
+	    echo "$(RELEASE_BBSIMCTL_NAME)-$$os_arch"; \
+	    GOOS="$${os_arch%-*}" GOARCH="$${os_arch#*-}" go build -mod vendor \
+	      -ldflags "-w -X github.com/opencord/bbsim/internal/bbsimctl/config.BuildTime=$(shell date +%Y/%m/%d-%H:%M:%S) \
+	      -X github.com/opencord/bbsim/internal/bbsimctl/config.CommitHash=$(shell git log --pretty=format:%H -n 1) \
+	      -X github.com/opencord/bbsim/internal/bbsimctl/config.GitStatus=${GIT_STATUS} \
+	      -X github.com/opencord/bbsim/internal/bbsimctl/config.Version=${VERSION}" \
+	    -o "$(RELEASE_DIR)/$(RELEASE_BBSIMCTL_NAME)-$$os_arch" ./cmd/bbsimctl; \
+	  done'
+
+.PHONY: release release-bbr release-bbsim release-bbsimctl
+release: release-bbr release-bbsim release-bbsimctl # @HELP Creates release ready bynaries for BBSimctl and BBR artifacts
 swagger: docs/swagger/bbsim/bbsim.swagger.json docs/swagger/leagacy/bbsim.swagger.json # @HELP Generate swagger documentation for BBSim API
 
 help: # @HELP Print the command options
@@ -164,68 +198,83 @@ endif
 # Internals
 
 clean:
-	rm -f bbsim
-	rm -f bbsimctl
-	rm -f bbr
-	rm -rf tools/bin
+	@rm -f bbsim
+	@rm -f bbsimctl
+	@rm -f bbr
+	@rm -rf tools/bin
+	@rm -rf release/*
 
 build-bbr: local-omci-sim
-	GO111MODULE=on go build -i -v -mod vendor \
-    	-ldflags "-w -X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
-    		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
-    		-X main.gitStatus=${GIT_STATUS} \
-    		-X main.version=${VERSION}" \
-    	./cmd/bbr
+	@go build -mod vendor \
+	  -ldflags "-w -X main.buildTime=$(shell date +%Y/%m/%d-%H:%M:%S) \
+	    -X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
+	    -X main.gitStatus=${GIT_STATUS} \
+	    -X main.version=${VERSION}" \
+	  ./cmd/bbr
 
 build-bbsim:
-	GO111MODULE=on go build -i -v -mod vendor \
-    	-ldflags "-w -X main.buildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
-    		-X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
-    		-X main.gitStatus=${GIT_STATUS} \
-    		-X main.version=${VERSION}" \
-    	./cmd/bbsim
+	@go build -mod vendor \
+	  -ldflags "-w -X main.buildTime=$(shell date +%Y/%m/%d-%H:%M:%S) \
+	    -X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
+	    -X main.gitStatus=${GIT_STATUS} \
+	    -X main.version=${VERSION}" \
+	  ./cmd/bbsim
 
 build-bbsimctl:
-	GO111MODULE=on go build -i -v -mod vendor \
-		-ldflags "-w -X github.com/opencord/bbsim/internal/bbsimctl/config.BuildTime=$(shell date +”%Y/%m/%d-%H:%M:%S”) \
-			-X github.com/opencord/bbsim/internal/bbsimctl/config.CommitHash=$(shell git log --pretty=format:%H -n 1) \
-			-X github.com/opencord/bbsim/internal/bbsimctl/config.GitStatus=${GIT_STATUS} \
-			-X github.com/opencord/bbsim/internal/bbsimctl/config.Version=${VERSION}" \
-		./cmd/bbsimctl
+	@go build -mod vendor \
+	  -ldflags "-w -X github.com/opencord/bbsim/internal/bbsimctl/config.BuildTime=$(shell date +%Y/%m/%d-%H:%M:%S) \
+	    -X github.com/opencord/bbsim/internal/bbsimctl/config.CommitHash=$(shell git log --pretty=format:%H -n 1) \
+	    -X github.com/opencord/bbsim/internal/bbsimctl/config.GitStatus=${GIT_STATUS} \
+	    -X github.com/opencord/bbsim/internal/bbsimctl/config.Version=${VERSION}" \
+	  ./cmd/bbsimctl
 
-api/openolt/openolt.pb.go: api/openolt/openolt.proto
-	@protoc -I. \
-    	-I${GOOGLEAPI}/third_party/googleapis \
-    	--go_out=plugins=grpc:./ \
-    	$<
+setup_tools:
+	@echo "Downloading dependencies..."
+	@${GO} mod download github.com/grpc-ecosystem/grpc-gateway github.com/opencord/voltha-protos/v2
+	@echo "Dependencies downloaded OK"
 
-api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go: api/bbsim/bbsim.proto api/bbsim/bbsim.yaml
-	@protoc -I. \
-		-I${GOOGLEAPI}/third_party/googleapis \
-		-I${VOLTHA_PROTOS}/protos/ \
-    	--go_out=plugins=grpc:./ \
-		--grpc-gateway_out=logtostderr=true,grpc_api_configuration=api/bbsim/bbsim.yaml,allow_delete_body=true:./ \
-    	$<
+VOLTHA_PROTOS ?= $(shell ${GO} list -f '{{ .Dir }}' -m github.com/opencord/voltha-protos/v2)
+GOOGLEAPI     ?= $(shell ${GO} list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
 
-api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go: api/legacy/bbsim.proto
-	@protoc -I. \
-		-I${GOOGLEAPI}/third_party/googleapis/ \
-		-I${GOOGLEAPI}/ \
-		-I${VOLTHA_PROTOS}/protos/ \
-    	--go_out=plugins=grpc:./ \
-		--grpc-gateway_out=logtostderr=true,allow_delete_body=true:./ \
-    	$<
+.PHONY: api/openolt/openolt.pb.go api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go docs/swagger/bbsim/bbsim.swagger.json docs/swagger/leagacy/bbsim.swagger.json
+api/openolt/openolt.pb.go: api/openolt/openolt.proto setup_tools
+	@echo $@
+	@${PROTOC} -I. \
+      -I${GOOGLEAPI}/third_party/googleapis \
+      --go_out=plugins=grpc:./ \
+      $<
 
-docs/swagger/bbsim/bbsim.swagger.json: api/bbsim/bbsim.yaml
-	@protoc -I ./api \
-	-I${GOOGLEAPI}/ \
-	-I${VOLTHA_PROTOS}/protos/ \
-	--swagger_out=logtostderr=true,allow_delete_body=true,grpc_api_configuration=$<:docs/swagger/ \
-	api/bbsim/bbsim.proto
+api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go: api/bbsim/bbsim.proto api/bbsim/bbsim.yaml setup_tools
+	@echo $@
+	@${PROTOC} -I. \
+	  -I${GOOGLEAPI}/third_party/googleapis \
+	  -I${VOLTHA_PROTOS}/protos/ \
+      --go_out=plugins=grpc:./ \
+	  --grpc-gateway_out=logtostderr=true,grpc_api_configuration=api/bbsim/bbsim.yaml,allow_delete_body=true:./ \
+      $<
 
-docs/swagger/leagacy/bbsim.swagger.json: api/legacy/bbsim.proto
-	@protoc -I ./api \
-	-I${GOOGLEAPI}/ \
-	-I${VOLTHA_PROTOS}/protos/ \
-	--swagger_out=logtostderr=true,allow_delete_body=true:docs/swagger/ \
-	$<
+api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go: api/legacy/bbsim.proto setup_tools
+	@echo $@
+	@${PROTOC} -I. \
+	  -I${GOOGLEAPI}/third_party/googleapis/ \
+	  -I${GOOGLEAPI}/ \
+	  -I${VOLTHA_PROTOS}/protos/ \
+      --go_out=plugins=grpc:./ \
+	  --grpc-gateway_out=logtostderr=true,allow_delete_body=true:./ \
+      $<
+
+docs/swagger/bbsim/bbsim.swagger.json: api/bbsim/bbsim.yaml setup_tools
+	@echo $@
+	@${PROTOC} -I ./api \
+	  -I${GOOGLEAPI}/ \
+	  -I${VOLTHA_PROTOS}/protos/ \
+	  --swagger_out=logtostderr=true,allow_delete_body=true,grpc_api_configuration=$<:docs/swagger/ \
+	  api/bbsim/bbsim.proto
+
+docs/swagger/leagacy/bbsim.swagger.json: api/legacy/bbsim.proto setup_tools
+	@echo $@
+	@${PROTOC} -I ./api \
+	  -I${GOOGLEAPI}/ \
+	  -I${VOLTHA_PROTOS}/protos/ \
+	  --swagger_out=logtostderr=true,allow_delete_body=true:docs/swagger/ \
+	  $<
