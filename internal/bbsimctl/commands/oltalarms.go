@@ -20,13 +20,13 @@ package commands
 import (
 	"context"
 	"fmt"
+	"github.com/opencord/bbsim/internal/common"
 	"os"
 	"strings"
 
 	"github.com/jessevdk/go-flags"
 	"github.com/olekukonko/tablewriter"
 	pb "github.com/opencord/bbsim/api/bbsim"
-	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
 	log "github.com/sirupsen/logrus"
 )
@@ -79,12 +79,12 @@ func (o *OltAlarmRaise) Execute(args []string) error {
 		InterfaceID: uint32(o.Args.IntfID),
 		Status:      "on"}
 
-	if string(o.Args.Name) == "PonLossOfSignal" {
+	if string(o.Args.Name) == common.OltPonLos {
 		req.InterfaceType = "pon"
-	} else if string(o.Args.Name) == "NniLossOfSignal" {
+	} else if string(o.Args.Name) == common.OltNniLos {
 		req.InterfaceType = "nni"
 	} else {
-		return fmt.Errorf("Unknown alarm type")
+		return fmt.Errorf("Unknown OLT alarm type")
 	}
 
 	res, err := client.SetOltAlarmIndication(ctx, &req)
@@ -109,12 +109,12 @@ func (o *OltAlarmClear) Execute(args []string) error {
 		InterfaceID: uint32(o.Args.IntfID),
 		Status:      "off"}
 
-	if string(o.Args.Name) == "PonLossOfSignal" {
+	if string(o.Args.Name) == common.OltPonLos {
 		req.InterfaceType = "pon"
-	} else if string(o.Args.Name) == "NniLossOfSignal" {
+	} else if string(o.Args.Name) == common.OltNniLos {
 		req.InterfaceType = "nni"
 	} else {
-		return fmt.Errorf("Unknown alarm type")
+		return fmt.Errorf("Unknown OLT alarm type")
 	}
 
 	res, err := client.SetOltAlarmIndication(ctx, &req)
@@ -135,9 +135,9 @@ func (o *OltAlarmList) Execute(args []string) error {
 	fmt.Fprintf(os.Stdout, "OLT Alarms List:\n")
 	OltAlarmstable.SetHeader([]string{"OLT Alarms"})
 
-	alarmNames := make([]AlarmListOutput, len(alarmsim.OltAlarmNameMap))
+	alarmNames := make([]AlarmListOutput, len(common.OLTAlarms))
 	i := 0
-	for k := range alarmsim.OltAlarmNameMap {
+	for k := range common.OLTAlarms {
 		alarmNames[i] = AlarmListOutput{Name: k}
 		OltAlarmsValue = append(OltAlarmsValue, []string{k})
 		i++
@@ -151,7 +151,7 @@ func (o *OltAlarmList) Execute(args []string) error {
 
 func (o *OltAlarmNameString) Complete(match string) []flags.Completion {
 	list := make([]flags.Completion, 0)
-	for k := range alarmsim.OltAlarmNameMap {
+	for k := range common.OLTAlarms {
 		if strings.HasPrefix(k, match) {
 			list = append(list, flags.Completion{Item: k})
 		}

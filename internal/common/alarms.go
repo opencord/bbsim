@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present Open Networking Foundation
+ * Copyright 2020-present Open Networking Foundation
 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// +build tools
 
-package tools
+package common
 
 import (
-	// protocol buffer compiler plugins
-	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
+	"github.com/opencord/bbsim/api/bbsim"
 )
+
+var ONUAlarms = make(map[string]bbsim.AlarmType_Types)
+
+func init() {
+	for id, name := range bbsim.AlarmType_Types_name {
+		if id := bbsim.AlarmType_Types(id); id != bbsim.AlarmType_LOS {
+			ONUAlarms[name] = id
+		}
+	}
+}
+
+const OltNniLos = "OLT_NNI_LOS"
+const OltPonLos = "OLG_PON_LOS"
+
+var OLTAlarms = map[string]bbsim.AlarmType_Types{
+	OltNniLos: bbsim.AlarmType_LOS,
+	OltPonLos: bbsim.AlarmType_LOS,
+}

@@ -1174,11 +1174,11 @@ var fileDescriptor_ef7750073d18011b = []byte{
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
-var _ grpc.ClientConnInterface
+var _ grpc.ClientConn
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion6
+const _ = grpc.SupportPackageIsVersion4
 
 // BBSimClient is the client API for BBSim service.
 //
@@ -1208,10 +1208,10 @@ type BBSimClient interface {
 }
 
 type bBSimClient struct {
-	cc grpc.ClientConnInterface
+	cc *grpc.ClientConn
 }
 
-func NewBBSimClient(cc grpc.ClientConnInterface) BBSimClient {
+func NewBBSimClient(cc *grpc.ClientConn) BBSimClient {
 	return &bBSimClient{cc}
 }
 
