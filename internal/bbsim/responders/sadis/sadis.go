@@ -37,10 +37,10 @@ type sadisServer struct {
 }
 
 // bandwidthProfiles contains some dummy profiles
-var bandwidthProfiles = []interface{}{
-	&SadisBWPEntry{ID: "User_Bandwidth1", AIR: 100000, CBS: 10000, CIR: 30000, EBS: 1000, EIR: 20000},
-	&SadisBWPEntry{ID: "User_Bandwidth2", AIR: 100000, CBS: 5000, CIR: 100000, EBS: 5000, EIR: 1000000},
-	&SadisBWPEntry{ID: "User_Bandwidth3", AIR: 100000, CBS: 5000, CIR: 100000, EBS: 5000, EIR: 1000000},
+var bandwidthProfiles = []*SadisBWPEntry{
+	&SadisBWPEntry{ID: "User_Bandwidth1", AIR: 100000, CBS: 10000, CIR: 30000, EBS: 1000, EIR: 100000},
+	&SadisBWPEntry{ID: "User_Bandwidth2", AIR: 100000, CBS: 5000, CIR: 100000, EBS: 5000, EIR: 100000},
+	&SadisBWPEntry{ID: "User_Bandwidth3", AIR: 100000, CBS: 5000, CIR: 1000000, EBS: 5000, EIR: 1000000},
 	&SadisBWPEntry{ID: "Default", AIR: 100000, CBS: 30, CIR: 600, EBS: 30, EIR: 400},
 }
 
@@ -56,7 +56,7 @@ type SadisEntries struct {
 }
 type BandwidthProfileEntries struct {
 	Integration SadisIntegration `json:"integration"`
-	Entries     []interface{}    `json:"entries,omitempty"`
+	Entries     []*SadisBWPEntry `json:"entries,omitempty"`
 }
 
 type SadisIntegration struct {
@@ -97,21 +97,13 @@ type SadisOnuEntryV2 struct {
 }
 
 type SadisUniTag struct {
-	UniTagMatch                int    `json:"uniTagMatch"`
-	PonCTag                    int    `json:"ponCTag"`
-	PonSTag                    int    `json:"ponSTag"`
-	UsPonCTagPriority          int    `json:"usPonCTagPriority"`
-	DsPonCTagPriority          int    `json:"dsPonCTagPriority"`
-	UsPonSTagPriority          int    `json:"usPonSTagPriority"`
-	DsPonSTagPriority          int    `json:"dsPonSTagPriority"`
-	EnableMacLearning          string `json:"enableMacLearning"`
-	ConfiguredMacAddress       string `json:"configuredMacAddress"`
-	TechnologyProfileID        int    `json:"technologyProfileId"`
-	UpstreamBandwidthProfile   string `json:"upstreamBandwidthProfile"`
-	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile"`
-	IsDhcpRequired             string `json:"isDhcpRequired"`
-	IsIgmpRequired             string `json:"isIgmpRequired"`
-	ServiceName                string `json:"serviceName"`
+	PonCTag                    int    `json:"ponCTag, omitempty"`
+	PonSTag                    int    `json:"ponSTag, omitempty"`
+	TechnologyProfileID        int    `json:"technologyProfileId, omitempty"`
+	UpstreamBandwidthProfile   string `json:"upstreamBandwidthProfile, omitempty"`
+	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile, omitempty"`
+	IsDhcpRequired             bool   `json:"isDhcpRequired, omitempty"`
+	IsIgmpRequired             bool   `json:"isIgmpRequired, omitempty"`
 }
 
 // SADIS BandwithProfile Entry
@@ -194,25 +186,23 @@ func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*Sad
 		ID:        onu.Sn() + uniSuffix,
 		NasPortID: onu.Sn() + uniSuffix,
 		CircuitID: onu.Sn() + uniSuffix,
-		RemoteID:  olt.SerialNumber,
+		RemoteID:  onu.Sn() + uniSuffix,
 	}
+
+	// TODO this sadis config only works for the ATT workflow
+	// address VOL-2761 to support DT
 	sonuUniTag := SadisUniTag{
-		UniTagMatch:                0,
-		PonCTag:                    onu.CTag,
-		PonSTag:                    onu.STag,
-		UsPonCTagPriority:          1,
-		DsPonCTagPriority:          1,
-		UsPonSTagPriority:          1,
-		DsPonSTagPriority:          1,
-		EnableMacLearning:          "true",
-		ConfiguredMacAddress:       "0.0.0.0",
-		TechnologyProfileID:        64,
-		UpstreamBandwidthProfile:   "User_Bandwidth1",
-		DownstreamBandwidthProfile: "Default",
-		IsDhcpRequired:             "true",
-		IsIgmpRequired:             "true",
-		ServiceName:                "Default",
+		PonCTag:             onu.CTag,
+		PonSTag:             onu.STag,
+		TechnologyProfileID: 64,
+		// NOTE do we want to select a random bandwidth profile?
+		// if so use bandwidthProfiles[rand.Intn(len(bandwidthProfiles))].ID
+		UpstreamBandwidthProfile:   "Default",
+		DownstreamBandwidthProfile: "User_Bandwidth1",
+		IsDhcpRequired:             true,
+		IsIgmpRequired:             true,
 	}
+
 	sonuv2.UniTagList = append(sonuv2.UniTagList, sonuUniTag)
 	return sonuv2, nil
 }
@@ -352,8 +342,7 @@ func (s *sadisServer) ServeBWPEntry(w http.ResponseWriter, r *http.Request) {
 
 	sadisLogger.Debugf("Received request for SADIS bandwidth profile %s", id)
 
-	for _, e := range bandwidthProfiles {
-		bwpEntry := e.(*SadisBWPEntry)
+	for _, bwpEntry := range bandwidthProfiles {
 		if bwpEntry.ID == id {
 			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(bwpEntry)
