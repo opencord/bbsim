@@ -97,21 +97,21 @@ type SadisOnuEntryV2 struct {
 }
 
 type SadisUniTag struct {
-	UniTagMatch                int    `json:"uniTagMatch"`
-	PonCTag                    int    `json:"ponCTag"`
-	PonSTag                    int    `json:"ponSTag"`
-	UsPonCTagPriority          int    `json:"usPonCTagPriority"`
-	DsPonCTagPriority          int    `json:"dsPonCTagPriority"`
-	UsPonSTagPriority          int    `json:"usPonSTagPriority"`
-	DsPonSTagPriority          int    `json:"dsPonSTagPriority"`
-	EnableMacLearning          string `json:"enableMacLearning"`
-	ConfiguredMacAddress       string `json:"configuredMacAddress"`
-	TechnologyProfileID        int    `json:"technologyProfileId"`
-	UpstreamBandwidthProfile   string `json:"upstreamBandwidthProfile"`
-	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile"`
-	IsDhcpRequired             string `json:"isDhcpRequired"`
-	IsIgmpRequired             string `json:"isIgmpRequired"`
-	ServiceName                string `json:"serviceName"`
+	UniTagMatch                int    `json:"uniTagMatch, omitempty"`
+	PonCTag                    int    `json:"ponCTag, omitempty"`
+	PonSTag                    int    `json:"ponSTag, omitempty"`
+	UsPonCTagPriority          int    `json:"usPonCTagPriority, omitempty"`
+	DsPonCTagPriority          int    `json:"dsPonCTagPriority, omitempty"`
+	UsPonSTagPriority          int    `json:"usPonSTagPriority, omitempty"`
+	DsPonSTagPriority          int    `json:"dsPonSTagPriority, omitempty"`
+	EnableMacLearning          string `json:"enableMacLearning, omitempty"`
+	ConfiguredMacAddress       string `json:"configuredMacAddress, omitempty"`
+	TechnologyProfileID        int    `json:"technologyProfileId, omitempty"`
+	UpstreamBandwidthProfile   string `json:"upstreamBandwidthProfile, omitempty"`
+	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile, omitempty"`
+	IsDhcpRequired             bool   `json:"isDhcpRequired, omitempty"`
+	IsIgmpRequired             bool   `json:"isIgmpRequired, omitempty"`
+	ServiceName                string `json:"serviceName, omitempty"`
 }
 
 // SADIS BandwithProfile Entry
@@ -194,7 +194,7 @@ func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*Sad
 		ID:        onu.Sn() + uniSuffix,
 		NasPortID: onu.Sn() + uniSuffix,
 		CircuitID: onu.Sn() + uniSuffix,
-		RemoteID:  olt.SerialNumber,
+		RemoteID:  onu.Sn() + uniSuffix,
 	}
 	sonuUniTag := SadisUniTag{
 		UniTagMatch:                0,
@@ -207,10 +207,10 @@ func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*Sad
 		EnableMacLearning:          "true",
 		ConfiguredMacAddress:       "0.0.0.0",
 		TechnologyProfileID:        64,
-		UpstreamBandwidthProfile:   "User_Bandwidth1",
-		DownstreamBandwidthProfile: "Default",
-		IsDhcpRequired:             "true",
-		IsIgmpRequired:             "true",
+		UpstreamBandwidthProfile:   "Default",
+		DownstreamBandwidthProfile: "User_Bandwidth1",
+		IsDhcpRequired:             true,
+		IsIgmpRequired:             true,
 		ServiceName:                "Default",
 	}
 	sonuv2.UniTagList = append(sonuv2.UniTagList, sonuUniTag)
