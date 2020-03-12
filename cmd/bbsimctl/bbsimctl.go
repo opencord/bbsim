@@ -38,6 +38,7 @@ func main() {
 	commands.RegisterConfigCommands(parser)
 	commands.RegisterOltCommands(parser)
 	commands.RegisterONUCommands(parser)
+	commands.RegisterPonCommands(parser)
 	commands.RegisterCompletionCommands(parser)
 	commands.RegisterLoggingCommands(parser)
 
