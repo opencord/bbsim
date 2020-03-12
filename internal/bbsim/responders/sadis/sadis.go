@@ -97,21 +97,21 @@ type SadisOnuEntryV2 struct {
 }
 
 type SadisUniTag struct {
-	UniTagMatch                int    `json:"uniTagMatch"`
+	//UniTagMatch                int    `json:"uniTagMatch"`
 	PonCTag                    int    `json:"ponCTag"`
 	PonSTag                    int    `json:"ponSTag"`
-	UsPonCTagPriority          int    `json:"usPonCTagPriority"`
-	DsPonCTagPriority          int    `json:"dsPonCTagPriority"`
-	UsPonSTagPriority          int    `json:"usPonSTagPriority"`
-	DsPonSTagPriority          int    `json:"dsPonSTagPriority"`
-	EnableMacLearning          string `json:"enableMacLearning"`
-	ConfiguredMacAddress       string `json:"configuredMacAddress"`
+	//UsPonCTagPriority          int    `json:"usPonCTagPriority"`
+	//DsPonCTagPriority          int    `json:"dsPonCTagPriority"`
+	//UsPonSTagPriority          int    `json:"usPonSTagPriority"`
+	//DsPonSTagPriority          int    `json:"dsPonSTagPriority"`
+	//EnableMacLearning          string `json:"enableMacLearning"`
+	//ConfiguredMacAddress       string `json:"configuredMacAddress"`
 	TechnologyProfileID        int    `json:"technologyProfileId"`
 	UpstreamBandwidthProfile   string `json:"upstreamBandwidthProfile"`
 	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile"`
-	IsDhcpRequired             string `json:"isDhcpRequired"`
-	IsIgmpRequired             string `json:"isIgmpRequired"`
-	ServiceName                string `json:"serviceName"`
+	IsDhcpRequired             bool `json:"isDhcpRequired"`
+	//IsIgmpRequired             string `json:"isIgmpRequired"`
+	//ServiceName                string `json:"serviceName"`
 }
 
 // SADIS BandwithProfile Entry
@@ -194,24 +194,24 @@ func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*Sad
 		ID:        onu.Sn() + uniSuffix,
 		NasPortID: onu.Sn() + uniSuffix,
 		CircuitID: onu.Sn() + uniSuffix,
-		RemoteID:  olt.SerialNumber,
+		RemoteID:  onu.Sn() + uniSuffix,
 	}
 	sonuUniTag := SadisUniTag{
-		UniTagMatch:                0,
+		//UniTagMatch:                0,
 		PonCTag:                    onu.CTag,
 		PonSTag:                    onu.STag,
-		UsPonCTagPriority:          1,
-		DsPonCTagPriority:          1,
-		UsPonSTagPriority:          1,
-		DsPonSTagPriority:          1,
-		EnableMacLearning:          "true",
-		ConfiguredMacAddress:       "0.0.0.0",
+		//UsPonCTagPriority:          1,
+		//DsPonCTagPriority:          1,
+		//UsPonSTagPriority:          1,
+		//DsPonSTagPriority:          1,
+		//EnableMacLearning:          "true",
+		//ConfiguredMacAddress:       "0.0.0.0",
 		TechnologyProfileID:        64,
-		UpstreamBandwidthProfile:   "User_Bandwidth1",
+		UpstreamBandwidthProfile:   "Default",
 		DownstreamBandwidthProfile: "Default",
-		IsDhcpRequired:             "true",
-		IsIgmpRequired:             "true",
-		ServiceName:                "Default",
+		IsDhcpRequired:             true,
+		//IsIgmpRequired:             "true",
+		//ServiceName:                "Default",
 	}
 	sonuv2.UniTagList = append(sonuv2.UniTagList, sonuUniTag)
 	return sonuv2, nil
