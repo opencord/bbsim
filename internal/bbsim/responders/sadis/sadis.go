@@ -105,7 +105,7 @@ type SadisUniTag struct {
 	UsPonSTagPriority          int    `json:"usPonSTagPriority"`
 	DsPonSTagPriority          int    `json:"dsPonSTagPriority"`
 	EnableMacLearning          string `json:"enableMacLearning"`
-	ConfiguredDacAddress       string `json:"configuredDacAddress"`
+	ConfiguredMacAddress       string `json:"configuredMacAddress"`
 	TechnologyProfileID        int    `json:"technologyProfileId"`
 	UpstreamBandwidthProfile   string `json:"upstreamBandwidthProfile"`
 	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile"`
@@ -205,7 +205,7 @@ func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*Sad
 		UsPonSTagPriority:          1,
 		DsPonSTagPriority:          1,
 		EnableMacLearning:          "true",
-		ConfiguredDacAddress:       "0.0.0.0",
+		ConfiguredMacAddress:       "0.0.0.0",
 		TechnologyProfileID:        64,
 		UpstreamBandwidthProfile:   "User_Bandwidth1",
 		DownstreamBandwidthProfile: "Default",

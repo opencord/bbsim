@@ -4,10 +4,6 @@
     "title": "bbsim/bbsim.proto",
     "version": "version not set"
   },
-  "schemes": [
-    "http",
-    "https"
-  ],
   "consumes": [
     "application/json"
   ],
@@ -26,6 +22,30 @@
             }
           }
         },
+        "tags": [
+          "BBSim"
+        ]
+      }
+    },
+    "/v1/olt/flows": {
+      "get": {
+        "operationId": "GetFlows2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimFlows"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "SerialNumber",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
         "tags": [
           "BBSim"
         ]
@@ -61,6 +81,171 @@
         "parameters": [
           {
             "name": "SerialNumber",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BBSim"
+        ]
+      },
+      "delete": {
+        "operationId": "ShutdownONU",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "SerialNumber",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BBSim"
+        ]
+      },
+      "post": {
+        "operationId": "PoweronONU",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "SerialNumber",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BBSim"
+        ]
+      }
+    },
+    "/v1/olt/onus/{SerialNumber}/alarms/{AlarmType}/{Status}": {
+      "post": {
+        "operationId": "SetOnuAlarmIndication",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "SerialNumber",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "AlarmType",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Status",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BBSim"
+        ]
+      }
+    },
+    "/v1/olt/onus/{SerialNumber}/flows": {
+      "get": {
+        "operationId": "GetFlows",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimFlows"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "SerialNumber",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BBSim"
+        ]
+      }
+    },
+    "/v1/olt/onus/{SerialNumber}/trafficschedulers": {
+      "get": {
+        "operationId": "GetOnuTrafficSchedulers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimONUTrafficSchedulers"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "SerialNumber",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BBSim"
+        ]
+      }
+    },
+    "/v1/olt/ports/{InterfaceType}/{InterfaceID}/alarms/los/{Status}": {
+      "post": {
+        "operationId": "SetOltAlarmIndication",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "InterfaceType",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "InterfaceID",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "Status",
             "in": "path",
             "required": true,
             "type": "string"
@@ -105,6 +290,32 @@
     }
   },
   "definitions": {
+    "bbsimAlarmParameter": {
+      "type": "object",
+      "properties": {
+        "Key": {
+          "type": "string"
+        },
+        "Value": {
+          "type": "string"
+        }
+      }
+    },
+    "bbsimFlows": {
+      "type": "object",
+      "properties": {
+        "flow_count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "flows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/openoltFlow"
+          }
+        }
+      }
+    },
     "bbsimLogLevel": {
       "type": "object",
       "properties": {
@@ -166,6 +377,22 @@
         }
       }
     },
+    "bbsimONURequest": {
+      "type": "object",
+      "properties": {
+        "SerialNumber": {
+          "type": "string"
+        }
+      }
+    },
+    "bbsimONUTrafficSchedulers": {
+      "type": "object",
+      "properties": {
+        "traffSchedulers": {
+          "$ref": "#/definitions/tech_profileTrafficSchedulers"
+        }
+      }
+    },
     "bbsimONUs": {
       "type": "object",
       "properties": {
@@ -191,6 +418,9 @@
           "type": "string"
         },
         "InternalState": {
+          "type": "string"
+        },
+        "IP": {
           "type": "string"
         },
         "NNIPorts": {
@@ -231,6 +461,15 @@
         }
       }
     },
+    "bbsimSubActionTypes": {
+      "type": "string",
+      "enum": [
+        "JOIN",
+        "LEAVE",
+        "JOINV3"
+      ],
+      "default": "JOIN"
+    },
     "bbsimVersionNumber": {
       "type": "object",
       "properties": {
@@ -245,6 +484,305 @@
         },
         "gitStatus": {
           "type": "string"
+        }
+      }
+    },
+    "openoltAction": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "$ref": "#/definitions/openoltActionCmd"
+        },
+        "o_vid": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "o_pbits": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "o_tpid": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "i_vid": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "i_pbits": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "i_tpid": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "openoltActionCmd": {
+      "type": "object",
+      "properties": {
+        "add_outer_tag": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "remove_outer_tag": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "trap_to_host": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "openoltClassifier": {
+      "type": "object",
+      "properties": {
+        "o_tpid": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "o_vid": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "i_tpid": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "i_vid": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "o_pbits": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "i_pbits": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "eth_type": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "dst_mac": {
+          "type": "string",
+          "format": "byte"
+        },
+        "src_mac": {
+          "type": "string",
+          "format": "byte"
+        },
+        "ip_proto": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "dst_ip": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "src_ip": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "src_port": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "dst_port": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pkt_tag_type": {
+          "type": "string"
+        }
+      }
+    },
+    "openoltFlow": {
+      "type": "object",
+      "properties": {
+        "access_intf_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "onu_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "uni_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "flow_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "flow_type": {
+          "type": "string"
+        },
+        "alloc_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "network_intf_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "gemport_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "classifier": {
+          "$ref": "#/definitions/openoltClassifier"
+        },
+        "action": {
+          "$ref": "#/definitions/openoltAction"
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "cookie": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "port_no": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "tech_profileAdditionalBW": {
+      "type": "string",
+      "enum": [
+        "AdditionalBW_None",
+        "AdditionalBW_NA",
+        "AdditionalBW_BestEffort",
+        "AdditionalBW_Auto"
+      ],
+      "default": "AdditionalBW_None"
+    },
+    "tech_profileDirection": {
+      "type": "string",
+      "enum": [
+        "UPSTREAM",
+        "DOWNSTREAM",
+        "BIDIRECTIONAL"
+      ],
+      "default": "UPSTREAM"
+    },
+    "tech_profileInferredAdditionBWIndication": {
+      "type": "string",
+      "enum": [
+        "InferredAdditionBWIndication_None",
+        "InferredAdditionBWIndication_Assured",
+        "InferredAdditionBWIndication_BestEffort"
+      ],
+      "default": "InferredAdditionBWIndication_None"
+    },
+    "tech_profileSchedulerConfig": {
+      "type": "object",
+      "properties": {
+        "direction": {
+          "$ref": "#/definitions/tech_profileDirection"
+        },
+        "additional_bw": {
+          "$ref": "#/definitions/tech_profileAdditionalBW"
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "weight": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "sched_policy": {
+          "$ref": "#/definitions/tech_profileSchedulingPolicy"
+        }
+      }
+    },
+    "tech_profileSchedulingPolicy": {
+      "type": "string",
+      "enum": [
+        "WRR",
+        "StrictPriority",
+        "Hybrid"
+      ],
+      "default": "WRR"
+    },
+    "tech_profileTrafficScheduler": {
+      "type": "object",
+      "properties": {
+        "direction": {
+          "$ref": "#/definitions/tech_profileDirection"
+        },
+        "alloc_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "scheduler": {
+          "$ref": "#/definitions/tech_profileSchedulerConfig"
+        },
+        "traffic_shaping_info": {
+          "$ref": "#/definitions/tech_profileTrafficShapingInfo"
+        }
+      }
+    },
+    "tech_profileTrafficSchedulers": {
+      "type": "object",
+      "properties": {
+        "intf_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "onu_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "uni_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "port_no": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "traffic_scheds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tech_profileTrafficScheduler"
+          }
+        }
+      }
+    },
+    "tech_profileTrafficShapingInfo": {
+      "type": "object",
+      "properties": {
+        "cir": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "cbs": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pir": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pbs": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "gir": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "add_bw_ind": {
+          "$ref": "#/definitions/tech_profileInferredAdditionBWIndication"
         }
       }
     }

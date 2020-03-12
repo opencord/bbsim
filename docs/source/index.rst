@@ -139,7 +139,7 @@ listens on port 50074 by default and provides the endpoints
 To configure ONOS to use the BBSim ``Sadis`` server endpoints, the Sadis app
 must use be configured as follows (see ``examples/sadis-in-bbsim.json``):
 
-.. literalinclude:: ../../examples/sadis-in-bbsim.json
+.. literalinclude:: ../../examples/sadis-in-bbsim2.json
 
 This base configuration may also be obtained directly from the BBSim Sadis
 server:
@@ -165,6 +165,11 @@ You can verify the current Sadis configuration:
    curl --user karaf:karaf http://localhost:8181/onos/v1/network/configuration/apps/org.opencord.sadis
 
 In ONOS subscriber information can be queried using ``sadis <id>``.
+
+*Note that BBSim supports both sadis configuration versions, here is an example of the configuration needed to return
+the old format:*
+
+.. literalinclude:: ../../examples/sadis-in-bbsim.json
 
 Publishing BBSim Events on kafka
 --------------------------------
