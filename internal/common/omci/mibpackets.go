@@ -163,6 +163,53 @@ func CreateMibUploadNextRequest(tid uint16, seqNumber uint16) ([]byte, error) {
 	return hexEncode(pkt)
 }
 
+// Return true if msg is an Omci Test Request
+func IsTestRequest(payload []byte) (bool, error) {
+	_, _, msgType, _, _, _, err := omcisim.ParsePkt(payload)
+	if err != nil {
+		return false, err
+	}
+
+	return ((msgType & 0x1F) == 18), nil
+}
+
+func BuildTestResult(payload []byte) ([]byte, error) {
+	transactionId, deviceId, _, class, instance, _, err := omcisim.ParsePkt(payload)
+
+	if err != nil {
+		return []byte{}, err
+	}
+
+	resp := make([]byte, 26)
+	resp[0] = byte(transactionId >> 8)
+	resp[1] = byte(transactionId & 0xFF)
+	resp[2] = 27 // Upper nibble 0x0 is fixed (0000), Lower nibbles defines msg type (TestResult=27)
+	resp[3] = deviceId
+	resp[4] = byte(class >> 8)
+	resp[5] = byte(class & 0xFF)
+	resp[6] = byte(instance >> 8)
+	resp[7] = byte(instance & 0xFF)
+	resp[8] = 0  // high byte of contents length
+	resp[9] = 17 // low byte of contents length
+	// Each of these is a 1-byte code
+	// follow by a 2-byte (high, low) value
+	resp[10] = 1 // power feed voltage
+	resp[11] = 0
+	resp[12] = 123 // feed voltage 123 mV, 20 mv res --> 6mv
+	resp[13] = 3   // received optical power
+	resp[14] = 1
+	resp[15] = 200 // 456 decibel-microwatts, 0.002 dB res --> 0.912 db-mw
+	resp[16] = 5   // mean optical launch power
+	resp[17] = 3
+	resp[18] = 21 // 789 uA, 2uA res --> 394uA
+	resp[19] = 9  // laser bias current
+	resp[20] = 38
+	resp[21] = 148 // 9876 deg C, 1/256 resolution --> 38.57 Deg C
+	resp[22] = 12  // temperature
+
+	return resp, nil
+}
+
 // TODO understand and refactor
 
 func CreateGalEnetRequest(tid uint16) ([]byte, error) {

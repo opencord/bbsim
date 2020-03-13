@@ -567,6 +567,37 @@ func (o *Onu) publishOmciEvent(msg OmciMessage) {
 	}
 }
 
+// Create a TestResponse packet and send it
+func (o *Onu) sendTestResult(msg OmciMessage, stream openolt.Openolt_EnableIndicationServer) error {
+	resp, err := omcilib.BuildTestResult(HexDecode(msg.omciMsg.Pkt))
+	if err != nil {
+		return err
+	}
+
+	var omciInd openolt.OmciIndication
+	omciInd.IntfId = o.PonPortID
+	omciInd.OnuId = o.ID
+	omciInd.Pkt = resp
+
+	omci := &openolt.Indication_OmciInd{OmciInd: &omciInd}
+	if err := stream.Send(&openolt.Indication{Data: omci}); err != nil {
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"SerialNumber": o.Sn(),
+			"omciPacket":   omciInd.Pkt,
+			"msg":          msg,
+		}).Errorf("send TestResult omcisim indication failed: %v", err)
+		return err
+	}
+	onuLogger.WithFields(log.Fields{
+		"IntfId":       o.PonPortID,
+		"SerialNumber": o.Sn(),
+		"omciPacket":   omciInd.Pkt,
+	}).Tracef("Sent TestResult OMCI message")
+
+	return nil
+}
+
 func (o *Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableIndicationServer) {
 
 	onuLogger.WithFields(log.Fields{
@@ -608,6 +639,16 @@ func (o *Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableIn
 		"SerialNumber": o.Sn(),
 		"omciPacket":   omciInd.Pkt,
 	}).Tracef("Sent OMCI message")
+
+	// Test message is special, it requires sending two packets:
+	//     first packet: TestResponse, says whether test was started successully, handled by omci-sim
+	//     second packet, TestResult, reports the result of running the self-test
+	// TestResult can come some time after a TestResponse
+	//     TODO: Implement some delay between the TestResponse and the TestResult
+	isTest, err := omcilib.IsTestRequest(HexDecode(msg.omciMsg.Pkt))
+	if (err == nil) && (isTest) {
+		o.sendTestResult(msg, stream)
+	}
 }
 
 func (o *Onu) storePortNumber(portNo uint32) {
@@ -834,7 +875,6 @@ func (o *Onu) handleOmci(msg OmciIndicationMessage, client openolt.OpenoltClient
 				}).Errorf("Error while transitioning ONU State %v", err)
 			}
 		}
-
 	}
 }
 

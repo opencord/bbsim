@@ -1079,7 +1079,9 @@ func init() {
 	proto.RegisterType((*Empty)(nil), "bbsim.Empty")
 }
 
-func init() { proto.RegisterFile("api/bbsim/bbsim.proto", fileDescriptor_ef7750073d18011b) }
+func init() {
+	proto.RegisterFile("api/bbsim/bbsim.proto", fileDescriptor_ef7750073d18011b)
+}
 
 var fileDescriptor_ef7750073d18011b = []byte{
 	// 1353 bytes of a gzipped FileDescriptorProto
