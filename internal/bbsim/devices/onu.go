@@ -835,6 +835,14 @@ func (o *Onu) handleOmci(msg OmciIndicationMessage, client openolt.OpenoltClient
 			}
 		}
 
+	case omci.TestRequestType:
+		// pages 514
+		log.Info("Received test request")
+		// statusCode 0000 = success
+		// TODO, get the tid, entityclass, and entityid from the test request and put them into the test response
+		//    cboling/omci needs to finish implementing test request and test reponse
+		testResp, _ := omcilib.CreateTestResponse(0, 0, 0, 0) //o.Tid, o.EntityClass, o.EntityId, 1)
+		sendOmciMsg(testResp, o.PonPortID, o.ID, o.SerialNumber, "TestResponse", client)
 	}
 }
 
