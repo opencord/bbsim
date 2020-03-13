@@ -567,6 +567,78 @@ func (o *Onu) publishOmciEvent(msg OmciMessage) {
 	}
 }
 
+func (o *Onu) isTestRequest(msg OmciMessage) (bool, error) {
+	_, _, msgType, _, _, _, err := omcisim.ParsePkt(HexDecode(msg.omciMsg.Pkt))
+	if err != nil {
+		return false, err
+	}
+
+	return ((msgType & 0x1F) == 18), nil
+}
+
+// Test message is special, it requires sending two packets:
+//     first packet: TestResponse, says whether test was started successully, handled by omci-sim
+//     second packet, TestResult, reports the result of running the self-test
+// TestResult can come some time aftera TestResponse
+//     TODO: Implement some delay between the TestResponse and the TestResult
+func (o *Onu) sendTestResult(msg OmciMessage, stream openolt.Openolt_EnableIndicationServer) error {
+	transactionId, deviceId, _, class, instance, _, err := omcisim.ParsePkt(HexDecode(msg.omciMsg.Pkt))
+
+	if err != nil {
+		return err
+	}
+
+	resp := make([]byte, 26)
+	resp[0] = byte(transactionId >> 8)
+	resp[1] = byte(transactionId & 0xFF)
+	resp[2] = 27 // Upper nibble 0x0 is fixed (0000), Lower nibbles defines msg type (TestResult=27)
+	resp[3] = deviceId
+	resp[4] = byte(class >> 8)
+	resp[5] = byte(class & 0xFF)
+	resp[6] = byte(instance >> 8)
+	resp[7] = byte(instance & 0xFF)
+	resp[8] = 0  // high byte of contents length
+	resp[9] = 17 // low byte of contents length
+	// Each of these is a 1-byte code
+	// follow by a 2-byte (high, low) value
+	resp[10] = 1 // power feed voltage
+	resp[11] = 0
+	resp[12] = 123 // feed voltage 123 mV, 20 mv res --> 6mv
+	resp[13] = 3   // received optical power
+	resp[14] = 1
+	resp[15] = 200 // 456 decibel-microwatts, 0.002 dB res --> 0.912 db-mw
+	resp[16] = 5   // mean optical launch power
+	resp[17] = 3
+	resp[18] = 21 // 789 uA, 2uA res --> 394uA
+	resp[19] = 9  // laser bias current
+	resp[20] = 38
+	resp[21] = 148 // 9876 deg C, 1/256 resolution --> 38.57 Deg C
+	resp[22] = 12  // temperature
+
+	var omciInd openolt.OmciIndication
+	omciInd.IntfId = o.PonPortID
+	omciInd.OnuId = o.ID
+	omciInd.Pkt = resp
+
+	omci := &openolt.Indication_OmciInd{OmciInd: &omciInd}
+	if err := stream.Send(&openolt.Indication{Data: omci}); err != nil {
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"SerialNumber": o.Sn(),
+			"omciPacket":   omciInd.Pkt,
+			"msg":          msg,
+		}).Errorf("send TestResult omcisim indication failed: %v", err)
+		return err
+	}
+	onuLogger.WithFields(log.Fields{
+		"IntfId":       o.PonPortID,
+		"SerialNumber": o.Sn(),
+		"omciPacket":   omciInd.Pkt,
+	}).Tracef("Sent TestResult OMCI message")
+
+	return nil
+}
+
 func (o *Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableIndicationServer) {
 
 	onuLogger.WithFields(log.Fields{
@@ -608,6 +680,11 @@ func (o *Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableIn
 		"SerialNumber": o.Sn(),
 		"omciPacket":   omciInd.Pkt,
 	}).Tracef("Sent OMCI message")
+
+	isTest, err := o.isTestRequest(msg)
+	if (err == nil) && (isTest) {
+		o.sendTestResult(msg, stream)
+	}
 }
 
 func (o *Onu) storePortNumber(portNo uint32) {
@@ -834,7 +911,6 @@ func (o *Onu) handleOmci(msg OmciIndicationMessage, client openolt.OpenoltClient
 				}).Errorf("Error while transitioning ONU State %v", err)
 			}
 		}
-
 	}
 }
 
