@@ -235,4 +235,25 @@ func CreateGemPortRequest(tid uint16) ([]byte, error) {
 	return hexEncode(pkt)
 }
 
+func CreateTestResponse(tid uint16, entityClass me.ClassID, entityId uint16, successCode uint16) ([]byte, error) {
+	request := &omci.TestResponse{
+		MeBasePacket: omci.MeBasePacket{
+			EntityClass: entityClass,
+		},
+		/*		EntityId:    entityId,
+				SuccessCode: successCode,
+		*/
+	}
+	_ = entityId
+	_ = successCode
+	pkt, err := serialize(omci.TestResponseType, request, tid)
+	if err != nil {
+		omciLogger.WithFields(log.Fields{
+			"Err": err,
+		}).Fatalf("Cannot serialize TestResponse")
+		return nil, err
+	}
+	return hexEncode(pkt)
+}
+
 // END TODO
