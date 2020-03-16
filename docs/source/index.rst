@@ -121,6 +121,10 @@ the list via ``./bbsim --help``
            Set this flag for publishing BBSim events on configured kafkaAddress
      -kafkaAddress string
            IP:Port for kafka, used only when bbsimEvents flag is set (default ":9092")
+     -ca string
+           Set the mode for controlled activation of PON ports and ONUs
+     -enableperf bool
+           Setting this flag will cause BBSim to not store data like traffic schedulers, flows of ONUs etc
 
 ``BBSim`` also looks for a configuration file in ``configs/bbsim.yaml`` from
 which it reads a number of default settings. The command line options listed
@@ -170,6 +174,29 @@ In ONOS subscriber information can be queried using ``sadis <id>``.
 the old format:*
 
 .. literalinclude:: ../../examples/sadis-in-bbsim.json
+
+Controlled PON and ONU activation
+---------------------------------
+
+BBSim provides support for controlled PON and ONU activation. By default both PON ports and ONUs are automatically activated when OLT is enabled.
+This can be controlled using ``-ca`` option.
+
+``-ca`` can be set to one of below four modes:
+
+- default: PON ports and ONUs are automatic activated (default behavior).
+
+- only-onu: PON ports automatically enabled and ONUs dynamically activated
+            On Enable OLT, IntfIndications for all PON ports are sent but ONU discovery indications are not sent.
+            When PoweronONU request is received at BBSim API server then ONU discovery indication is sent for that ONU.
+- only-pon: PON ports dynamically enabled and ONUs automatically activated
+            On Enable OLT, neither IntfIndications for PON ports nor ONU discovery indications are sent.
+            When EnablePonIf request is received at OpenOLT server, then that PON port is enabled and
+            IntfIndication is sent for that PON and all ONUs under that ports are discovered automatically.
+- both: Both PON ports and ONUs are dynamically activated
+        On Enable OLT, neither IntfIndication for PON ports nor ONU discovery indications are sent.
+        When EnablePonIf request is received on OpenOLT server then IntfIndication is sent for that PON but no ONU discovery indication will be sent.
+        When PoweronONU request is received at BBSim API server then ONU discovery indication is sent for that ONU.
+
 
 Publishing BBSim Events on kafka
 --------------------------------
