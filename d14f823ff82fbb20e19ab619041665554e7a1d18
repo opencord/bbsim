@@ -46,6 +46,30 @@
       "revId": "d14f823ff82fbb20e19ab619041665554e7a1d18",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f81160d0_b8034c0c",
+        "filename": "internal/bbsim/responders/sadis/sadis.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-03-17T16:24:04Z",
+      "side": 1,
+      "message": "Sorry meant \"remove the commented elements\" not \"uncomment\" been a long day",
+      "parentUuid": "436ca067_80bfc0e6",
+      "range": {
+        "startLine": 100,
+        "startChar": 1,
+        "endLine": 100,
+        "endChar": 68
+      },
+      "revId": "d14f823ff82fbb20e19ab619041665554e7a1d18",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
