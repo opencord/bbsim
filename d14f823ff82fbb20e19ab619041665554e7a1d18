@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01480e04_f79a139c",
+        "filename": "internal/bbsim/responders/sadis/sadis.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-03-17T16:19:06Z",
+      "side": 1,
+      "message": "I would uncomment the useless things in this structs and 203",
+      "range": {
+        "startLine": 100,
+        "startChar": 1,
+        "endLine": 100,
+        "endChar": 68
+      },
+      "revId": "d14f823ff82fbb20e19ab619041665554e7a1d18",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
