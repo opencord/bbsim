@@ -62,7 +62,15 @@ func KafkaPublisher(eventChannel chan Event) {
 	for {
 		select {
 		case event := <-eventChannel:
-			log.Debugf("Received event on channel %v", event)
+			log.WithFields(log.Fields{
+				"EventType": event.EventType,
+				"OnuSerial": event.OnuSerial,
+				"OltID":     event.OltID,
+				"IntfID":    event.IntfID,
+				"OnuID":     event.OnuID,
+				"EpochTime": event.EpochTime,
+				"Timestamp": event.Timestamp,
+			}).Trace("Received event on channel")
 			jsonEvent, err := json.Marshal(event)
 			if err != nil {
 				log.Errorf("Failed to get json event %v", err)
@@ -72,7 +80,15 @@ func KafkaPublisher(eventChannel chan Event) {
 				Topic: topic,
 				Value: sarama.ByteEncoder(jsonEvent),
 			}
-			log.Debugf("Event sent on kafka")
+			log.WithFields(log.Fields{
+				"EventType": event.EventType,
+				"OnuSerial": event.OnuSerial,
+				"OltID":     event.OltID,
+				"IntfID":    event.IntfID,
+				"OnuID":     event.OnuID,
+				"EpochTime": event.EpochTime,
+				"Timestamp": event.Timestamp,
+			}).Debug("Event sent on kafka")
 		}
 	}
 }
