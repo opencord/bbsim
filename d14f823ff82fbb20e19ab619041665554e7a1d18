@@ -22,6 +22,30 @@
       "revId": "d14f823ff82fbb20e19ab619041665554e7a1d18",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "436ca067_80bfc0e6",
+        "filename": "internal/bbsim/responders/sadis/sadis.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-03-17T16:21:35Z",
+      "side": 1,
+      "message": "Field in Go struct cannot be null, if I uncomment them they\u0027ll be reported as 0 in the JSON response and that will break things.\n\nAny unexpected field received by Sadis seems to break functionalities in ONOS (most often only a subset of the flows are pushed when you provision a subscriber)",
+      "parentUuid": "01480e04_f79a139c",
+      "range": {
+        "startLine": 100,
+        "startChar": 1,
+        "endLine": 100,
+        "endChar": 68
+      },
+      "revId": "d14f823ff82fbb20e19ab619041665554e7a1d18",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
