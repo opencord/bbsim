@@ -160,30 +160,51 @@ message Flows {
 message Empty {}
 
 service BBSim {
+    // Get BBSim version
     rpc Version(Empty) returns (VersionNumber) {}
+    // Set BBSim log level
     rpc SetLogLevel(LogLevel) returns (LogLevel) {}
 
+    // Get current status of OLT
     rpc GetOlt(Empty) returns (Olt) {}
+    // Poweron OLT
     rpc PoweronOlt(Empty) returns (Response) {}
+    // Shutdown OLT
     rpc ShutdownOlt(Empty) returns (Response) {}
+    // Reboot OLT
     rpc RebootOlt(Empty) returns (Response) {}
 
+    // Get status of an ONU by serial number
     rpc GetONU(ONURequest) returns (ONU) {}
+    // Get status of all ONUs
     rpc GetONUs(Empty) returns (ONUs) {}
 
+    // Shutdown an ONU by serial number
     rpc ShutdownONU (ONURequest) returns (Response) {}
+    // Shutdown all ONUs in OLT
     rpc ShutdownAllONUs (Empty) returns (Response) {}
+    // Shutdown all ONUs under a PON by pon-port-ID
     rpc ShutdownONUsOnPON(PONRequest) returns (Response) {}
 
+    // Poweron an ONU by serial number 
     rpc PoweronONU (ONURequest) returns (Response) {}
+    // Poweron all ONUs in OLT
     rpc PoweronAllONUs (Empty) returns (Response) {}
+    // Poweron all ONUs under a PON by pon-port-ID
     rpc PoweronONUsOnPON(PONRequest) returns (Response) {}
 
+    // Restart EAPOL for ONU
     rpc RestartEapol (ONURequest) returns (Response) {}
+    // Resatrt DHCP for ONU
     rpc RestartDhcp (ONURequest) returns (Response) {}
+    // Send ONU alarm indication
     rpc SetOnuAlarmIndication (ONUAlarmRequest) returns (Response) {}
+    // Send OLT alarm indication for Interface type NNI or PON
     rpc SetOltAlarmIndication (OLTAlarmRequest) returns (Response) {}
-    rpc GetFlows(ONURequest) returns(Flows) {} 
+    // Get all flows or ONU specific flows
+    rpc GetFlows(ONURequest) returns(Flows) {}
+    // Chnage IGMP state 
     rpc ChangeIgmpState (IgmpRequest) returns (Response) {}
+    // Get Traffic scheduler information for ONU
     rpc GetOnuTrafficSchedulers (ONURequest) returns (ONUTrafficSchedulers) {}
 }

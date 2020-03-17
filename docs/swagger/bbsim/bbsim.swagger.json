@@ -13,12 +13,19 @@
   "paths": {
     "/v1/olt": {
       "get": {
+        "summary": "Get current status of OLT",
         "operationId": "GetOlt",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimOlt"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -29,12 +36,19 @@
     },
     "/v1/olt/flows": {
       "get": {
+        "summary": "Get all flows or ONU specific flows",
         "operationId": "GetFlows2",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimFlows"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -53,12 +67,61 @@
     },
     "/v1/olt/onus": {
       "get": {
+        "summary": "Get status of all ONUs",
         "operationId": "GetONUs",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimONUs"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "BBSim"
+        ]
+      },
+      "delete": {
+        "summary": "Shutdown all ONUs in OLT",
+        "operationId": "ShutdownAllONUs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "BBSim"
+        ]
+      },
+      "post": {
+        "summary": "Poweron all ONUs in OLT",
+        "operationId": "PoweronAllONUs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -69,12 +132,19 @@
     },
     "/v1/olt/onus/{SerialNumber}": {
       "get": {
+        "summary": "Get status of an ONU by serial number",
         "operationId": "GetONU",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimONU"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -91,12 +161,19 @@
         ]
       },
       "delete": {
+        "summary": "Shutdown an ONU by serial number",
         "operationId": "ShutdownONU",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -113,12 +190,19 @@
         ]
       },
       "post": {
+        "summary": "Poweron an ONU by serial number",
         "operationId": "PoweronONU",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -137,12 +221,19 @@
     },
     "/v1/olt/onus/{SerialNumber}/alarms/{AlarmType}/{Status}": {
       "post": {
+        "summary": "Send ONU alarm indication",
         "operationId": "SetOnuAlarmIndication",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -173,12 +264,19 @@
     },
     "/v1/olt/onus/{SerialNumber}/flows": {
       "get": {
+        "summary": "Get all flows or ONU specific flows",
         "operationId": "GetFlows",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimFlows"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -197,12 +295,19 @@
     },
     "/v1/olt/onus/{SerialNumber}/trafficschedulers": {
       "get": {
+        "summary": "Get Traffic scheduler information for ONU",
         "operationId": "GetOnuTrafficSchedulers",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimONUTrafficSchedulers"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -219,14 +324,83 @@
         ]
       }
     },
+    "/v1/olt/port/{PonPortId}/onus": {
+      "delete": {
+        "summary": "Shutdown all ONUs under a PON by pon-port-ID",
+        "operationId": "ShutdownONUsOnPON",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "PonPortId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "BBSim"
+        ]
+      },
+      "post": {
+        "summary": "Poweron all ONUs under a PON by pon-port-ID",
+        "operationId": "PoweronONUsOnPON",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "PonPortId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "BBSim"
+        ]
+      }
+    },
     "/v1/olt/ports/{InterfaceType}/{InterfaceID}/alarms/los/{Status}": {
       "post": {
+        "summary": "Send OLT alarm indication for Interface type NNI or PON",
         "operationId": "SetOltAlarmIndication",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -258,12 +432,19 @@
     },
     "/v1/olt/status": {
       "get": {
+        "summary": "Get current status of OLT",
         "operationId": "GetOlt2",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimOlt"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -274,12 +455,19 @@
     },
     "/v1/version": {
       "get": {
+        "summary": "Get BBSim version",
         "operationId": "Version",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimVersionNumber"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -651,6 +839,39 @@
         "port_no": {
           "type": "integer",
           "format": "int64"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
         }
       }
     },
