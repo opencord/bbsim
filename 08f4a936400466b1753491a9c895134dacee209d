@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5fe9d40_4cbb7621",
+        "filename": "internal/bbsimctl/commands/oltalarms.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1000655
+      },
+      "writtenOn": "2020-03-17T13:56:09Z",
+      "side": 1,
+      "message": "I think, you meant OLTAlarms. All ONUAlarms should be replaced with OLTAlarms.",
+      "range": {
+        "startLine": 138,
+        "startChar": 43,
+        "endLine": 138,
+        "endChar": 54
+      },
+      "revId": "08f4a936400466b1753491a9c895134dacee209d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e8eade6_3c73ca22",
+        "filename": "internal/bbsimctl/commands/onualarms.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1000655
+      },
+      "writtenOn": "2020-03-17T13:56:09Z",
+      "side": 1,
+      "message": "this should be ONUAlarms",
+      "revId": "08f4a936400466b1753491a9c895134dacee209d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d8226f8_a339fc08",
+        "filename": "internal/bbsimctl/commands/onualarms.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1000655
+      },
+      "writtenOn": "2020-03-17T13:56:09Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 141,
+        "startChar": 16,
+        "endLine": 141,
+        "endChar": 32
+      },
+      "revId": "08f4a936400466b1753491a9c895134dacee209d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
