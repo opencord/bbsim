@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "0b4aefa0_c4f790a6",
+        "filename": "internal/bbsimctl/commands/onualarms.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-03-17T19:57:44Z",
+      "side": 1,
+      "message": "Fixed. I was confused by this comment.  ;)",
+      "range": {
+        "startLine": 132,
+        "startChar": 11,
+        "endLine": 132,
+        "endChar": 14
+      },
+      "revId": "08f4a936400466b1753491a9c895134dacee209d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8e8eade6_3c73ca22",
         "filename": "internal/bbsimctl/commands/onualarms.go",
         "patchSetId": 9
