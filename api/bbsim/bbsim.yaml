@@ -23,6 +23,8 @@ http:
     get: "/v1/olt"
     additional_bindings:
       - get: "/v1/olt/status"
+  - selector: bbsim.BBSim.RebootOlt
+    post: "/v1/olt/reboot"
 
   - selector: bbsim.BBSim.GetONUs
     get: "/v1/olt/onus"
