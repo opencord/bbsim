@@ -180,7 +180,7 @@ func BuildTestResult(payload []byte) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	resp := make([]byte, 26)
+	resp := make([]byte, 48)
 	resp[0] = byte(transactionId >> 8)
 	resp[1] = byte(transactionId & 0xFF)
 	resp[2] = 27 // Upper nibble 0x0 is fixed (0000), Lower nibbles defines msg type (TestResult=27)
@@ -189,23 +189,23 @@ func BuildTestResult(payload []byte) ([]byte, error) {
 	resp[5] = byte(class & 0xFF)
 	resp[6] = byte(instance >> 8)
 	resp[7] = byte(instance & 0xFF)
-	resp[8] = 0  // high byte of contents length
-	resp[9] = 17 // low byte of contents length
 	// Each of these is a 1-byte code
 	// follow by a 2-byte (high, low) value
-	resp[10] = 1 // power feed voltage
-	resp[11] = 0
-	resp[12] = 123 // feed voltage 123 mV, 20 mv res --> 6mv
-	resp[13] = 3   // received optical power
-	resp[14] = 1
-	resp[15] = 200 // 456 decibel-microwatts, 0.002 dB res --> 0.912 db-mw
-	resp[16] = 5   // mean optical launch power
-	resp[17] = 3
-	resp[18] = 21 // 789 uA, 2uA res --> 394uA
-	resp[19] = 9  // laser bias current
-	resp[20] = 38
-	resp[21] = 148 // 9876 deg C, 1/256 resolution --> 38.57 Deg C
-	resp[22] = 12  // temperature
+	resp[8] = 1 // power feed voltage
+	resp[9] = 0
+	resp[10] = 123 // 123 mV, 20 mv res --> 6mv
+	resp[11] = 3   // received optical power
+	resp[12] = 1
+	resp[13] = 200 // 456 decibel-microwatts, 0.002 dB res --> 0.912 db-mw
+	resp[14] = 5   // mean optical launch power
+	resp[15] = 3
+	resp[16] = 21 // 789 uA, 0.002 dB res --> 1.578 db-mw
+	resp[17] = 9  // laser bias current
+	resp[18] = 3
+	resp[19] = 244 // 1012 uA, 2uA res --> 505 ua
+	resp[20] = 12  // temperature
+	resp[21] = 38
+	resp[22] = 148 // 9876 deg C, 1/256 resolution --> 38.57 Deg C
 
 	return resp, nil
 }
