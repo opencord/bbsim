@@ -31,7 +31,7 @@ func init() {
 }
 
 const OltNniLos = "OLT_NNI_LOS"
-const OltPonLos = "OLG_PON_LOS"
+const OltPonLos = "OLT_PON_LOS"
 
 var OLTAlarms = map[string]bbsim.AlarmType_Types{
 	OltNniLos: bbsim.AlarmType_LOS,
