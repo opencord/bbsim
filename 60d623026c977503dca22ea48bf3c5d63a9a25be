@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d8fc76c_5e5e6546",
+        "filename": "internal/common/alarms.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000655
+      },
+      "writtenOn": "2020-03-19T07:01:16Z",
+      "side": 1,
+      "message": "Typo \"OLG\" \u003d\u003e \"OLT\".\nThis will break PON_LOSS alarm",
+      "range": {
+        "startLine": 34,
+        "startChar": 19,
+        "endLine": 34,
+        "endChar": 22
+      },
+      "revId": "60d623026c977503dca22ea48bf3c5d63a9a25be",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
