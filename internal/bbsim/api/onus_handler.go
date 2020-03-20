@@ -19,6 +19,7 @@ package api
 import (
 	"context"
 	"fmt"
+
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
@@ -404,7 +405,7 @@ func handlePoweronONU(onu *devices.Onu) (*bbsim.Response, error) {
 	}
 
 	losReq := bbsim.ONUAlarmRequest{
-		AlarmType:    "LossOfSignal",
+		AlarmType:    "ONU_ALARM_LOS",
 		SerialNumber: onu.Sn(),
 		Status:       "off",
 	}
@@ -457,7 +458,7 @@ func handleShutdownONU(onu *devices.Onu) (*bbsim.Response, error) {
 	olt := devices.GetOLT()
 
 	dyingGasp := bbsim.ONUAlarmRequest{
-		AlarmType:    "DyingGasp",
+		AlarmType:    "DYING_GASP",
 		SerialNumber: onu.Sn(),
 		Status:       "on",
 	}
@@ -474,7 +475,7 @@ func handleShutdownONU(onu *devices.Onu) (*bbsim.Response, error) {
 	}
 
 	losReq := bbsim.ONUAlarmRequest{
-		AlarmType:    "LossOfSignal",
+		AlarmType:    "ONU_ALARM_LOS",
 		SerialNumber: onu.Sn(),
 		Status:       "on",
 	}
