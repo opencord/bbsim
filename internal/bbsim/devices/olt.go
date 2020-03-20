@@ -963,6 +963,10 @@ func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Em
 		}
 		if !o.enablePerf {
 			onu.Flows = append(onu.Flows, flowKey)
+			// Generate event on first flow for ONU
+			if len(onu.Flows) == 1 {
+				publishEvent("Flow-add-received", int32(onu.PonPortID), int32(onu.ID), onuSnToString(onu.SerialNumber))
+			}
 		}
 
 		msg := Message{
@@ -1012,6 +1016,7 @@ func (o OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.E
 				return new(openolt.Empty), nil
 			}
 			onu.DeleteFlow(flowKey)
+			publishEvent("Flow-remove-received", int32(onu.PonPortID), int32(onu.ID), onuSnToString(onu.SerialNumber))
 		}
 
 		// delete from olt flows
