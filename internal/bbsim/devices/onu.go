@@ -459,6 +459,7 @@ func (o *Onu) processOmciMessage(message omcisim.OmciChMessage, stream openolt.O
 		log.WithFields(log.Fields{
 			"OnuId":  message.Data.OnuId,
 			"IntfId": message.Data.IntfId,
+			"OnuSn": o.Sn(),
 		}).Infof("GemPort Added")
 
 		// NOTE if we receive the GemPort but we don't have EAPOL flows
