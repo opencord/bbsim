@@ -3,4 +3,4 @@ host=gerrit.opencord.org
 port=29418
 project=bbsim.git
 defaultremote=origin
-
+defaultbranch=voltha-2.3
