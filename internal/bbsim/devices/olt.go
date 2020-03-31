@@ -944,6 +944,10 @@ func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Em
 		oltLogger.WithFields(log.Fields{
 			"FlowId": flow.FlowId,
 		}).Debugf("This is an OLT flow")
+	} else if flow.FlowType == "multicast" {
+		oltLogger.WithFields(log.Fields{
+			"FlowId": flow.FlowId,
+		}).Debugf("This is a multicast flow")
 	} else {
 		pon, err := o.GetPonById(uint32(flow.AccessIntfId))
 		if err != nil {
@@ -960,6 +964,7 @@ func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Em
 				"IntfId": flow.AccessIntfId,
 				"err":    err,
 			}).Error("Can't find Onu")
+			return nil, err
 		}
 		if !o.enablePerf {
 			onu.Flows = append(onu.Flows, flowKey)
