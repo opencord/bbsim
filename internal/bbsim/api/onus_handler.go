@@ -261,7 +261,7 @@ func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest
 				"OnuSn":  onu.Sn(),
 			}).Errorf("IGMP request failed: %s", igmpErr.Error())
 			res.StatusCode = int32(codes.FailedPrecondition)
-			res.Message = err.Error()
+			res.Message = igmpErr.Error()
 			return res, igmpErr
 		}
 	}

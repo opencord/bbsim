@@ -1061,8 +1061,26 @@ func (o OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.Devi
 }
 
 func (o OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*openolt.Empty, error) {
-	pon, _ := o.GetPonById(omci_msg.IntfId)
-	onu, _ := pon.GetOnuById(omci_msg.OnuId)
+	pon, err := o.GetPonById(omci_msg.IntfId)
+	if err != nil {
+		oltLogger.WithFields(log.Fields{
+			"error": err,
+			"onu_id": omci_msg.OnuId,
+			"pon_id": omci_msg.IntfId,
+		}).Error("pon ID not found")
+		return nil, err
+	}
+
+	onu, err := pon.GetOnuById(omci_msg.OnuId)
+	if err != nil {
+		oltLogger.WithFields(log.Fields{
+			"error": err,
+			"onu_id": omci_msg.OnuId,
+			"pon_id": omci_msg.IntfId,
+		}).Error("onu ID not found")
+		return nil, err
+	}
+
 	oltLogger.WithFields(log.Fields{
 		"IntfId": onu.PonPortID,
 		"OnuId":  onu.ID,

@@ -151,8 +151,8 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 			{Name: "send_eapol_flow", Src: []string{"initialized"}, Dst: "eapol_flow_sent"},
 			{Name: "send_dhcp_flow", Src: []string{"eapol_flow_sent"}, Dst: "dhcp_flow_sent"},
 			// IGMP
-			{Name: "igmp_join_start", Src: []string{"eap_response_success_received", "gem_port_added", "eapol_flow_received", "dhcp_ack_received", "igmp_left", "igmp_join_error"}, Dst: "igmp_join_started"},
-			{Name: "igmp_join_startv3", Src: []string{"eap_response_success_received", "gem_port_added", "eapol_flow_received", "dhcp_ack_received", "igmp_left", "igmp_join_error"}, Dst: "igmp_join_started"},
+			{Name: "igmp_join_start", Src: []string{"eap_response_success_received", "gem_port_added", "eapol_flow_received", "dhcp_ack_received", "igmp_left", "igmp_join_error", "igmp_join_started"}, Dst: "igmp_join_started"},
+			{Name: "igmp_join_startv3", Src: []string{"eap_response_success_received", "gem_port_added", "eapol_flow_received", "dhcp_ack_received", "igmp_left", "igmp_join_error", "igmp_join_started"}, Dst: "igmp_join_started"},
 			{Name: "igmp_join_error", Src: []string{"igmp_join_started"}, Dst: "igmp_join_error"},
 			{Name: "igmp_leave", Src: []string{"igmp_join_started", "gem_port_added", "eapol_flow_received", "eap_response_success_received", "dhcp_ack_received"}, Dst: "igmp_left"},
 		},
