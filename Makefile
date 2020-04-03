@@ -25,7 +25,7 @@ DOCKER_PORTS			?= -p 50070:50070 -p 50060:50060 -p 50071:50071 -p 50072:50072 -p
 TYPE                            ?= minimal
 
 # tool containers
-VOLTHA_TOOLS_VERSION ?= 2.1.0
+VOLTHA_TOOLS_VERSION ?= 2.2.0
 
 GO                = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golang go
 GO_SH             = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golang sh -c '
@@ -268,7 +268,7 @@ docs/swagger/bbsim/bbsim.swagger.json: api/bbsim/bbsim.yaml setup_tools
 	@${PROTOC} -I ./api \
 	  -I${GOOGLEAPI}/ \
 	  -I${VOLTHA_PROTOS}/protos/ \
-	  --swagger_out=logtostderr=true,allow_delete_body=true,grpc_api_configuration=$<:docs/swagger/ \
+	  --swagger_out=logtostderr=true,allow_delete_body=true,disable_default_errors=true,grpc_api_configuration=$<:docs/swagger/ \
 	  api/bbsim/bbsim.proto
 
 docs/swagger/leagacy/bbsim.swagger.json: api/legacy/bbsim.proto setup_tools
@@ -276,5 +276,5 @@ docs/swagger/leagacy/bbsim.swagger.json: api/legacy/bbsim.proto setup_tools
 	@${PROTOC} -I ./api \
 	  -I${GOOGLEAPI}/ \
 	  -I${VOLTHA_PROTOS}/protos/ \
-	  --swagger_out=logtostderr=true,allow_delete_body=true:docs/swagger/ \
+	  --swagger_out=logtostderr=true,allow_delete_body=true,disable_default_errors=true:docs/swagger/ \
 	  $<
