@@ -21,12 +21,6 @@
             "schema": {
               "$ref": "#/definitions/bbsimOlt"
             }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
           }
         },
         "tags": [
@@ -43,12 +37,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimFlows"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -75,12 +63,6 @@
             "schema": {
               "$ref": "#/definitions/bbsimONUs"
             }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
           }
         },
         "tags": [
@@ -96,12 +78,6 @@
             "schema": {
               "$ref": "#/definitions/bbsimResponse"
             }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
           }
         },
         "tags": [
@@ -116,12 +92,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -139,12 +109,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimONU"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -169,12 +133,6 @@
             "schema": {
               "$ref": "#/definitions/bbsimResponse"
             }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
           }
         },
         "parameters": [
@@ -197,12 +155,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -228,12 +180,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -272,12 +218,6 @@
             "schema": {
               "$ref": "#/definitions/bbsimFlows"
             }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
           }
         },
         "parameters": [
@@ -302,12 +242,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimONUTrafficSchedulers"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -334,12 +268,6 @@
             "schema": {
               "$ref": "#/definitions/bbsimResponse"
             }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
           }
         },
         "parameters": [
@@ -363,12 +291,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -395,12 +317,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -430,6 +346,23 @@
         ]
       }
     },
+    "/v1/olt/reboot": {
+      "post": {
+        "summary": "Reboot OLT",
+        "operationId": "RebootOlt",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimResponse"
+            }
+          }
+        },
+        "tags": [
+          "BBSim"
+        ]
+      }
+    },
     "/v1/olt/status": {
       "get": {
         "summary": "Get current status of OLT",
@@ -439,12 +372,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimOlt"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -462,12 +389,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/bbsimVersionNumber"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -839,39 +760,6 @@
         "port_no": {
           "type": "integer",
           "format": "int64"
-        }
-      }
-    },
-    "protobufAny": {
-      "type": "object",
-      "properties": {
-        "type_url": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string",
-          "format": "byte"
-        }
-      }
-    },
-    "runtimeError": {
-      "type": "object",
-      "properties": {
-        "error": {
-          "type": "string"
-        },
-        "code": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "message": {
-          "type": "string"
-        },
-        "details": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/protobufAny"
-          }
         }
       }
     },

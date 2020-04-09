@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to BBSim's documentation!
-=================================
+BBSim, a Broadband Simulator
+============================
 
 .. toctree::
    :maxdepth: 2
@@ -178,8 +178,9 @@ the old format:*
 Controlled PON and ONU activation
 ---------------------------------
 
-BBSim provides support for controlled PON and ONU activation. By default both PON ports and ONUs are automatically activated when OLT is enabled.
-This can be controlled using ``-ca`` option.
+BBSim provides support for controlled PON and ONU activation. By default both
+PON ports and ONUs are automatically activated when OLT is enabled.  This can
+be controlled using ``-ca`` option.
 
 ``-ca`` can be set to one of below four modes:
 
@@ -188,21 +189,28 @@ This can be controlled using ``-ca`` option.
 - only-onu: PON ports automatically enabled and ONUs dynamically activated
             On Enable OLT, IntfIndications for all PON ports are sent but ONU discovery indications are not sent.
             When PoweronONU request is received at BBSim API server then ONU discovery indication is sent for that ONU.
+
 - only-pon: PON ports dynamically enabled and ONUs automatically activated
             On Enable OLT, neither IntfIndications for PON ports nor ONU discovery indications are sent.
             When EnablePonIf request is received at OpenOLT server, then that PON port is enabled and
             IntfIndication is sent for that PON and all ONUs under that ports are discovered automatically.
+
 - both: Both PON ports and ONUs are dynamically activated
         On Enable OLT, neither IntfIndication for PON ports nor ONU discovery indications are sent.
-        When EnablePonIf request is received on OpenOLT server then IntfIndication is sent for that PON but no ONU discovery indication will be sent.
+        When EnablePonIf request is received on OpenOLT server then
+        IntfIndication is sent for that PON but no ONU discovery indication
+        will be sent.
         When PoweronONU request is received at BBSim API server then ONU discovery indication is sent for that ONU.
 
 
 Publishing BBSim Events on kafka
 --------------------------------
 
-BBSim provides option for publishing events on kafka. To publish events on kafka, set BBSimEvents flag and configure kafkaAddress.
-Once BBSim is started, it will publish events (as and when they happen) on topic ``BBSim-OLT-<id>-Events``.
+BBSim provides option for publishing events on kafka. To publish events on
+kafka, set BBSimEvents flag and configure kafkaAddress.
+
+Once BBSim is started, it will publish events (as and when they happen) on
+topic ``BBSim-OLT-<id>-Events``.
 
 Types of Events:
   - OLT-enable-received
