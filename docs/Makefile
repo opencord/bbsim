@@ -17,9 +17,8 @@ help: doc_venv
 	$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 doc_venv:
-	virtualenv $@ ;\
+	virtualenv -p python3 $@ ;\
 	source $@/bin/activate ;\
-	pip install livereload ;\
 	pip install -r requirements.txt
 
 lint: doc8
