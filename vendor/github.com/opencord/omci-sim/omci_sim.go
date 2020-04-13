@@ -48,7 +48,7 @@ func OmciSim(intfId uint32, onuId uint32, request []byte) ([]byte, error) {
 		"MeInstance": instance,
 		//"Conent": content,
 		"omciMsg": fmt.Sprintf("%x", content),
-	}).Tracef("Processing OMCI packet")
+	}).Tracef("Processing OMCI packet [TEO 28]")
 
 	key := OnuKey{intfId, onuId}
 	OnuOmciStateMapLock.Lock()
