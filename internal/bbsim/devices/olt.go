@@ -148,20 +148,47 @@ func CreateOLT(options common.BBSimYamlConfig, isMock bool) *OltDevice {
 	}
 
 	// create PON ports
-	availableCTag := options.BBSim.CTagInit
-	for i := 0; i < olt.NumPon; i++ {
-		p := CreatePonPort(&olt, uint32(i))
 
-		// create ONU devices
-		for j := 0; j < olt.NumOnuPerPon; j++ {
-			delay := time.Duration(olt.Delay*j) * time.Millisecond
-			o := CreateONU(&olt, *p, uint32(j+1), options.BBSim.STag, availableCTag, options.BBSim.EnableAuth, options.BBSim.EnableDhcp, delay, isMock)
-			p.Onus = append(p.Onus, o)
-			availableCTag = availableCTag + 1
+	if options.BBSim.STagAllocation == "shared" && options.BBSim.CTagAllocation == "shared" {
+		oltLogger.Fatalf("This configuration will result in duplicate C/S tags combination")
+	} else if options.BBSim.STagAllocation == "unique" && options.BBSim.CTagAllocation == "unique" {
+		oltLogger.Fatalf("This configuration is not supported yet")
+	} else if options.BBSim.STagAllocation == "shared" && options.BBSim.CTagAllocation == "unique" {
+		// ATT case
+		availableCTag := options.BBSim.CTag
+		for i := 0; i < olt.NumPon; i++ {
+			p := CreatePonPort(&olt, uint32(i))
+
+			// create ONU devices
+			for j := 0; j < olt.NumOnuPerPon; j++ {
+				delay := time.Duration(olt.Delay*j) * time.Millisecond
+				o := CreateONU(&olt, *p, uint32(j+1), options.BBSim.STag, availableCTag, options.BBSim.EnableAuth, options.BBSim.EnableDhcp, delay, isMock)
+				p.Onus = append(p.Onus, o)
+				availableCTag = availableCTag + 1
+			}
+
+			olt.Pons = append(olt.Pons, p)
 		}
+	} else if options.BBSim.STagAllocation == "unique" && options.BBSim.CTagAllocation == "shared" {
+		// DT case
+		availableSTag := options.BBSim.STag
+		for i := 0; i < olt.NumPon; i++ {
+			p := CreatePonPort(&olt, uint32(i))
 
-		olt.Pons = append(olt.Pons, p)
+			// create ONU devices
+			for j := 0; j < olt.NumOnuPerPon; j++ {
+				delay := time.Duration(olt.Delay*j) * time.Millisecond
+				o := CreateONU(&olt, *p, uint32(j+1), availableSTag, options.BBSim.CTag, options.BBSim.EnableAuth, options.BBSim.EnableDhcp, delay, isMock)
+				p.Onus = append(p.Onus, o)
+				availableSTag = availableSTag + 1
+			}
+
+			olt.Pons = append(olt.Pons, p)
+		}
 	}
+
+
+
 
 	if isMock != true {
 		if err := olt.InternalState.Event("initialize"); err != nil {

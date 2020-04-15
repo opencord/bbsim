@@ -19,10 +19,9 @@ package common
 import (
 	"flag"
 	"fmt"
+	"github.com/ghodss/yaml"
 	"io/ioutil"
 	"net"
-
-	"gopkg.in/yaml.v2"
 )
 
 type BBRCliOptions struct {
@@ -56,25 +55,30 @@ type OltConfig struct {
 }
 
 type BBSimConfig struct {
-	EnableDhcp           bool    `yaml:"enable_dhcp"`
-	EnableAuth           bool    `yaml:"enable_auth"`
-	LogLevel             string  `yaml:"log_level"`
-	LogCaller            bool    `yaml:"log_caller"`
-	Delay                int     `yaml:"delay"`
-	CpuProfile           *string `yaml:"cpu_profile"`
-	CTagInit             int     `yaml:"c_tag"`
-	STag                 int     `yaml:"s_tag"`
-	OpenOltAddress       string  `yaml:"openolt_address"`
-	ApiAddress           string  `yaml:"api_address"`
-	RestApiAddress       string  `yaml:"rest_api_address"`
-	LegacyApiAddress     string  `yaml:"legacy_api_address"`
-	LegacyRestApiAddress string  `yaml:"legacy_rest_api_address"`
-	SadisRestAddress     string  `yaml:"sadis_rest_address"`
-	SadisServer          bool    `yaml:"sadis_server"`
-	KafkaAddress         string  `yaml:"kafka_address"`
-	Events               bool    `yaml:"enable_events"`
-	ControlledActivation string  `yaml:"controlled_activation"`
-	EnablePerf           bool    `yaml:"enable_perf"`
+	EnableDhcp bool    `yaml:"enable_dhcp"`
+	EnableAuth bool    `yaml:"enable_auth"`
+	LogLevel   string  `yaml:"log_level"`
+	LogCaller  bool    `yaml:"log_caller"`
+	Delay      int     `yaml:"delay"`
+	CpuProfile *string `yaml:"cpu_profile"`
+	// TODO use enum <shared|unique>
+	CTagAllocation string `yaml:"c_tag_allocation"`
+	CTag           int    `yaml:"c_tag"`
+	// TODO use enum <shared|unique>
+	STagAllocation       string `yaml:"s_tag_allocation"`
+	STag                 int    `yaml:"s_tag"`
+	OpenOltAddress       string `yaml:"openolt_address"`
+	ApiAddress           string `yaml:"api_address"`
+	RestApiAddress       string `yaml:"rest_api_address"`
+	LegacyApiAddress     string `yaml:"legacy_api_address"`
+	LegacyRestApiAddress string `yaml:"legacy_rest_api_address"`
+	SadisRestAddress     string `yaml:"sadis_rest_address"`
+	SadisServer          bool   `yaml:"sadis_server"`
+	SadisFormat          string `yaml:"sadis_format"`
+	KafkaAddress         string `yaml:"kafka_address"`
+	Events               bool   `yaml:"enable_events"`
+	ControlledActivation string `yaml:"controlled_activation"`
+	EnablePerf           bool   `yaml:"enable_perf"`
 }
 
 type BBRConfig struct {
@@ -94,8 +98,10 @@ func getDefaultOps() *BBSimYamlConfig {
 
 	c := &BBSimYamlConfig{
 		BBSimConfig{
+			STagAllocation:       "shared",
 			STag:                 900,
-			CTagInit:             900,
+			CTagAllocation:       "unique",
+			CTag:                 900,
 			EnableDhcp:           false,
 			EnableAuth:           false,
 			LogLevel:             "debug",
@@ -108,6 +114,7 @@ func getDefaultOps() *BBSimYamlConfig {
 			LegacyRestApiAddress: ":50073",
 			SadisRestAddress:     ":50074",
 			SadisServer:          true,
+			SadisFormat:          "att",
 			KafkaAddress:         ":9092",
 			Events:               false,
 			ControlledActivation: "default",
@@ -166,8 +173,12 @@ func GetBBSimOpts() *BBSimYamlConfig {
 	api_address := flag.String("api_address", conf.BBSim.ApiAddress, "IP address:port")
 	rest_api_address := flag.String("rest_api_address", conf.BBSim.RestApiAddress, "IP address:port")
 
+	s_tag_allocation := flag.String("s_tag_allocation", conf.BBSim.STagAllocation, "Use 'unique' for incremental values, 'shared' to use the same value in all the ONUs")
 	s_tag := flag.Int("s_tag", conf.BBSim.STag, "S-Tag initial value")
-	c_tag_init := flag.Int("c_tag", conf.BBSim.CTagInit, "C-Tag starting value, each ONU will get a sequential one (targeting 1024 ONUs per BBSim instance the range is big enough)")
+	c_tag_allocation := flag.String("c_tag_allocation", conf.BBSim.CTagAllocation, "Use 'unique' for incremental values, 'shared' to use the same value in all the ONUs")
+	c_tag := flag.Int("c_tag", conf.BBSim.CTag, "C-Tag starting value, each ONU will get a sequential one (targeting 1024 ONUs per BBSim instance the range is big enough)")
+
+	sadis_format := flag.String("sadis_format", conf.BBSim.SadisFormat, "Which format should sadis expose? [att|dt|tt]")
 
 	auth := flag.Bool("auth", conf.BBSim.EnableAuth, "Set this flag if you want authentication to start automatically")
 	dhcp := flag.Bool("dhcp", conf.BBSim.EnableDhcp, "Set this flag if you want DHCP to start automatically")
@@ -189,8 +200,10 @@ func GetBBSimOpts() *BBSimYamlConfig {
 	conf.Olt.NniPorts = uint32(*nni)
 	conf.Olt.PonPorts = uint32(*pon)
 	conf.Olt.OnusPonPort = uint32(*onu)
+	conf.BBSim.STagAllocation = *s_tag_allocation
 	conf.BBSim.STag = int(*s_tag)
-	conf.BBSim.CTagInit = int(*c_tag_init)
+	conf.BBSim.CTagAllocation = *c_tag_allocation
+	conf.BBSim.CTag = int(*c_tag)
 	conf.BBSim.CpuProfile = profileCpu
 	conf.BBSim.LogLevel = *logLevel
 	conf.BBSim.LogCaller = *logCaller
@@ -204,6 +217,7 @@ func GetBBSimOpts() *BBSimYamlConfig {
 	conf.BBSim.OpenOltAddress = *openolt_address
 	conf.BBSim.ApiAddress = *api_address
 	conf.BBSim.RestApiAddress = *rest_api_address
+	conf.BBSim.SadisFormat = *sadis_format
 
 	// update device id if not set
 	if conf.Olt.DeviceId == "" {

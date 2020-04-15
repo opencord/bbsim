@@ -7,6 +7,8 @@ require (
 	github.com/aead/cmac v0.0.0-20160719120800-7af84192f0b1 // indirect
 	github.com/cboling/omci v0.1.0
 	github.com/deckarep/golang-set v1.7.1 // indirect
+	github.com/fatih/structs v1.1.0
+	github.com/ghodss/yaml v1.0.0
 	github.com/golang/protobuf v1.3.2
 	github.com/google/gopacket v1.1.17
 	github.com/gorilla/mux v1.7.3

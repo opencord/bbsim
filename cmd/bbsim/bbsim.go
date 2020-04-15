@@ -157,6 +157,10 @@ func main() {
 		"Events":               options.BBSim.Events,
 		"ControlledActivation": options.BBSim.ControlledActivation,
 		"EnablePerf":           options.BBSim.EnablePerf,
+		"CTag":                 options.BBSim.CTag,
+		"CTagAllocation":       options.BBSim.CTagAllocation,
+		"STag":                 options.BBSim.STag,
+		"STagAllocation":       options.BBSim.STagAllocation,
 	}).Info("BroadBand Simulator is on")
 
 	// control channels, they are only closed when the goroutine needs to be terminated
