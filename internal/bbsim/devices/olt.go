@@ -33,7 +33,7 @@ import (
 	"github.com/opencord/bbsim/internal/common"
 	omcisim "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
-	tech_profile "github.com/opencord/voltha-protos/v2/go/tech_profile"
+	"github.com/opencord/voltha-protos/v2/go/tech_profile"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -148,19 +148,43 @@ func CreateOLT(options common.BBSimYamlConfig, isMock bool) *OltDevice {
 	}
 
 	// create PON ports
-	availableCTag := options.BBSim.CTagInit
-	for i := 0; i < olt.NumPon; i++ {
-		p := CreatePonPort(&olt, uint32(i))
 
-		// create ONU devices
-		for j := 0; j < olt.NumOnuPerPon; j++ {
-			delay := time.Duration(olt.Delay*j) * time.Millisecond
-			o := CreateONU(&olt, *p, uint32(j+1), options.BBSim.STag, availableCTag, options.BBSim.EnableAuth, options.BBSim.EnableDhcp, delay, isMock)
-			p.Onus = append(p.Onus, o)
-			availableCTag = availableCTag + 1
+	if options.BBSim.STagAllocation == common.TagAllocationShared && options.BBSim.CTagAllocation == common.TagAllocationShared {
+		oltLogger.Fatalf("This configuration will result in duplicate C/S tags combination")
+	} else if options.BBSim.STagAllocation == common.TagAllocationUnique && options.BBSim.CTagAllocation == common.TagAllocationUnique {
+		oltLogger.Fatalf("This configuration is not supported yet")
+	} else if options.BBSim.STagAllocation == common.TagAllocationShared && options.BBSim.CTagAllocation == common.TagAllocationUnique {
+		// ATT case
+		availableCTag := options.BBSim.CTag
+		for i := 0; i < olt.NumPon; i++ {
+			p := CreatePonPort(&olt, uint32(i))
+
+			// create ONU devices
+			for j := 0; j < olt.NumOnuPerPon; j++ {
+				delay := time.Duration(olt.Delay*j) * time.Millisecond
+				o := CreateONU(&olt, *p, uint32(j+1), options.BBSim.STag, availableCTag, options.BBSim.EnableAuth, options.BBSim.EnableDhcp, delay, isMock)
+				p.Onus = append(p.Onus, o)
+				availableCTag = availableCTag + 1
+			}
+
+			olt.Pons = append(olt.Pons, p)
 		}
+	} else if options.BBSim.STagAllocation == common.TagAllocationUnique && options.BBSim.CTagAllocation == common.TagAllocationShared {
+		// DT case
+		availableSTag := options.BBSim.STag
+		for i := 0; i < olt.NumPon; i++ {
+			p := CreatePonPort(&olt, uint32(i))
 
-		olt.Pons = append(olt.Pons, p)
+			// create ONU devices
+			for j := 0; j < olt.NumOnuPerPon; j++ {
+				delay := time.Duration(olt.Delay*j) * time.Millisecond
+				o := CreateONU(&olt, *p, uint32(j+1), availableSTag, options.BBSim.CTag, options.BBSim.EnableAuth, options.BBSim.EnableDhcp, delay, isMock)
+				p.Onus = append(p.Onus, o)
+				availableSTag = availableSTag + 1
+			}
+
+			olt.Pons = append(olt.Pons, p)
+		}
 	}
 
 	if isMock != true {
@@ -1069,7 +1093,7 @@ func (o OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*
 	pon, err := o.GetPonById(omci_msg.IntfId)
 	if err != nil {
 		oltLogger.WithFields(log.Fields{
-			"error": err,
+			"error":  err,
 			"onu_id": omci_msg.OnuId,
 			"pon_id": omci_msg.IntfId,
 		}).Error("pon ID not found")
@@ -1079,7 +1103,7 @@ func (o OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*
 	onu, err := pon.GetOnuById(omci_msg.OnuId)
 	if err != nil {
 		oltLogger.WithFields(log.Fields{
-			"error": err,
+			"error":  err,
 			"onu_id": omci_msg.OnuId,
 			"pon_id": omci_msg.IntfId,
 		}).Error("onu ID not found")
