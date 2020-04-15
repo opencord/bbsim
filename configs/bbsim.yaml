@@ -14,12 +14,15 @@ bbsim:
   # legacy_api_address: ":50072"
   # legacy_rest_api_address: ":50073"
   # sadis_rest_address: ":50074"
+  # sadis_format: att|dt|tt
   # enable_events: false
   # kafka_address: ":9092"
   # log_level: "debug" 
   # log_caller: false
   # delay: 200
+  # c_tag_allocation: unique
   # c_tag: 900
+  # s_tag_allocation: shared
   # s_tag: 900
 
 # OLT device settings

@@ -25,6 +25,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"github.com/opencord/bbsim/internal/common"
+	"github.com/fatih/structs"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -93,10 +94,13 @@ type SadisOnuEntryV2 struct {
 	NasPortID  string        `json:"nasPortId"`
 	CircuitID  string        `json:"circuitId"`
 	RemoteID   string        `json:"remoteId"`
-	UniTagList []SadisUniTag `json:"uniTagList"`
+	UniTagList []SadisUniTagJson `json:"uniTagList"`
 }
 
+type SadisUniTagJson map[string]interface{}
+
 type SadisUniTag struct {
+	UniTagMatch                int    `json:"uniTagMatch, omitempty"`
 	PonCTag                    int    `json:"ponCTag, omitempty"`
 	PonSTag                    int    `json:"ponSTag, omitempty"`
 	TechnologyProfileID        int    `json:"technologyProfileId, omitempty"`
@@ -189,8 +193,7 @@ func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*Sad
 		RemoteID:  onu.Sn() + uniSuffix,
 	}
 
-	// TODO this sadis config only works for the ATT workflow
-	// address VOL-2761 to support DT
+	// base structure common to all use cases
 	sonuUniTag := SadisUniTag{
 		PonCTag:             onu.CTag,
 		PonSTag:             onu.STag,
@@ -199,11 +202,30 @@ func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*Sad
 		// if so use bandwidthProfiles[rand.Intn(len(bandwidthProfiles))].ID
 		UpstreamBandwidthProfile:   "Default",
 		DownstreamBandwidthProfile: "User_Bandwidth1",
-		IsDhcpRequired:             true,
-		IsIgmpRequired:             true,
 	}
 
-	sonuv2.UniTagList = append(sonuv2.UniTagList, sonuUniTag)
+	// set workflow specific params
+	switch common.Options.BBSim.SadisFormat {
+	case common.SadisFormatAtt:
+		sonuUniTag.IsDhcpRequired = true
+		sonuUniTag.IsIgmpRequired = true
+	case common.SadisFormatDt:
+		sonuUniTag.UniTagMatch = 4096
+	}
+
+	// convert to a map so that we can remove stuff we don't want to be published in the JSON
+	uniTagList := structs.Map(sonuUniTag)
+
+	// remove unwanted fields
+	switch common.Options.BBSim.SadisFormat {
+	case common.SadisFormatAtt:
+		delete(uniTagList, "UniTagMatch")
+	case common.SadisFormatDt:
+		delete(uniTagList, "IsDhcpRequired")
+		delete(uniTagList, "IsIgmpRequired")
+	}
+
+	sonuv2.UniTagList = append(sonuv2.UniTagList, uniTagList)
 	return sonuv2, nil
 }
 
