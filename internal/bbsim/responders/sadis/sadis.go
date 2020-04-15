@@ -93,10 +93,10 @@ type SadisOnuEntryV2 struct {
 	NasPortID  string        `json:"nasPortId"`
 	CircuitID  string        `json:"circuitId"`
 	RemoteID   string        `json:"remoteId"`
-	UniTagList []SadisUniTag `json:"uniTagList"`
+	UniTagList []interface{} `json:"uniTagList"` // this can be SadisUniTagAtt, SadisUniTagDt
 }
 
-type SadisUniTag struct {
+type SadisUniTagAtt struct {
 	PonCTag                    int    `json:"ponCTag, omitempty"`
 	PonSTag                    int    `json:"ponSTag, omitempty"`
 	TechnologyProfileID        int    `json:"technologyProfileId, omitempty"`
@@ -104,6 +104,15 @@ type SadisUniTag struct {
 	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile, omitempty"`
 	IsDhcpRequired             bool   `json:"isDhcpRequired, omitempty"`
 	IsIgmpRequired             bool   `json:"isIgmpRequired, omitempty"`
+}
+
+type SadisUniTagDt struct {
+	UniTagMatch                int    `json:"uniTagMatch, omitempty"`
+	PonCTag                    int    `json:"ponCTag, omitempty"`
+	PonSTag                    int    `json:"ponSTag, omitempty"`
+	TechnologyProfileID        int    `json:"technologyProfileId, omitempty"`
+	UpstreamBandwidthProfile   string `json:"upstreamBandwidthProfile, omitempty"`
+	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile, omitempty"`
 }
 
 // SADIS BandwithProfile Entry
@@ -189,18 +198,34 @@ func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*Sad
 		RemoteID:  onu.Sn() + uniSuffix,
 	}
 
-	// TODO this sadis config only works for the ATT workflow
-	// address VOL-2761 to support DT
-	sonuUniTag := SadisUniTag{
-		PonCTag:             onu.CTag,
-		PonSTag:             onu.STag,
-		TechnologyProfileID: 64,
-		// NOTE do we want to select a random bandwidth profile?
-		// if so use bandwidthProfiles[rand.Intn(len(bandwidthProfiles))].ID
-		UpstreamBandwidthProfile:   "Default",
-		DownstreamBandwidthProfile: "User_Bandwidth1",
-		IsDhcpRequired:             true,
-		IsIgmpRequired:             true,
+	// base structure common to all use cases
+	var sonuUniTag interface{}
+
+	// set workflow specific params
+	switch common.Options.BBSim.SadisFormat {
+	case common.SadisFormatAtt:
+		sonuUniTag = SadisUniTagAtt{
+			PonCTag:             onu.CTag,
+			PonSTag:             onu.STag,
+			TechnologyProfileID: 64,
+			// NOTE do we want to select a random bandwidth profile?
+			// if so use bandwidthProfiles[rand.Intn(len(bandwidthProfiles))].ID
+			UpstreamBandwidthProfile:   "Default",
+			DownstreamBandwidthProfile: "User_Bandwidth1",
+			IsDhcpRequired:             true,
+			IsIgmpRequired:             true,
+		}
+	case common.SadisFormatDt:
+		sonuUniTag = SadisUniTagDt{
+			PonCTag:             4096,
+			PonSTag:             onu.STag,
+			TechnologyProfileID: 64,
+			// NOTE do we want to select a random bandwidth profile?
+			// if so use bandwidthProfiles[rand.Intn(len(bandwidthProfiles))].ID
+			UpstreamBandwidthProfile:   "Default",
+			DownstreamBandwidthProfile: "User_Bandwidth1",
+			UniTagMatch:                4096,
+		}
 	}
 
 	sonuv2.UniTagList = append(sonuv2.UniTagList, sonuUniTag)

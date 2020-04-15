@@ -16,6 +16,10 @@ github.com/eapache/go-resiliency/breaker
 github.com/eapache/go-xerial-snappy
 # github.com/eapache/queue v1.1.0
 github.com/eapache/queue
+# github.com/fatih/structs v1.1.0
+github.com/fatih/structs
+# github.com/ghodss/yaml v1.0.0
+github.com/ghodss/yaml
 # github.com/golang/protobuf v1.3.2
 github.com/golang/protobuf/descriptor
 github.com/golang/protobuf/jsonpb

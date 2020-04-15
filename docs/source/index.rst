@@ -93,16 +93,28 @@ the list via ``./bbsim --help``
 
    $ ./bbsim --help
    Usage of ./bbsim:
+     -api_address string
+           IP address:port (default ":50070")
      -auth
            Set this flag if you want authentication to start automatically
      -c_tag int
            C-Tag starting value, each ONU will get a sequential one (targeting 1024 ONUs per BBSim instance the range is big enough) (default 900)
+     -c_tag_allocation string
+           Use 'unique' for incremental values, 'shared' to use the same value in all the ONUs (default "unique")
+     -ca string
+           Set the mode for controlled activation of PON ports and ONUs (default "default")
      -cpuprofile string
            write cpu profile to file
      -delay int
            The delay between ONU DISCOVERY batches in milliseconds (1 ONU per each PON PORT at a time (default 200)
      -dhcp
            Set this flag if you want DHCP to start automatically
+     -enableEvents
+           Enable sending BBSim events on configured kafka server
+     -enableperf
+           Setting this flag will cause BBSim to not store data like traffic schedulers, flows of ONUs etc..
+     -kafkaAddress string
+           IP:Port for kafka (default ":9092")
      -logCaller
            Whether to print the caller filename or not
      -logLevel string
@@ -110,21 +122,21 @@ the list via ``./bbsim --help``
      -nni int
            Number of NNI ports per OLT device to be emulated (default 1)
      -olt_id int
-           Number of OLT devices to be emulated
+           OLT device ID
      -onu int
            Number of ONU devices per PON port to be emulated (default 1)
+     -openolt_address string
+           IP address:port (default ":50060")
      -pon int
            Number of PON ports per OLT device to be emulated (default 1)
+     -rest_api_address string
+           IP address:port (default ":50071")
      -s_tag int
-           S-Tag value (default 900)
-     -enableEvents
-           Set this flag for publishing BBSim events on configured kafkaAddress
-     -kafkaAddress string
-           IP:Port for kafka, used only when bbsimEvents flag is set (default ":9092")
-     -ca string
-           Set the mode for controlled activation of PON ports and ONUs
-     -enableperf bool
-           Setting this flag will cause BBSim to not store data like traffic schedulers, flows of ONUs etc
+           S-Tag initial value (default 900)
+     -s_tag_allocation string
+           Use 'unique' for incremental values, 'shared' to use the same value in all the ONUs (default "shared")
+     -sadisFormat string
+           Which format should sadis expose? [att|dt|tt] (default "att")
 
 ``BBSim`` also looks for a configuration file in ``configs/bbsim.yaml`` from
 which it reads a number of default settings. The command line options listed
@@ -132,6 +144,37 @@ above override the corresponding configuration file settings. A sample
 configuration file is given below:
 
 .. literalinclude:: ../../configs/bbsim.yaml
+
+Specifying different tagging schemes
+------------------------------------
+
+BBSim supports two different tagging schemes:
+- ``-s_tag_allocation shared -c_tag_allocation unique``
+- ``-s_tag_allocation unique -c_tag_allocation shared``
+
+Where the former will use the same ``S-Tag`` for all the ONUs and a unique ``C-Tag`` for each of them
+and the latter will use a unique ``S-Tag`` for each ONU and the same ``C-Tag`` for all of them.
+
+For example:
+
+.. code:: bash
+
+   # -s_tag_allocation shared -c_tag_allocation unique
+   PONPORTID    ID    PORTNO    SERIALNUMBER    HWADDRESS            STAG    CTAG    OPERSTATE    INTERNALSTATE
+   0            0     0         BBSM00000001    2e:60:70:00:00:01    900     900     down         created
+   1            0     0         BBSM00000101    2e:60:70:00:01:01    900     901     down         created
+   2            0     0         BBSM00000201    2e:60:70:00:02:01    900     902     down         created
+   3            0     0         BBSM00000301    2e:60:70:00:03:01    900     903     down         created
+
+
+   # -s_tag_allocation unique -c_tag_allocation shared
+   PONPORTID    ID    PORTNO    SERIALNUMBER    HWADDRESS            STAG    CTAG    OPERSTATE    INTERNALSTATE
+   0            0     0         BBSM00000001    2e:60:70:00:00:01    900     7       down         created
+   1            0     0         BBSM00000101    2e:60:70:00:01:01    901     7       down         created
+   2            0     0         BBSM00000201    2e:60:70:00:02:01    902     7       down         created
+   3            0     0         BBSM00000301    2e:60:70:00:03:01    903     7       down         created
+
+
 
 Using the BBSim Sadis server in ONOS
 ------------------------------------
@@ -143,14 +186,14 @@ listens on port 50074 by default and provides the endpoints
 To configure ONOS to use the BBSim ``Sadis`` server endpoints, the Sadis app
 must use be configured as follows (see ``examples/sadis-in-bbsim.json``):
 
-.. literalinclude:: ../../examples/sadis-in-bbsim2.json
+.. literalinclude:: ../../examples/sadis-in-bbsim.json
 
 This base configuration may also be obtained directly from the BBSim Sadis
 server:
 
 .. code:: bash
 
-   curl http://<BBSIM_IP>:50074/cfg -o examples/sadis.json
+   curl http://<BBSIM_IP>:50074/v2/cfg -o examples/sadis.json
 
 It can then be pushed to the Sadis app using the following command:
 
@@ -170,10 +213,69 @@ You can verify the current Sadis configuration:
 
 In ONOS subscriber information can be queried using ``sadis <id>``.
 
-*Note that BBSim supports both sadis configuration versions, here is an example of the configuration needed to return
-the old format:*
+*Note that BBSim supports both sadis configuration versions,
+if you need to support the configuration for release older than VOLTHA-2.3
+you can use the following command:*
 
-.. literalinclude:: ../../examples/sadis-in-bbsim.json
+.. code:: bash
+
+   curl http://<BBSIM_IP>:50074/v1/cfg -o examples/sadis.json
+
+Configure the Sadis format for different workflows
+**************************************************
+
+BBSim support different sadis formats, required for different workflows.
+The desired sadis format can be specified via the ``-sadisFormat`` flag.
+
+The difference in the format is restricted to the ``uniTagList`` property,
+for example:
+
+**ATT**
+
+.. code:: json
+
+   {
+  "id": "BBSM00000003-1",
+  "nasPortId": "BBSM00000003-1",
+  "circuitId": "BBSM00000003-1",
+  "remoteId": "BBSM00000003-1",
+  "uniTagList": [
+    {
+      "DownstreamBandwidthProfile": "User_Bandwidth1",
+      "IsDhcpRequired": true,
+      "IsIgmpRequired": true,
+      "PonCTag": 903,
+      "PonSTag": 900,
+      "TechnologyProfileID": 64,
+      "UpstreamBandwidthProfile": "Default"
+    }
+  ]
+}
+
+**DT**
+
+.. code:: json
+
+   {
+  "id": "BBSM00000003-1",
+  "nasPortId": "BBSM00000003-1",
+  "circuitId": "BBSM00000003-1",
+  "remoteId": "BBSM00000003-1",
+  "uniTagList": [
+    {
+      "DownstreamBandwidthProfile": "User_Bandwidth1",
+      "PonCTag": 4096,
+      "PonSTag": 903,
+      "TechnologyProfileID": 64,
+      "UniTagMatch": 4096,
+      "UpstreamBandwidthProfile": "Default"
+    }
+  ]
+}
+
+**TT**
+
+*Coming soon...*
 
 Controlled PON and ONU activation
 ---------------------------------
