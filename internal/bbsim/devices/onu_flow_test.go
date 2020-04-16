@@ -272,6 +272,7 @@ func Test_HandleFlowUpdateDhcp(t *testing.T) {
 			EthType: uint32(layers.EthernetTypeIPv4),
 			SrcPort: uint32(68),
 			DstPort: uint32(67),
+			OPbits: 0,
 		},
 		Action:   &openolt.Action{},
 		Priority: int32(100),
@@ -287,6 +288,88 @@ func Test_HandleFlowUpdateDhcp(t *testing.T) {
 	onu.handleFlowUpdate(msg)
 	assert.Equal(t, onu.InternalState.Current(), "dhcp_started")
 	assert.Equal(t, onu.DhcpFlowReceived, true)
+}
+
+func Test_HandleFlowUpdateDhcpPBit255(t *testing.T) {
+	onu := createMockOnu(1, 1, 900, 900, false, true)
+
+	onu.InternalState = fsm.NewFSM(
+		"eap_response_success_received",
+		fsm.Events{
+			{Name: "start_dhcp", Src: []string{"eap_response_success_received"}, Dst: "dhcp_started"},
+		},
+		fsm.Callbacks{},
+	)
+
+	flow := openolt.Flow{
+		AccessIntfId:  int32(onu.PonPortID),
+		OnuId:         int32(onu.ID),
+		UniId:         int32(0),
+		FlowId:        uint32(onu.ID),
+		FlowType:      "downstream",
+		AllocId:       int32(0),
+		NetworkIntfId: int32(0),
+		Classifier: &openolt.Classifier{
+			EthType: uint32(layers.EthernetTypeIPv4),
+			SrcPort: uint32(68),
+			DstPort: uint32(67),
+			OPbits: 0,
+		},
+		Action:   &openolt.Action{},
+		Priority: int32(100),
+		PortNo:   uint32(onu.ID), // NOTE we are using this to map an incoming packetIndication to an ONU
+	}
+
+	msg := OnuFlowUpdateMessage{
+		PonPortID: 1,
+		OnuID:     1,
+		Flow:      &flow,
+	}
+
+	onu.handleFlowUpdate(msg)
+	assert.Equal(t, onu.InternalState.Current(), "dhcp_started")
+	assert.Equal(t, onu.DhcpFlowReceived, true)
+}
+
+func Test_HandleFlowUpdateDhcpIgnoreByPbit(t *testing.T) {
+	onu := createMockOnu(1, 1, 900, 900, false, true)
+
+	onu.InternalState = fsm.NewFSM(
+		"eap_response_success_received",
+		fsm.Events{
+			{Name: "start_dhcp", Src: []string{"eap_response_success_received"}, Dst: "dhcp_started"},
+		},
+		fsm.Callbacks{},
+	)
+
+	flow := openolt.Flow{
+		AccessIntfId:  int32(onu.PonPortID),
+		OnuId:         int32(onu.ID),
+		UniId:         int32(0),
+		FlowId:        uint32(onu.ID),
+		FlowType:      "downstream",
+		AllocId:       int32(0),
+		NetworkIntfId: int32(0),
+		Classifier: &openolt.Classifier{
+			EthType: uint32(layers.EthernetTypeIPv4),
+			SrcPort: uint32(68),
+			DstPort: uint32(67),
+			OPbits: 1,
+		},
+		Action:   &openolt.Action{},
+		Priority: int32(100),
+		PortNo:   uint32(onu.ID), // NOTE we are using this to map an incoming packetIndication to an ONU
+	}
+
+	msg := OnuFlowUpdateMessage{
+		PonPortID: 1,
+		OnuID:     1,
+		Flow:      &flow,
+	}
+
+	onu.handleFlowUpdate(msg)
+	assert.Equal(t, onu.InternalState.Current(), "eap_response_success_received")
+	assert.Equal(t, onu.DhcpFlowReceived, false)
 }
 
 func Test_HandleFlowUpdateDhcpNoDhcp(t *testing.T) {
@@ -326,5 +409,5 @@ func Test_HandleFlowUpdateDhcpNoDhcp(t *testing.T) {
 
 	onu.handleFlowUpdate(msg)
 	assert.Equal(t, onu.InternalState.Current(), "eap_response_success_received")
-	assert.Equal(t, onu.DhcpFlowReceived, true)
+	assert.Equal(t, onu.DhcpFlowReceived, false)
 }
