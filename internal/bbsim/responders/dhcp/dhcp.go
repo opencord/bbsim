@@ -55,12 +55,12 @@ var defaultParamsRequestList = []layers.DHCPOpt{
 	layers.DHCPOptNTPServers,
 }
 
-func createDefaultDHCPReq(intfId uint32, onuId uint32, mac net.HardwareAddr) layers.DHCPv4 {
+func createDefaultDHCPReq(oltId int, intfId uint32, onuId uint32, mac net.HardwareAddr) layers.DHCPv4 {
 	// NOTE we want to generate a unique XID, the easiest way is to concat the PON ID and the ONU ID
 	// we increment them by one otherwise:
-	// - PON: 0 ONU: 62 = 062 -> 62
-	// - PON: 6 ONU: 2 = 62 -> 62
-	xid, err := strconv.Atoi(fmt.Sprintf("%d%d", intfId+1, onuId+1))
+	// - OLT: 0 PON: 0 ONU: 62 = 062 -> 62
+	// - OLT: 0 PON: 6 ONU: 2 = 62 -> 62
+	xid, err := strconv.Atoi(fmt.Sprintf("%d%d%d", oltId+1, intfId+1, onuId+1))
 	if err != nil {
 		log.Fatal("Can't generate unique XID for ONU")
 	}
@@ -97,8 +97,8 @@ func createDefaultOpts(intfId uint32, onuId uint32) []layers.DHCPOption {
 	return opts
 }
 
-func createDHCPDisc(intfId uint32, onuId uint32, macAddress net.HardwareAddr) *layers.DHCPv4 {
-	dhcpLayer := createDefaultDHCPReq(intfId, onuId, macAddress)
+func createDHCPDisc(oltId int, intfId uint32, onuId uint32, macAddress net.HardwareAddr) *layers.DHCPv4 {
+	dhcpLayer := createDefaultDHCPReq(oltId, intfId, onuId, macAddress)
 	defaultOpts := createDefaultOpts(intfId, onuId)
 	dhcpLayer.Options = append([]layers.DHCPOption{layers.DHCPOption{
 		Type:   layers.DHCPOptMessageType,
@@ -107,7 +107,7 @@ func createDHCPDisc(intfId uint32, onuId uint32, macAddress net.HardwareAddr) *l
 	}}, defaultOpts...)
 
 	data := []byte{0xcd, 0x28, 0xcb, 0xcc, 0x00, 0x01, 0x00, 0x01,
-		0x23, 0xed, 0x11, 0xec, 0x4e, 0xfc, 0xcd, 0x28, byte(intfId), byte(onuId)}
+		0x23, 0xed, 0x11, 0xec, 0x4e, 0xfc, 0xcd, 0x28, byte(intfId), byte(onuId)} //FIXME use the OLT-ID in here
 	dhcpLayer.Options = append(dhcpLayer.Options, layers.DHCPOption{
 		Type:   layers.DHCPOptClientID,
 		Data:   data,
@@ -117,8 +117,8 @@ func createDHCPDisc(intfId uint32, onuId uint32, macAddress net.HardwareAddr) *l
 	return &dhcpLayer
 }
 
-func createDHCPReq(intfId uint32, onuId uint32, macAddress net.HardwareAddr, offeredIp net.IP) *layers.DHCPv4 {
-	dhcpLayer := createDefaultDHCPReq(intfId, onuId, macAddress)
+func createDHCPReq(oltId int, intfId uint32, onuId uint32, macAddress net.HardwareAddr, offeredIp net.IP) *layers.DHCPv4 {
+	dhcpLayer := createDefaultDHCPReq(oltId, intfId, onuId, macAddress)
 	defaultOpts := createDefaultOpts(intfId, onuId)
 
 	dhcpLayer.Options = append(defaultOpts, layers.DHCPOption{
@@ -266,8 +266,8 @@ func sendDHCPPktIn(msg bbsim.ByteMsg, portNo uint32, stream bbsim.Stream) error 
 	return nil
 }
 
-func sendDHCPRequest(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, cTag int, onuStateMachine *fsm.FSM, onuHwAddress net.HardwareAddr, offeredIp net.IP, stream openolt.Openolt_EnableIndicationServer) error {
-	dhcp := createDHCPReq(ponPortId, onuId, onuHwAddress, offeredIp)
+func sendDHCPRequest(oltId int, ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, cTag int, onuStateMachine *fsm.FSM, onuHwAddress net.HardwareAddr, offeredIp net.IP, stream openolt.Openolt_EnableIndicationServer) error {
+	dhcp := createDHCPReq(oltId, ponPortId, onuId, onuHwAddress, offeredIp)
 	pkt, err := serializeDHCPPacket(ponPortId, onuId, cTag, onuHwAddress, dhcp)
 
 	if err != nil {
@@ -324,8 +324,8 @@ func updateDhcpFailed(onuId uint32, ponPortId uint32, serialNumber string, onuSt
 	return nil
 }
 
-func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, onuStateMachine *fsm.FSM, onuHwAddress net.HardwareAddr, cTag int, stream bbsim.Stream) error {
-	dhcp := createDHCPDisc(ponPortId, onuId, onuHwAddress)
+func SendDHCPDiscovery(oltId int, ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, onuStateMachine *fsm.FSM, onuHwAddress net.HardwareAddr, cTag int, stream bbsim.Stream) error {
+	dhcp := createDHCPDisc(oltId, ponPortId, onuId, onuHwAddress)
 	pkt, err := serializeDHCPPacket(ponPortId, onuId, cTag, onuHwAddress, dhcp)
 
 	if err != nil {
@@ -376,7 +376,7 @@ func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serialNumber string, port
 }
 
 // FIXME cTag is not used here
-func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portNo uint32, onuHwAddress net.HardwareAddr, cTag int, onuStateMachine *fsm.FSM, pkt gopacket.Packet, stream openolt.Openolt_EnableIndicationServer) error {
+func HandleNextPacket(oltId int, onuId uint32, ponPortId uint32, serialNumber string, portNo uint32, onuHwAddress net.HardwareAddr, cTag int, onuStateMachine *fsm.FSM, pkt gopacket.Packet, stream openolt.Openolt_EnableIndicationServer) error {
 
 	dhcpLayer, err := GetDhcpLayer(pkt)
 	if err != nil {
@@ -406,7 +406,7 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serialNumber string, portN
 	if dhcpLayer.Operation == layers.DHCPOpReply {
 		if dhcpMessageType == layers.DHCPMsgTypeOffer {
 			offeredIp := dhcpLayer.YourClientIP
-			if err := sendDHCPRequest(ponPortId, onuId, serialNumber, portNo, cTag, onuStateMachine, onuHwAddress, offeredIp, stream); err != nil {
+			if err := sendDHCPRequest(oltId, ponPortId, onuId, serialNumber, portNo, cTag, onuStateMachine, onuHwAddress, offeredIp, stream); err != nil {
 				dhcpLogger.WithFields(log.Fields{
 					"OnuId":  onuId,
 					"IntfId": ponPortId,

@@ -98,7 +98,7 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 		CTag:                cTag,
 		Auth:                auth,
 		Dhcp:                dhcp,
-		HwAddress:           net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(id)},
+		HwAddress:           net.HardwareAddr{0x2e, 0x60, 0x70, byte(olt.ID), byte(pon.ID), byte(id)},
 		PortNo:              0,
 		tid:                 0x1,
 		hpTid:               0x8000,
@@ -359,7 +359,7 @@ loop:
 			case StartDHCP:
 				log.Infof("Receive StartDHCP message on ONU Channel")
 				// FIXME use id, ponId as SendEapStart
-				dhcp.SendDHCPDiscovery(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
+				dhcp.SendDHCPDiscovery(o.PonPort.Olt.ID, o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
 			case OnuPacketOut:
 
 				msg, _ := message.Data.(OnuPacketMessage)
@@ -375,7 +375,7 @@ loop:
 				} else if msg.Type == packetHandlers.DHCP {
 					// NOTE here we receive packets going from the DHCP Server to the ONU
 					// for now we expect them to be double-tagged, but ideally the should be single tagged
-					dhcp.HandleNextPacket(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.CTag, o.InternalState, msg.Packet, stream)
+					dhcp.HandleNextPacket(o.PonPort.Olt.ID, o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.CTag, o.InternalState, msg.Packet, stream)
 				}
 			case OnuPacketIn:
 				// NOTE we only receive BBR packets here.
