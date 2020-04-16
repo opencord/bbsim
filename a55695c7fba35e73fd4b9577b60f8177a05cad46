@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2242635e_2498ab0b",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-04-16T08:19:24Z",
+      "side": 1,
+      "message": "same extracting and re-using point",
+      "range": {
+        "startLine": 152,
+        "startChar": 36,
+        "endLine": 152,
+        "endChar": 44
+      },
+      "revId": "a55695c7fba35e73fd4b9577b60f8177a05cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27c8de81_de1a49b8",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-04-16T08:19:24Z",
+      "side": 1,
+      "message": "you can probably default these to False for DT, VOLTHA does not care about EAPOL/DHCP flows in DT use case, it\u0027s considered normal DP traffic.",
+      "range": {
+        "startLine": 181,
+        "startChar": 77,
+        "endLine": 181,
+        "endChar": 128
+      },
+      "revId": "a55695c7fba35e73fd4b9577b60f8177a05cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2922496_8df5a450",
+        "filename": "internal/bbsim/responders/sadis/sadis.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-04-16T08:19:24Z",
+      "side": 1,
+      "message": "probably worth extracting and re-using.",
+      "range": {
+        "startLine": 206,
+        "startChar": 41,
+        "endLine": 206,
+        "endChar": 46
+      },
+      "revId": "a55695c7fba35e73fd4b9577b60f8177a05cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9cae609_120efef9",
+        "filename": "internal/bbsim/responders/sadis/sadis.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-04-16T08:19:24Z",
+      "side": 1,
+      "message": "same, just for future proofing in case Sadis Changes",
+      "range": {
+        "startLine": 218,
+        "startChar": 21,
+        "endLine": 218,
+        "endChar": 34
+      },
+      "revId": "a55695c7fba35e73fd4b9577b60f8177a05cad46",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
