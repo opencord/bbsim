@@ -35,7 +35,7 @@ import (
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
 	omcisim "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
-	tech_profile "github.com/opencord/voltha-protos/v2/go/tech_profile"
+	"github.com/opencord/voltha-protos/v2/go/tech_profile"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -459,7 +459,7 @@ func (o *Onu) processOmciMessage(message omcisim.OmciChMessage, stream openolt.O
 		log.WithFields(log.Fields{
 			"OnuId":  message.Data.OnuId,
 			"IntfId": message.Data.IntfId,
-			"OnuSn": o.Sn(),
+			"OnuSn":  o.Sn(),
 		}).Infof("GemPort Added")
 
 		// NOTE if we receive the GemPort but we don't have EAPOL flows
@@ -737,15 +737,27 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 	} else if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeIPv4) &&
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
 		msg.Flow.Classifier.DstPort == uint32(67) &&
-		msg.Flow.Classifier.OPbits == 0 {
+		(msg.Flow.Classifier.OPbits == 0 || msg.Flow.Classifier.OPbits == 255) {
 
-		// keep track that we received the DHCP Flows so that we can transition the state to dhcp_started
-		o.DhcpFlowReceived = true
 
 		if o.Dhcp == true {
-			// NOTE we are receiving multiple DHCP flows but we shouldn't call the transition multiple times
-			if err := o.InternalState.Event("start_dhcp"); err != nil {
-				log.Errorf("Can't go to dhcp_started: %v", err)
+			if o.DhcpFlowReceived == false {
+				// keep track that we received the DHCP Flows
+				// so that we can transition the state to dhcp_started
+				// this is needed as a check in case someone trigger DHCP from the CLI
+				o.DhcpFlowReceived = true
+
+				// now start the DHCP state machine
+				if err := o.InternalState.Event("start_dhcp"); err != nil {
+					log.Errorf("Can't go to dhcp_started: %v", err)
+				}
+			} else {
+				onuLogger.WithFields(log.Fields{
+					"IntfId":           o.PonPortID,
+					"OnuId":            o.ID,
+					"SerialNumber":     o.Sn(),
+					"DhcpFlowReceived": o.DhcpFlowReceived,
+				}).Warn("DHCP already started")
 			}
 		} else {
 			onuLogger.WithFields(log.Fields{
