@@ -737,15 +737,22 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 	} else if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeIPv4) &&
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
 		msg.Flow.Classifier.DstPort == uint32(67) &&
-		msg.Flow.Classifier.OPbits == 0 {
+		(msg.Flow.Classifier.OPbits == 0 || msg.Flow.Classifier.OPbits == 255 ){
 
 		// keep track that we received the DHCP Flows so that we can transition the state to dhcp_started
 		o.DhcpFlowReceived = true
 
 		if o.Dhcp == true {
-			// NOTE we are receiving multiple DHCP flows but we shouldn't call the transition multiple times
-			if err := o.InternalState.Event("start_dhcp"); err != nil {
-				log.Errorf("Can't go to dhcp_started: %v", err)
+			if o.DhcpFlowReceived == false {
+				if err := o.InternalState.Event("start_dhcp"); err != nil {
+					log.Errorf("Can't go to dhcp_started: %v", err)
+				}
+			} else {
+				onuLogger.WithFields(log.Fields{
+					"IntfId":       o.PonPortID,
+					"OnuId":        o.ID,
+					"SerialNumber": o.Sn(),
+				}).Warn("DHCP already started")
 			}
 		} else {
 			onuLogger.WithFields(log.Fields{
