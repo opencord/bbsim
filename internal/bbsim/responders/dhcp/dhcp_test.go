@@ -63,6 +63,7 @@ func TestSendDHCPDiscovery(t *testing.T) {
 	var onuId uint32 = 1
 	var gemPortId uint16 = 1
 	var ponPortId uint32 = 0
+	var oltId int = 1
 	var serialNumber = "BBSM00000001"
 	var mac = net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(ponPortId), byte(onuId)}
 	var portNo uint32 = 16
@@ -80,7 +81,7 @@ func TestSendDHCPDiscovery(t *testing.T) {
 		fail:  false,
 	}
 
-	if err := SendDHCPDiscovery(ponPortId, onuId, serialNumber, portNo, dhcpStateMachine, mac, 1, stream); err != nil {
+	if err := SendDHCPDiscovery(oltId, ponPortId, onuId, serialNumber, portNo, dhcpStateMachine, mac, 1, stream); err != nil {
 		t.Errorf("SendDHCPDiscovery returned an error: %v", err)
 		t.Fail()
 	}
