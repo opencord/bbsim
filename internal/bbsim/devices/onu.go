@@ -64,7 +64,7 @@ type Onu struct {
 	// ONU State
 	// PortNo comes with flows and it's used when sending packetIndications,
 	// There is one PortNo per UNI Port, for now we're only storing the first one
-	// FIXME add support for multiple UNIs
+	// FIXME add support for multiple UNIs (each UNI has a different PortNo)
 	PortNo           uint32
 	DhcpFlowReceived bool
 	Flows            []FlowKey
@@ -199,6 +199,13 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 				o.Channel <- msg
 			},
 			"enter_disabled": func(event *fsm.Event) {
+
+				// clean the ONU state
+				o.DhcpFlowReceived = false
+				o.PortNo = 0
+				o.Flows = []FlowKey{}
+
+				// set the OpenState to disabled
 				if err := o.OperState.Event("disable"); err != nil {
 					onuLogger.WithFields(log.Fields{
 						"OnuId":  o.ID,
@@ -206,6 +213,8 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 						"OnuSn":  o.Sn(),
 					}).Errorf("Cannot change ONU OperState to down: %s", err.Error())
 				}
+
+				// send the OnuIndication DOWN event
 				msg := Message{
 					Type: OnuIndication,
 					Data: OnuIndicationMessage{
