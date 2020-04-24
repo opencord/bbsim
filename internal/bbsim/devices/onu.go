@@ -932,7 +932,7 @@ func (o *Onu) sendEapolFlow(client openolt.OpenoltClient) {
 			"FlowId":       downstreamFlow.FlowId,
 			"PortNo":       downstreamFlow.PortNo,
 			"SerialNumber": common.OnuSnToString(o.SerialNumber),
-		}).Fatalf("Failed to EAPOL Flow")
+		}).Fatalf("Failed to add EAPOL Flow")
 	}
 	log.WithFields(log.Fields{
 		"IntfId":       o.PonPortID,
