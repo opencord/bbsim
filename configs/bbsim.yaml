@@ -1,6 +1,6 @@
 ---
 # CLI arguments override values specified here.
-# Commented values show defaults. 
+# Commented values show defaults.
 
 # BBSim specific settings
 bbsim:
@@ -17,13 +17,14 @@ bbsim:
   # sadis_format: att|dt|tt
   # enable_events: false
   # kafka_address: ":9092"
-  # log_level: "debug" 
+  # log_level: "debug"
   # log_caller: false
   # delay: 200
   # c_tag_allocation: unique
   # c_tag: 900
   # s_tag_allocation: shared
   # s_tag: 900
+  # kafka_event_topic: ""
 
 # OLT device settings
 olt:
@@ -33,7 +34,7 @@ olt:
   device_serial_number: BBSM00000001
   pon_ports: 1
   nni_ports: 1
-  onus_per_port: 1 
+  onus_per_port: 1
   onus_per_port: 1
   technology: "XGS-PON"
   id: 0                 # OLT-ID of the device

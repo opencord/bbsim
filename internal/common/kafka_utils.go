@@ -26,7 +26,7 @@ import (
 )
 
 var producer sarama.AsyncProducer
-var topic string
+var Topic string
 
 // Event defines structure for bbsim events
 type Event struct {
@@ -50,8 +50,11 @@ func InitializePublisher(oltID int) error {
 	config.Metadata.Retry.Max = 10
 	config.Metadata.Retry.Backoff = 10 * time.Second
 	config.ClientID = "BBSim-OLT-" + strconv.Itoa(oltID)
-	topic = "BBSim-OLT-" + strconv.Itoa(oltID) + "-Events"
-
+	if len(Options.BBSim.KafkaEventTopic) > 0 {
+		Topic = Options.BBSim.KafkaEventTopic
+	} else {
+		Topic = "BBSim-OLT-" + strconv.Itoa(oltID) + "-Events"
+	}
 	producer, err = sarama.NewAsyncProducer([]string{Options.BBSim.KafkaAddress}, config)
 	return err
 }
@@ -77,7 +80,7 @@ func KafkaPublisher(eventChannel chan Event) {
 				continue
 			}
 			producer.Input() <- &sarama.ProducerMessage{
-				Topic: topic,
+				Topic: Topic,
 				Value: sarama.ByteEncoder(jsonEvent),
 			}
 			log.WithFields(log.Fields{
