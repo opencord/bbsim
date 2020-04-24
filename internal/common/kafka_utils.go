@@ -50,8 +50,11 @@ func InitializePublisher(oltID int) error {
 	config.Metadata.Retry.Max = 10
 	config.Metadata.Retry.Backoff = 10 * time.Second
 	config.ClientID = "BBSim-OLT-" + strconv.Itoa(oltID)
-	topic = "BBSim-OLT-" + strconv.Itoa(oltID) + "-Events"
-
+	if len(Options.BBSim.KafkaEventTopic) > 0 {
+		topic = Options.BBSim.KafkaEventTopic
+	} else {
+		topic = "BBSim-OLT-" + strconv.Itoa(oltID) + "-Events"
+	}
 	producer, err = sarama.NewAsyncProducer([]string{Options.BBSim.KafkaAddress}, config)
 	return err
 }
