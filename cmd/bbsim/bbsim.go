@@ -26,6 +26,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/Shopify/sarama"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/api/legacy"
@@ -155,6 +156,7 @@ func main() {
 		"Dhcp":                 options.BBSim.EnableDhcp,
 		"Delay":                options.BBSim.Delay,
 		"Events":               options.BBSim.Events,
+		"KafkaEventTopic":      options.BBSim.KafkaEventTopic,
 		"ControlledActivation": options.BBSim.ControlledActivation,
 		"EnablePerf":           options.BBSim.EnablePerf,
 		"CTag":                 options.BBSim.CTag,
@@ -196,7 +198,7 @@ func main() {
 
 	if options.BBSim.Events {
 		// initialize a publisher
-		if err := common.InitializePublisher(olt.ID); err == nil {
+		if err := common.InitializePublisher(sarama.NewAsyncProducer, olt.ID); err == nil {
 			// start a go routine which will read from channel and publish on kafka
 			go common.KafkaPublisher(olt.EventChannel)
 		} else {

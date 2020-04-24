@@ -137,6 +137,16 @@ the list via ``./bbsim --help``
            Use 'unique' for incremental values, 'shared' to use the same value in all the ONUs (default "shared")
      -sadisFormat string
            Which format should sadis expose? [att|dt|tt] (default "att")
+     -enableEvents
+           Set this flag for publishing BBSim events on configured kafkaAddress
+     -kafkaAddress string
+           IP:Port for kafka, used only when bbsimEvents flag is set (default ":9092")
+     -ca string
+           Set the mode for controlled activation of PON ports and ONUs
+     -enableperf bool
+           Setting this flag will cause BBSim to not store data like traffic schedulers, flows of ONUs etc
+     -kafkaEventTopic string
+           Set the topic on which BBSim publishes events on kafka
 
 ``BBSim`` also looks for a configuration file in ``configs/bbsim.yaml`` from
 which it reads a number of default settings. The command line options listed

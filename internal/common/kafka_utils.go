@@ -39,8 +39,12 @@ type Event struct {
 	Timestamp string
 }
 
+type saramaIf interface {
+	NewAsyncProducer(addrs []string, conf *sarama.Config) (sarama.AsyncProducer, error)
+}
+
 // InitializePublisher initalizes kafka publisher
-func InitializePublisher(oltID int) error {
+func InitializePublisher(NewAsyncProducer func([]string, *sarama.Config) (sarama.AsyncProducer, error), oltID int) error {
 
 	var err error
 	sarama.Logger = log.New()
@@ -50,9 +54,13 @@ func InitializePublisher(oltID int) error {
 	config.Metadata.Retry.Max = 10
 	config.Metadata.Retry.Backoff = 10 * time.Second
 	config.ClientID = "BBSim-OLT-" + strconv.Itoa(oltID)
-	topic = "BBSim-OLT-" + strconv.Itoa(oltID) + "-Events"
+	if len(Options.BBSim.KafkaEventTopic) > 0 {
+		topic = Options.BBSim.KafkaEventTopic
+	} else {
+		topic = "BBSim-OLT-" + strconv.Itoa(oltID) + "-Events"
+	}
 
-	producer, err = sarama.NewAsyncProducer([]string{Options.BBSim.KafkaAddress}, config)
+	producer, err = NewAsyncProducer([]string{Options.BBSim.KafkaAddress}, config)
 	return err
 }
 

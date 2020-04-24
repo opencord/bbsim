@@ -20,11 +20,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/ghodss/yaml"
 	"io/ioutil"
-	log "github.com/sirupsen/logrus"
 	"net"
 	"strings"
+
+	"github.com/ghodss/yaml"
+	log "github.com/sirupsen/logrus"
 )
 
 var tagAllocationValues = []string{
@@ -56,7 +57,6 @@ const (
 	TagAllocationShared
 	TagAllocationUnique
 )
-
 
 var sadisFormatValues = []string{
 	"unknown",
@@ -143,6 +143,7 @@ type BBSimConfig struct {
 	Events               bool          `yaml:"enable_events"`
 	ControlledActivation string        `yaml:"controlled_activation"`
 	EnablePerf           bool          `yaml:"enable_perf"`
+	KafkaEventTopic      string        `yaml:"kafka_event_topic`
 }
 
 type BBRConfig struct {
@@ -183,6 +184,7 @@ func getDefaultOps() *BBSimYamlConfig {
 			Events:               false,
 			ControlledActivation: "default",
 			EnablePerf:           false,
+			KafkaEventTopic:      "",
 		},
 		OltConfig{
 			Vendor:             "BBSim",
@@ -261,6 +263,7 @@ func GetBBSimOpts() *BBSimYamlConfig {
 	enablePerf := flag.Bool("enableperf", conf.BBSim.EnablePerf, "Setting this flag will cause BBSim to not store data like traffic schedulers, flows of ONUs etc..")
 	enableEvents := flag.Bool("enableEvents", conf.BBSim.Events, "Enable sending BBSim events on configured kafka server")
 	kafkaAddress := flag.String("kafkaAddress", conf.BBSim.KafkaAddress, "IP:Port for kafka")
+	kafkaEventTopic := flag.String("kafkaEventTopic", conf.BBSim.KafkaEventTopic, "Ability to configure the topic on which BBSim publishes events on Kafka")
 	flag.Parse()
 
 	sTagAlloc, err := tagAllocationFromString(*s_tag_allocation)
@@ -304,6 +307,7 @@ func GetBBSimOpts() *BBSimYamlConfig {
 	conf.BBSim.ApiAddress = *api_address
 	conf.BBSim.RestApiAddress = *rest_api_address
 	conf.BBSim.SadisFormat = sf
+	conf.BBSim.KafkaEventTopic = *kafkaEventTopic
 
 	// update device id if not set
 	if conf.Olt.DeviceId == "" {
