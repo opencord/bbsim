@@ -43,7 +43,7 @@
         timeout(1) {
           sh """
             docker rm -f bbsim || true
-            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-auth -dhcp -pon 4 -onu 16" make docker-run
+            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-enableperf -auth -dhcp -pon 4 -onu 16" make docker-run
             sleep 5
             ./bbr -pon 4 -onu 16 -logfile bbr_16_4.logs
             docker logs bbsim 2>&1 | tee bbsim_16_4.logs
@@ -57,7 +57,7 @@
         timeout(1) {
           sh """
             docker rm -f bbsim || true
-            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-auth -dhcp -pon 4 -onu 32" make docker-run
+            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-enableperf -auth -dhcp -pon 4 -onu 32" make docker-run
             sleep 5
             ./bbr -pon 4 -onu 32 -logfile bbr_32_4.logs
             docker logs bbsim 2>&1 | tee bbsim_32_4.logs
@@ -71,7 +71,7 @@
         timeout(1) {
           sh """
             docker rm -f bbsim || true
-            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-auth -dhcp -pon 8 -onu 32" make docker-run
+            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-enableperf -auth -dhcp -pon 8 -onu 32" make docker-run
             sleep 5
             ./bbr -pon 8 -onu 32 -logfile bbr_32_8.logs
             docker logs bbsim 2>&1 | tee bbsim_32_8.logs
@@ -85,7 +85,7 @@
         timeout(1) {
           sh """
             docker rm -f bbsim || true
-            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-auth -dhcp -pon 8 -onu 64" make docker-run
+            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-enableperf -auth -dhcp -pon 8 -onu 64" make docker-run
             sleep 5
             ./bbr -pon 8 -onu 64 -logfile bbr_64_8.logs
             docker logs bbsim 2>&1 | tee bbsim_64_8.logs
@@ -99,7 +99,7 @@
         timeout(1) {
           sh """
             docker rm -f bbsim || true
-            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-auth -dhcp -pon 15 -onu 64" make docker-run
+            DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-enableperf -auth -dhcp -pon 15 -onu 64" make docker-run
             sleep 5
             ./bbr -pon 15 -onu 64 -logfile bbr_64_15.logs
             docker logs bbsim 2>&1 | tee bbsim_64_15.logs
