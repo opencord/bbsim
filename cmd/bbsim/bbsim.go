@@ -155,6 +155,7 @@ func main() {
 		"Dhcp":                 options.BBSim.EnableDhcp,
 		"Delay":                options.BBSim.Delay,
 		"Events":               options.BBSim.Events,
+		"KafkaEventTopic":      options.BBSim.KafkaEventTopic,
 		"ControlledActivation": options.BBSim.ControlledActivation,
 		"EnablePerf":           options.BBSim.EnablePerf,
 		"CTag":                 options.BBSim.CTag,
@@ -196,7 +197,8 @@ func main() {
 
 	if options.BBSim.Events {
 		// initialize a publisher
-		if err := common.InitializePublisher(olt.ID); err == nil {
+		sar := common.SaramaObj{}
+		if err := common.InitializePublisher(sar, olt.ID); err == nil {
 			// start a go routine which will read from channel and publish on kafka
 			go common.KafkaPublisher(olt.EventChannel)
 		} else {
