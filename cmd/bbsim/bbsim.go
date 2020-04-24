@@ -155,6 +155,7 @@ func main() {
 		"Dhcp":                 options.BBSim.EnableDhcp,
 		"Delay":                options.BBSim.Delay,
 		"Events":               options.BBSim.Events,
+		"KafkaEventTopic":      options.BBSim.KafkaEventTopic,
 		"ControlledActivation": options.BBSim.ControlledActivation,
 		"EnablePerf":           options.BBSim.EnablePerf,
 		"CTag":                 options.BBSim.CTag,
