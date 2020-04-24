@@ -1,17 +1,26 @@
 {
   "sadis": {
     "integration": {
-      "url": "http://bbsim.voltha.svc:50074/v1/subscribers/%s",
+      "url": "http://bbsim:50074/v2/subscribers/%s",
       "cache": {
-        "enabled": true,
+        "enabled": false,
         "maxsize": 50,
-        "ttl": "PT1m"
+        "ttl": "PT0m"
       }
-    }
+    },
+    "entries": [
+      {
+        "id": "BBSIM_OLT_0",
+        "hardwareIdentifier": "0a:0a:0a:0a:0a:00",
+        "ipAddress": "0.0.0.0",
+        "nasId": "BBSIM_OLT_0",
+        "uplinkPort": 1048576
+      }
+    ]
   },
   "bandwidthprofile": {
     "integration": {
-      "url": "http://bbsim.voltha.svc:50074/v1/bandwidthprofiles/%s",
+      "url": "http://bbsim:50074/v2/bandwidthprofiles/%s",
       "cache": {
         "enabled": true,
         "maxsize": 40,

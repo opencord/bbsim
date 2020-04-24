@@ -895,60 +895,42 @@ var fileDescriptor_6ea2bed57327b60e = []byte{
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
-var _ grpc.ClientConnInterface
+var _ grpc.ClientConn
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion6
+const _ = grpc.SupportPackageIsVersion4
 
 // BBSimServiceClient is the client API for BBSimService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type BBSimServiceClient interface {
 	// Get current status of OLT
-	//
-	// Deprecated: Do not use.
 	OLTStatus(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*OLTStatusResponse, error)
 	// Get status of a PON/NNI port
-	//
-	// Deprecated: Do not use.
 	PortStatus(ctx context.Context, in *PortInfo, opts ...grpc.CallOption) (*Ports, error)
 	// Get status of all or specific ONUs
-	//
-	// Deprecated: Do not use.
 	ONUStatus(ctx context.Context, in *ONURequest, opts ...grpc.CallOption) (*ONUs, error)
 	// Single/bulk activate ONU(s) for specific PON port(s)
-	//
-	// Deprecated: Do not use.
 	ONUActivate(ctx context.Context, in *ONURequest, opts ...grpc.CallOption) (*BBSimResponse, error)
 	// Deactivate ONU(s) for specific PON port(s) specified by
 	// a given onu_serial, onu_id, or pon_port_id
-	//
-	// Deprecated: Do not use.
 	ONUDeactivate(ctx context.Context, in *ONURequest, opts ...grpc.CallOption) (*BBSimResponse, error)
 	// Generate ONU related alarms
-	//
-	// Deprecated: Do not use.
 	GenerateONUAlarm(ctx context.Context, in *ONUAlarmRequest, opts ...grpc.CallOption) (*BBSimResponse, error)
 	// Generate OLT related alarms
-	//
-	// Deprecated: Do not use.
 	GenerateOLTAlarm(ctx context.Context, in *OLTAlarmRequest, opts ...grpc.CallOption) (*BBSimResponse, error)
 	// Perform actions on OLT/ONU devices (e.g. reboot)
-	//
-	// Deprecated: Do not use.
 	PerformDeviceAction(ctx context.Context, in *DeviceAction, opts ...grpc.CallOption) (*BBSimResponse, error)
 	// Get flows
-	//
-	// Deprecated: Do not use.
 	GetFlows(ctx context.Context, in *ONUInfo, opts ...grpc.CallOption) (*Flows, error)
 }
 
 type bBSimServiceClient struct {
-	cc grpc.ClientConnInterface
+	cc *grpc.ClientConn
 }
 
-func NewBBSimServiceClient(cc grpc.ClientConnInterface) BBSimServiceClient {
+func NewBBSimServiceClient(cc *grpc.ClientConn) BBSimServiceClient {
 	return &bBSimServiceClient{cc}
 }
 
@@ -1045,41 +1027,23 @@ func (c *bBSimServiceClient) GetFlows(ctx context.Context, in *ONUInfo, opts ...
 // BBSimServiceServer is the server API for BBSimService service.
 type BBSimServiceServer interface {
 	// Get current status of OLT
-	//
-	// Deprecated: Do not use.
 	OLTStatus(context.Context, *Empty) (*OLTStatusResponse, error)
 	// Get status of a PON/NNI port
-	//
-	// Deprecated: Do not use.
 	PortStatus(context.Context, *PortInfo) (*Ports, error)
 	// Get status of all or specific ONUs
-	//
-	// Deprecated: Do not use.
 	ONUStatus(context.Context, *ONURequest) (*ONUs, error)
 	// Single/bulk activate ONU(s) for specific PON port(s)
-	//
-	// Deprecated: Do not use.
 	ONUActivate(context.Context, *ONURequest) (*BBSimResponse, error)
 	// Deactivate ONU(s) for specific PON port(s) specified by
 	// a given onu_serial, onu_id, or pon_port_id
-	//
-	// Deprecated: Do not use.
 	ONUDeactivate(context.Context, *ONURequest) (*BBSimResponse, error)
 	// Generate ONU related alarms
-	//
-	// Deprecated: Do not use.
 	GenerateONUAlarm(context.Context, *ONUAlarmRequest) (*BBSimResponse, error)
 	// Generate OLT related alarms
-	//
-	// Deprecated: Do not use.
 	GenerateOLTAlarm(context.Context, *OLTAlarmRequest) (*BBSimResponse, error)
 	// Perform actions on OLT/ONU devices (e.g. reboot)
-	//
-	// Deprecated: Do not use.
 	PerformDeviceAction(context.Context, *DeviceAction) (*BBSimResponse, error)
 	// Get flows
-	//
-	// Deprecated: Do not use.
 	GetFlows(context.Context, *ONUInfo) (*Flows, error)
 }
 

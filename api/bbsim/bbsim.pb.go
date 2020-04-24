@@ -1079,9 +1079,7 @@ func init() {
 	proto.RegisterType((*Empty)(nil), "bbsim.Empty")
 }
 
-func init() {
-	proto.RegisterFile("api/bbsim/bbsim.proto", fileDescriptor_ef7750073d18011b)
-}
+func init() { proto.RegisterFile("api/bbsim/bbsim.proto", fileDescriptor_ef7750073d18011b) }
 
 var fileDescriptor_ef7750073d18011b = []byte{
 	// 1353 bytes of a gzipped FileDescriptorProto
@@ -1184,26 +1182,47 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type BBSimClient interface {
+	// Get BBSim version
 	Version(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*VersionNumber, error)
+	// Set BBSim log level
 	SetLogLevel(ctx context.Context, in *LogLevel, opts ...grpc.CallOption) (*LogLevel, error)
+	// Get current status of OLT
 	GetOlt(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Olt, error)
+	// Poweron OLT
 	PoweronOlt(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Response, error)
+	// Shutdown OLT
 	ShutdownOlt(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Response, error)
+	// Reboot OLT
 	RebootOlt(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Response, error)
+	// Get status of an ONU by serial number
 	GetONU(ctx context.Context, in *ONURequest, opts ...grpc.CallOption) (*ONU, error)
+	// Get status of all ONUs
 	GetONUs(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ONUs, error)
+	// Shutdown an ONU by serial number
 	ShutdownONU(ctx context.Context, in *ONURequest, opts ...grpc.CallOption) (*Response, error)
+	// Shutdown all ONUs in OLT
 	ShutdownAllONUs(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Response, error)
+	// Shutdown all ONUs under a PON by pon-port-ID
 	ShutdownONUsOnPON(ctx context.Context, in *PONRequest, opts ...grpc.CallOption) (*Response, error)
+	// Poweron an ONU by serial number
 	PoweronONU(ctx context.Context, in *ONURequest, opts ...grpc.CallOption) (*Response, error)
+	// Poweron all ONUs in OLT
 	PoweronAllONUs(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Response, error)
+	// Poweron all ONUs under a PON by pon-port-ID
 	PoweronONUsOnPON(ctx context.Context, in *PONRequest, opts ...grpc.CallOption) (*Response, error)
+	// Restart EAPOL for ONU
 	RestartEapol(ctx context.Context, in *ONURequest, opts ...grpc.CallOption) (*Response, error)
+	// Resatrt DHCP for ONU
 	RestartDhcp(ctx context.Context, in *ONURequest, opts ...grpc.CallOption) (*Response, error)
+	// Send ONU alarm indication
 	SetOnuAlarmIndication(ctx context.Context, in *ONUAlarmRequest, opts ...grpc.CallOption) (*Response, error)
+	// Send OLT alarm indication for Interface type NNI or PON
 	SetOltAlarmIndication(ctx context.Context, in *OLTAlarmRequest, opts ...grpc.CallOption) (*Response, error)
+	// Get all flows or ONU specific flows
 	GetFlows(ctx context.Context, in *ONURequest, opts ...grpc.CallOption) (*Flows, error)
+	// Chnage IGMP state
 	ChangeIgmpState(ctx context.Context, in *IgmpRequest, opts ...grpc.CallOption) (*Response, error)
+	// Get Traffic scheduler information for ONU
 	GetOnuTrafficSchedulers(ctx context.Context, in *ONURequest, opts ...grpc.CallOption) (*ONUTrafficSchedulers, error)
 }
 
@@ -1406,26 +1425,47 @@ func (c *bBSimClient) GetOnuTrafficSchedulers(ctx context.Context, in *ONUReques
 
 // BBSimServer is the server API for BBSim service.
 type BBSimServer interface {
+	// Get BBSim version
 	Version(context.Context, *Empty) (*VersionNumber, error)
+	// Set BBSim log level
 	SetLogLevel(context.Context, *LogLevel) (*LogLevel, error)
+	// Get current status of OLT
 	GetOlt(context.Context, *Empty) (*Olt, error)
+	// Poweron OLT
 	PoweronOlt(context.Context, *Empty) (*Response, error)
+	// Shutdown OLT
 	ShutdownOlt(context.Context, *Empty) (*Response, error)
+	// Reboot OLT
 	RebootOlt(context.Context, *Empty) (*Response, error)
+	// Get status of an ONU by serial number
 	GetONU(context.Context, *ONURequest) (*ONU, error)
+	// Get status of all ONUs
 	GetONUs(context.Context, *Empty) (*ONUs, error)
+	// Shutdown an ONU by serial number
 	ShutdownONU(context.Context, *ONURequest) (*Response, error)
+	// Shutdown all ONUs in OLT
 	ShutdownAllONUs(context.Context, *Empty) (*Response, error)
+	// Shutdown all ONUs under a PON by pon-port-ID
 	ShutdownONUsOnPON(context.Context, *PONRequest) (*Response, error)
+	// Poweron an ONU by serial number
 	PoweronONU(context.Context, *ONURequest) (*Response, error)
+	// Poweron all ONUs in OLT
 	PoweronAllONUs(context.Context, *Empty) (*Response, error)
+	// Poweron all ONUs under a PON by pon-port-ID
 	PoweronONUsOnPON(context.Context, *PONRequest) (*Response, error)
+	// Restart EAPOL for ONU
 	RestartEapol(context.Context, *ONURequest) (*Response, error)
+	// Resatrt DHCP for ONU
 	RestartDhcp(context.Context, *ONURequest) (*Response, error)
+	// Send ONU alarm indication
 	SetOnuAlarmIndication(context.Context, *ONUAlarmRequest) (*Response, error)
+	// Send OLT alarm indication for Interface type NNI or PON
 	SetOltAlarmIndication(context.Context, *OLTAlarmRequest) (*Response, error)
+	// Get all flows or ONU specific flows
 	GetFlows(context.Context, *ONURequest) (*Flows, error)
+	// Chnage IGMP state
 	ChangeIgmpState(context.Context, *IgmpRequest) (*Response, error)
+	// Get Traffic scheduler information for ONU
 	GetOnuTrafficSchedulers(context.Context, *ONURequest) (*ONUTrafficSchedulers, error)
 }
 

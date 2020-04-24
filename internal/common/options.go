@@ -17,12 +17,77 @@
 package common
 
 import (
+	"errors"
 	"flag"
 	"fmt"
+	"github.com/ghodss/yaml"
 	"io/ioutil"
+	log "github.com/sirupsen/logrus"
 	"net"
+	"strings"
+)
 
-	"gopkg.in/yaml.v2"
+var tagAllocationValues = []string{
+	"unknown",
+	"shared",
+	"unique",
+}
+
+type TagAllocation int
+
+func (t TagAllocation) String() string {
+	return tagAllocationValues[t]
+}
+
+func tagAllocationFromString(s string) (TagAllocation, error) {
+	for i, v := range tagAllocationValues {
+		if v == s {
+			return TagAllocation(i), nil
+		}
+	}
+	log.WithFields(log.Fields{
+		"ValidValues": strings.Join(tagAllocationValues[1:], ", "),
+	}).Errorf("%s-is-not-a-valid-tag-allocation", s)
+	return TagAllocation(0), errors.New(fmt.Sprintf("%s-is-not-a-valid-tag-allocation", s))
+}
+
+const (
+	_ TagAllocation = iota
+	TagAllocationShared
+	TagAllocationUnique
+)
+
+
+var sadisFormatValues = []string{
+	"unknown",
+	"att",
+	"dt",
+	"tt",
+}
+
+type SadisFormat int
+
+func (s SadisFormat) String() string {
+	return sadisFormatValues[s]
+}
+
+func sadisFormatFromString(s string) (SadisFormat, error) {
+	for i, v := range sadisFormatValues {
+		if v == s {
+			return SadisFormat(i), nil
+		}
+	}
+	log.WithFields(log.Fields{
+		"ValidValues": strings.Join(sadisFormatValues[1:], ", "),
+	}).Errorf("%s-is-not-a-valid-sadis-format", s)
+	return SadisFormat(0), errors.New(fmt.Sprintf("%s-is-not-a-valid-sadis-format", s))
+}
+
+const (
+	_ SadisFormat = iota
+	SadisFormatAtt
+	SadisFormatDt
+	SadisFormatTt
 )
 
 type BBRCliOptions struct {
@@ -56,25 +121,28 @@ type OltConfig struct {
 }
 
 type BBSimConfig struct {
-	EnableDhcp           bool    `yaml:"enable_dhcp"`
-	EnableAuth           bool    `yaml:"enable_auth"`
-	LogLevel             string  `yaml:"log_level"`
-	LogCaller            bool    `yaml:"log_caller"`
-	Delay                int     `yaml:"delay"`
-	CpuProfile           *string `yaml:"cpu_profile"`
-	CTagInit             int     `yaml:"c_tag"`
-	STag                 int     `yaml:"s_tag"`
-	OpenOltAddress       string  `yaml:"openolt_address"`
-	ApiAddress           string  `yaml:"api_address"`
-	RestApiAddress       string  `yaml:"rest_api_address"`
-	LegacyApiAddress     string  `yaml:"legacy_api_address"`
-	LegacyRestApiAddress string  `yaml:"legacy_rest_api_address"`
-	SadisRestAddress     string  `yaml:"sadis_rest_address"`
-	SadisServer          bool    `yaml:"sadis_server"`
-	KafkaAddress         string  `yaml:"kafka_address"`
-	Events               bool    `yaml:"enable_events"`
-	ControlledActivation string  `yaml:"controlled_activation"`
-	EnablePerf           bool    `yaml:"enable_perf"`
+	EnableDhcp           bool          `yaml:"enable_dhcp"`
+	EnableAuth           bool          `yaml:"enable_auth"`
+	LogLevel             string        `yaml:"log_level"`
+	LogCaller            bool          `yaml:"log_caller"`
+	Delay                int           `yaml:"delay"`
+	CpuProfile           *string       `yaml:"cpu_profile"`
+	CTagAllocation       TagAllocation `yaml:"c_tag_allocation"`
+	CTag                 int           `yaml:"c_tag"`
+	STagAllocation       TagAllocation `yaml:"s_tag_allocation"`
+	STag                 int           `yaml:"s_tag"`
+	OpenOltAddress       string        `yaml:"openolt_address"`
+	ApiAddress           string        `yaml:"api_address"`
+	RestApiAddress       string        `yaml:"rest_api_address"`
+	LegacyApiAddress     string        `yaml:"legacy_api_address"`
+	LegacyRestApiAddress string        `yaml:"legacy_rest_api_address"`
+	SadisRestAddress     string        `yaml:"sadis_rest_address"`
+	SadisServer          bool          `yaml:"sadis_server"`
+	SadisFormat          SadisFormat   `yaml:"sadis_format"`
+	KafkaAddress         string        `yaml:"kafka_address"`
+	Events               bool          `yaml:"enable_events"`
+	ControlledActivation string        `yaml:"controlled_activation"`
+	EnablePerf           bool          `yaml:"enable_perf"`
 }
 
 type BBRConfig struct {
@@ -94,8 +162,10 @@ func getDefaultOps() *BBSimYamlConfig {
 
 	c := &BBSimYamlConfig{
 		BBSimConfig{
+			STagAllocation:       TagAllocationShared,
 			STag:                 900,
-			CTagInit:             900,
+			CTagAllocation:       TagAllocationUnique,
+			CTag:                 900,
 			EnableDhcp:           false,
 			EnableAuth:           false,
 			LogLevel:             "debug",
@@ -108,6 +178,7 @@ func getDefaultOps() *BBSimYamlConfig {
 			LegacyRestApiAddress: ":50073",
 			SadisRestAddress:     ":50074",
 			SadisServer:          true,
+			SadisFormat:          SadisFormatAtt,
 			KafkaAddress:         ":9092",
 			Events:               false,
 			ControlledActivation: "default",
@@ -150,6 +221,8 @@ func LoadBBSimConf(filename string) (*BBSimYamlConfig, error) {
 		fmt.Printf("Error parsing YAML file: %s\n", err)
 	}
 
+	// TODO convert from string to TagAllocation
+
 	return yamlConfig, nil
 }
 
@@ -166,8 +239,13 @@ func GetBBSimOpts() *BBSimYamlConfig {
 	api_address := flag.String("api_address", conf.BBSim.ApiAddress, "IP address:port")
 	rest_api_address := flag.String("rest_api_address", conf.BBSim.RestApiAddress, "IP address:port")
 
+	s_tag_allocation := flag.String("s_tag_allocation", conf.BBSim.STagAllocation.String(), "Use 'unique' for incremental values, 'shared' to use the same value in all the ONUs")
 	s_tag := flag.Int("s_tag", conf.BBSim.STag, "S-Tag initial value")
-	c_tag_init := flag.Int("c_tag", conf.BBSim.CTagInit, "C-Tag starting value, each ONU will get a sequential one (targeting 1024 ONUs per BBSim instance the range is big enough)")
+
+	c_tag_allocation := flag.String("c_tag_allocation", conf.BBSim.CTagAllocation.String(), "Use 'unique' for incremental values, 'shared' to use the same value in all the ONUs")
+	c_tag := flag.Int("c_tag", conf.BBSim.CTag, "C-Tag starting value, each ONU will get a sequential one (targeting 1024 ONUs per BBSim instance the range is big enough)")
+
+	sadisFormat := flag.String("sadisFormat", conf.BBSim.SadisFormat.String(), fmt.Sprintf("Which format should sadis expose? [%s]", strings.Join(sadisFormatValues[1:], "|")))
 
 	auth := flag.Bool("auth", conf.BBSim.EnableAuth, "Set this flag if you want authentication to start automatically")
 	dhcp := flag.Bool("dhcp", conf.BBSim.EnableDhcp, "Set this flag if you want DHCP to start automatically")
@@ -185,12 +263,33 @@ func GetBBSimOpts() *BBSimYamlConfig {
 	kafkaAddress := flag.String("kafkaAddress", conf.BBSim.KafkaAddress, "IP:Port for kafka")
 	flag.Parse()
 
+	sTagAlloc, err := tagAllocationFromString(*s_tag_allocation)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cTagAlloc, err := tagAllocationFromString(*c_tag_allocation)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sf, err := sadisFormatFromString(*sadisFormat)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if sf == SadisFormatTt {
+		log.Fatalf("Sadis format %s is not yet supported", sf.String())
+	}
+
 	conf.Olt.ID = int(*olt_id)
 	conf.Olt.NniPorts = uint32(*nni)
 	conf.Olt.PonPorts = uint32(*pon)
 	conf.Olt.OnusPonPort = uint32(*onu)
+	conf.BBSim.STagAllocation = sTagAlloc
 	conf.BBSim.STag = int(*s_tag)
-	conf.BBSim.CTagInit = int(*c_tag_init)
+	conf.BBSim.CTagAllocation = cTagAlloc
+	conf.BBSim.CTag = int(*c_tag)
 	conf.BBSim.CpuProfile = profileCpu
 	conf.BBSim.LogLevel = *logLevel
 	conf.BBSim.LogCaller = *logCaller
@@ -204,6 +303,7 @@ func GetBBSimOpts() *BBSimYamlConfig {
 	conf.BBSim.OpenOltAddress = *openolt_address
 	conf.BBSim.ApiAddress = *api_address
 	conf.BBSim.RestApiAddress = *rest_api_address
+	conf.BBSim.SadisFormat = sf
 
 	// update device id if not set
 	if conf.Olt.DeviceId == "" {
