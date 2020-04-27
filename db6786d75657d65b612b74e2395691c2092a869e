@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed079493_e4302afa",
+        "filename": "internal/bbsim/devices/kafka_topic_config_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-27T17:57:25Z",
+      "side": 1,
+      "message": "this is testing \"internal/common/kafka_utils.go\" so I would move this test in \"internal/common/kafka_utils_test.go\"",
+      "revId": "db6786d75657d65b612b74e2395691c2092a869e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c28f4d6_1d793ef2",
+        "filename": "internal/bbsim/devices/kafka_topic_config_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-27T17:57:25Z",
+      "side": 1,
+      "message": "we only need to pass an integer to the \"InitializePublisher\" method, so there\u0027s no need to create a MockOlt, we can simply:\n\noltId :\u003d 1\ncommon.InitializePublisher(oltId)",
+      "range": {
+        "startLine": 33,
+        "startChar": 1,
+        "endLine": 33,
+        "endChar": 37
+      },
+      "revId": "db6786d75657d65b612b74e2395691c2092a869e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8096b4e4_8bc2df40",
+        "filename": "internal/bbsim/devices/kafka_topic_config_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-27T17:57:25Z",
+      "side": 1,
+      "message": "This method is actually trying to connect to Kafka, thus the unit test are failing as kafka is not available when running tests (nor it should be).\n\nIn order to properly test that function we need to mock the sarama package. Here a couple pointers on how to mock things in go: \n\n- https://medium.com/agrea-technogies/mocking-dependencies-in-go-bb9739fef008\n- https://blog.learngoprogramming.com/how-to-mock-in-your-go-golang-tests-b9eee7d7c266",
+      "range": {
+        "startLine": 35,
+        "startChar": 15,
+        "endLine": 35,
+        "endChar": 34
+      },
+      "revId": "db6786d75657d65b612b74e2395691c2092a869e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7e0a52c_6f5a6f64",
+        "filename": "internal/common/kafka_utils.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-04-27T17:57:25Z",
+      "side": 1,
+      "message": "once you move the tests in the \"common\" package this shouldn\u0027t need to be exported",
+      "range": {
+        "startLine": 29,
+        "startChar": 4,
+        "endLine": 29,
+        "endChar": 9
+      },
+      "revId": "db6786d75657d65b612b74e2395691c2092a869e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
