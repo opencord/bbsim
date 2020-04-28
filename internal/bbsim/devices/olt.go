@@ -918,8 +918,29 @@ func (o OltDevice) DisableOlt(context.Context, *openolt.Empty) (*openolt.Empty, 
 	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) DisablePonIf(context.Context, *openolt.Interface) (*openolt.Empty, error) {
-	oltLogger.Error("DisablePonIf not implemented")
+func (o OltDevice) DisablePonIf(_ context.Context, intf *openolt.Interface) (*openolt.Empty, error) {
+	oltLogger.Errorf("DisnablePonIf request received for PON %d", intf.IntfId)
+	ponID := intf.GetIntfId()
+	pon, _ := o.GetPonById(intf.IntfId)
+	err := pon.InternalState.Event("disable")
+	err = pon.OperState.Event("disable")
+	oltLogger.WithFields(log.Fields{
+		"IntfId": ponID,
+		"err":    err,
+	}).Error("Can't disable PonPort")
+
+	for _, onu := range pon.Onus {
+
+		onuIndication := OnuIndicationMessage{
+			OperState: DOWN,
+			PonPortID: ponID,
+			OnuID:     onu.ID,
+			OnuSN:     onu.SerialNumber,
+		}
+		onu.sendOnuIndication(onuIndication, *o.OpenoltStream)
+
+	}
+
 	return new(openolt.Empty), nil
 }
 
