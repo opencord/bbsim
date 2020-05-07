@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb814938_5d369104",
+        "filename": "internal/common/kafka_topic_config_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-05-07T15:59:52Z",
+      "side": 1,
+      "message": "also check that setting a custom value that value is correctly set",
+      "range": {
+        "startLine": 70,
+        "startChar": 25,
+        "endLine": 70,
+        "endChar": 43
+      },
+      "revId": "bb6698d03ab1a5e25bd258661d90379b55226f4b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a58ecf17_c27b82dd",
+        "filename": "internal/common/kafka_utils.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-05-07T15:59:52Z",
+      "side": 1,
+      "message": "Instead of wrapping sarama in a struct we can change the InitializePublisher method to accept NewAsyncProducer as a parameter",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 1
+      },
+      "revId": "bb6698d03ab1a5e25bd258661d90379b55226f4b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
