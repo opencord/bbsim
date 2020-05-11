@@ -121,6 +121,7 @@ type OltConfig struct {
 }
 
 type BBSimConfig struct {
+	EnableIgmp           bool          `yaml:"enable_igmp"`
 	EnableDhcp           bool          `yaml:"enable_dhcp"`
 	EnableAuth           bool          `yaml:"enable_auth"`
 	LogLevel             string        `yaml:"log_level"`
@@ -167,6 +168,7 @@ func getDefaultOps() *BBSimYamlConfig {
 			STag:                 900,
 			CTagAllocation:       TagAllocationUnique,
 			CTag:                 900,
+			EnableIgmp:           false,
 			EnableDhcp:           false,
 			EnableAuth:           false,
 			LogLevel:             "debug",
@@ -251,7 +253,7 @@ func GetBBSimOpts() *BBSimYamlConfig {
 
 	auth := flag.Bool("auth", conf.BBSim.EnableAuth, "Set this flag if you want authentication to start automatically")
 	dhcp := flag.Bool("dhcp", conf.BBSim.EnableDhcp, "Set this flag if you want DHCP to start automatically")
-
+	igmp := flag.Bool("igmp", conf.BBSim.EnableIgmp, "Set this flag if you want IGMP to start automatically")
 	profileCpu := flag.String("cpuprofile", "", "write cpu profile to file")
 
 	logLevel := flag.String("logLevel", conf.BBSim.LogLevel, "Set the log level (trace, debug, info, warn, error)")
@@ -298,6 +300,7 @@ func GetBBSimOpts() *BBSimYamlConfig {
 	conf.BBSim.LogCaller = *logCaller
 	conf.BBSim.EnableAuth = *auth
 	conf.BBSim.EnableDhcp = *dhcp
+	conf.BBSim.EnableIgmp = *igmp
 	conf.BBSim.Delay = *delay
 	conf.BBSim.ControlledActivation = *controlledActivation
 	conf.BBSim.EnablePerf = *enablePerf

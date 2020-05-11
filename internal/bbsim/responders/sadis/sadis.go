@@ -212,8 +212,8 @@ func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*Sad
 			// if so use bandwidthProfiles[rand.Intn(len(bandwidthProfiles))].ID
 			UpstreamBandwidthProfile:   "Default",
 			DownstreamBandwidthProfile: "User_Bandwidth1",
-			IsDhcpRequired:             true,
-			IsIgmpRequired:             true,
+			IsDhcpRequired:             common.Options.BBSim.EnableDhcp,
+			IsIgmpRequired:             common.Options.BBSim.EnableIgmp,
 		}
 	case common.SadisFormatDt:
 		sonuUniTag = SadisUniTagDt{

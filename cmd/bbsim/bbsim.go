@@ -154,6 +154,7 @@ func main() {
 		"TotalOnus":            options.Olt.PonPorts * options.Olt.OnusPonPort,
 		"EnableAuth":           options.BBSim.EnableAuth,
 		"Dhcp":                 options.BBSim.EnableDhcp,
+		"Igmp":                 options.BBSim.EnableIgmp,
 		"Delay":                options.BBSim.Delay,
 		"Events":               options.BBSim.Events,
 		"KafkaEventTopic":      options.BBSim.KafkaEventTopic,

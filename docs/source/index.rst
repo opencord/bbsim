@@ -147,6 +147,8 @@ the list via ``./bbsim --help``
            Setting this flag will cause BBSim to not store data like traffic schedulers, flows of ONUs etc
      -kafkaEventTopic string
            Set the topic on which BBSim publishes events on kafka
+     -igmp
+           Set this flag to start IGMP automatically
 
 ``BBSim`` also looks for a configuration file in ``configs/bbsim.yaml`` from
 which it reads a number of default settings. The command line options listed

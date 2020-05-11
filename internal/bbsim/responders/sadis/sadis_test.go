@@ -18,11 +18,12 @@ package sadis
 
 import (
 	"fmt"
+	"net"
+	"testing"
+
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"github.com/opencord/bbsim/internal/common"
 	"gotest.tools/assert"
-	"net"
-	"testing"
 )
 
 func createMockDevices() (devices.OltDevice, devices.Onu) {
@@ -54,7 +55,7 @@ func TestSadisServer_GetOnuEntryV1(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, res.ID, fmt.Sprintf("%s-%s",onu.Sn(), uni))
+	assert.Equal(t, res.ID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
 	assert.Equal(t, res.CTag, 923)
 	assert.Equal(t, res.STag, 900)
 	assert.Equal(t, res.RemoteID, string(olt.SerialNumber))
@@ -74,8 +75,8 @@ func TestSadisServer_GetOnuEntryV2_Att(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, res.ID, fmt.Sprintf("%s-%s",onu.Sn(), uni))
-	assert.Equal(t, res.RemoteID, fmt.Sprintf("%s-%s",onu.Sn(), uni))
+	assert.Equal(t, res.ID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
+	assert.Equal(t, res.RemoteID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
 
 	// assert the correct type
 	uniTagList, ok := res.UniTagList[0].(SadisUniTagAtt)
@@ -88,8 +89,8 @@ func TestSadisServer_GetOnuEntryV2_Att(t *testing.T) {
 	assert.Equal(t, uniTagList.DownstreamBandwidthProfile, "User_Bandwidth1")
 	assert.Equal(t, uniTagList.UpstreamBandwidthProfile, "Default")
 	assert.Equal(t, uniTagList.TechnologyProfileID, 64)
-	assert.Equal(t, uniTagList.IsDhcpRequired, true)
-	assert.Equal(t, uniTagList.IsIgmpRequired, true)
+	assert.Equal(t, uniTagList.IsDhcpRequired, false)
+	assert.Equal(t, uniTagList.IsIgmpRequired, false)
 }
 
 func TestSadisServer_GetOnuEntryV2_Dt(t *testing.T) {
@@ -103,8 +104,8 @@ func TestSadisServer_GetOnuEntryV2_Dt(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, res.ID, fmt.Sprintf("%s-%s",onu.Sn(), uni))
-	assert.Equal(t, res.RemoteID, fmt.Sprintf("%s-%s",onu.Sn(), uni))
+	assert.Equal(t, res.ID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
+	assert.Equal(t, res.RemoteID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
 
 	// assert the correct type
 	uniTagList, ok := res.UniTagList[0].(SadisUniTagDt)
