@@ -137,6 +137,8 @@ the list via ``./bbsim --help``
            Use 'unique' for incremental values, 'shared' to use the same value in all the ONUs (default "shared")
      -sadisFormat string
            Which format should sadis expose? [att|dt|tt] (default "att")
+     -igmp
+           Set this flag to start IGMP automatically
 
 ``BBSim`` also looks for a configuration file in ``configs/bbsim.yaml`` from
 which it reads a number of default settings. The command line options listed
