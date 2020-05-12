@@ -124,9 +124,9 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 		"created",
 		fsm.Events{
 			// DEVICE Lifecycle
-			{Name: "initialize", Src: []string{"created", "disabled"}, Dst: "initialized"},
-			{Name: "discover", Src: []string{"initialized", "pon_disabled"}, Dst: "discovered"},
-			{Name: "enable", Src: []string{"discovered"}, Dst: "enabled"},
+			{Name: "initialize", Src: []string{"created", "disabled", "pon_disabled"}, Dst: "initialized"},
+			{Name: "discover", Src: []string{"initialized"}, Dst: "discovered"},
+			{Name: "enable", Src: []string{"discovered", "pon_disabled"}, Dst: "enabled"},
 			{Name: "receive_eapol_flow", Src: []string{"enabled", "gem_port_added"}, Dst: "eapol_flow_received"},
 			{Name: "add_gem_port", Src: []string{"enabled", "eapol_flow_received"}, Dst: "gem_port_added"},
 			// NOTE should disabled state be different for oper_disabled (emulating an error) and admin_disabled (received a disabled call via VOLTHA)?
