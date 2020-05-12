@@ -78,16 +78,28 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 				} else if e.Src == "disabled" {
 					for _, onu := range ponPort.Onus {
 						if onu.InternalState.Current() == "pon_disabled" {
-							if err := onu.InternalState.Event("discover"); err != nil {
-								log.Errorf("Error discover ONU: %v", err)
+							if err := onu.InternalState.Event("enable"); err != nil {
+								log.WithFields(log.Fields{
+									"Err": err,
+									"OnuSn": onu.Sn(),
+									"IntfId": onu.PonPortID,
+								}).Error("Error enabling ONU")
 							}
 						} else if onu.InternalState.Current() == "disabled" {
 							if err := onu.InternalState.Event("initialize"); err != nil {
-								log.Errorf("Error initialize ONU: %v", err)
+								log.WithFields(log.Fields{
+									"Err": err,
+									"OnuSn": onu.Sn(),
+									"IntfId": onu.PonPortID,
+								}).Error("Error initializing ONU")
 								continue
 							}
 							if err := onu.InternalState.Event("discover"); err != nil {
-								log.Errorf("Error discover ONU: %v", err)
+								log.WithFields(log.Fields{
+									"Err": err,
+									"OnuSn": onu.Sn(),
+									"IntfId": onu.PonPortID,
+								}).Error("Error discovering ONU")
 							}
 						}
 					}

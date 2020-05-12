@@ -677,11 +677,31 @@ loop:
 				msg, _ := message.Data.(PonIndicationMessage)
 				pon, _ := o.GetPonById(msg.PonPortID)
 				if msg.OperState == UP {
-					pon.OperState.Event("enable")
-					pon.InternalState.Event("enable")
+					if err := pon.OperState.Event("enable"); err != nil {
+						oltLogger.WithFields(log.Fields{
+							"OperState": msg.OperState,
+							"IntfId": msg.PonPortID,
+						}).Error("Can't change PON Status")
+					}
+					if err := pon.InternalState.Event("enable"); err != nil {
+						oltLogger.WithFields(log.Fields{
+							"OperState": msg.OperState,
+							"IntfId": msg.PonPortID,
+						}).Error("Can't change PON Status")
+					}
 				} else if msg.OperState == DOWN {
-					pon.OperState.Event("disable")
-					pon.InternalState.Event("disable")
+					if err := pon.OperState.Event("disable"); err != nil {
+						oltLogger.WithFields(log.Fields{
+							"OperState": msg.OperState,
+							"IntfId": msg.PonPortID,
+						}).Error("Can't change PON Status")
+					}
+					if err := pon.InternalState.Event("disable"); err != nil {
+						oltLogger.WithFields(log.Fields{
+							"OperState": msg.OperState,
+							"IntfId": msg.PonPortID,
+						}).Error("Can't change PON Status")
+					}
 				}
 			default:
 				oltLogger.Warnf("Received unknown message data %v for type %v in OLT Channel", message.Data, message.Type)
@@ -967,17 +987,6 @@ func (o *OltDevice) EnableIndication(_ *openolt.Empty, stream openolt.Openolt_En
 func (o OltDevice) EnablePonIf(_ context.Context, intf *openolt.Interface) (*openolt.Empty, error) {
 	oltLogger.Errorf("EnablePonIf request received for PON %d", intf.IntfId)
 	ponID := intf.GetIntfId()
-	pon, _ := o.GetPonById(intf.IntfId)
-	errInternalState := pon.InternalState.Event("enable")
-	oltLogger.WithFields(log.Fields{
-		"IntfId": ponID,
-		"err":    errInternalState,
-	}).Error("Can't enable Internal state for PonPort")
-	errOperState := pon.OperState.Event("enable")
-	oltLogger.WithFields(log.Fields{
-		"IntfId": ponID,
-		"err":    errOperState,
-	}).Error("Can't enable Oper state for PonPort")
 
 	msg := Message{
 		Type: PonIndication,
@@ -987,18 +996,6 @@ func (o OltDevice) EnablePonIf(_ context.Context, intf *openolt.Interface) (*ope
 		},
 	}
 	o.channel <- msg
-
-	for _, onu := range pon.Onus {
-
-		onuIndication := OnuIndicationMessage{
-			OperState: UP,
-			PonPortID: ponID,
-			OnuID:     onu.ID,
-			OnuSN:     onu.SerialNumber,
-		}
-		onu.sendOnuIndication(onuIndication, *o.OpenoltStream)
-
-	}
 
 	return new(openolt.Empty), nil
 }
