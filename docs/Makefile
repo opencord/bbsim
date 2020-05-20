@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2019 Open Networking Foundation <info@opennetworking.org>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 # Minimal makefile for Sphinx documentation
 
 # use bash safe mode, fail quickly
