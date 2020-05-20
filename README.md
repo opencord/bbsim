@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2019 Open Networking Foundation <info@opennetworking.org>
+
+SPDX-License-Identifier: CC0-1.0
+-->
+
 # BroadBand Simular (BBSim)
 
 Build

@@ -1,0 +1,14 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: BBSim
+Upstream-Contact: Open Networking Foundation <info@opennetworking.org>
+Source: https://www.opennetworking.org/voltha/
+
+# Sample paragraph, commented out:
+#
+Files: vendor/*
+Copyright: Original Owner
+License: LicenseRef-Original-Owner-License
+
+Files: docs/*
+Copyright: 2019 Open Networking Foundation <info@opennetworking.org>
+License: CC0-1.0
