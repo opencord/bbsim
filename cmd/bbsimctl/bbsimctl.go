@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2019 Open Networking Foundation <info@opennetworking.org>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 /*
  * Portions copyright 2019-present Open Networking Foundation
  * Original copyright 2019-present Ciena Corporation
