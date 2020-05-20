@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a5d5907_179a2c19",
+        "filename": "api/bbsim/bbsim.proto",
+        "patchSetId": 3
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2020-05-20T19:50:16Z",
+      "side": 1,
+      "message": "twice?",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 2,
+        "endChar": 83
+      },
+      "revId": "54a385471fb8f24dc5304b6a5702f18188518b92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b0d8019_6de9b8e6",
+        "filename": "api/legacy/bbsim.pb.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2020-05-20T19:50:16Z",
+      "side": 1,
+      "message": "Two different licenses?",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 35
+      },
+      "revId": "54a385471fb8f24dc5304b6a5702f18188518b92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c85c1fb_628783c3",
+        "filename": "docs/source/api.rst.license",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2020-05-20T19:50:16Z",
+      "side": 1,
+      "message": ".rst supports multiline comments, per: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#comments  - would look like this:\n\n..\n  SPDX-FileCopyrightText: 2020 Open Networking Foundation \u003cinfo@opennetworking.org\u003e\n  SPDX-License-Identifier: Apache-2.0",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 32
+      },
+      "revId": "54a385471fb8f24dc5304b6a5702f18188518b92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7921750a_66d3bb17",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2020-05-20T19:50:16Z",
+      "side": 1,
+      "message": "is this still needed if the SPDX lines exist?",
+      "range": {
+        "startLine": 1,
+        "startChar": 3,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "54a385471fb8f24dc5304b6a5702f18188518b92",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
