@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2019 Open Networking Foundation <info@opennetworking.org>
+SPDX-FileCopyrightText: 2020 Open Networking Foundation <info@opennetworking.org>
+
+SPDX-License-Identifier: CC0-1.0
+-->
+
 Copyright 2019-present Open Networking Foundation
 
 Licensed under the Apache License, Version 2.0 (the "License");
