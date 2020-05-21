@@ -93,6 +93,30 @@
       "revId": "59dcf2f3acdbee56ef080bd14bbc8b7274209f9e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f373af0b_19fefa8d",
+        "filename": "internal/bbsimctl/completion/bash.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-05-21T23:31:35Z",
+      "side": 1,
+      "message": "Keep both copyright in this case",
+      "parentUuid": "6b9f1a21_b6b48b6e",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 43
+      },
+      "revId": "59dcf2f3acdbee56ef080bd14bbc8b7274209f9e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
