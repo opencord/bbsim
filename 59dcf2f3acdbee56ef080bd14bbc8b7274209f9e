@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1eaef16f_a0166f6f",
+        "filename": ".golangci.yml",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-05-21T22:59:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "af914ac6_aa82797e",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 51
+      },
+      "revId": "59dcf2f3acdbee56ef080bd14bbc8b7274209f9e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9409f585_d2194804",
         "filename": "internal/bbsimctl/completion/bash.go",
         "patchSetId": 7
@@ -36,6 +60,30 @@
       "writtenOn": "2020-05-21T18:28:46Z",
       "side": 1,
       "message": "Should this file should be licensed by Ciena?",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 43
+      },
+      "revId": "59dcf2f3acdbee56ef080bd14bbc8b7274209f9e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b9f1a21_b6b48b6e",
+        "filename": "internal/bbsimctl/completion/bash.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-05-21T22:59:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9409f585_d2194804",
       "range": {
         "startLine": 1,
         "startChar": 0,
