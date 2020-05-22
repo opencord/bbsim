@@ -141,6 +141,30 @@
       "revId": "59dcf2f3acdbee56ef080bd14bbc8b7274209f9e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78bcf14a_8b259c8d",
+        "filename": "internal/bbsimctl/completion/bash.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-05-22T18:11:18Z",
+      "side": 1,
+      "message": "@kent yes, that\u0027s definitely the case, the original copyright will be maintained (I\u0027m still familiarizing with the tool to get it right)",
+      "parentUuid": "a9df97c9_ab882d94",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 43
+      },
+      "revId": "59dcf2f3acdbee56ef080bd14bbc8b7274209f9e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
