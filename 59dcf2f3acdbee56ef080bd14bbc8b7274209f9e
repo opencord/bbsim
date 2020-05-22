@@ -117,6 +117,30 @@
       "revId": "59dcf2f3acdbee56ef080bd14bbc8b7274209f9e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9df97c9_ab882d94",
+        "filename": "internal/bbsimctl/completion/bash.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-05-22T17:17:19Z",
+      "side": 1,
+      "message": "My understanding is that some files should still be ciena-licensed (files which were originally ciena-owned).\n\nDoes anyone know for sure?",
+      "parentUuid": "f373af0b_19fefa8d",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 43
+      },
+      "revId": "59dcf2f3acdbee56ef080bd14bbc8b7274209f9e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
