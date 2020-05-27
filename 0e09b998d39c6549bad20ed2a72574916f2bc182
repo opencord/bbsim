@@ -1,0 +1,1361 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "517b1b7f_3aa9d58d",
+        "filename": "Makefile",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 51
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81f1fd87_2e94ed33",
+        "filename": "api/bbsim/bbsim.proto",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 48
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "869ac92e_a5f8dcb3",
+        "filename": "api/bbsim/bbsim.yaml",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 51
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9e20990_c7664c6f",
+        "filename": "api/legacy/bbsim.proto",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 48
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b8492a2_42ca749c",
+        "filename": "build/ci/builder.Dockerfile",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2020.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 51
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b59f0215_3bbab4a5",
+        "filename": "build/ci/linter.Dockerfile",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2020.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 51
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbd74aa9_9959f342",
+        "filename": "build/package/Dockerfile",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 51
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe6cc4bc_b216d7a1",
+        "filename": "cmd/bbr/bbr.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e0ce65f_b38e47f2",
+        "filename": "cmd/bbsim/bbsim.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39432ac2_05c0e3e2",
+        "filename": "docs/__init__.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 51
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09b016ac_e902eac1",
+        "filename": "docs/source/__init__.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 51
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f92d300c_5d60780e",
+        "filename": "docs/source/conf.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 51
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3248f15d_4d3d7d7d",
+        "filename": "internal/bbr/devices/olt.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd62a453_37917c75",
+        "filename": "internal/bbr/devices/validate.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9db5f623_eba8fc95",
+        "filename": "internal/bbsim/alarmsim/alarmsim.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77806562_11901e99",
+        "filename": "internal/bbsim/api/grpc_api_server.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2def17b9_f4199b78",
+        "filename": "internal/bbsim/api/grpc_api_server_legacy.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a43ba03_9936c0ec",
+        "filename": "internal/bbsim/api/legacy_api_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3afffb09_ae58df4a",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae24b206_35804fb6",
+        "filename": "internal/bbsim/devices/helpers.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "464b29ec_9e79be05",
+        "filename": "internal/bbsim/devices/helpers_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78750e3f_fec03855",
+        "filename": "internal/bbsim/devices/messageTypes.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b0d6886_cdd5afc8",
+        "filename": "internal/bbsim/devices/nni.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5dbfe876_9eabe747",
+        "filename": "internal/bbsim/devices/nni_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07b32774_8cb2e4b7",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2685e049_28df8fa4",
+        "filename": "internal/bbsim/devices/olt_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b82dc844_42b39565",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56758727_a513af61",
+        "filename": "internal/bbsim/devices/onu_flow_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c1b10fc_ff3120d9",
+        "filename": "internal/bbsim/devices/onu_indications_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a88413a_9f46d6e2",
+        "filename": "internal/bbsim/devices/onu_state_machine_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "356d4674_5d09f049",
+        "filename": "internal/bbsim/devices/onu_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dae27b8e_75688760",
+        "filename": "internal/bbsim/devices/onu_test_helpers.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "082cde5f_ee73ad6b",
+        "filename": "internal/bbsim/devices/pon.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31e90446_b49e5d59",
+        "filename": "internal/bbsim/packetHandlers/filters.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67737827_5da9a444",
+        "filename": "internal/bbsim/packetHandlers/filters_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8eb3e01_2f4035dd",
+        "filename": "internal/bbsim/packetHandlers/packetTypes.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c80a689_c63c92b9",
+        "filename": "internal/bbsim/packetHandlers/packet_tags.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c47ddb8_21cec412",
+        "filename": "internal/bbsim/packetHandlers/packet_tags_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "029fbe0f_d05de663",
+        "filename": "internal/bbsim/responders/dhcp/dhcp.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "719ac38c_14e6a10d",
+        "filename": "internal/bbsim/responders/dhcp/dhcp_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4ad2c25_9ab3ef05",
+        "filename": "internal/bbsim/responders/eapol/eapol.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a0a0232_ba1cb153",
+        "filename": "internal/bbsim/responders/eapol/eapol_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d3f38f3_c153adb1",
+        "filename": "internal/bbsim/responders/igmp/igmp.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e613e68_db9811ae",
+        "filename": "internal/bbsim/responders/sadis/sadis.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "befa76b7_eb6dc95b",
+        "filename": "internal/bbsim/responders/sadis/sadis_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ea45449_53bccb42",
+        "filename": "internal/bbsim/types/interfaces.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "913f3e69_932c9332",
+        "filename": "internal/bbsim/types/types.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86fe7694_fd875771",
+        "filename": "internal/bbsimctl/commands/logging.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d6bdd65_5f2f09e9",
+        "filename": "internal/common/alarms.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2020.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51b93098_f6024925",
+        "filename": "internal/common/helpers.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1946b252_fe1c0e7a",
+        "filename": "internal/common/kafka_topic_config_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a97bc961_d51f88ce",
+        "filename": "internal/common/kafka_utils.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78ab7542_2fc1fd85",
+        "filename": "internal/common/logger.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d31e395b_48249a15",
+        "filename": "internal/common/logger_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e31afb43_3306ee22",
+        "filename": "internal/common/omci/mibpackets.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e17a602_2306e4c2",
+        "filename": "internal/common/options.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8bf6d9b6_197d55e6",
+        "filename": "tests/bbr.groovy",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fcd813d9_f7e76f4a",
+        "filename": "tests/bbr.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 51
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a91ce2da_83dada48",
+        "filename": "tools/main.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000315
+      },
+      "writtenOn": "2020-05-27T20:46:10Z",
+      "side": 1,
+      "message": "We should remove this stray header.\nThe SPDX-FileCopyrightText year should be 2018.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 52
+      },
+      "revId": "0e09b998d39c6549bad20ed2a72574916f2bc182",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
