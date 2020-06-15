@@ -363,12 +363,9 @@ loop:
 				msg, _ := message.Data.(OnuFlowUpdateMessage)
 				o.handleFlowUpdate(msg)
 			case StartEAPOL:
-				log.Infof("Receive StartEAPOL message on ONU Channel")
-				eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, stream)
+				o.handleEAPOLStart(stream)
 			case StartDHCP:
-				log.Infof("Receive StartDHCP message on ONU Channel")
-				// FIXME use id, ponId as SendEapStart
-				dhcp.SendDHCPDiscovery(o.PonPort.Olt.ID, o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
+				o.handleDHCPStart(stream)
 			case OnuPacketOut:
 
 				msg, _ := message.Data.(OnuPacketMessage)
@@ -491,6 +488,33 @@ func (o *Onu) processOmciMessage(message omcisim.OmciChMessage, stream openolt.O
 			}
 		}
 	}
+}
+
+func (o Onu) handleEAPOLStart(stream openolt.Openolt_EnableIndicationServer) {
+	log.Infof("Receive StartEAPOL message on ONU Channel")
+	eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, stream)
+
+	go func(delay time.Duration) {
+		time.Sleep(delay)
+		if o.InternalState.Current() == "auth_failed" && common.Options.BBSim.EapolStartRetry {
+			o.InternalState.Event("enter_auth_started")
+			o.handleEAPOLStart(stream)
+		}
+	}(o.DiscoveryRetryDelay)
+}
+
+func (o Onu) handleDHCPStart(stream openolt.Openolt_EnableIndicationServer) {
+	log.Infof("Receive StartDHCP message on ONU Channel")
+	// FIXME use id, ponId as SendEapStart
+	dhcp.SendDHCPDiscovery(o.PonPort.Olt.ID, o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
+
+	go func(delay time.Duration) {
+		time.Sleep(delay)
+		if o.InternalState.Current() == "dhcp_failed" && common.Options.BBSim.DhcpStartRetry {
+			o.InternalState.Event("enter_dhcp_started")
+			o.handleDHCPStart(stream)
+		}
+	}(o.DiscoveryRetryDelay)
 }
 
 func (o Onu) NewSN(oltid int, intfid uint32, onuid uint32) *openolt.SerialNumber {
@@ -747,7 +771,6 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
 		msg.Flow.Classifier.DstPort == uint32(67) &&
 		(msg.Flow.Classifier.OPbits == 0 || msg.Flow.Classifier.OPbits == 255) {
-
 
 		if o.Dhcp == true {
 			if o.DhcpFlowReceived == false {

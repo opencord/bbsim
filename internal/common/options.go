@@ -121,6 +121,8 @@ type OltConfig struct {
 }
 
 type BBSimConfig struct {
+	DhcpStartRetry       bool          `yaml:"dhcp_retry"`
+	EapolStartRetry      bool          `yaml:"eapol_retry"`
 	EnableIgmp           bool          `yaml:"enable_igmp"`
 	EnableDhcp           bool          `yaml:"enable_dhcp"`
 	EnableAuth           bool          `yaml:"enable_auth"`
@@ -187,6 +189,8 @@ func getDefaultOps() *BBSimYamlConfig {
 			ControlledActivation: "default",
 			EnablePerf:           false,
 			KafkaEventTopic:      "",
+			DhcpStartRetry:       false,
+			EapolStartRetry:      false,
 		},
 		OltConfig{
 			Vendor:             "BBSim",
@@ -266,6 +270,8 @@ func GetBBSimOpts() *BBSimYamlConfig {
 	enableEvents := flag.Bool("enableEvents", conf.BBSim.Events, "Enable sending BBSim events on configured kafka server")
 	kafkaAddress := flag.String("kafkaAddress", conf.BBSim.KafkaAddress, "IP:Port for kafka")
 	kafkaEventTopic := flag.String("kafkaEventTopic", conf.BBSim.KafkaEventTopic, "Ability to configure the topic on which BBSim publishes events on Kafka")
+	dhcpStartRetry := flag.Bool("dhcpStartRetry", conf.BBSim.DhcpStartRetry, "Set this flag if BBSim should retry DHCP upon failure until success")
+	eapolStartRetry := flag.Bool("eapolStartRetry", conf.BBSim.EapolStartRetry, "Set this flag if BBSim should retry EAPOL (Authentication) upon failure until success")
 	flag.Parse()
 
 	sTagAlloc, err := tagAllocationFromString(*s_tag_allocation)
@@ -311,6 +317,8 @@ func GetBBSimOpts() *BBSimYamlConfig {
 	conf.BBSim.RestApiAddress = *rest_api_address
 	conf.BBSim.SadisFormat = sf
 	conf.BBSim.KafkaEventTopic = *kafkaEventTopic
+	conf.BBSim.EapolStartRetry = *eapolStartRetry
+	conf.BBSim.DhcpStartRetry = *dhcpStartRetry
 
 	// update device id if not set
 	if conf.Olt.DeviceId == "" {
