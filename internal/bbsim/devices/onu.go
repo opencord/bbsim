@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/cboling/omci"
+	backoff "github.com/cenkalti/backoff/v4"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
@@ -363,12 +364,13 @@ loop:
 				msg, _ := message.Data.(OnuFlowUpdateMessage)
 				o.handleFlowUpdate(msg)
 			case StartEAPOL:
-				log.Infof("Receive StartEAPOL message on ONU Channel")
-				eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, stream)
+				e := backoff.NewExponentialBackOff()
+				e.MaxInterval = 30 * time.Second
+				o.handleEAPOLStart(stream, e)
 			case StartDHCP:
-				log.Infof("Receive StartDHCP message on ONU Channel")
-				// FIXME use id, ponId as SendEapStart
-				dhcp.SendDHCPDiscovery(o.PonPort.Olt.ID, o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
+				f := backoff.NewExponentialBackOff()
+				f.MaxInterval = 30 * time.Second
+				o.handleDHCPStart(stream, f)
 			case OnuPacketOut:
 
 				msg, _ := message.Data.(OnuPacketMessage)
@@ -491,6 +493,31 @@ func (o *Onu) processOmciMessage(message omcisim.OmciChMessage, stream openolt.O
 			}
 		}
 	}
+}
+
+func (o Onu) handleEAPOLStart(stream openolt.Openolt_EnableIndicationServer, e *backoff.ExponentialBackOff) {
+	log.Infof("Receive StartEAPOL message on ONU Channel")
+	eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, stream)
+	go func(delay time.Duration) {
+		time.Sleep(delay)
+		if o.InternalState.Current() == "eap_response_identity_sent" && common.Options.BBSim.AuthRetry {
+			o.InternalState.Event("start_auth")
+			o.handleEAPOLStart(stream, e)
+		}
+	}(e.NextBackOff())
+}
+
+func (o Onu) handleDHCPStart(stream openolt.Openolt_EnableIndicationServer, f *backoff.ExponentialBackOff) {
+	log.Infof("Receive StartDHCP message on ONU Channel")
+	// FIXME use id, ponId as SendEapStart
+	dhcp.SendDHCPDiscovery(o.PonPort.Olt.ID, o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
+	go func(delay time.Duration) {
+		time.Sleep(delay)
+		if o.InternalState.Current() == "dhcp_discovery_sent" && common.Options.BBSim.DhcpRetry {
+			o.InternalState.Event("start_dhcp")
+			o.handleDHCPStart(stream, f)
+		}
+	}(f.NextBackOff())
 }
 
 func (o Onu) NewSN(oltid int, intfid uint32, onuid uint32) *openolt.SerialNumber {
@@ -747,7 +774,6 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
 		msg.Flow.Classifier.DstPort == uint32(67) &&
 		(msg.Flow.Classifier.OPbits == 0 || msg.Flow.Classifier.OPbits == 255) {
-
 
 		if o.Dhcp == true {
 			if o.DhcpFlowReceived == false {
