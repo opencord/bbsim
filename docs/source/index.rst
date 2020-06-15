@@ -149,6 +149,10 @@ the list via ``./bbsim --help``
            Set the topic on which BBSim publishes events on kafka
      -igmp
            Set this flag to start IGMP automatically
+     -dhcpRetry bool
+           Set this flag if BBSim should retry DHCP upon failure until success
+     -authRetry bool
+           Set this flag if BBSim should retry EAPOL (Authentication) upon failure until success
 
 ``BBSim`` also looks for a configuration file in ``configs/bbsim.yaml`` from
 which it reads a number of default settings. The command line options listed
