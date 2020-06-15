@@ -26,6 +26,7 @@ import (
 
 	"github.com/cboling/omci"
 	"github.com/google/gopacket/layers"
+	backoff "github.com/jpillora/backoff"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
@@ -60,7 +61,7 @@ type Onu struct {
 	InternalState       *fsm.FSM
 	DiscoveryRetryDelay time.Duration // this is the time between subsequent Discovery Indication
 	DiscoveryDelay      time.Duration // this is the time to send the first Discovery Indication
-
+	Backoff             *backoff.Backoff
 	// ONU State
 	// PortNo comes with flows and it's used when sending packetIndications,
 	// There is one PortNo per UNI Port, for now we're only storing the first one
@@ -89,6 +90,13 @@ func (o *Onu) Sn() string {
 }
 
 func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth bool, dhcp bool, delay time.Duration, isMock bool) *Onu {
+	b := &backoff.Backoff{
+		//These are the defaults
+		Min:    1 * time.Second,
+		Max:    35 * time.Second,
+		Factor: 1.5,
+		Jitter: false,
+	}
 
 	o := Onu{
 		ID:                  0,
@@ -108,9 +116,9 @@ func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth 
 		DiscoveryRetryDelay: 60 * time.Second, // this is used to send OnuDiscoveryIndications until an activate call is received
 		Flows:               []FlowKey{},
 		DiscoveryDelay:      delay,
+		Backoff:             b,
 	}
 	o.SerialNumber = o.NewSN(olt.ID, pon.ID, id)
-
 	// NOTE this state machine is used to track the operational
 	// state as requested by VOLTHA
 	o.OperState = getOperStateFSM(func(e *fsm.Event) {
@@ -363,12 +371,9 @@ loop:
 				msg, _ := message.Data.(OnuFlowUpdateMessage)
 				o.handleFlowUpdate(msg)
 			case StartEAPOL:
-				log.Infof("Receive StartEAPOL message on ONU Channel")
-				eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, stream)
+				o.handleEAPOLStart(stream)
 			case StartDHCP:
-				log.Infof("Receive StartDHCP message on ONU Channel")
-				// FIXME use id, ponId as SendEapStart
-				dhcp.SendDHCPDiscovery(o.PonPort.Olt.ID, o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
+				o.handleDHCPStart(stream)
 			case OnuPacketOut:
 
 				msg, _ := message.Data.(OnuPacketMessage)
@@ -491,6 +496,37 @@ func (o *Onu) processOmciMessage(message omcisim.OmciChMessage, stream openolt.O
 			}
 		}
 	}
+}
+
+func (o Onu) handleEAPOLStart(stream openolt.Openolt_EnableIndicationServer) {
+	log.Infof("Receive StartEAPOL message on ONU Channel")
+	eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, stream)
+	go func(delay time.Duration) {
+		if delay >= 30*time.Second {
+			o.Backoff.Reset()
+			return
+		}
+		time.Sleep(delay)
+		if o.InternalState.Current() == "eap_response_identity_sent" && common.Options.BBSim.AuthRetry {
+			o.InternalState.Event("start_auth")
+		}
+	}(o.Backoff.Duration())
+}
+
+func (o Onu) handleDHCPStart(stream openolt.Openolt_EnableIndicationServer) {
+	log.Infof("Receive StartDHCP message on ONU Channel")
+	// FIXME use id, ponId as SendEapStart
+	dhcp.SendDHCPDiscovery(o.PonPort.Olt.ID, o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
+	go func(delay time.Duration) {
+		if delay >= 30*time.Second {
+			o.Backoff.Reset()
+			return
+		}
+		time.Sleep(delay)
+		if o.InternalState.Current() == "dhcp_discovery_sent" && common.Options.BBSim.DhcpRetry {
+			o.InternalState.Event("start_dhcp")
+		}
+	}(o.Backoff.Duration())
 }
 
 func (o Onu) NewSN(oltid int, intfid uint32, onuid uint32) *openolt.SerialNumber {
@@ -747,7 +783,6 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
 		msg.Flow.Classifier.DstPort == uint32(67) &&
 		(msg.Flow.Classifier.OPbits == 0 || msg.Flow.Classifier.OPbits == 255) {
-
 
 		if o.Dhcp == true {
 			if o.DhcpFlowReceived == false {
