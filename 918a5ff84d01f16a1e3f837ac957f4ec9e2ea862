@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7176d187_153459e9",
+        "filename": "cmd/bbsim/bbsim.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-15T16:38:48Z",
+      "side": 1,
+      "message": "DhcpRetry",
+      "range": {
+        "startLine": 168,
+        "startChar": 3,
+        "endLine": 168,
+        "endChar": 17
+      },
+      "revId": "918a5ff84d01f16a1e3f837ac957f4ec9e2ea862",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d75fe89_4b7b7708",
+        "filename": "cmd/bbsim/bbsim.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-15T16:38:48Z",
+      "side": 1,
+      "message": "AuthRetry",
+      "range": {
+        "startLine": 169,
+        "startChar": 3,
+        "endLine": 169,
+        "endChar": 18
+      },
+      "revId": "918a5ff84d01f16a1e3f837ac957f4ec9e2ea862",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5570643c_faf4d2fe",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-15T16:38:48Z",
+      "side": 1,
+      "message": "Don\u0027t use this duration, use an exponential Backoff (that means, retry after 1, then after 2, 3, 5, 8, 13, ...) until a max value of let\u0027s say 30seconds...",
+      "range": {
+        "startLine": 503,
+        "startChar": 5,
+        "endLine": 503,
+        "endChar": 24
+      },
+      "revId": "918a5ff84d01f16a1e3f837ac957f4ec9e2ea862",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da6bcc72_fc862fbe",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-15T16:38:48Z",
+      "side": 1,
+      "message": "same as per Eapol",
+      "range": {
+        "startLine": 517,
+        "startChar": 5,
+        "endLine": 517,
+        "endChar": 24
+      },
+      "revId": "918a5ff84d01f16a1e3f837ac957f4ec9e2ea862",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
