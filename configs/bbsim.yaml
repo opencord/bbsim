@@ -12,6 +12,8 @@ bbsim:
   rest_api_address: ":50071"
   controlled_activation: "default"
   enable_perf: false
+  dhcp_retry: false
+  auth_retry: false
   # legacy_api_address: ":50072"
   # legacy_rest_api_address: ":50073"
   # sadis_rest_address: ":50074"
