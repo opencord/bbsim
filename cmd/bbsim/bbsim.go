@@ -165,6 +165,8 @@ func main() {
 		"STag":                 options.BBSim.STag,
 		"STagAllocation":       options.BBSim.STagAllocation,
 		"SadisFormat":          options.BBSim.SadisFormat,
+		"DhcpRetry":            options.BBSim.DhcpRetry,
+		"AuthRetry":            options.BBSim.AuthRetry,
 	}).Info("BroadBand Simulator is on")
 
 	// control channels, they are only closed when the goroutine needs to be terminated
