@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8e9387c_8a970de1",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-16T22:55:55Z",
+      "side": 1,
+      "message": "if the generated delay is bigger than 30s then we\u0027re not calling this function ever again",
+      "range": {
+        "startLine": 499,
+        "startChar": 2,
+        "endLine": 499,
+        "endChar": 27
+      },
+      "revId": "2d66037af605dac1c9f5ee1d14b1294fdd17b3b4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd0660cf_47330be8",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-16T22:55:55Z",
+      "side": 1,
+      "message": "Eapol is never retried as BBSim won\u0027t move to auth_failed for timeouts, it will be in the state that represent the last packet sent, eg: eap_response_identity_sent",
+      "range": {
+        "startLine": 501,
+        "startChar": 36,
+        "endLine": 501,
+        "endChar": 47
+      },
+      "revId": "2d66037af605dac1c9f5ee1d14b1294fdd17b3b4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
