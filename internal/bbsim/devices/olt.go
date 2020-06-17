@@ -677,11 +677,31 @@ loop:
 				msg, _ := message.Data.(PonIndicationMessage)
 				pon, _ := o.GetPonById(msg.PonPortID)
 				if msg.OperState == UP {
-					pon.OperState.Event("enable")
-					pon.InternalState.Event("enable")
+					if err := pon.OperState.Event("enable"); err != nil {
+						oltLogger.WithFields(log.Fields{
+							"IntfId": msg.PonPortID,
+							"Err": err,
+						}).Error("Can't Enable Oper state for PON Port")
+					}
+					if err := pon.InternalState.Event("enable"); err != nil {
+						oltLogger.WithFields(log.Fields{
+							"IntfId": msg.PonPortID,
+							"Err": err,
+						}).Error("Can't Enable Internal state for PON Port")
+					}
 				} else if msg.OperState == DOWN {
-					pon.OperState.Event("disable")
-					pon.InternalState.Event("disable")
+					if err := pon.OperState.Event("disable"); err != nil {
+						oltLogger.WithFields(log.Fields{
+							"IntfId": msg.PonPortID,
+							"Err": err,
+						}).Error("Can't Disable Oper state for PON Port")
+					}
+					if err := pon.InternalState.Event("disable"); err != nil {
+						oltLogger.WithFields(log.Fields{
+							"IntfId": msg.PonPortID,
+							"Err": err,
+						}).Error("Can't Disable Internal state for PON Port")
+					}
 				}
 			default:
 				oltLogger.Warnf("Received unknown message data %v for type %v in OLT Channel", message.Data, message.Type)
@@ -872,12 +892,33 @@ func (o OltDevice) DeleteOnu(_ context.Context, onu *openolt.Onu) (*openolt.Empt
 		}).Error("Can't find Onu")
 	}
 
-	if err := _onu.InternalState.Event("initialize"); err != nil {
+	if err := _onu.InternalState.Event("disable"); err != nil {
 		oltLogger.WithFields(log.Fields{
 			"IntfId": _onu.PonPortID,
 			"OnuSn":  _onu.Sn(),
 			"OnuId":  _onu.ID,
-		}).Infof("Failed to transition ONU to initialized state: %s", err.Error())
+		}).Infof("Failed to transition ONU to disabled state: %s", err.Error())
+	}
+
+	time.Sleep(1 * time.Second)
+
+	// ONU Re-Discovery
+	if o.InternalState.Current() == "enabled" && pon.InternalState.Current() == "enabled" {
+		if err := _onu.InternalState.Event("initialize"); err != nil {
+			oltLogger.WithFields(log.Fields{
+				"IntfId": _onu.PonPortID,
+				"OnuSn":  _onu.Sn(),
+				"OnuId":  _onu.ID,
+			}).Infof("Failed to transition ONU to initialized state: %s", err.Error())
+		}
+
+		if err := _onu.InternalState.Event("discover"); err != nil {
+			oltLogger.WithFields(log.Fields{
+				"IntfId": _onu.PonPortID,
+				"OnuSn":  _onu.Sn(),
+				"OnuId":  _onu.ID,
+			}).Infof("Failed to transition ONU to discovered state: %s", err.Error())
+		}
 	}
 
 	return new(openolt.Empty), nil
@@ -919,19 +960,9 @@ func (o OltDevice) DisableOlt(context.Context, *openolt.Empty) (*openolt.Empty, 
 }
 
 func (o OltDevice) DisablePonIf(_ context.Context, intf *openolt.Interface) (*openolt.Empty, error) {
-	oltLogger.Errorf("DisablePonIf request received for PON %d", intf.IntfId)
+	oltLogger.Infof("DisablePonIf request received for PON %d", intf.IntfId)
 	ponID := intf.GetIntfId()
 	pon, _ := o.GetPonById(intf.IntfId)
-	errInternalState := pon.InternalState.Event("disable")
-	oltLogger.WithFields(log.Fields{
-		"IntfId": ponID,
-		"err":    errInternalState,
-	}).Error("Can't disable Internal state for PonPort")
-	errOperState := pon.OperState.Event("disable")
-	oltLogger.WithFields(log.Fields{
-		"IntfId": ponID,
-		"err":    errOperState,
-	}).Error("Can't disable Oper state for PonPort")
 
 	msg := Message{
 		Type: PonIndication,
@@ -965,19 +996,9 @@ func (o *OltDevice) EnableIndication(_ *openolt.Empty, stream openolt.Openolt_En
 }
 
 func (o OltDevice) EnablePonIf(_ context.Context, intf *openolt.Interface) (*openolt.Empty, error) {
-	oltLogger.Errorf("EnablePonIf request received for PON %d", intf.IntfId)
+	oltLogger.Infof("EnablePonIf request received for PON %d", intf.IntfId)
 	ponID := intf.GetIntfId()
 	pon, _ := o.GetPonById(intf.IntfId)
-	errInternalState := pon.InternalState.Event("enable")
-	oltLogger.WithFields(log.Fields{
-		"IntfId": ponID,
-		"err":    errInternalState,
-	}).Error("Can't enable Internal state for PonPort")
-	errOperState := pon.OperState.Event("enable")
-	oltLogger.WithFields(log.Fields{
-		"IntfId": ponID,
-		"err":    errOperState,
-	}).Error("Can't enable Oper state for PonPort")
 
 	msg := Message{
 		Type: PonIndication,

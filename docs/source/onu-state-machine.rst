@@ -21,7 +21,7 @@ Here is a list of possible state transitions for an ONU in BBSim:
       - created
       -
     * - initialize
-      - created, disabled
+      - created, disabled, pon_disabled
       - initialized
       -
     * - discover
@@ -29,7 +29,7 @@ Here is a list of possible state transitions for an ONU in BBSim:
       - discovered
       -
     * - enable
-      - discovered, disabled
+      - discovered, disabled, pon_disabled
       - enabled
       -
     * - receive_eapol_flow
