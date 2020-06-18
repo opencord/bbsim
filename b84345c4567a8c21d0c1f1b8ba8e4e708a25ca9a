@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d2b4ad9c_fabe853c",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 903,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-06-18T06:03:06Z",
+      "side": 1,
+      "message": "First.. I added this to give some delay before the Re-Discovery..\nBut then at times I have observed Delete ONU comes first while deleting OLT and the below check remains true which gets the ONU in discovered state and messes the system. Also because currently enable is only expected state after discovered and later when PON tries to disable it in delete OLT it doesn\u0027t work.. I can update the device cycle but felt this is better.. Let me know if my understanding needs a correction..",
+      "parentUuid": "d999c4cd_7a443e6e",
+      "range": {
+        "startLine": 903,
+        "startChar": 1,
+        "endLine": 903,
+        "endChar": 28
+      },
+      "revId": "b84345c4567a8c21d0c1f1b8ba8e4e708a25ca9a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e969df91_c2828677",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "dc21af91_a4c04a70",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 906,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-06-18T06:03:06Z",
+      "side": 1,
+      "message": "This is for OLT..",
+      "parentUuid": "e969df91_c2828677",
+      "range": {
+        "startLine": 906,
+        "startChar": 1,
+        "endLine": 906,
+        "endChar": 42
+      },
+      "revId": "b84345c4567a8c21d0c1f1b8ba8e4e708a25ca9a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "847ac940_dd53c3d5",
         "filename": "internal/bbsim/devices/pon.go",
         "patchSetId": 1
@@ -59,6 +107,30 @@
       "writtenOn": "2020-06-17T21:49:46Z",
       "side": 1,
       "message": "do we want to kill the entire simulator or an Error could be enough?",
+      "range": {
+        "startLine": 118,
+        "startChar": 10,
+        "endLine": 118,
+        "endChar": 15
+      },
+      "revId": "b84345c4567a8c21d0c1f1b8ba8e4e708a25ca9a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57408e34_b6059039",
+        "filename": "internal/bbsim/devices/pon.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-06-18T06:03:06Z",
+      "side": 1,
+      "message": "Made this to try some scenario.. Will change to Error.. Thanks",
+      "parentUuid": "847ac940_dd53c3d5",
       "range": {
         "startLine": 118,
         "startChar": 10,
