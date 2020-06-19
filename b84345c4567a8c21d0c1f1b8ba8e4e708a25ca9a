@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "266ef8f8_2470191a",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 903,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-19T15:37:33Z",
+      "side": 1,
+      "message": "Not sure I follow but it seems fine.",
+      "parentUuid": "d2b4ad9c_fabe853c",
+      "range": {
+        "startLine": 903,
+        "startChar": 1,
+        "endLine": 903,
+        "endChar": 28
+      },
+      "revId": "b84345c4567a8c21d0c1f1b8ba8e4e708a25ca9a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e969df91_c2828677",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 1
@@ -96,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "24b789fa_ef6f5ad7",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 906,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-19T15:37:33Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "dc21af91_a4c04a70",
+      "range": {
+        "startLine": 906,
+        "startChar": 1,
+        "endLine": 906,
+        "endChar": 42
+      },
+      "revId": "b84345c4567a8c21d0c1f1b8ba8e4e708a25ca9a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "847ac940_dd53c3d5",
         "filename": "internal/bbsim/devices/pon.go",
         "patchSetId": 1
@@ -140,6 +188,30 @@
       "revId": "b84345c4567a8c21d0c1f1b8ba8e4e708a25ca9a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b52e5c31_3e6d700a",
+        "filename": "internal/bbsim/devices/pon.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-19T15:37:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "57408e34_b6059039",
+      "range": {
+        "startLine": 118,
+        "startChar": 10,
+        "endLine": 118,
+        "endChar": 15
+      },
+      "revId": "b84345c4567a8c21d0c1f1b8ba8e4e708a25ca9a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
