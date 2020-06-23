@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f917c16_1bf82a63",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-23T18:00:17Z",
+      "side": 1,
+      "message": "this is not needed, you already set the maximum in the backoff",
+      "range": {
+        "startLine": 505,
+        "startChar": 2,
+        "endLine": 508,
+        "endChar": 3
+      },
+      "revId": "c7c13969dcee9da68e5f7bb0815a85bdcdaa119c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "199e77ae_abb07ffc",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 510,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-23T18:00:17Z",
+      "side": 1,
+      "message": "EAPOL can break in any of these states: eap_start_sent, eap_response_identity_sent, eap_response_challenge_sent, auth_failed\n\nWe need to restart auth if we are in any of those states",
+      "range": {
+        "startLine": 510,
+        "startChar": 35,
+        "endLine": 510,
+        "endChar": 61
+      },
+      "revId": "c7c13969dcee9da68e5f7bb0815a85bdcdaa119c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b42deccf_495a60a6",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-23T18:00:17Z",
+      "side": 1,
+      "message": "same as for EAPOL",
+      "range": {
+        "startLine": 521,
+        "startChar": 2,
+        "endLine": 524,
+        "endChar": 3
+      },
+      "revId": "c7c13969dcee9da68e5f7bb0815a85bdcdaa119c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa2189ca_18753eec",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-06-23T18:00:17Z",
+      "side": 1,
+      "message": "DHCP can break in any of these states: dhcp_discovery_sent, dhcp_request_sent, dhcp_failed\n\nWe need to restart DHCP if we are in any of those states",
+      "range": {
+        "startLine": 526,
+        "startChar": 35,
+        "endLine": 526,
+        "endChar": 54
+      },
+      "revId": "c7c13969dcee9da68e5f7bb0815a85bdcdaa119c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
