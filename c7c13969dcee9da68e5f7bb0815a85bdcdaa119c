@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3d61cf27_a834ce4d",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1000663
+      },
+      "writtenOn": "2020-06-23T23:48:39Z",
+      "side": 1,
+      "message": "I added this not just to stop the function, but to also reset the backoff so that whenever this function is called again we do not face any issues.",
+      "parentUuid": "1f917c16_1bf82a63",
+      "range": {
+        "startLine": 505,
+        "startChar": 2,
+        "endLine": 508,
+        "endChar": 3
+      },
+      "revId": "c7c13969dcee9da68e5f7bb0815a85bdcdaa119c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "199e77ae_abb07ffc",
         "filename": "internal/bbsim/devices/onu.go",
         "patchSetId": 7
