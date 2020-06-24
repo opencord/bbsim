@@ -162,7 +162,7 @@ func CreateOLT(options common.BBSimYamlConfig, isMock bool) *OltDevice {
 			// create ONU devices
 			for j := 0; j < olt.NumOnuPerPon; j++ {
 				delay := time.Duration(olt.Delay*j) * time.Millisecond
-				o := CreateONU(&olt, *p, uint32(j+1), options.BBSim.STag, availableCTag, options.BBSim.EnableAuth, options.BBSim.EnableDhcp, delay, isMock)
+				o := CreateONU(&olt, p, uint32(j+1), options.BBSim.STag, availableCTag, options.BBSim.EnableAuth, options.BBSim.EnableDhcp, delay, isMock)
 				p.Onus = append(p.Onus, o)
 				availableCTag = availableCTag + 1
 			}
@@ -178,7 +178,7 @@ func CreateOLT(options common.BBSimYamlConfig, isMock bool) *OltDevice {
 			// create ONU devices
 			for j := 0; j < olt.NumOnuPerPon; j++ {
 				delay := time.Duration(olt.Delay*j) * time.Millisecond
-				o := CreateONU(&olt, *p, uint32(j+1), availableSTag, options.BBSim.CTag, options.BBSim.EnableAuth, options.BBSim.EnableDhcp, delay, isMock)
+				o := CreateONU(&olt, p, uint32(j+1), availableSTag, options.BBSim.CTag, options.BBSim.EnableAuth, options.BBSim.EnableDhcp, delay, isMock)
 				p.Onus = append(p.Onus, o)
 				availableSTag = availableSTag + 1
 			}
@@ -1046,11 +1046,11 @@ func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Em
 	if flow.AccessIntfId == -1 {
 		oltLogger.WithFields(log.Fields{
 			"FlowId": flow.FlowId,
-		}).Debugf("This is an OLT flow")
+		}).Debug("Adding OLT flow")
 	} else if flow.FlowType == "multicast" {
 		oltLogger.WithFields(log.Fields{
 			"FlowId": flow.FlowId,
-		}).Debugf("This is a multicast flow")
+		}).Debug("Adding OLT multicast flow")
 	} else {
 		pon, err := o.GetPonById(uint32(flow.AccessIntfId))
 		if err != nil {
@@ -1078,7 +1078,7 @@ func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Em
 		}
 
 		msg := Message{
-			Type: FlowUpdate,
+			Type: FlowAdd,
 			Data: OnuFlowUpdateMessage{
 				PonPortID: pon.ID,
 				OnuID:     onu.ID,
@@ -1093,10 +1093,11 @@ func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Em
 
 // FlowRemove request from VOLTHA
 func (o OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.Empty, error) {
+
 	oltLogger.WithFields(log.Fields{
-		"FlowId":   flow.FlowId,
-		"FlowType": flow.FlowType,
-	}).Tracef("OLT receives FlowRemove")
+		"FlowId":           flow.FlowId,
+		"FlowType":         flow.FlowType,
+	}).Debug("OLT receives FlowRemove")
 
 	if !o.enablePerf { // remove only if flow were stored
 		flowKey := FlowKey{
@@ -1130,6 +1131,36 @@ func (o OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.E
 		// delete from olt flows
 		delete(o.Flows, flowKey)
 	}
+
+	if flow.AccessIntfId == -1 {
+		oltLogger.WithFields(log.Fields{
+			"FlowId": flow.FlowId,
+		}).Debug("Removing OLT flow")
+	} else if flow.FlowType == "multicast" {
+		oltLogger.WithFields(log.Fields{
+			"FlowId": flow.FlowId,
+		}).Debug("Removing OLT multicast flow")
+	} else {
+
+		onu, err := o.GetOnuByFlowId(flow.FlowId)
+		if err != nil {
+			oltLogger.WithFields(log.Fields{
+				"OnuId":  flow.OnuId,
+				"IntfId": flow.AccessIntfId,
+				"err":    err,
+			}).Error("Can't find Onu")
+			return nil, err
+		}
+
+		msg := Message{
+			Type: FlowRemoved,
+			Data: OnuFlowUpdateMessage{
+				Flow:      flow,
+			},
+		}
+		onu.Channel <- msg
+	}
+
 	return new(openolt.Empty), nil
 }
 
@@ -1139,6 +1170,19 @@ func (o OltDevice) HeartbeatCheck(context.Context, *openolt.Empty) (*openolt.Hea
 		"signature": res.HeartbeatSignature,
 	}).Trace("HeartbeatCheck")
 	return &res, nil
+}
+
+func (o *OltDevice) GetOnuByFlowId(flowId uint32) (*Onu, error) {
+	for _, pon := range o.Pons {
+		for _, onu := range pon.Onus {
+			for _, fId := range onu.FlowIds {
+				if fId == flowId {
+					return onu, nil
+				}
+			}
+		}
+	}
+	return nil, errors.New(fmt.Sprintf("Cannot find Onu by flowId %d", flowId))
 }
 
 func (o OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.DeviceInfo, error) {

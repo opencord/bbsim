@@ -47,10 +47,28 @@ func Test_Onu_SendEapolFlow(t *testing.T) {
 	assert.Equal(t, client.FlowAddSpy.Calls[1].PortNo, onu.ID)
 }
 
+// checks that the FlowId is added to the list
+func Test_HandleFlowAddFlowId(t *testing.T) {
+	onu := createMockOnu(1, 1, 900, 900, true, false)
+
+	flow := openolt.Flow{
+		FlowId: 64,
+		Classifier: &openolt.Classifier{},
+	}
+	msg := OnuFlowUpdateMessage{
+		OnuID:     onu.ID,
+		PonPortID: onu.PonPortID,
+		Flow:      &flow,
+	}
+	onu.handleFlowAdd(msg)
+	assert.Equal(t, len(onu.FlowIds), 1)
+	assert.Equal(t, onu.FlowIds[0], uint32(64))
+}
+
 // validates that when an ONU receives an EAPOL flow for UNI 0
 // and the GemPort has already been configured
 // it transition to auth_started state
-func Test_HandleFlowUpdateEapolWithGem(t *testing.T) {
+func Test_HandleFlowAddEapolWithGem(t *testing.T) {
 
 	onu := createMockOnu(1, 1, 900, 900, true, false)
 
@@ -85,13 +103,13 @@ func Test_HandleFlowUpdateEapolWithGem(t *testing.T) {
 		Flow:      &flow,
 	}
 
-	onu.handleFlowUpdate(msg)
+	onu.handleFlowAdd(msg)
 	assert.Equal(t, onu.InternalState.Current(), "auth_started")
 }
 
 // validates that when an ONU receives an EAPOL flow for UNI that is not 0
 // no action is taken (this is independent of GemPort status
-func Test_HandleFlowUpdateEapolWrongUNI(t *testing.T) {
+func Test_HandleFlowAddEapolWrongUNI(t *testing.T) {
 
 	onu := createMockOnu(1, 1, 900, 900, true, false)
 
@@ -126,14 +144,14 @@ func Test_HandleFlowUpdateEapolWrongUNI(t *testing.T) {
 		Flow:      &flow,
 	}
 
-	onu.handleFlowUpdate(msg)
+	onu.handleFlowAdd(msg)
 	assert.Equal(t, onu.InternalState.Current(), "enabled")
 }
 
 // validates that when an ONU receives an EAPOL flow for UNI 0
 // and the GemPort has not yet been configured
 // it transition to auth_started state
-func Test_HandleFlowUpdateEapolWithoutGem(t *testing.T) {
+func Test_HandleFlowAddEapolWithoutGem(t *testing.T) {
 
 	onu := createMockOnu(1, 1, 900, 900, true, false)
 	onu.GemPortAdded = false
@@ -169,7 +187,7 @@ func Test_HandleFlowUpdateEapolWithoutGem(t *testing.T) {
 		Flow:      &flow,
 	}
 
-	onu.handleFlowUpdate(msg)
+	onu.handleFlowAdd(msg)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -191,7 +209,7 @@ func Test_HandleFlowUpdateEapolWithoutGem(t *testing.T) {
 
 // validates that when an ONU receives an EAPOL flow for UNI 0
 // but the noAuth bit is set no action is taken
-func Test_HandleFlowUpdateEapolNoAuth(t *testing.T) {
+func Test_HandleFlowAddEapolNoAuth(t *testing.T) {
 	onu := createMockOnu(1, 1, 900, 900, false, false)
 
 	onu.InternalState = fsm.NewFSM(
@@ -225,14 +243,14 @@ func Test_HandleFlowUpdateEapolNoAuth(t *testing.T) {
 		Flow:      &flow,
 	}
 
-	onu.handleFlowUpdate(msg)
+	onu.handleFlowAdd(msg)
 	assert.Equal(t, onu.InternalState.Current(), "enabled")
 }
 
 // validates that when an ONU receives a DHCP flow for UNI 0 and pbit 0
 // and the GemPort has already been configured
 // it transition to dhcp_started state
-func Test_HandleFlowUpdateDhcp(t *testing.T) {
+func Test_HandleFlowAddDhcp(t *testing.T) {
 	onu := createMockOnu(1, 1, 900, 900, false, true)
 
 	onu.InternalState = fsm.NewFSM(
@@ -268,7 +286,7 @@ func Test_HandleFlowUpdateDhcp(t *testing.T) {
 		Flow:      &flow,
 	}
 
-	onu.handleFlowUpdate(msg)
+	onu.handleFlowAdd(msg)
 	assert.Equal(t, onu.InternalState.Current(), "dhcp_started")
 	assert.Equal(t, onu.DhcpFlowReceived, true)
 }
@@ -276,7 +294,7 @@ func Test_HandleFlowUpdateDhcp(t *testing.T) {
 // validates that when an ONU receives a DHCP flow for UNI 0 and pbit 255
 // and the GemPort has already been configured
 // it transition to dhcp_started state
-func Test_HandleFlowUpdateDhcpPBit255(t *testing.T) {
+func Test_HandleFlowAddDhcpPBit255(t *testing.T) {
 	onu := createMockOnu(1, 1, 900, 900, false, true)
 
 	onu.InternalState = fsm.NewFSM(
@@ -312,7 +330,7 @@ func Test_HandleFlowUpdateDhcpPBit255(t *testing.T) {
 		Flow:      &flow,
 	}
 
-	onu.handleFlowUpdate(msg)
+	onu.handleFlowAdd(msg)
 	assert.Equal(t, onu.InternalState.Current(), "dhcp_started")
 	assert.Equal(t, onu.DhcpFlowReceived, true)
 }
@@ -320,7 +338,7 @@ func Test_HandleFlowUpdateDhcpPBit255(t *testing.T) {
 // validates that when an ONU receives a DHCP flow for UNI 0 and pbit not 0 or 255
 // and the GemPort has already been configured
 // it ignores the message
-func Test_HandleFlowUpdateDhcpIgnoreByPbit(t *testing.T) {
+func Test_HandleFlowAddDhcpIgnoreByPbit(t *testing.T) {
 	onu := createMockOnu(1, 1, 900, 900, false, true)
 
 	onu.InternalState = fsm.NewFSM(
@@ -356,14 +374,14 @@ func Test_HandleFlowUpdateDhcpIgnoreByPbit(t *testing.T) {
 		Flow:      &flow,
 	}
 
-	onu.handleFlowUpdate(msg)
+	onu.handleFlowAdd(msg)
 	assert.Equal(t, onu.InternalState.Current(), "eap_response_success_received")
 	assert.Equal(t, onu.DhcpFlowReceived, false)
 }
 
 // validates that when an ONU receives a DHCP flow for UNI 0
 // but the noDchp bit is set no action is taken
-func Test_HandleFlowUpdateDhcpNoDhcp(t *testing.T) {
+func Test_HandleFlowAddDhcpNoDhcp(t *testing.T) {
 	onu := createMockOnu(1, 1, 900, 900, false, false)
 
 	onu.InternalState = fsm.NewFSM(
@@ -398,7 +416,7 @@ func Test_HandleFlowUpdateDhcpNoDhcp(t *testing.T) {
 		Flow:      &flow,
 	}
 
-	onu.handleFlowUpdate(msg)
+	onu.handleFlowAdd(msg)
 	assert.Equal(t, onu.InternalState.Current(), "eap_response_success_received")
 	assert.Equal(t, onu.DhcpFlowReceived, false)
 }
@@ -406,9 +424,9 @@ func Test_HandleFlowUpdateDhcpNoDhcp(t *testing.T) {
 // validates that when an ONU receives a DHCP flow for UNI 0 and pbit not 0 or 255
 // and the GemPort has not already been configured
 // it transition to dhcp_started state
-func Test_HandleFlowUpdateDhcpWithoutGem(t *testing.T) {
-	// NOTE that this feature is required when we do DHCP with no eapol
-	// as the DHCP flow will be the first one received
+func Test_HandleFlowAddDhcpWithoutGem(t *testing.T) {
+	// NOTE that this feature is required as there is no guarantee that the gemport is the same
+	// one we received with the EAPOL flow
 	onu := createMockOnu(1, 1, 900, 900, false, true)
 
 	onu.GemPortAdded = false
@@ -446,7 +464,7 @@ func Test_HandleFlowUpdateDhcpWithoutGem(t *testing.T) {
 		Flow:      &flow,
 	}
 
-	onu.handleFlowUpdate(msg)
+	onu.handleFlowAdd(msg)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -464,4 +482,52 @@ func Test_HandleFlowUpdateDhcpWithoutGem(t *testing.T) {
 		assert.Equal(t, onu.DhcpFlowReceived, true)
 	}(&wg)
 	wg.Wait()
+}
+
+// checks that we only remove the correct flow
+func Test_HandleFlowRemoveFlowId(t *testing.T) {
+	onu := createMockOnu(1, 1, 900, 900, true, false)
+
+	onu.FlowIds = []uint32{1, 2, 34, 64, 92}
+
+	flow := openolt.Flow{
+		FlowId: 64,
+		Classifier: &openolt.Classifier{},
+	}
+	msg := OnuFlowUpdateMessage{
+		OnuID:     onu.ID,
+		PonPortID: onu.PonPortID,
+		Flow:      &flow,
+	}
+	onu.handleFlowRemove(msg)
+	assert.Equal(t, len(onu.FlowIds), 4)
+	assert.Equal(t, onu.FlowIds[0], uint32(1))
+	assert.Equal(t, onu.FlowIds[1], uint32(2))
+	assert.Equal(t, onu.FlowIds[2], uint32(34))
+	assert.Equal(t, onu.FlowIds[3], uint32(92))
+}
+
+// checks that when the last flow is removed we reset the stored flags in the ONU
+func Test_HandleFlowRemoveFlowId_LastFlow(t *testing.T) {
+	onu := createMockOnu(1, 1, 900, 900, true, false)
+	onu.GemPortAdded = true
+	onu.DhcpFlowReceived = true
+	onu.EapolFlowReceived = true
+
+	onu.FlowIds = []uint32{64}
+
+	flow := openolt.Flow{
+		FlowId: 64,
+		Classifier: &openolt.Classifier{},
+	}
+	msg := OnuFlowUpdateMessage{
+		OnuID:     onu.ID,
+		PonPortID: onu.PonPortID,
+		Flow:      &flow,
+	}
+	onu.handleFlowRemove(msg)
+	assert.Equal(t, len(onu.FlowIds), 0)
+	assert.Equal(t, onu.GemPortAdded, false)
+	assert.Equal(t, onu.DhcpFlowReceived, false)
+	assert.Equal(t, onu.EapolFlowReceived, false)
 }
