@@ -26,7 +26,7 @@ import (
 
 	"github.com/cboling/omci"
 	"github.com/google/gopacket/layers"
-	backoff "github.com/jpillora/backoff"
+	"github.com/jpillora/backoff"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
@@ -52,7 +52,7 @@ type FlowKey struct {
 type Onu struct {
 	ID                  uint32
 	PonPortID           uint32
-	PonPort             PonPort
+	PonPort             *PonPort
 	STag                int
 	CTag                int
 	Auth                bool // automatically start EAPOL if set to true
@@ -71,6 +71,7 @@ type Onu struct {
 	EapolFlowReceived bool
 	DhcpFlowReceived  bool
 	Flows             []FlowKey
+	FlowIds           []uint32 // keep track of the flows we currently have in the ONU
 
 	OperState    *fsm.FSM
 	SerialNumber *openolt.SerialNumber
@@ -98,10 +99,10 @@ func (o *Onu) GetGemPortChan() chan bool {
 	return listener
 }
 
-func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth bool, dhcp bool, delay time.Duration, isMock bool) *Onu {
+func CreateONU(olt *OltDevice, pon *PonPort, id uint32, sTag int, cTag int, auth bool, dhcp bool, delay time.Duration, isMock bool) *Onu {
 	b := &backoff.Backoff{
 		//These are the defaults
-		Min:    1 * time.Second,
+		Min:    5 * time.Second,
 		Max:    35 * time.Second,
 		Factor: 1.5,
 		Jitter: false,
@@ -401,9 +402,12 @@ loop:
 			case OMCI:
 				msg, _ := message.Data.(OmciMessage)
 				o.handleOmciMessage(msg, stream)
-			case FlowUpdate:
+			case FlowAdd:
 				msg, _ := message.Data.(OnuFlowUpdateMessage)
-				o.handleFlowUpdate(msg)
+				o.handleFlowAdd(msg)
+			case FlowRemoved:
+				msg, _ := message.Data.(OnuFlowUpdateMessage)
+				o.handleFlowRemove(msg)
 			case StartEAPOL:
 				o.handleEAPOLStart(stream)
 			case StartDHCP:
@@ -751,7 +755,7 @@ func (o *Onu) SetID(id uint32) {
 	o.ID = id
 }
 
-func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
+func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 	onuLogger.WithFields(log.Fields{
 		"DstPort":          msg.Flow.Classifier.DstPort,
 		"EthType":          fmt.Sprintf("%x", msg.Flow.Classifier.EthType),
@@ -768,7 +772,7 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 		"SrcPort":          msg.Flow.Classifier.SrcPort,
 		"UniID":            msg.Flow.UniId,
 		"ClassifierOPbits": msg.Flow.Classifier.OPbits,
-	}).Debug("ONU receives Flow")
+	}).Debug("ONU receives FlowAdd")
 
 	if msg.Flow.UniId != 0 {
 		// as of now BBSim only support a single UNI, so ignore everything that is not targeted to it
@@ -779,6 +783,8 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 		}).Debug("Ignoring flow as it's not for the first UNI")
 		return
 	}
+
+	o.FlowIds = append(o.FlowIds, msg.Flow.FlowId)
 
 	if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeEAPOL) && msg.Flow.Classifier.OVid == 4091 {
 		// NOTE storing the PortNO, it's needed when sending PacketIndications
@@ -825,6 +831,13 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 				// this is needed as a check in case someone trigger DHCP from the CLI
 				o.DhcpFlowReceived = true
 
+				// FIXME it's possible that the GemPort we have is not valid anymore
+				// as it can change when the eapol flow is removed
+				// A possible solution is to keep track of the number of flows added in the ONU,
+				// when all of them are removed, set o.GemPortAdded = false
+				// Issue, when we remove the flow we only have: flow="flow_id:3 flow_type:\"upstream\"
+				// so we need to keep track of the association FlowId -> ONU in order to clean it
+
 				if !o.GemPortAdded {
 					// wait for Gem and then start DHCP
 					go func() {
@@ -857,6 +870,32 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 				"SerialNumber": o.Sn(),
 			}).Warn("Not starting DHCP as Dhcp bit is not set in CLI parameters")
 		}
+	}
+}
+
+func (o *Onu) handleFlowRemove(msg OnuFlowUpdateMessage) {
+	onuLogger.WithFields(log.Fields{
+		"FlowId":           msg.Flow.FlowId,
+		"FlowType":         msg.Flow.FlowType,
+	}).Debug("ONU receives FlowRemove")
+
+	for idx, flow := range o.FlowIds {
+		// If the gemport is found, delete it from local cache.
+		if flow == msg.Flow.FlowId {
+			o.FlowIds = append(o.FlowIds[:idx], o.FlowIds[idx+1:]...)
+			break
+		}
+	}
+
+	if len(o.FlowIds) == 0 {
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"OnuId":        o.ID,
+			"SerialNumber": o.Sn(),
+		}).Info("Resetting GemPort")
+		o.HasGemPort = false
+		o.EapolFlowReceived = false
+		o.DhcpFlowReceived = false
 	}
 }
 
