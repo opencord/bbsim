@@ -47,6 +47,7 @@ func sendEapolPktIn(msg bbsim.ByteMsg, portNo uint32, stream openolt.Openolt_Ena
 		}).Errorf("Can't retrieve GemPortId: %s", err)
 		return
 	}
+
 	data := &openolt.Indication_PktInd{PktInd: &openolt.PacketIndication{
 		IntfType:  "pon",
 		IntfId:    msg.IntfId,

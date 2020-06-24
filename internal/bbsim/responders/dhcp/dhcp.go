@@ -251,6 +251,7 @@ func sendDHCPPktIn(msg bbsim.ByteMsg, portNo uint32, stream bbsim.Stream) error 
 		}).Errorf("Can't retrieve GemPortId: %s", err)
 		return err
 	}
+
 	data := &openolt.Indication_PktInd{PktInd: &openolt.PacketIndication{
 		IntfType:  "pon",
 		IntfId:    msg.IntfId,
