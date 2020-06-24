@@ -17,6 +17,7 @@
 package devices
 
 import (
+	"github.com/opencord/voltha-protos/v2/go/openolt"
 	"gotest.tools/assert"
 	"net"
 	"testing"
@@ -36,7 +37,7 @@ func createMockOlt(numPon int, numOnu int) OltDevice {
 			onuId := uint32(i + j)
 			onu := Onu{
 				ID:        onuId,
-				PonPort:   pon,
+				PonPort:   &pon,
 				PonPortID: pon.ID,
 				HwAddress: net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(onuId)},
 			}
@@ -104,4 +105,43 @@ func Test_Olt_FindOnuByMacAddress_Error(t *testing.T) {
 	_, err := olt.FindOnuByMacAddress(mac)
 
 	assert.Equal(t, err.Error(), "cannot-find-onu-by-mac-address-2e:60:70:13:03:03")
+}
+
+func Test_Olt_GetOnuByFlowId(t *testing.T) {
+	numPon := 4
+	numOnu := 4
+
+	olt := createMockOlt(numPon, numOnu)
+
+	// Add the flows to onus (to be found)
+	onu1, _ := olt.FindOnuBySn("BBSM00000303")
+	flow1 := openolt.Flow{
+		FlowId: 64,
+		Classifier: &openolt.Classifier{},
+	}
+	msg1 := OnuFlowUpdateMessage{
+		OnuID:     onu1.ID,
+		PonPortID: onu1.PonPortID,
+		Flow:      &flow1,
+	}
+	onu1.handleFlowAdd(msg1)
+
+	onu2, _ := olt.FindOnuBySn("BBSM00000103")
+	flow2 := openolt.Flow{
+		FlowId: 72,
+		Classifier: &openolt.Classifier{},
+	}
+	msg2 := OnuFlowUpdateMessage{
+		OnuID:     onu2.ID,
+		PonPortID: onu2.PonPortID,
+		Flow:      &flow2,
+	}
+	onu2.handleFlowAdd(msg2)
+
+
+
+	found, err := olt.GetOnuByFlowId(flow1.FlowId)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, found.Sn(), onu1.Sn())
 }

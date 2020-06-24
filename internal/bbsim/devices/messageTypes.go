@@ -31,7 +31,8 @@ const (
 	OnuDiscIndication MessageType = 3
 	OnuIndication     MessageType = 4
 	OMCI              MessageType = 5
-	FlowUpdate        MessageType = 6
+	FlowAdd           MessageType = 6
+	FlowRemoved       MessageType = 18
 	StartEAPOL        MessageType = 7
 	StartDHCP         MessageType = 8
 	OnuPacketOut      MessageType = 9
@@ -58,7 +59,7 @@ func (m MessageType) String() string {
 		"OnuDiscIndication",
 		"OnuIndication",
 		"OMCI",
-		"FlowUpdate",
+		"FlowAdd",
 		"StartEAPOL",
 		"StartDHCP",
 		"OnuPacketOut",
@@ -69,6 +70,7 @@ func (m MessageType) String() string {
 		"IGMPMembershipReportV2",
 		"IGMPLeaveGroup",
 		"IGMPMembershipReportV3",
+		"FlowRemoved",
 	}
 	return names[m]
 }
@@ -138,7 +140,7 @@ type OperState int
 
 const (
 	UP   OperState = iota
-	DOWN           // The device has been discovered, but not yet activated
+	DOWN  // The device has been discovered, but not yet activated
 )
 
 func (m OperState) String() string {

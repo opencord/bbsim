@@ -26,7 +26,7 @@ import (
 
 	"github.com/cboling/omci"
 	"github.com/google/gopacket/layers"
-	backoff "github.com/jpillora/backoff"
+	"github.com/jpillora/backoff"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
@@ -52,7 +52,7 @@ type FlowKey struct {
 type Onu struct {
 	ID                  uint32
 	PonPortID           uint32
-	PonPort             PonPort
+	PonPort             *PonPort
 	STag                int
 	CTag                int
 	Auth                bool // automatically start EAPOL if set to true
@@ -71,6 +71,7 @@ type Onu struct {
 	EapolFlowReceived bool
 	DhcpFlowReceived  bool
 	Flows             []FlowKey
+	FlowIds           []uint32 // keep track of the flows we currently have in the ONU
 
 	OperState    *fsm.FSM
 	SerialNumber *openolt.SerialNumber
@@ -79,10 +80,9 @@ type Onu struct {
 	GemPortChannels []chan bool  // this channels are used to notify everyone that is interested that a GemPort has been added
 
 	// OMCI params
-	tid        uint16
-	hpTid      uint16
-	seqNumber  uint16
-	HasGemPort bool
+	tid       uint16
+	hpTid     uint16
+	seqNumber uint16
 
 	DoneChannel       chan bool // this channel is used to signal once the onu is complete (when the struct is used by BBR)
 	TrafficSchedulers *tech_profile.TrafficSchedulers
@@ -98,10 +98,10 @@ func (o *Onu) GetGemPortChan() chan bool {
 	return listener
 }
 
-func CreateONU(olt *OltDevice, pon PonPort, id uint32, sTag int, cTag int, auth bool, dhcp bool, delay time.Duration, isMock bool) *Onu {
+func CreateONU(olt *OltDevice, pon *PonPort, id uint32, sTag int, cTag int, auth bool, dhcp bool, delay time.Duration, isMock bool) *Onu {
 	b := &backoff.Backoff{
 		//These are the defaults
-		Min:    1 * time.Second,
+		Min:    5 * time.Second,
 		Max:    35 * time.Second,
 		Factor: 1.5,
 		Jitter: false,
@@ -401,9 +401,12 @@ loop:
 			case OMCI:
 				msg, _ := message.Data.(OmciMessage)
 				o.handleOmciMessage(msg, stream)
-			case FlowUpdate:
+			case FlowAdd:
 				msg, _ := message.Data.(OnuFlowUpdateMessage)
-				o.handleFlowUpdate(msg)
+				o.handleFlowAdd(msg)
+			case FlowRemoved:
+				msg, _ := message.Data.(OnuFlowUpdateMessage)
+				o.handleFlowRemove(msg)
 			case StartEAPOL:
 				o.handleEAPOLStart(stream)
 			case StartDHCP:
@@ -751,7 +754,7 @@ func (o *Onu) SetID(id uint32) {
 	o.ID = id
 }
 
-func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
+func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 	onuLogger.WithFields(log.Fields{
 		"DstPort":          msg.Flow.Classifier.DstPort,
 		"EthType":          fmt.Sprintf("%x", msg.Flow.Classifier.EthType),
@@ -768,7 +771,7 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 		"SrcPort":          msg.Flow.Classifier.SrcPort,
 		"UniID":            msg.Flow.UniId,
 		"ClassifierOPbits": msg.Flow.Classifier.OPbits,
-	}).Debug("ONU receives Flow")
+	}).Debug("ONU receives FlowAdd")
 
 	if msg.Flow.UniId != 0 {
 		// as of now BBSim only support a single UNI, so ignore everything that is not targeted to it
@@ -779,6 +782,8 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 		}).Debug("Ignoring flow as it's not for the first UNI")
 		return
 	}
+
+	o.FlowIds = append(o.FlowIds, msg.Flow.FlowId)
 
 	if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeEAPOL) && msg.Flow.Classifier.OVid == 4091 {
 		// NOTE storing the PortNO, it's needed when sending PacketIndications
@@ -857,6 +862,38 @@ func (o *Onu) handleFlowUpdate(msg OnuFlowUpdateMessage) {
 				"SerialNumber": o.Sn(),
 			}).Warn("Not starting DHCP as Dhcp bit is not set in CLI parameters")
 		}
+	}
+}
+
+func (o *Onu) handleFlowRemove(msg OnuFlowUpdateMessage) {
+	onuLogger.WithFields(log.Fields{
+		"IntfId":       o.PonPortID,
+		"OnuId":        o.ID,
+		"SerialNumber": o.Sn(),
+		"FlowId":       msg.Flow.FlowId,
+		"FlowType":     msg.Flow.FlowType,
+	}).Debug("ONU receives FlowRemove")
+
+	for idx, flow := range o.FlowIds {
+		// If the gemport is found, delete it from local cache.
+		if flow == msg.Flow.FlowId {
+			o.FlowIds = append(o.FlowIds[:idx], o.FlowIds[idx+1:]...)
+			break
+		}
+	}
+
+	if len(o.FlowIds) == 0 {
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"OnuId":        o.ID,
+			"SerialNumber": o.Sn(),
+		}).Info("Resetting GemPort")
+		o.GemPortAdded = false
+
+		// TODO ideally we should keep track of the flow type (and not only the ID)
+		// so that we can properly set these two flag when the flow is removed
+		o.EapolFlowReceived = false
+		o.DhcpFlowReceived = false
 	}
 }
 
@@ -964,12 +1001,12 @@ func (o *Onu) handleOmci(msg OmciIndicationMessage, client openolt.OpenoltClient
 		// In the same way we can create a GemPort even without setting up UNIs/TConts/...
 		// but we need the GemPort to trigger the state change
 
-		if !o.HasGemPort {
+		if !o.GemPortAdded {
 			// NOTE this sends a CreateRequestType and BBSim replies with a CreateResponseType
 			// thus we send this request only once
 			gemReq, _ := omcilib.CreateGemPortRequest(o.getNextTid(false))
 			sendOmciMsg(gemReq, o.PonPortID, o.ID, o.SerialNumber, "CreateGemPortRequest", client)
-			o.HasGemPort = true
+			o.GemPortAdded = true
 		} else {
 			if err := o.InternalState.Event("send_eapol_flow"); err != nil {
 				onuLogger.WithFields(log.Fields{

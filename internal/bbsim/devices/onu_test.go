@@ -32,7 +32,7 @@ func Test_Onu_CreateOnu(t *testing.T) {
 		Olt: &olt,
 	}
 
-	onu := CreateONU(&olt, pon, 1, 900, 900, true, false, 0, false)
+	onu := CreateONU(&olt, &pon, 1, 900, 900, true, false, 0, false)
 
 	assert.Equal(t, onu.Sn(), "BBSM00000101")
 	assert.Equal(t, onu.STag, 900)
