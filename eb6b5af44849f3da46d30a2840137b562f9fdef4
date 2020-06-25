@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa4a76da_9fabdcd0",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 1142,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2020-06-25T19:01:14Z",
+      "side": 1,
+      "message": "Nothing actually gets removed for this flow type, right.",
+      "revId": "eb6b5af44849f3da46d30a2840137b562f9fdef4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
