@@ -221,6 +221,8 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, sTag int, cTag int, auth
 
 				// clean the ONU state
 				o.DhcpFlowReceived = false
+				o.EapolFlowReceived = false
+				o.GemPortAdded = false
 				o.PortNo = 0
 				o.Flows = []FlowKey{}
 

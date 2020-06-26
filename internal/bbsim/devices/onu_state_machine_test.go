@@ -38,6 +38,8 @@ func Test_Onu_StateMachine_disable(t *testing.T) {
 
 	onu.PortNo = 16
 	onu.DhcpFlowReceived = true
+	onu.EapolFlowReceived = true
+	onu.GemPortAdded = true
 	onu.Flows = []FlowKey{
 		FlowKey{ID: 1, Direction: "upstream"},
 		FlowKey{ID: 2, Direction: "downstream"},
@@ -47,6 +49,8 @@ func Test_Onu_StateMachine_disable(t *testing.T) {
 	assert.Equal(t, onu.InternalState.Current(), "disabled")
 
 	assert.Equal(t, onu.DhcpFlowReceived, false)
+	assert.Equal(t, onu.EapolFlowReceived, false)
+	assert.Equal(t, onu.GemPortAdded, false)
 	assert.Equal(t, onu.PortNo, uint32(0))
 	assert.Equal(t, len(onu.Flows), 0)
 }
