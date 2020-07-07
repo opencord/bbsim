@@ -619,18 +619,20 @@ func (o *OltDevice) sendPonIndication(ponPortID uint32) {
 }
 
 func (o *OltDevice) sendPortStatsIndication(stats *openolt.PortStatistics, portID uint32, portType string) {
-	oltLogger.WithFields(log.Fields{
-		"Type":   portType,
-		"IntfId": portID,
-	}).Trace("Sending port stats")
-	stats.IntfId = InterfaceIDToPortNo(portID, portType)
-	data := &openolt.Indication_PortStats{
-		PortStats: stats,
-	}
-	stream := *o.OpenoltStream
-	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
-		oltLogger.Errorf("Failed to send PortStats: %v", err)
-		return
+	if o.InternalState.Current() == "enabled" {
+		oltLogger.WithFields(log.Fields{
+			"Type":   portType,
+			"IntfId": portID,
+		}).Trace("Sending port stats")
+		stats.IntfId = InterfaceIDToPortNo(portID, portType)
+		data := &openolt.Indication_PortStats{
+			PortStats: stats,
+		}
+		stream := *o.OpenoltStream
+		if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
+			oltLogger.Errorf("Failed to send PortStats: %v", err)
+			return
+		}
 	}
 }
 
@@ -1095,8 +1097,8 @@ func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Em
 func (o OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.Empty, error) {
 
 	oltLogger.WithFields(log.Fields{
-		"FlowId":           flow.FlowId,
-		"FlowType":         flow.FlowType,
+		"FlowId":   flow.FlowId,
+		"FlowType": flow.FlowType,
 	}).Debug("OLT receives FlowRemove")
 
 	if !o.enablePerf { // remove only if flow were stored
@@ -1155,7 +1157,7 @@ func (o OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.E
 		msg := Message{
 			Type: FlowRemoved,
 			Data: OnuFlowUpdateMessage{
-				Flow:      flow,
+				Flow: flow,
 			},
 		}
 		onu.Channel <- msg
