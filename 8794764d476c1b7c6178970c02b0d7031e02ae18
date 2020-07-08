@@ -16,6 +16,24 @@
       "revId": "8794764d476c1b7c6178970c02b0d7031e02ae18",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7467b4b_e7bf6377",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 904,
+      "author": {
+        "id": 1000514
+      },
+      "writtenOn": "2020-07-08T10:03:30Z",
+      "side": 0,
+      "message": "Yes, actually this needs to be inside only. This is safe delay before we send the ONU Re-Discovery. Also, I have verified the changes by running the sanity and functional suite for both ATT and DT.",
+      "parentUuid": "32d5ef62_244806ed",
+      "revId": "8794764d476c1b7c6178970c02b0d7031e02ae18",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
