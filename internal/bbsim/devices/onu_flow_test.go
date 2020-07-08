@@ -510,6 +510,15 @@ func Test_HandleFlowRemoveFlowId(t *testing.T) {
 // checks that when the last flow is removed we reset the stored flags in the ONU
 func Test_HandleFlowRemoveFlowId_LastFlow(t *testing.T) {
 	onu := createMockOnu(1, 1, 900, 900, true, false)
+
+	onu.InternalState = fsm.NewFSM(
+		"enabled",
+		fsm.Events{
+			{Name: "disable", Src: []string{"enabled"}, Dst: "disabled"},
+		},
+		fsm.Callbacks{},
+	)
+
 	onu.GemPortAdded = true
 	onu.DhcpFlowReceived = true
 	onu.EapolFlowReceived = true
