@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "32d5ef62_244806ed",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 904,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-08T09:47:57Z",
+      "side": 0,
+      "message": "this moved in the ReDiscoverOnu. Are we sure the state is correct and we get into the if statement of line 903 even if the sleep is after ?",
+      "revId": "8794764d476c1b7c6178970c02b0d7031e02ae18",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
