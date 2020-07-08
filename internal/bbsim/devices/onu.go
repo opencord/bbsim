@@ -245,8 +245,12 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, sTag int, cTag int, auth
 					},
 				}
 				o.Channel <- msg
+
+				// verify all the flows removes are handled and
 				// terminate the ONU's ProcessOnuMessages Go routine
-				close(o.Channel)
+				if len(o.FlowIds) == 0 {
+					close(o.Channel)
+				}
 			},
 			"before_start_auth": func(e *fsm.Event) {
 				if o.EapolFlowReceived == false {
@@ -896,6 +900,12 @@ func (o *Onu) handleFlowRemove(msg OnuFlowUpdateMessage) {
 		// so that we can properly set these two flag when the flow is removed
 		o.EapolFlowReceived = false
 		o.DhcpFlowReceived = false
+
+		// check if ONU delete is performed and
+		// terminate the ONU's ProcessOnuMessages Go routine
+		if o.InternalState.Current() == "disabled" {
+			close(o.Channel)
+		}
 	}
 }
 
@@ -1118,5 +1128,33 @@ func (onu *Onu) DeleteFlow(key FlowKey) {
 			onu.Flows = t
 			break
 		}
+	}
+}
+
+func (onu *Onu) ReDiscoverOnu() {
+	// Wait for few seconds to be sure of the cleanup
+	time.Sleep(5 * time.Second)
+
+	onuLogger.WithFields(log.Fields{
+		"IntfId": onu.PonPortID,
+		"OnuId":  onu.ID,
+		"OnuSn":  onu.Sn(),
+	}).Debug("Send ONU Re-Discovery")
+
+	// ONU Re-Discovery
+	if err := onu.InternalState.Event("initialize"); err != nil {
+		log.WithFields(log.Fields{
+			"IntfId": onu.PonPortID,
+			"OnuSn":  onu.Sn(),
+			"OnuId":  onu.ID,
+		}).Infof("Failed to transition ONU to initialized state: %s", err.Error())
+	}
+
+	if err := onu.InternalState.Event("discover"); err != nil {
+		log.WithFields(log.Fields{
+			"IntfId": onu.PonPortID,
+			"OnuSn":  onu.Sn(),
+			"OnuId":  onu.ID,
+		}).Infof("Failed to transition ONU to discovered state: %s", err.Error())
 	}
 }

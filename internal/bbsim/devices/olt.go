@@ -900,25 +900,9 @@ func (o OltDevice) DeleteOnu(_ context.Context, onu *openolt.Onu) (*openolt.Empt
 		}).Infof("Failed to transition ONU to disabled state: %s", err.Error())
 	}
 
-	time.Sleep(1 * time.Second)
-
 	// ONU Re-Discovery
 	if o.InternalState.Current() == "enabled" && pon.InternalState.Current() == "enabled" {
-		if err := _onu.InternalState.Event("initialize"); err != nil {
-			oltLogger.WithFields(log.Fields{
-				"IntfId": _onu.PonPortID,
-				"OnuSn":  _onu.Sn(),
-				"OnuId":  _onu.ID,
-			}).Infof("Failed to transition ONU to initialized state: %s", err.Error())
-		}
-
-		if err := _onu.InternalState.Event("discover"); err != nil {
-			oltLogger.WithFields(log.Fields{
-				"IntfId": _onu.PonPortID,
-				"OnuSn":  _onu.Sn(),
-				"OnuId":  _onu.ID,
-			}).Infof("Failed to transition ONU to discovered state: %s", err.Error())
-		}
+		go _onu.ReDiscoverOnu()
 	}
 
 	return new(openolt.Empty), nil
