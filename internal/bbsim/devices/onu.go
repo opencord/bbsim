@@ -249,11 +249,11 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, sTag int, cTag int, auth
 				close(o.Channel)
 			},
 			"before_start_auth": func(e *fsm.Event) {
-				if o.EapolFlowReceived == false {
+				if !o.EapolFlowReceived {
 					e.Cancel(errors.New("cannot-go-to-auth-started-as-eapol-flow-is-missing"))
 					return
 				}
-				if o.GemPortAdded == false {
+				if !o.GemPortAdded {
 					e.Cancel(errors.New("cannot-go-to-auth-started-as-gemport-is-missing"))
 					return
 				}
@@ -287,12 +287,12 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, sTag int, cTag int, auth
 					return
 				}
 
-				if o.DhcpFlowReceived == false {
+				if !o.DhcpFlowReceived {
 					e.Cancel(errors.New("cannot-go-to-dhcp-started-as-dhcp-flow-is-missing"))
 					return
 				}
 
-				if o.GemPortAdded == false {
+				if !o.GemPortAdded {
 					e.Cancel(errors.New("cannot-go-to-dhcp-started-as-gemport-is-missing"))
 					return
 				}
@@ -799,7 +799,7 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 				// wait for Gem and then start auth
 				go func() {
 					for v := range o.GetGemPortChan() {
-						if v == true {
+						if v {
 							if err := o.InternalState.Event("start_auth"); err != nil {
 								onuLogger.Warnf("Can't go to auth_started: %v", err)
 							}
@@ -825,8 +825,8 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 		msg.Flow.Classifier.DstPort == uint32(67) &&
 		(msg.Flow.Classifier.OPbits == 0 || msg.Flow.Classifier.OPbits == 255) {
 
-		if o.Dhcp == true {
-			if o.DhcpFlowReceived == false {
+		if o.Dhcp {
+			if !o.DhcpFlowReceived {
 				// keep track that we received the DHCP Flows
 				// so that we can transition the state to dhcp_started
 				// this is needed as a check in case someone trigger DHCP from the CLI
@@ -836,7 +836,7 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 					// wait for Gem and then start DHCP
 					go func() {
 						for v := range o.GetGemPortChan() {
-							if v == true {
+							if v {
 								if err := o.InternalState.Event("start_dhcp"); err != nil {
 									log.Errorf("Can't go to dhcp_started: %v", err)
 								}

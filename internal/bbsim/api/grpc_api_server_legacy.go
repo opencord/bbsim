@@ -202,7 +202,9 @@ func StartRestGatewayService(channel chan bool, group *sync.WaitGroup, grpcAddre
 	select {
 	case <-channel:
 		logger.Warnf("Stopping legacy API REST server")
-		s.Shutdown(ctx)
+		if err := s.Shutdown(ctx); err != nil {
+			logger.Errorf("Could not stop server: %v", err)
+		}
 		group.Done()
 	}
 	return
