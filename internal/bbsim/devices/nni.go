@@ -81,7 +81,7 @@ func (n *NniPort) sendNniPacket(packet gopacket.Packet) error {
 	isDhcp := packetHandlers.IsDhcpPacket(packet)
 	isLldp := packetHandlers.IsLldpPacket(packet)
 
-	if isDhcp == false && isLldp == false {
+	if !isDhcp && !isLldp {
 		nniLogger.WithFields(log.Fields{
 			"packet": packet,
 		}).Trace("Dropping NNI packet as it's not DHCP")

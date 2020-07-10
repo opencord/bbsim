@@ -18,12 +18,13 @@ package dhcp
 
 import (
 	"errors"
+	"net"
+	"testing"
+
 	"github.com/looplab/fsm"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
 	"google.golang.org/grpc"
 	"gotest.tools/assert"
-	"net"
-	"testing"
 )
 
 // MOCKS
@@ -104,15 +105,24 @@ func TestUpdateDhcpFailed(t *testing.T) {
 	var serialNumber string = "BBSM00000001"
 
 	dhcpStateMachine.SetState("dhcp_started")
-	updateDhcpFailed(onuId, ponPortId, serialNumber, dhcpStateMachine)
+	if err := updateDhcpFailed(onuId, ponPortId, serialNumber, dhcpStateMachine); err == nil {
+		t.Errorf("updateDhcpFailed did not return an error")
+		t.Fail()
+	}
 	assert.Equal(t, dhcpStateMachine.Current(), "dhcp_failed")
 
 	dhcpStateMachine.SetState("dhcp_discovery_sent")
-	updateDhcpFailed(onuId, ponPortId, serialNumber, dhcpStateMachine)
+	if err := updateDhcpFailed(onuId, ponPortId, serialNumber, dhcpStateMachine); err == nil {
+		t.Errorf("updateDhcpFailed did not return an error")
+		t.Fail()
+	}
 	assert.Equal(t, dhcpStateMachine.Current(), "dhcp_failed")
 
 	dhcpStateMachine.SetState("dhcp_request_sent")
-	updateDhcpFailed(onuId, ponPortId, serialNumber, dhcpStateMachine)
+	if err := updateDhcpFailed(onuId, ponPortId, serialNumber, dhcpStateMachine); err == nil {
+		t.Errorf("updateDhcpFailed did not return an error")
+		t.Fail()
+	}
 	assert.Equal(t, dhcpStateMachine.Current(), "dhcp_failed")
 
 	dhcpStateMachine.SetState("dhcp_ack_received")

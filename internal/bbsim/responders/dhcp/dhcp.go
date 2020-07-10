@@ -20,6 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
+	"reflect"
+	"strconv"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
@@ -28,9 +32,6 @@ import (
 	omci "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
 	log "github.com/sirupsen/logrus"
-	"net"
-	"reflect"
-	"strconv"
 )
 
 var GetGemPortId = omci.GetGemPortId
@@ -179,7 +180,7 @@ func serializeDHCPPacket(intfId uint32, onuId uint32, cTag int, srcMac net.Hardw
 		DstPort: 67,
 	}
 
-	udpLayer.SetNetworkLayerForChecksum(ipLayer)
+	_ = udpLayer.SetNetworkLayerForChecksum(ipLayer)
 	if err := gopacket.SerializeLayers(buffer, options, ethernetLayer, ipLayer, udpLayer, dhcp); err != nil {
 		dhcpLogger.Error("SerializeLayers")
 		return nil, err
@@ -253,10 +254,10 @@ func sendDHCPPktIn(msg bbsim.ByteMsg, portNo uint32, stream bbsim.Stream) error 
 	}
 
 	log.WithFields(log.Fields{
-		"OnuId":  msg.OnuId,
-		"IntfId": msg.IntfId,
+		"OnuId":   msg.OnuId,
+		"IntfId":  msg.IntfId,
 		"GemPort": gemid,
-		"Type": "DHCP",
+		"Type":    "DHCP",
 	}).Trace("sending-pkt")
 
 	data := &openolt.Indication_PktInd{PktInd: &openolt.PacketIndication{
@@ -493,7 +494,7 @@ func HandleNextBbrPacket(onuId uint32, ponPortId uint32, serialNumber string, sT
 	srcMac, _ := packetHandlers.GetSrcMacAddressFromPacket(pkt)
 	dstMac, _ := packetHandlers.GetDstMacAddressFromPacket(pkt)
 
-	if isIncoming == true {
+	if isIncoming {
 
 		onuPacket := openolt.OnuPacket{
 			IntfId:    ponPortId,
