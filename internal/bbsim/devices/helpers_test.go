@@ -17,9 +17,10 @@
 package devices
 
 import (
+	"testing"
+
 	"github.com/looplab/fsm"
 	"gotest.tools/assert"
-	"testing"
 )
 
 var (
@@ -60,7 +61,6 @@ func Test_Helpers(t *testing.T) {
 	cb_called := 0
 	cb := func(e *fsm.Event) {
 		cb_called++
-		return
 	}
 
 	// calling the method under test
@@ -79,7 +79,7 @@ func Test_Helpers(t *testing.T) {
 	assert.Equal(t, args.events[1].Dst, "down")
 
 	// this is to test that the callback is called when the state change
-	sm.Event("enable")
+	_ = sm.Event("enable")
 	assert.Equal(t, cb_called, 1)
 
 	tearDownHelpers()
