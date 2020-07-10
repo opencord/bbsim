@@ -38,10 +38,10 @@ type sadisServer struct {
 
 // bandwidthProfiles contains some dummy profiles
 var bandwidthProfiles = []*SadisBWPEntry{
-	&SadisBWPEntry{ID: "User_Bandwidth1", AIR: 100000, CBS: 10000, CIR: 30000, EBS: 1000, EIR: 100000},
-	&SadisBWPEntry{ID: "User_Bandwidth2", AIR: 100000, CBS: 5000, CIR: 100000, EBS: 5000, EIR: 100000},
-	&SadisBWPEntry{ID: "User_Bandwidth3", AIR: 100000, CBS: 5000, CIR: 1000000, EBS: 5000, EIR: 1000000},
-	&SadisBWPEntry{ID: "Default", AIR: 100000, CBS: 30, CIR: 600, EBS: 30, EIR: 400},
+	{ID: "User_Bandwidth1", AIR: 100000, CBS: 10000, CIR: 30000, EBS: 1000, EIR: 100000},
+	{ID: "User_Bandwidth2", AIR: 100000, CBS: 5000, CIR: 100000, EBS: 5000, EIR: 100000},
+	{ID: "User_Bandwidth3", AIR: 100000, CBS: 5000, CIR: 1000000, EBS: 5000, EIR: 1000000},
+	{ID: "Default", AIR: 100000, CBS: 30, CIR: 600, EBS: 30, EIR: 400},
 }
 
 // SadisConfig is the top-level SADIS configuration struct
@@ -256,7 +256,7 @@ func (s *sadisServer) ServeBaseConfig(w http.ResponseWriter, r *http.Request) {
 
 	if vars["version"] != "v1" && vars["version"] != "v2" {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("{}"))
+		_, _ = w.Write([]byte("{}"))
 		return
 	}
 
@@ -265,7 +265,7 @@ func (s *sadisServer) ServeBaseConfig(w http.ResponseWriter, r *http.Request) {
 	sadisJSON, _ := json.Marshal(sadisConf)
 	sadisLogger.Tracef("SADIS JSON: %s", sadisJSON)
 
-	w.Write([]byte(sadisJSON))
+	_, _ = w.Write([]byte(sadisJSON))
 
 }
 
@@ -296,7 +296,7 @@ func (s *sadisServer) ServeStaticConfig(w http.ResponseWriter, r *http.Request) 
 	sadisJSON, _ := json.Marshal(sadisConf)
 	sadisLogger.Tracef("SADIS JSON: %s", sadisJSON)
 
-	w.Write([]byte(sadisJSON))
+	_, _ = w.Write([]byte(sadisJSON))
 
 }
 
@@ -313,7 +313,7 @@ func (s *sadisServer) ServeEntry(w http.ResponseWriter, r *http.Request) {
 		sadisConf, _ := GetOltEntry(s.olt)
 
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(sadisConf)
+		_ = json.NewEncoder(w).Encode(sadisConf)
 		return
 	}
 
@@ -346,10 +346,10 @@ func (s *sadisServer) ServeEntry(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if vars["version"] == "v1" {
 		sadisConf, _ := GetOnuEntryV1(s.olt, onu, uni)
-		json.NewEncoder(w).Encode(sadisConf)
+		_ = json.NewEncoder(w).Encode(sadisConf)
 	} else if vars["version"] == "v2" {
 		sadisConf, _ := GetOnuEntryV2(s.olt, onu, uni)
-		json.NewEncoder(w).Encode(sadisConf)
+		_ = json.NewEncoder(w).Encode(sadisConf)
 	}
 
 }
@@ -370,7 +370,7 @@ func (s *sadisServer) ServeBWPEntry(w http.ResponseWriter, r *http.Request) {
 	for _, bwpEntry := range bandwidthProfiles {
 		if bwpEntry.ID == id {
 			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(bwpEntry)
+			_ = json.NewEncoder(w).Encode(bwpEntry)
 			return
 		}
 	}

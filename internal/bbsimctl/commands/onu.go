@@ -109,7 +109,7 @@ type ONUOptions struct {
 }
 
 func RegisterONUCommands(parser *flags.Parser) {
-	parser.AddCommand("onu", "ONU Commands", "Commands to query and manipulate ONU devices", &ONUOptions{})
+	_, _ = parser.AddCommand("onu", "ONU Commands", "Commands to query and manipulate ONU devices", &ONUOptions{})
 }
 
 func connect() (pb.BBSimClient, *grpc.ClientConn) {
