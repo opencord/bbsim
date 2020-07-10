@@ -122,7 +122,7 @@ func (s BBSimServer) ShutdownOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.
 func (s BBSimServer) RebootOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Response, error) {
 	res := &bbsim.Response{}
 	o := devices.GetOLT()
-	go o.RestartOLT()
+	go func() { _ = o.RestartOLT() }()
 	res.StatusCode = int32(codes.OK)
 	res.Message = fmt.Sprintf("OLT restart triggered.")
 	return res, nil
