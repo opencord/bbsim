@@ -18,7 +18,6 @@ package devices
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"sync"
@@ -137,7 +136,7 @@ func CreateOLT(options common.BBSimYamlConfig, isMock bool) *OltDevice {
 		},
 	)
 
-	if isMock != true {
+	if !isMock {
 		// create NNI Port
 		nniPort, err := CreateNNI(&olt)
 		if err != nil {
@@ -187,7 +186,7 @@ func CreateOLT(options common.BBSimYamlConfig, isMock bool) *OltDevice {
 		}
 	}
 
-	if isMock != true {
+	if !isMock {
 		if err := olt.InternalState.Event("initialize"); err != nil {
 			log.Errorf("Error initializing OLT: %v", err)
 			return nil
@@ -203,7 +202,7 @@ func CreateOLT(options common.BBSimYamlConfig, isMock bool) *OltDevice {
 	return &olt
 }
 
-func (o *OltDevice) InitOlt() error {
+func (o *OltDevice) InitOlt() {
 
 	if oltServer == nil {
 		oltServer, _ = o.newOltServer()
@@ -235,8 +234,6 @@ func (o *OltDevice) InitOlt() error {
 			oltLogger.Errorf("Error getting NNI channel: %v", err)
 		}
 	}
-
-	return nil
 }
 
 func (o *OltDevice) RestartOLT() error {
@@ -274,7 +271,7 @@ func (o *OltDevice) RestartOLT() error {
 
 		for _, onu := range pon.Onus {
 			if onu.InternalState.Current() != "initialized" {
-				onu.InternalState.Event("disable")
+				_ = onu.InternalState.Event("disable")
 			}
 		}
 	}
@@ -312,7 +309,7 @@ func (o *OltDevice) newOltServer() (*grpc.Server, error) {
 
 	reflection.Register(grpcServer)
 
-	go grpcServer.Serve(lis)
+	go func() { _ = grpcServer.Serve(lis) }()
 	oltLogger.Debugf("OLT listening on %v", address)
 
 	return grpcServer, nil
@@ -335,7 +332,7 @@ func (o *OltDevice) StopOltServer() error {
 // Device Methods
 
 // Enable implements the OpenOLT EnableIndicationServer functionality
-func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error {
+func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) {
 	oltLogger.Debug("Enable OLT called")
 	rebootFlag := false
 
@@ -383,7 +380,7 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error 
 
 	go o.processOmciMessages(o.enableContext, stream, &wg)
 
-	if rebootFlag == true {
+	if rebootFlag {
 		for _, pon := range o.Pons {
 			if pon.InternalState.Current() == "disabled" {
 				msg := Message{
@@ -424,7 +421,6 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error 
 	}
 
 	wg.Wait()
-	return nil
 }
 
 func (o *OltDevice) processOmciMessages(ctx context.Context, stream openolt.Openolt_EnableIndicationServer, wg *sync.WaitGroup) {
@@ -499,22 +495,22 @@ func (o *OltDevice) periodicPortStats(ctx context.Context) {
 
 // Helpers method
 
-func (o OltDevice) GetPonById(id uint32) (*PonPort, error) {
+func (o *OltDevice) GetPonById(id uint32) (*PonPort, error) {
 	for _, pon := range o.Pons {
 		if pon.ID == id {
 			return pon, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Cannot find PonPort with id %d in OLT %d", id, o.ID))
+	return nil, fmt.Errorf("Cannot find PonPort with id %d in OLT %d", id, o.ID)
 }
 
-func (o OltDevice) getNniById(id uint32) (*NniPort, error) {
+func (o *OltDevice) getNniById(id uint32) (*NniPort, error) {
 	for _, nni := range o.Nnis {
 		if nni.ID == id {
 			return nni, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Cannot find NniPort with id %d in OLT %d", id, o.ID))
+	return nil, fmt.Errorf("Cannot find NniPort with id %d in OLT %d", id, o.ID)
 }
 
 func (o *OltDevice) sendAlarmIndication(alarmInd *openolt.AlarmIndication, stream openolt.Openolt_EnableIndicationServer) {
@@ -662,11 +658,11 @@ loop:
 			case OltIndication:
 				msg, _ := message.Data.(OltIndicationMessage)
 				if msg.OperState == UP {
-					o.InternalState.Event("enable")
-					o.OperState.Event("enable")
+					_ = o.InternalState.Event("enable")
+					_ = o.OperState.Event("enable")
 				} else if msg.OperState == DOWN {
-					o.InternalState.Event("disable")
-					o.OperState.Event("disable")
+					_ = o.InternalState.Event("disable")
+					_ = o.OperState.Event("disable")
 				}
 				o.sendOltIndication(msg, stream)
 			case AlarmIndication:
@@ -789,7 +785,7 @@ loop:
 }
 
 // returns an ONU with a given Serial Number
-func (o OltDevice) FindOnuBySn(serialNumber string) (*Onu, error) {
+func (o *OltDevice) FindOnuBySn(serialNumber string) (*Onu, error) {
 	// TODO this function can be a performance bottleneck when we have many ONUs,
 	// memoizing it will remove the bottleneck
 	for _, pon := range o.Pons {
@@ -800,11 +796,11 @@ func (o OltDevice) FindOnuBySn(serialNumber string) (*Onu, error) {
 		}
 	}
 
-	return &Onu{}, errors.New(fmt.Sprintf("cannot-find-onu-by-serial-number-%s", serialNumber))
+	return &Onu{}, fmt.Errorf("cannot-find-onu-by-serial-number-%s", serialNumber)
 }
 
 // returns an ONU with a given interface/Onu Id
-func (o OltDevice) FindOnuById(intfId uint32, onuId uint32) (*Onu, error) {
+func (o *OltDevice) FindOnuById(intfId uint32, onuId uint32) (*Onu, error) {
 	// TODO this function can be a performance bottleneck when we have many ONUs,
 	// memoizing it will remove the bottleneck
 	for _, pon := range o.Pons {
@@ -816,11 +812,11 @@ func (o OltDevice) FindOnuById(intfId uint32, onuId uint32) (*Onu, error) {
 			}
 		}
 	}
-	return &Onu{}, errors.New(fmt.Sprintf("cannot-find-onu-by-id-%v-%v", intfId, onuId))
+	return &Onu{}, fmt.Errorf("cannot-find-onu-by-id-%v-%v", intfId, onuId)
 }
 
 // returns an ONU with a given Mac Address
-func (o OltDevice) FindOnuByMacAddress(mac net.HardwareAddr) (*Onu, error) {
+func (o *OltDevice) FindOnuByMacAddress(mac net.HardwareAddr) (*Onu, error) {
 	// TODO this function can be a performance bottleneck when we have many ONUs,
 	// memoizing it will remove the bottleneck
 	for _, pon := range o.Pons {
@@ -831,12 +827,12 @@ func (o OltDevice) FindOnuByMacAddress(mac net.HardwareAddr) (*Onu, error) {
 		}
 	}
 
-	return &Onu{}, errors.New(fmt.Sprintf("cannot-find-onu-by-mac-address-%s", mac))
+	return &Onu{}, fmt.Errorf("cannot-find-onu-by-mac-address-%s", mac)
 }
 
 // GRPC Endpoints
 
-func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*openolt.Empty, error) {
+func (o *OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*openolt.Empty, error) {
 	oltLogger.WithFields(log.Fields{
 		"OnuSn": onuSnToString(onu.SerialNumber),
 	}).Info("Received ActivateOnu call from VOLTHA")
@@ -866,12 +862,12 @@ func (o OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*open
 	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) DeactivateOnu(context.Context, *openolt.Onu) (*openolt.Empty, error) {
+func (o *OltDevice) DeactivateOnu(context.Context, *openolt.Onu) (*openolt.Empty, error) {
 	oltLogger.Error("DeactivateOnu not implemented")
 	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) DeleteOnu(_ context.Context, onu *openolt.Onu) (*openolt.Empty, error) {
+func (o *OltDevice) DeleteOnu(_ context.Context, onu *openolt.Onu) (*openolt.Empty, error) {
 	oltLogger.WithFields(log.Fields{
 		"IntfId": onu.IntfId,
 		"OnuId":  onu.OnuId,
@@ -910,7 +906,7 @@ func (o OltDevice) DeleteOnu(_ context.Context, onu *openolt.Onu) (*openolt.Empt
 	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) DisableOlt(context.Context, *openolt.Empty) (*openolt.Empty, error) {
+func (o *OltDevice) DisableOlt(context.Context, *openolt.Empty) (*openolt.Empty, error) {
 	// NOTE when we disable the OLT should we disable NNI, PONs and ONUs altogether?
 	oltLogger.WithFields(log.Fields{
 		"oltId": o.ID,
@@ -945,7 +941,7 @@ func (o OltDevice) DisableOlt(context.Context, *openolt.Empty) (*openolt.Empty, 
 	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) DisablePonIf(_ context.Context, intf *openolt.Interface) (*openolt.Empty, error) {
+func (o *OltDevice) DisablePonIf(_ context.Context, intf *openolt.Interface) (*openolt.Empty, error) {
 	oltLogger.Infof("DisablePonIf request received for PON %d", intf.IntfId)
 	ponID := intf.GetIntfId()
 	pon, _ := o.GetPonById(intf.IntfId)
@@ -981,7 +977,7 @@ func (o *OltDevice) EnableIndication(_ *openolt.Empty, stream openolt.Openolt_En
 	return nil
 }
 
-func (o OltDevice) EnablePonIf(_ context.Context, intf *openolt.Interface) (*openolt.Empty, error) {
+func (o *OltDevice) EnablePonIf(_ context.Context, intf *openolt.Interface) (*openolt.Empty, error) {
 	oltLogger.Infof("EnablePonIf request received for PON %d", intf.IntfId)
 	ponID := intf.GetIntfId()
 	pon, _ := o.GetPonById(intf.IntfId)
@@ -1010,7 +1006,7 @@ func (o OltDevice) EnablePonIf(_ context.Context, intf *openolt.Interface) (*ope
 	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Empty, error) {
+func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Empty, error) {
 	oltLogger.WithFields(log.Fields{
 		"IntfId":    flow.AccessIntfId,
 		"OnuId":     flow.OnuId,
@@ -1078,7 +1074,7 @@ func (o OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.Em
 }
 
 // FlowRemove request from VOLTHA
-func (o OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.Empty, error) {
+func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.Empty, error) {
 
 	oltLogger.WithFields(log.Fields{
 		"FlowId":   flow.FlowId,
@@ -1150,7 +1146,7 @@ func (o OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.E
 	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) HeartbeatCheck(context.Context, *openolt.Empty) (*openolt.Heartbeat, error) {
+func (o *OltDevice) HeartbeatCheck(context.Context, *openolt.Empty) (*openolt.Heartbeat, error) {
 	res := openolt.Heartbeat{HeartbeatSignature: uint32(time.Now().Unix())}
 	oltLogger.WithFields(log.Fields{
 		"signature": res.HeartbeatSignature,
@@ -1168,10 +1164,10 @@ func (o *OltDevice) GetOnuByFlowId(flowId uint32) (*Onu, error) {
 			}
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Cannot find Onu by flowId %d", flowId))
+	return nil, fmt.Errorf("Cannot find Onu by flowId %d", flowId)
 }
 
-func (o OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.DeviceInfo, error) {
+func (o *OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.DeviceInfo, error) {
 
 	oltLogger.WithFields(log.Fields{
 		"oltId":    o.ID,
@@ -1198,7 +1194,7 @@ func (o OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.Devi
 	return devinfo, nil
 }
 
-func (o OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*openolt.Empty, error) {
+func (o *OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*openolt.Empty, error) {
 	pon, err := o.GetPonById(omci_msg.IntfId)
 	if err != nil {
 		oltLogger.WithFields(log.Fields{
@@ -1236,7 +1232,7 @@ func (o OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (*
 	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) (*openolt.Empty, error) {
+func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) (*openolt.Empty, error) {
 	pon, err := o.GetPonById(onuPkt.IntfId)
 	if err != nil {
 		oltLogger.WithFields(log.Fields{
@@ -1261,7 +1257,7 @@ func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) 
 	}).Tracef("Received OnuPacketOut")
 
 	rawpkt := gopacket.NewPacket(onuPkt.Pkt, layers.LayerTypeEthernet, gopacket.Default)
-	pktType, err := packetHandlers.IsEapolOrDhcp(rawpkt)
+	pktType, _ := packetHandlers.IsEapolOrDhcp(rawpkt)
 
 	msg := Message{
 		Type: OnuPacketOut,
@@ -1277,16 +1273,16 @@ func (o OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) 
 	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) Reboot(context.Context, *openolt.Empty) (*openolt.Empty, error) {
+func (o *OltDevice) Reboot(context.Context, *openolt.Empty) (*openolt.Empty, error) {
 	oltLogger.WithFields(log.Fields{
 		"oltId": o.ID,
 	}).Info("Shutting down")
 	publishEvent("OLT-reboot-received", -1, -1, "")
-	go o.RestartOLT()
+	go func() { _ = o.RestartOLT() }()
 	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) ReenableOlt(context.Context, *openolt.Empty) (*openolt.Empty, error) {
+func (o *OltDevice) ReenableOlt(context.Context, *openolt.Empty) (*openolt.Empty, error) {
 	oltLogger.WithFields(log.Fields{
 		"oltId": o.ID,
 	}).Info("Received ReenableOlt request from VOLTHA")
@@ -1317,40 +1313,40 @@ func (o OltDevice) ReenableOlt(context.Context, *openolt.Empty) (*openolt.Empty,
 	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) UplinkPacketOut(context context.Context, packet *openolt.UplinkPacket) (*openolt.Empty, error) {
+func (o *OltDevice) UplinkPacketOut(context context.Context, packet *openolt.UplinkPacket) (*openolt.Empty, error) {
 	pkt := gopacket.NewPacket(packet.Pkt, layers.LayerTypeEthernet, gopacket.Default)
 
-	o.Nnis[0].sendNniPacket(pkt) // FIXME we are assuming we have only one NNI
+	_ = o.Nnis[0].sendNniPacket(pkt) // FIXME we are assuming we have only one NNI
 	// NOTE should we return an error if sendNniPakcet fails?
 	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) CollectStatistics(context.Context, *openolt.Empty) (*openolt.Empty, error) {
+func (o *OltDevice) CollectStatistics(context.Context, *openolt.Empty) (*openolt.Empty, error) {
 	oltLogger.Error("CollectStatistics not implemented")
 	return new(openolt.Empty), nil
 }
 
-func (o OltDevice) GetOnuInfo(context context.Context, packet *openolt.Onu) (*openolt.OnuIndication, error) {
+func (o *OltDevice) GetOnuInfo(context context.Context, packet *openolt.Onu) (*openolt.OnuIndication, error) {
 	oltLogger.Error("GetOnuInfo not implemented")
 	return new(openolt.OnuIndication), nil
 }
 
-func (o OltDevice) GetPonIf(context context.Context, packet *openolt.Interface) (*openolt.IntfIndication, error) {
+func (o *OltDevice) GetPonIf(context context.Context, packet *openolt.Interface) (*openolt.IntfIndication, error) {
 	oltLogger.Error("GetPonIf not implemented")
 	return new(openolt.IntfIndication), nil
 }
 
-func (s OltDevice) CreateTrafficQueues(context.Context, *tech_profile.TrafficQueues) (*openolt.Empty, error) {
+func (s *OltDevice) CreateTrafficQueues(context.Context, *tech_profile.TrafficQueues) (*openolt.Empty, error) {
 	oltLogger.Info("received CreateTrafficQueues")
 	return new(openolt.Empty), nil
 }
 
-func (s OltDevice) RemoveTrafficQueues(context.Context, *tech_profile.TrafficQueues) (*openolt.Empty, error) {
+func (s *OltDevice) RemoveTrafficQueues(context.Context, *tech_profile.TrafficQueues) (*openolt.Empty, error) {
 	oltLogger.Info("received RemoveTrafficQueues")
 	return new(openolt.Empty), nil
 }
 
-func (s OltDevice) CreateTrafficSchedulers(context context.Context, trafficSchedulers *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
+func (s *OltDevice) CreateTrafficSchedulers(context context.Context, trafficSchedulers *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
 	oltLogger.WithFields(log.Fields{
 		"OnuId":     trafficSchedulers.OnuId,
 		"IntfId":    trafficSchedulers.IntfId,
@@ -1373,7 +1369,7 @@ func (s OltDevice) CreateTrafficSchedulers(context context.Context, trafficSched
 	return new(openolt.Empty), nil
 }
 
-func (s OltDevice) RemoveTrafficSchedulers(context context.Context, trafficSchedulers *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
+func (s *OltDevice) RemoveTrafficSchedulers(context context.Context, trafficSchedulers *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
 	oltLogger.WithFields(log.Fields{
 		"OnuId":     trafficSchedulers.OnuId,
 		"IntfId":    trafficSchedulers.IntfId,
@@ -1397,7 +1393,7 @@ func (s OltDevice) RemoveTrafficSchedulers(context context.Context, trafficSched
 }
 
 // assumes caller has properly formulated an openolt.AlarmIndication
-func (o OltDevice) SendAlarmIndication(context context.Context, ind *openolt.AlarmIndication) error {
+func (o *OltDevice) SendAlarmIndication(context context.Context, ind *openolt.AlarmIndication) error {
 	msg := Message{
 		Type: AlarmIndication,
 		Data: ind,
@@ -1405,22 +1401,4 @@ func (o OltDevice) SendAlarmIndication(context context.Context, ind *openolt.Ala
 
 	o.channel <- msg
 	return nil
-}
-
-func getOltIP() net.IP {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		oltLogger.Error(err.Error())
-		return net.IP{}
-	}
-	defer func() {
-		err := conn.Close()
-		if err != nil {
-			oltLogger.Error(err.Error())
-		}
-	}()
-
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-
-	return localAddr.IP
 }

@@ -253,11 +253,11 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, sTag int, cTag int, auth
 				}
 			},
 			"before_start_auth": func(e *fsm.Event) {
-				if o.EapolFlowReceived == false {
+				if !o.EapolFlowReceived {
 					e.Cancel(errors.New("cannot-go-to-auth-started-as-eapol-flow-is-missing"))
 					return
 				}
-				if o.GemPortAdded == false {
+				if !o.GemPortAdded {
 					e.Cancel(errors.New("cannot-go-to-auth-started-as-gemport-is-missing"))
 					return
 				}
@@ -291,12 +291,12 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, sTag int, cTag int, auth
 					return
 				}
 
-				if o.DhcpFlowReceived == false {
+				if !o.DhcpFlowReceived {
 					e.Cancel(errors.New("cannot-go-to-dhcp-started-as-dhcp-flow-is-missing"))
 					return
 				}
 
-				if o.GemPortAdded == false {
+				if !o.GemPortAdded {
 					e.Cancel(errors.New("cannot-go-to-dhcp-started-as-gemport-is-missing"))
 					return
 				}
@@ -432,7 +432,7 @@ loop:
 				} else if msg.Type == packetHandlers.DHCP {
 					// NOTE here we receive packets going from the DHCP Server to the ONU
 					// for now we expect them to be double-tagged, but ideally the should be single tagged
-					dhcp.HandleNextPacket(o.PonPort.Olt.ID, o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.CTag, o.InternalState, msg.Packet, stream)
+					_ = dhcp.HandleNextPacket(o.PonPort.Olt.ID, o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.CTag, o.InternalState, msg.Packet, stream)
 				}
 			case OnuPacketIn:
 				// NOTE we only receive BBR packets here.
@@ -449,7 +449,7 @@ loop:
 				if msg.Type == packetHandlers.EAPOL {
 					eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream, client)
 				} else if msg.Type == packetHandlers.DHCP {
-					dhcp.HandleNextBbrPacket(o.ID, o.PonPortID, o.Sn(), o.STag, o.HwAddress, o.DoneChannel, msg.Packet, client)
+					_ = dhcp.HandleNextBbrPacket(o.ID, o.PonPortID, o.Sn(), o.STag, o.HwAddress, o.DoneChannel, msg.Packet, client)
 				}
 			case OmciIndication:
 				msg, _ := message.Data.(OmciIndicationMessage)
@@ -460,13 +460,13 @@ loop:
 				o.sendDhcpFlow(client)
 			case IGMPMembershipReportV2:
 				log.Infof("Recieved IGMPMembershipReportV2 message on ONU channel")
-				igmp.SendIGMPMembershipReportV2(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.HwAddress, stream)
+				_ = igmp.SendIGMPMembershipReportV2(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.HwAddress, stream)
 			case IGMPLeaveGroup:
 				log.Infof("Recieved IGMPLeaveGroupV2 message on ONU channel")
-				igmp.SendIGMPLeaveGroupV2(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.HwAddress, stream)
+				_ = igmp.SendIGMPLeaveGroupV2(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.HwAddress, stream)
 			case IGMPMembershipReportV3:
 				log.Infof("Recieved IGMPMembershipReportV3 message on ONU channel")
-				igmp.SendIGMPMembershipReportV3(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.HwAddress, stream)
+				_ = igmp.SendIGMPMembershipReportV3(o.PonPortID, o.ID, o.Sn(), o.PortNo, o.HwAddress, stream)
 			default:
 				onuLogger.Warnf("Received unknown message data %v for type %v in OLT Channel", message.Data, message.Type)
 			}
@@ -534,14 +534,14 @@ func (o *Onu) processOmciMessage(message omcisim.OmciChMessage, stream openolt.O
 
 func (o *Onu) handleEAPOLStart(stream openolt.Openolt_EnableIndicationServer) {
 	log.Infof("Receive StartEAPOL message on ONU Channel")
-	eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, stream)
+	_ = eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, stream)
 	go func(delay time.Duration) {
 		time.Sleep(delay)
 		if (o.InternalState.Current() == "eap_start_sent" ||
 			o.InternalState.Current() == "eap_response_identity_sent" ||
 			o.InternalState.Current() == "eap_response_challenge_sent" ||
 			o.InternalState.Current() == "auth_failed") && common.Options.BBSim.AuthRetry {
-			o.InternalState.Event("start_auth")
+			_ = o.InternalState.Event("start_auth")
 		} else if o.InternalState.Current() == "eap_response_success_received" {
 			o.Backoff.Reset()
 		}
@@ -551,13 +551,13 @@ func (o *Onu) handleEAPOLStart(stream openolt.Openolt_EnableIndicationServer) {
 func (o *Onu) handleDHCPStart(stream openolt.Openolt_EnableIndicationServer) {
 	log.Infof("Receive StartDHCP message on ONU Channel")
 	// FIXME use id, ponId as SendEapStart
-	dhcp.SendDHCPDiscovery(o.PonPort.Olt.ID, o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
+	_ = dhcp.SendDHCPDiscovery(o.PonPort.Olt.ID, o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
 	go func(delay time.Duration) {
 		time.Sleep(delay)
 		if (o.InternalState.Current() == "dhcp_discovery_sent" ||
 			o.InternalState.Current() == "dhcp_request_sent" ||
 			o.InternalState.Current() == "dhcp_failed") && common.Options.BBSim.DhcpRetry {
-			o.InternalState.Event("start_dhcp")
+			_ = o.InternalState.Event("start_dhcp")
 		} else if o.InternalState.Current() == "dhcp_ack_received" {
 			o.Backoff.Reset()
 		}
@@ -728,7 +728,7 @@ func (o *Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableIn
 	//     TODO: Implement some delay between the TestResponse and the TestResult
 	isTest, err := omcilib.IsTestRequest(HexDecode(msg.omciMsg.Pkt))
 	if (err == nil) && (isTest) {
-		o.sendTestResult(msg, stream)
+		_ = o.sendTestResult(msg, stream)
 	}
 }
 
@@ -803,7 +803,7 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 				// wait for Gem and then start auth
 				go func() {
 					for v := range o.GetGemPortChan() {
-						if v == true {
+						if v {
 							if err := o.InternalState.Event("start_auth"); err != nil {
 								onuLogger.Warnf("Can't go to auth_started: %v", err)
 							}
@@ -829,8 +829,8 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 		msg.Flow.Classifier.DstPort == uint32(67) &&
 		(msg.Flow.Classifier.OPbits == 0 || msg.Flow.Classifier.OPbits == 255) {
 
-		if o.Dhcp == true {
-			if o.DhcpFlowReceived == false {
+		if o.Dhcp {
+			if !o.DhcpFlowReceived {
 				// keep track that we received the DHCP Flows
 				// so that we can transition the state to dhcp_started
 				// this is needed as a check in case someone trigger DHCP from the CLI
@@ -840,7 +840,7 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 					// wait for Gem and then start DHCP
 					go func() {
 						for v := range o.GetGemPortChan() {
-							if v == true {
+							if v {
 								if err := o.InternalState.Event("start_dhcp"); err != nil {
 									log.Errorf("Can't go to dhcp_started: %v", err)
 								}

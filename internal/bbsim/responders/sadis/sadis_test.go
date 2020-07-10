@@ -26,12 +26,12 @@ import (
 	"gotest.tools/assert"
 )
 
-func createMockDevices() (devices.OltDevice, devices.Onu) {
-	olt := devices.OltDevice{
+func createMockDevices() (*devices.OltDevice, *devices.Onu) {
+	olt := &devices.OltDevice{
 		ID: 0,
 	}
 
-	onu := devices.Onu{
+	onu := &devices.Onu{
 		ID:        1,
 		PonPortID: 1,
 		STag:      900,
@@ -50,7 +50,7 @@ func TestSadisServer_GetOnuEntryV1(t *testing.T) {
 
 	uni := "1"
 
-	res, err := GetOnuEntryV1(&olt, &onu, uni)
+	res, err := GetOnuEntryV1(olt, onu, uni)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func TestSadisServer_GetOnuEntryV2_Att(t *testing.T) {
 
 	uni := "1"
 
-	res, err := GetOnuEntryV2(&olt, &onu, uni)
+	res, err := GetOnuEntryV2(olt, onu, uni)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,7 +99,7 @@ func TestSadisServer_GetOnuEntryV2_Dt(t *testing.T) {
 
 	uni := "1"
 
-	res, err := GetOnuEntryV2(&olt, &onu, uni)
+	res, err := GetOnuEntryV2(olt, onu, uni)
 	if err != nil {
 		t.Fatal(err)
 	}

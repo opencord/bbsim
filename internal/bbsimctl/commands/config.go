@@ -19,6 +19,7 @@ package commands
 
 import (
 	"fmt"
+
 	"github.com/jessevdk/go-flags"
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
 	"gopkg.in/yaml.v2"
@@ -45,7 +46,7 @@ const copyrightNotice = `
 type ConfigOptions struct{}
 
 func RegisterConfigCommands(parent *flags.Parser) {
-	parent.AddCommand("config", "generate bbsimctl configuration", "Commands to generate bbsimctl configuration", &ConfigOptions{})
+	_, _ = parent.AddCommand("config", "generate bbsimctl configuration", "Commands to generate bbsimctl configuration", &ConfigOptions{})
 }
 
 func (options *ConfigOptions) Execute(args []string) error {

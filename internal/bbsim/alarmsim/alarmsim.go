@@ -19,8 +19,9 @@ package alarmsim
 import (
 	"context"
 	"fmt"
-	"github.com/opencord/bbsim/internal/common"
 	"strconv"
+
+	"github.com/opencord/bbsim/internal/common"
 
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
