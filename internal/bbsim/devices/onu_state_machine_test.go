@@ -25,9 +25,9 @@ import (
 func Test_Onu_StateMachine_enable(t *testing.T) {
 	onu := createTestOnu()
 	assert.Equal(t, onu.InternalState.Current(), "initialized")
-	onu.InternalState.Event("discover")
+	_ = onu.InternalState.Event("discover")
 	assert.Equal(t, onu.InternalState.Current(), "discovered")
-	onu.InternalState.Event("enable")
+	_ = onu.InternalState.Event("enable")
 	assert.Equal(t, onu.InternalState.Current(), "enabled")
 }
 
@@ -45,7 +45,7 @@ func Test_Onu_StateMachine_disable(t *testing.T) {
 		FlowKey{ID: 2, Direction: "downstream"},
 	}
 
-	onu.InternalState.Event("disable")
+	_ = onu.InternalState.Event("disable")
 	assert.Equal(t, onu.InternalState.Current(), "disabled")
 
 	assert.Equal(t, onu.DhcpFlowReceived, false)

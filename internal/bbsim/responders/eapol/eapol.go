@@ -49,10 +49,10 @@ func sendEapolPktIn(msg bbsim.ByteMsg, portNo uint32, stream openolt.Openolt_Ena
 	}
 
 	log.WithFields(log.Fields{
-		"OnuId":  msg.OnuId,
-		"IntfId": msg.IntfId,
+		"OnuId":   msg.OnuId,
+		"IntfId":  msg.IntfId,
 		"GemPort": gemid,
-		"Type": "EAPOL",
+		"Type":    "EAPOL",
 	}).Trace("sending-pkt")
 
 	data := &openolt.Indication_PktInd{PktInd: &openolt.PacketIndication{
