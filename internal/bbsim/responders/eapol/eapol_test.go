@@ -18,12 +18,13 @@ package eapol
 
 import (
 	"errors"
+	"net"
+	"testing"
+
 	"github.com/looplab/fsm"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
 	"google.golang.org/grpc"
 	"gotest.tools/assert"
-	"net"
-	"testing"
 )
 
 // MOCKS
@@ -163,19 +164,19 @@ func TestUpdateAuthFailed(t *testing.T) {
 	var serialNumber string = "BBSM00000001"
 
 	eapolStateMachine.SetState("auth_started")
-	updateAuthFailed(onuId, ponPortId, serialNumber, eapolStateMachine)
+	_ = updateAuthFailed(onuId, ponPortId, serialNumber, eapolStateMachine)
 	assert.Equal(t, eapolStateMachine.Current(), "auth_failed")
 
 	eapolStateMachine.SetState("eap_start_sent")
-	updateAuthFailed(onuId, ponPortId, serialNumber, eapolStateMachine)
+	_ = updateAuthFailed(onuId, ponPortId, serialNumber, eapolStateMachine)
 	assert.Equal(t, eapolStateMachine.Current(), "auth_failed")
 
 	eapolStateMachine.SetState("eap_response_identity_sent")
-	updateAuthFailed(onuId, ponPortId, serialNumber, eapolStateMachine)
+	_ = updateAuthFailed(onuId, ponPortId, serialNumber, eapolStateMachine)
 	assert.Equal(t, eapolStateMachine.Current(), "auth_failed")
 
 	eapolStateMachine.SetState("eap_response_challenge_sent")
-	updateAuthFailed(onuId, ponPortId, serialNumber, eapolStateMachine)
+	_ = updateAuthFailed(onuId, ponPortId, serialNumber, eapolStateMachine)
 	assert.Equal(t, eapolStateMachine.Current(), "auth_failed")
 
 	eapolStateMachine.SetState("eap_response_success_received")
