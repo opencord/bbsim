@@ -52,7 +52,7 @@ func Test_HandleFlowAddFlowId(t *testing.T) {
 	onu := createMockOnu(1, 1, 900, 900, true, false)
 
 	flow := openolt.Flow{
-		FlowId: 64,
+		FlowId:     64,
 		Classifier: &openolt.Classifier{},
 	}
 	msg := OnuFlowUpdateMessage{
@@ -491,7 +491,7 @@ func Test_HandleFlowRemoveFlowId(t *testing.T) {
 	onu.FlowIds = []uint32{1, 2, 34, 64, 92}
 
 	flow := openolt.Flow{
-		FlowId: 64,
+		FlowId:     64,
 		Classifier: &openolt.Classifier{},
 	}
 	msg := OnuFlowUpdateMessage{
@@ -526,7 +526,7 @@ func Test_HandleFlowRemoveFlowId_LastFlow(t *testing.T) {
 	onu.FlowIds = []uint32{64}
 
 	flow := openolt.Flow{
-		FlowId: 64,
+		FlowId:     64,
 		Classifier: &openolt.Classifier{},
 	}
 	msg := OnuFlowUpdateMessage{

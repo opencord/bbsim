@@ -39,10 +39,6 @@ type Event struct {
 	Timestamp string
 }
 
-type saramaIf interface {
-	NewAsyncProducer(addrs []string, conf *sarama.Config) (sarama.AsyncProducer, error)
-}
-
 // InitializePublisher initalizes kafka publisher
 func InitializePublisher(NewAsyncProducer func([]string, *sarama.Config) (sarama.AsyncProducer, error), oltID int) error {
 
@@ -68,35 +64,34 @@ func InitializePublisher(NewAsyncProducer func([]string, *sarama.Config) (sarama
 func KafkaPublisher(eventChannel chan Event) {
 	defer log.Debugf("KafkaPublisher stopped")
 	for {
-		select {
-		case event := <-eventChannel:
-			log.WithFields(log.Fields{
-				"EventType": event.EventType,
-				"OnuSerial": event.OnuSerial,
-				"OltID":     event.OltID,
-				"IntfID":    event.IntfID,
-				"OnuID":     event.OnuID,
-				"EpochTime": event.EpochTime,
-				"Timestamp": event.Timestamp,
-			}).Trace("Received event on channel")
-			jsonEvent, err := json.Marshal(event)
-			if err != nil {
-				log.Errorf("Failed to get json event %v", err)
-				continue
-			}
-			producer.Input() <- &sarama.ProducerMessage{
-				Topic: topic,
-				Value: sarama.ByteEncoder(jsonEvent),
-			}
-			log.WithFields(log.Fields{
-				"EventType": event.EventType,
-				"OnuSerial": event.OnuSerial,
-				"OltID":     event.OltID,
-				"IntfID":    event.IntfID,
-				"OnuID":     event.OnuID,
-				"EpochTime": event.EpochTime,
-				"Timestamp": event.Timestamp,
-			}).Debug("Event sent on kafka")
+		event := <-eventChannel
+		log.WithFields(log.Fields{
+			"EventType": event.EventType,
+			"OnuSerial": event.OnuSerial,
+			"OltID":     event.OltID,
+			"IntfID":    event.IntfID,
+			"OnuID":     event.OnuID,
+			"EpochTime": event.EpochTime,
+			"Timestamp": event.Timestamp,
+		}).Trace("Received event on channel")
+		jsonEvent, err := json.Marshal(event)
+		if err != nil {
+			log.Errorf("Failed to get json event %v", err)
+			continue
 		}
+		producer.Input() <- &sarama.ProducerMessage{
+			Topic: topic,
+			Value: sarama.ByteEncoder(jsonEvent),
+		}
+		log.WithFields(log.Fields{
+			"EventType": event.EventType,
+			"OnuSerial": event.OnuSerial,
+			"OltID":     event.OltID,
+			"IntfID":    event.IntfID,
+			"OnuID":     event.OnuID,
+			"EpochTime": event.EpochTime,
+			"Timestamp": event.Timestamp,
+		}).Debug("Event sent on kafka")
 	}
+
 }

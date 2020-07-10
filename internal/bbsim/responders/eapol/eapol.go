@@ -20,6 +20,8 @@ import (
 	"context"
 	"crypto/md5"
 	"errors"
+	"net"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
@@ -27,7 +29,6 @@ import (
 	omci "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
 	log "github.com/sirupsen/logrus"
-	"net"
 )
 
 var eapolLogger = log.WithFields(log.Fields{
@@ -49,10 +50,10 @@ func sendEapolPktIn(msg bbsim.ByteMsg, portNo uint32, stream openolt.Openolt_Ena
 	}
 
 	log.WithFields(log.Fields{
-		"OnuId":  msg.OnuId,
-		"IntfId": msg.IntfId,
+		"OnuId":   msg.OnuId,
+		"IntfId":  msg.IntfId,
 		"GemPort": gemid,
-		"Type": "EAPOL",
+		"Type":    "EAPOL",
 	}).Trace("sending-pkt")
 
 	data := &openolt.Indication_PktInd{PktInd: &openolt.PacketIndication{
@@ -141,7 +142,7 @@ func createEAPOLPkt(eap *layers.EAP, onuId uint32, intfId uint32) []byte {
 		EthernetType: layers.EthernetTypeEAPOL,
 	}
 
-	gopacket.SerializeLayers(buffer, options,
+	_ = gopacket.SerializeLayers(buffer, options,
 		ethernetLayer,
 		&layers.EAPOL{Version: eapolVersion, Type: 0, Length: eap.Length},
 		eap,
@@ -223,7 +224,7 @@ func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, portNo ui
 		EthernetType: layers.EthernetTypeEAPOL,
 	}
 
-	gopacket.SerializeLayers(buffer, options,
+	_ = gopacket.SerializeLayers(buffer, options,
 		ethernetLayer,
 		&layers.EAPOL{Version: eapolVersion, Type: 1, Length: 0},
 	)

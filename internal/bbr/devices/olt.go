@@ -20,6 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"reflect"
+	"time"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
@@ -28,9 +32,6 @@ import (
 	"github.com/opencord/voltha-protos/v2/go/openolt"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"io"
-	"reflect"
-	"time"
 )
 
 type OltMock struct {
@@ -238,7 +239,7 @@ func (o *OltMock) handleOnuIndication(client openolt.OpenoltClient, onuInd *open
 		}()
 
 		for message := range onu.DoneChannel {
-			if message == true {
+			if message {
 				o.CompletedOnus++
 				if o.CompletedOnus == o.TargetOnus {
 					// NOTE once all the ONUs are completed, exit
@@ -317,7 +318,6 @@ func (o *OltMock) handlePktIndication(client openolt.OpenoltClient, pktIndicatio
 		"pktType":   pktType,
 	}).Trace("Received PktIndication")
 
-	msg := devices.Message{}
 	if pktIndication.IntfType == "nni" {
 		// This is an packet that is arriving from the NNI and needs to be sent to an ONU
 		// in this case we need to fin the ONU from the C/S tags
@@ -335,7 +335,7 @@ func (o *OltMock) handlePktIndication(client openolt.OpenoltClient, pktIndicatio
 			}).Fatalf("Can't find ONU from c/s tags")
 		}
 
-		msg = devices.Message{
+		msg := devices.Message{
 			Type: devices.OnuPacketIn,
 			Data: devices.OnuPacketMessage{
 				IntfId: pktIndication.IntfId,
@@ -367,7 +367,7 @@ func (o *OltMock) handlePktIndication(client openolt.OpenoltClient, pktIndicatio
 		}
 		// NOTE when we push the EAPOL flow we set the PortNo = OnuId for convenience sake
 		// BBsim responds setting the port number that was sent with the flow
-		msg = devices.Message{
+		msg := devices.Message{
 			Type: devices.OnuPacketIn,
 			Data: devices.OnuPacketMessage{
 				IntfId: pktIndication.IntfId,

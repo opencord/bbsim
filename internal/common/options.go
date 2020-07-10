@@ -17,7 +17,6 @@
 package common
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -49,7 +48,7 @@ func tagAllocationFromString(s string) (TagAllocation, error) {
 	log.WithFields(log.Fields{
 		"ValidValues": strings.Join(tagAllocationValues[1:], ", "),
 	}).Errorf("%s-is-not-a-valid-tag-allocation", s)
-	return TagAllocation(0), errors.New(fmt.Sprintf("%s-is-not-a-valid-tag-allocation", s))
+	return TagAllocation(0), fmt.Errorf("%s-is-not-a-valid-tag-allocation", s)
 }
 
 const (
@@ -80,7 +79,7 @@ func sadisFormatFromString(s string) (SadisFormat, error) {
 	log.WithFields(log.Fields{
 		"ValidValues": strings.Join(sadisFormatValues[1:], ", "),
 	}).Errorf("%s-is-not-a-valid-sadis-format", s)
-	return SadisFormat(0), errors.New(fmt.Sprintf("%s-is-not-a-valid-sadis-format", s))
+	return SadisFormat(0), fmt.Errorf("%s-is-not-a-valid-sadis-format", s)
 }
 
 const (
@@ -117,7 +116,7 @@ type OltConfig struct {
 	Technology         string `yaml:"technology"`
 	ID                 int    `yaml:"id"`
 	OltRebootDelay     int    `yaml:"reboot_delay"`
-	PortStatsInterval  int    `yaml: "port_stats_interval"`
+	PortStatsInterval  int    `yaml:"port_stats_interval"`
 }
 
 type BBSimConfig struct {
@@ -146,7 +145,7 @@ type BBSimConfig struct {
 	Events               bool          `yaml:"enable_events"`
 	ControlledActivation string        `yaml:"controlled_activation"`
 	EnablePerf           bool          `yaml:"enable_perf"`
-	KafkaEventTopic      string        `yaml:"kafka_event_topic`
+	KafkaEventTopic      string        `yaml:"kafka_event_topic"`
 }
 
 type BBRConfig struct {

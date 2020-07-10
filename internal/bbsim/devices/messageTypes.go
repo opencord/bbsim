@@ -140,7 +140,7 @@ type OperState int
 
 const (
 	UP   OperState = iota
-	DOWN  // The device has been discovered, but not yet activated
+	DOWN           // The device has been discovered, but not yet activated
 )
 
 func (m OperState) String() string {

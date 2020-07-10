@@ -45,7 +45,7 @@ type PONOptions struct {
 }
 
 func RegisterPonCommands(parser *flags.Parser) {
-	parser.AddCommand("pon", "PON Commands", "Commands to query and manipulate the PON port", &PONOptions{})
+	_, _ = parser.AddCommand("pon", "PON Commands", "Commands to query and manipulate the PON port", &PONOptions{})
 }
 
 func (pon *PonPoweronAllOnus) Execute(args []string) error {

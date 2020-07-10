@@ -17,15 +17,12 @@
 package api
 
 import (
-	"encoding/hex"
-	"errors"
 	"net"
 	"strconv"
 
 	"github.com/opencord/bbsim/api/legacy"
 	api "github.com/opencord/bbsim/api/legacy"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
-	"github.com/opencord/voltha-protos/v2/go/openolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -116,28 +113,6 @@ func (s BBSimLegacyServer) fetchPortDetail(intfID uint32, portType string) (*api
 
 	portInfo := &api.PortInfo{}
 	return portInfo, status.Errorf(codes.NotFound, "Invalid port %s-%d", portType, intfID)
-}
-
-func getOpenoltSerialNumber(SerialNumber string) (*openolt.SerialNumber, error) {
-	var VendorIDLength = 4
-	var SerialNumberLength = 12
-
-	if len(SerialNumber) != SerialNumberLength {
-		logger.Errorf("Invalid serial number %s", SerialNumber)
-		return nil, errors.New("invalid serial number")
-	}
-	// First four characters are vendorId
-	vendorID := SerialNumber[:VendorIDLength]
-	vendorSpecific := SerialNumber[VendorIDLength:]
-
-	vsbyte, _ := hex.DecodeString(vendorSpecific)
-
-	// Convert to Openolt serial number
-	serialNum := new(openolt.SerialNumber)
-	serialNum.VendorId = []byte(vendorID)
-	serialNum.VendorSpecific = vsbyte
-
-	return serialNum, nil
 }
 
 // ConvB2S converts byte array to string

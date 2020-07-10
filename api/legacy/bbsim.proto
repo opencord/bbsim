@@ -45,8 +45,9 @@ option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
 };
 
 // OLT information
+// This supports the older format of the REST APIs (still used from some clients)
+// Please refer to the protos in api/bbsim/bbsim.proto for the latest available version
 message OLTInfo {
-	option deprecated = true;
 	int64   olt_id = 1;
 	string  olt_serial = 2;
 	string  olt_ip = 3;

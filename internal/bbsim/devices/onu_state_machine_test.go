@@ -25,9 +25,9 @@ import (
 func Test_Onu_StateMachine_enable(t *testing.T) {
 	onu := createTestOnu()
 	assert.Equal(t, onu.InternalState.Current(), "initialized")
-	onu.InternalState.Event("discover")
+	_ = onu.InternalState.Event("discover")
 	assert.Equal(t, onu.InternalState.Current(), "discovered")
-	onu.InternalState.Event("enable")
+	_ = onu.InternalState.Event("enable")
 	assert.Equal(t, onu.InternalState.Current(), "enabled")
 }
 
@@ -41,11 +41,11 @@ func Test_Onu_StateMachine_disable(t *testing.T) {
 	onu.EapolFlowReceived = true
 	onu.GemPortAdded = true
 	onu.Flows = []FlowKey{
-		FlowKey{ID: 1, Direction: "upstream"},
-		FlowKey{ID: 2, Direction: "downstream"},
+		{ID: 1, Direction: "upstream"},
+		{ID: 2, Direction: "downstream"},
 	}
 
-	onu.InternalState.Event("disable")
+	_ = onu.InternalState.Event("disable")
 	assert.Equal(t, onu.InternalState.Current(), "disabled")
 
 	assert.Equal(t, onu.DhcpFlowReceived, false)
@@ -100,7 +100,7 @@ func Test_Onu_StateMachine_eapol_start(t *testing.T) {
 	// succeed
 	onu.EapolFlowReceived = true
 	onu.GemPortAdded = true
-	onu.InternalState.Event("start_auth")
+	_ = onu.InternalState.Event("start_auth")
 	assert.Equal(t, onu.InternalState.Current(), "auth_started")
 }
 
@@ -113,13 +113,13 @@ func Test_Onu_StateMachine_eapol_states(t *testing.T) {
 	onu.InternalState.SetState("auth_started")
 
 	assert.Equal(t, onu.InternalState.Current(), "auth_started")
-	onu.InternalState.Event("eap_start_sent")
+	_ = onu.InternalState.Event("eap_start_sent")
 	assert.Equal(t, onu.InternalState.Current(), "eap_start_sent")
-	onu.InternalState.Event("eap_response_identity_sent")
+	_ = onu.InternalState.Event("eap_response_identity_sent")
 	assert.Equal(t, onu.InternalState.Current(), "eap_response_identity_sent")
-	onu.InternalState.Event("eap_response_challenge_sent")
+	_ = onu.InternalState.Event("eap_response_challenge_sent")
 	assert.Equal(t, onu.InternalState.Current(), "eap_response_challenge_sent")
-	onu.InternalState.Event("eap_response_success_received")
+	_ = onu.InternalState.Event("eap_response_success_received")
 	assert.Equal(t, onu.InternalState.Current(), "eap_response_success_received")
 
 	// test that we can retrigger EAPOL
@@ -194,7 +194,7 @@ func Test_Onu_StateMachine_dhcp_start(t *testing.T) {
 	assert.Equal(t, onu.InternalState.Current(), "eap_response_success_received")
 
 	// default transition
-	onu.InternalState.Event("start_dhcp")
+	_ = onu.InternalState.Event("start_dhcp")
 	assert.Equal(t, onu.InternalState.Current(), "dhcp_started")
 }
 
@@ -207,11 +207,11 @@ func Test_Onu_StateMachine_dhcp_states(t *testing.T) {
 	onu.InternalState.SetState("dhcp_started")
 
 	assert.Equal(t, onu.InternalState.Current(), "dhcp_started")
-	onu.InternalState.Event("dhcp_discovery_sent")
+	_ = onu.InternalState.Event("dhcp_discovery_sent")
 	assert.Equal(t, onu.InternalState.Current(), "dhcp_discovery_sent")
-	onu.InternalState.Event("dhcp_request_sent")
+	_ = onu.InternalState.Event("dhcp_request_sent")
 	assert.Equal(t, onu.InternalState.Current(), "dhcp_request_sent")
-	onu.InternalState.Event("dhcp_ack_received")
+	_ = onu.InternalState.Event("dhcp_ack_received")
 	assert.Equal(t, onu.InternalState.Current(), "dhcp_ack_received")
 
 	// test that we can retrigger DHCP

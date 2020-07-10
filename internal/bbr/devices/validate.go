@@ -19,10 +19,11 @@ package devices
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/opencord/bbsim/api/bbsim"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"time"
 )
 
 func ValidateAndClose(olt *OltMock) {
@@ -57,7 +58,7 @@ func ValidateAndClose(olt *OltMock) {
 		}
 	}
 
-	if res == true {
+	if res {
 		log.WithFields(log.Fields{
 			"ExpectedState": expectedState,
 		}).Infof("%d ONUs matching expected state", len(onus.Items))
