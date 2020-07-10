@@ -19,8 +19,9 @@ package alarmsim
 import (
 	"context"
 	"fmt"
-	"github.com/opencord/bbsim/internal/common"
 	"strconv"
+
+	"github.com/opencord/bbsim/internal/common"
 
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
@@ -74,7 +75,7 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 	switch alarmType {
 	case bbsim.AlarmType_DYING_GASP:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_DyingGaspInd{&openolt.DyingGaspIndication{
+			Data: &openolt.AlarmIndication_DyingGaspInd{DyingGaspInd: &openolt.DyingGaspIndication{
 				Status: req.Status,
 				OnuId:  onu.ID,
 				IntfId: onu.PonPortID,
@@ -82,7 +83,7 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 		}
 	case bbsim.AlarmType_ONU_STARTUP_FAILURE:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_OnuStartupFailInd{&openolt.OnuStartupFailureIndication{
+			Data: &openolt.AlarmIndication_OnuStartupFailInd{OnuStartupFailInd: &openolt.OnuStartupFailureIndication{
 				Status: req.Status,
 				OnuId:  onu.ID,
 				IntfId: onu.PonPortID,
@@ -90,7 +91,7 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 		}
 	case bbsim.AlarmType_ONU_SIGNAL_DEGRADE:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_OnuSignalDegradeInd{&openolt.OnuSignalDegradeIndication{
+			Data: &openolt.AlarmIndication_OnuSignalDegradeInd{OnuSignalDegradeInd: &openolt.OnuSignalDegradeIndication{
 				Status:              req.Status,
 				OnuId:               onu.ID,
 				IntfId:              onu.PonPortID,
@@ -99,7 +100,7 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 		}
 	case bbsim.AlarmType_ONU_SIGNALS_FAILURE:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_OnuSignalsFailInd{&openolt.OnuSignalsFailureIndication{
+			Data: &openolt.AlarmIndication_OnuSignalsFailInd{OnuSignalsFailInd: &openolt.OnuSignalsFailureIndication{
 				Status:              req.Status,
 				OnuId:               onu.ID,
 				IntfId:              onu.PonPortID,
@@ -108,7 +109,7 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 		}
 	case bbsim.AlarmType_ONU_DRIFT_OF_WINDOW:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_OnuDriftOfWindowInd{&openolt.OnuDriftOfWindowIndication{
+			Data: &openolt.AlarmIndication_OnuDriftOfWindowInd{OnuDriftOfWindowInd: &openolt.OnuDriftOfWindowIndication{
 				Status: req.Status,
 				OnuId:  onu.ID,
 				IntfId: onu.PonPortID,
@@ -118,7 +119,7 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 		}
 	case bbsim.AlarmType_ONU_LOSS_OF_OMCI_CHANNEL:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_OnuLossOmciInd{&openolt.OnuLossOfOmciChannelIndication{
+			Data: &openolt.AlarmIndication_OnuLossOmciInd{OnuLossOmciInd: &openolt.OnuLossOfOmciChannelIndication{
 				Status: req.Status,
 				OnuId:  onu.ID,
 				IntfId: onu.PonPortID,
@@ -126,7 +127,7 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 		}
 	case bbsim.AlarmType_ONU_TRANSMISSION_INTERFERENCE_WARNING:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_OnuTiwiInd{&openolt.OnuTransmissionInterferenceWarning{
+			Data: &openolt.AlarmIndication_OnuTiwiInd{OnuTiwiInd: &openolt.OnuTransmissionInterferenceWarning{
 				Status: req.Status,
 				OnuId:  onu.ID,
 				IntfId: onu.PonPortID,
@@ -135,7 +136,7 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 		}
 	case bbsim.AlarmType_ONU_ACTIVATION_FAILURE:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_OnuActivationFailInd{&openolt.OnuActivationFailureIndication{
+			Data: &openolt.AlarmIndication_OnuActivationFailInd{OnuActivationFailInd: &openolt.OnuActivationFailureIndication{
 				OnuId:      onu.ID,
 				IntfId:     onu.PonPortID,
 				FailReason: uint32(extractInt(req.Parameters, "FailReason", 0)),
@@ -143,14 +144,14 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 		}
 	case bbsim.AlarmType_ONU_PROCESSING_ERROR:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_OnuProcessingErrorInd{&openolt.OnuProcessingErrorIndication{
+			Data: &openolt.AlarmIndication_OnuProcessingErrorInd{OnuProcessingErrorInd: &openolt.OnuProcessingErrorIndication{
 				OnuId:  onu.ID,
 				IntfId: onu.PonPortID,
 			}},
 		}
 	case bbsim.AlarmType_ONU_LOSS_OF_KEY_SYNC_FAILURE:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_OnuLossOfSyncFailInd{&openolt.OnuLossOfKeySyncFailureIndication{
+			Data: &openolt.AlarmIndication_OnuLossOfSyncFailInd{OnuLossOfSyncFailInd: &openolt.OnuLossOfKeySyncFailureIndication{
 				OnuId:  onu.ID,
 				IntfId: onu.PonPortID,
 				Status: req.Status,
@@ -158,7 +159,7 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 		}
 	case bbsim.AlarmType_ONU_ITU_PON_STATS:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_OnuItuPonStatsInd{&openolt.OnuItuPonStatsIndication{
+			Data: &openolt.AlarmIndication_OnuItuPonStatsInd{OnuItuPonStatsInd: &openolt.OnuItuPonStatsIndication{
 				OnuId:     onu.ID,
 				IntfId:    onu.PonPortID,
 				RdiErrors: uint32(extractInt(req.Parameters, "RdiErrors", 0)),
@@ -166,7 +167,7 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 		}
 	case bbsim.AlarmType_ONU_ALARM_LOS:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_OnuAlarmInd{&openolt.OnuAlarmIndication{
+			Data: &openolt.AlarmIndication_OnuAlarmInd{OnuAlarmInd: &openolt.OnuAlarmIndication{
 				LosStatus: req.Status,
 				OnuId:     onu.ID,
 				IntfId:    onu.PonPortID,
@@ -174,7 +175,7 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 		}
 	case bbsim.AlarmType_ONU_ALARM_LOB:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_OnuAlarmInd{&openolt.OnuAlarmIndication{
+			Data: &openolt.AlarmIndication_OnuAlarmInd{OnuAlarmInd: &openolt.OnuAlarmIndication{
 				LobStatus: req.Status,
 				OnuId:     onu.ID,
 				IntfId:    onu.PonPortID,
@@ -182,7 +183,7 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 		}
 	case bbsim.AlarmType_ONU_ALARM_LOPC_MISS:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_OnuAlarmInd{&openolt.OnuAlarmIndication{
+			Data: &openolt.AlarmIndication_OnuAlarmInd{OnuAlarmInd: &openolt.OnuAlarmIndication{
 				LopcMissStatus: req.Status,
 				OnuId:          onu.ID,
 				IntfId:         onu.PonPortID,
@@ -190,7 +191,7 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 		}
 	case bbsim.AlarmType_ONU_ALARM_LOPC_MIC_ERROR:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_OnuAlarmInd{&openolt.OnuAlarmIndication{
+			Data: &openolt.AlarmIndication_OnuAlarmInd{OnuAlarmInd: &openolt.OnuAlarmIndication{
 				LopcMicErrorStatus: req.Status,
 				OnuId:              onu.ID,
 				IntfId:             onu.PonPortID,
@@ -198,7 +199,7 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 		}
 	case bbsim.AlarmType_ONU_ALARM_LOFI:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_OnuAlarmInd{&openolt.OnuAlarmIndication{
+			Data: &openolt.AlarmIndication_OnuAlarmInd{OnuAlarmInd: &openolt.OnuAlarmIndication{
 				LofiStatus: req.Status,
 				OnuId:      onu.ID,
 				IntfId:     onu.PonPortID,
@@ -206,7 +207,7 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 		}
 	case bbsim.AlarmType_ONU_ALARM_LOAMI:
 		alarm = &openolt.AlarmIndication{
-			Data: &openolt.AlarmIndication_OnuAlarmInd{&openolt.OnuAlarmIndication{
+			Data: &openolt.AlarmIndication_OnuAlarmInd{OnuAlarmInd: &openolt.OnuAlarmIndication{
 				LoamiStatus: req.Status,
 				OnuId:       onu.ID,
 				IntfId:      onu.PonPortID,
@@ -274,7 +275,7 @@ func SimulateOltAlarm(ctx context.Context, req *bbsim.OLTAlarmRequest, o *device
 		}
 	}
 	alarmIndication = &openolt.AlarmIndication{
-		Data: &openolt.AlarmIndication_LosInd{&openolt.LosIndication{
+		Data: &openolt.AlarmIndication_LosInd{LosInd: &openolt.LosIndication{
 			Status: req.Status,
 			IntfId: devices.InterfaceIDToPortNo(req.InterfaceID, req.InterfaceType),
 		}},

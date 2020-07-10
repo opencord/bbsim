@@ -18,7 +18,6 @@ package devices
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 
 	"github.com/looplab/fsm"
@@ -163,7 +162,7 @@ func (p PonPort) GetOnuBySn(sn *openolt.SerialNumber) (*Onu, error) {
 			return onu, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Cannot find Onu with serial number %d in PonPort %d", sn, p.ID))
+	return nil, fmt.Errorf("Cannot find Onu with serial number %d in PonPort %d", sn, p.ID)
 }
 
 func (p PonPort) GetOnuById(id uint32) (*Onu, error) {
@@ -172,7 +171,7 @@ func (p PonPort) GetOnuById(id uint32) (*Onu, error) {
 			return onu, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Cannot find Onu with id %d in PonPort %d", id, p.ID))
+	return nil, fmt.Errorf("Cannot find Onu with id %d in PonPort %d", id, p.ID)
 }
 
 // GetNumOfActiveOnus returns number of active ONUs for PON port

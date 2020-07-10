@@ -71,7 +71,7 @@ func CreateNNI(olt *OltDevice) (NniPort, error) {
 		}),
 		Type: "nni",
 	}
-	createNNIPair(executor, olt, &nniPort)
+	_ = createNNIPair(executor, olt, &nniPort)
 	return nniPort, nil
 }
 
@@ -81,7 +81,7 @@ func (n *NniPort) sendNniPacket(packet gopacket.Packet) error {
 	isDhcp := packetHandlers.IsDhcpPacket(packet)
 	isLldp := packetHandlers.IsLldpPacket(packet)
 
-	if isDhcp == false && isLldp == false {
+	if !isDhcp && !isLldp {
 		nniLogger.WithFields(log.Fields{
 			"packet": packet,
 		}).Trace("Dropping NNI packet as it's not DHCP")
@@ -142,14 +142,6 @@ func createNNIPair(executor Executor, olt *OltDevice, nniPort *NniPort) error {
 		return err
 	}
 
-	return nil
-}
-
-func deleteNNIPair(executor Executor, nniPort *NniPort) error {
-	if err := executor.Command("ip", "link", "del", nniPort.nniVeth).Run(); err != nil {
-		nniLogger.Errorf("Couldn't delete veth pair between %s and %s", nniPort.nniVeth, nniPort.upstreamVeth)
-		return err
-	}
 	return nil
 }
 

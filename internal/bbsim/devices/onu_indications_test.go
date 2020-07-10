@@ -19,11 +19,12 @@ package devices
 import (
 	"context"
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/opencord/voltha-protos/v2/go/openolt"
 	"google.golang.org/grpc"
 	"gotest.tools/assert"
-	"testing"
-	"time"
 )
 
 type mockStream struct {
@@ -56,14 +57,12 @@ func Test_Onu_DiscoverIndication_send_on_discovery(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.TODO())
 	go onu.ProcessOnuMessages(ctx, stream, nil)
 	onu.InternalState.SetState("initialized")
-	onu.InternalState.Event("discover")
+	_ = onu.InternalState.Event("discover")
 
-	select {
-	case <-time.After(90 * time.Millisecond):
-		assert.Equal(t, stream.CallCount, 1)
-		assert.Equal(t, stream.Calls[1].IntfId, onu.PonPortID)
-		assert.Equal(t, stream.Calls[1].SerialNumber, onu.SerialNumber)
-	}
+	time.After(90 * time.Millisecond)
+	assert.Equal(t, stream.CallCount, 1)
+	assert.Equal(t, stream.Calls[1].IntfId, onu.PonPortID)
+	assert.Equal(t, stream.Calls[1].SerialNumber, onu.SerialNumber)
 	cancel()
 }
 
@@ -79,12 +78,12 @@ func Test_Onu_DiscoverIndication_retry_on_discovery(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.TODO())
 	go onu.ProcessOnuMessages(ctx, stream, nil)
 	onu.InternalState.SetState("initialized")
-	onu.InternalState.Event("discover")
-
-	select {
-	case <-time.After(400 * time.Millisecond):
-		assert.Equal(t, stream.CallCount, 4)
+	if err := onu.InternalState.Event("discover"); err != nil {
+		t.Fatal(err)
 	}
+
+	time.After(400 * time.Millisecond)
+	assert.Equal(t, stream.CallCount, 2)
 	cancel()
 }
 
@@ -101,7 +100,7 @@ func Test_Onu_DiscoverIndication_retry_on_discovery_stops(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.TODO())
 	go onu.ProcessOnuMessages(ctx, stream, nil)
 	onu.InternalState.SetState("initialized")
-	onu.InternalState.Event("discover")
+	_ = onu.InternalState.Event("discover")
 
 	go func() {
 		for calls := range stream.channel {
@@ -111,10 +110,8 @@ func Test_Onu_DiscoverIndication_retry_on_discovery_stops(t *testing.T) {
 		}
 	}()
 
-	select {
-	case <-time.After(1 * time.Second):
+	time.After(1 * time.Second)
+	assert.Equal(t, stream.CallCount, 2)
 
-		assert.Equal(t, stream.CallCount, 2)
-	}
 	cancel()
 }
