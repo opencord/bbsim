@@ -19,6 +19,7 @@ package commands
 import (
 	"context"
 	"fmt"
+
 	"github.com/jessevdk/go-flags"
 	pb "github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
@@ -58,6 +59,10 @@ func (options *LoggingOptions) Execute(args []string) error {
 	}
 
 	logLevel, err := c.SetLogLevel(ctx, &req)
+
+	if err != nil {
+		log.Fatalf("could not set log level: %v", err)
+	}
 
 	fmt.Println("New log settings:")
 	fmt.Println(fmt.Sprintf("\tLevel: %s", logLevel.Level))

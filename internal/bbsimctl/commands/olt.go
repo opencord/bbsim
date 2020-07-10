@@ -103,7 +103,7 @@ func (o *OltGet) Execute(args []string) error {
 
 	// print out
 	tableFormat := format.Format(DEFAULT_OLT_DEVICE_HEADER_FORMAT)
-	tableFormat.Execute(os.Stdout, true, olt)
+	_ = tableFormat.Execute(os.Stdout, true, olt)
 
 	return nil
 }
@@ -114,7 +114,7 @@ func (o *OltNNIs) Execute(args []string) error {
 	printOltHeader("NNI Ports for", olt)
 
 	tableFormat := format.Format(DEFAULT_PORT_HEADER_FORMAT)
-	tableFormat.Execute(os.Stdout, true, olt.NNIPorts)
+	_ = tableFormat.Execute(os.Stdout, true, olt.NNIPorts)
 
 	return nil
 }
@@ -125,7 +125,7 @@ func (o *OltPONs) Execute(args []string) error {
 	printOltHeader("PON Ports for", olt)
 
 	tableFormat := format.Format(DEFAULT_PORT_HEADER_FORMAT)
-	tableFormat.Execute(os.Stdout, true, olt.PONPorts)
+	_ = tableFormat.Execute(os.Stdout, true, olt.PONPorts)
 
 	return nil
 }

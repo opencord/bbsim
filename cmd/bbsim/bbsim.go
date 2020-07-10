@@ -51,11 +51,11 @@ func startApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 
 	reflection.Register(grpcServer)
 
-	go grpcServer.Serve(lis)
+	go func() { _ = grpcServer.Serve(lis) }()
 	go startApiRestServer(apiDoneChannel, group, address)
 
-	select {
-	case <-apiDoneChannel:
+	x := <-apiDoneChannel
+	if x {
 		// if the API channel is closed, stop the gRPC server
 		grpcServer.Stop()
 		log.Warnf("Stopping API gRPC server")
@@ -90,10 +90,10 @@ func startApiRestServer(apiDoneChannel chan bool, group *sync.WaitGroup, grpcAdd
 		}
 	}()
 
-	select {
-	case <-apiDoneChannel:
+	x := <-apiDoneChannel
+	if x {
 		log.Warnf("Stopping API REST server")
-		s.Shutdown(ctx)
+		_ = s.Shutdown(ctx)
 	}
 
 	group.Done()
@@ -194,7 +194,7 @@ func main() {
 	go startApiServer(apiDoneChannel, &wg)
 	go startLegacyApiServer(apiDoneChannel, &wg)
 	log.Debugf("Started APIService")
-	if common.Options.BBSim.SadisServer != false {
+	if common.Options.BBSim.SadisServer {
 		wg.Add(1)
 		go sadis.StartRestServer(olt, &wg)
 	}

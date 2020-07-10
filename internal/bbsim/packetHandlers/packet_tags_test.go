@@ -17,12 +17,13 @@
 package packetHandlers_test
 
 import (
+	"net"
+	"testing"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"gotest.tools/assert"
-	"net"
-	"testing"
 )
 
 func TestPushSingleTag(t *testing.T) {
@@ -37,7 +38,7 @@ func TestPushSingleTag(t *testing.T) {
 	}
 
 	buffer := gopacket.NewSerializeBuffer()
-	gopacket.SerializeLayers(
+	_ = gopacket.SerializeLayers(
 		buffer,
 		gopacket.SerializeOptions{
 			FixLengths: false,
@@ -69,7 +70,7 @@ func TestPushDoubleTag(t *testing.T) {
 	}
 
 	buffer := gopacket.NewSerializeBuffer()
-	gopacket.SerializeLayers(
+	_ = gopacket.SerializeLayers(
 		buffer,
 		gopacket.SerializeOptions{
 			FixLengths: false,
@@ -119,7 +120,7 @@ func TestPopSingleTag(t *testing.T) {
 	}
 
 	buffer := gopacket.NewSerializeBuffer()
-	gopacket.SerializeLayers(
+	_ = gopacket.SerializeLayers(
 		buffer,
 		gopacket.SerializeOptions{
 			FixLengths: false,

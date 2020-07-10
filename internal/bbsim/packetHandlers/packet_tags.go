@@ -18,6 +18,7 @@ package packetHandlers
 
 import (
 	"errors"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 )
@@ -37,7 +38,7 @@ func PushSingleTag(tag int, pkt gopacket.Packet) (gopacket.Packet, error) {
 		}
 
 		buffer := gopacket.NewSerializeBuffer()
-		gopacket.SerializeLayers(
+		_ = gopacket.SerializeLayers(
 			buffer,
 			gopacket.SerializeOptions{
 				FixLengths: false,
@@ -84,7 +85,7 @@ func PopSingleTag(pkt gopacket.Packet) (gopacket.Packet, error) {
 			EthernetType: layer.Type,
 		}
 		buffer := gopacket.NewSerializeBuffer()
-		gopacket.SerializeLayers(buffer, gopacket.SerializeOptions{},
+		_ = gopacket.SerializeLayers(buffer, gopacket.SerializeOptions{},
 			ethernetLayer,
 			gopacket.Payload(layer.Payload),
 		)

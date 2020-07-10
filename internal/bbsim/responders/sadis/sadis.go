@@ -313,7 +313,7 @@ func (s *sadisServer) ServeEntry(w http.ResponseWriter, r *http.Request) {
 		sadisConf, _ := GetOltEntry(s.olt)
 
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(sadisConf)
+		_ = json.NewEncoder(w).Encode(sadisConf)
 		return
 	}
 
@@ -346,10 +346,10 @@ func (s *sadisServer) ServeEntry(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if vars["version"] == "v1" {
 		sadisConf, _ := GetOnuEntryV1(s.olt, onu, uni)
-		json.NewEncoder(w).Encode(sadisConf)
+		_ = json.NewEncoder(w).Encode(sadisConf)
 	} else if vars["version"] == "v2" {
 		sadisConf, _ := GetOnuEntryV2(s.olt, onu, uni)
-		json.NewEncoder(w).Encode(sadisConf)
+		_ = json.NewEncoder(w).Encode(sadisConf)
 	}
 
 }
