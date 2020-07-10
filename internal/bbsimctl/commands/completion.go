@@ -17,6 +17,7 @@ package commands
 
 import (
 	"fmt"
+
 	"github.com/jessevdk/go-flags"
 	"github.com/opencord/bbsim/internal/bbsimctl/completion"
 )
@@ -28,7 +29,7 @@ type CompletionOptions struct {
 }
 
 func RegisterCompletionCommands(parent *flags.Parser) {
-	parent.AddCommand("completion", "generate shell compleition", "Commands to generate shell completion information", &CompletionOptions{})
+	_, _ = parent.AddCommand("completion", "generate shell compleition", "Commands to generate shell completion information", &CompletionOptions{})
 }
 
 func (options *BashOptions) Execute(args []string) error {
