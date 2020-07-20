@@ -17,7 +17,7 @@
 # builder parent
 FROM golang:1.13.8-stretch as builder
 
-RUN apt-get update && apt-get install -y build-essential libpcap-dev
+RUN apt-get update && apt-get install -y build-essential=12.3 libpcap-dev=1.8.1-3 --no-install-recommends
 
 ENV CGO_ENABLED=1
 
@@ -47,7 +47,10 @@ FROM ubuntu:18.04
 # debian symlinks it to 0.8 for historical reasons:
 # https://packages.debian.org/stretch/libpcap0.8-dev
 RUN apt-get update \
- && apt-get install -y libpcap-dev isc-dhcp-server network-manager tcpdump\
+ && apt-get install -y libpcap-dev=1.8.1-6ubuntu1.18.04.1 isc-dhcp-server=4.3.5-3ubuntu7.1 \
+ network-manager=1.10.6-2ubuntu1.4 tcpdump=4.9.3-0ubuntu0.18.04.1 --no-install-recommends \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/* \
  && ln -s /usr/lib/libpcap.so.1.8.1 /usr/lib/libpcap.so.0.9
 
 COPY ./configs/dhcpd.conf /etc/dhcp/
@@ -61,6 +64,6 @@ COPY --from=builder /app/bbsimctl /usr/bin/bbsimctl
 RUN mv /usr/sbin/tcpdump /usr/bin/tcpdump
 RUN chmod a+x /app/bbsim
 RUN chmod a+x /usr/bin/bbsimctl
-RUN bbsimctl completion bash >> $HOME/.bashrc
+RUN bbsimctl completion bash >> "$HOME/.bashrc"
 COPY ./configs/bbsim.yaml ./configs/bbsim.yaml
-CMD [ '/app/bbsim' ]
+CMD [ "/app/bbsim" ]
