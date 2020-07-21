@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7f2e26e_f8ee17e0",
+        "filename": "internal/bbr/devices/olt.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-07-21T21:12:11Z",
+      "side": 1,
+      "message": "if this is not used needs to be removed",
+      "range": {
+        "startLine": 321,
+        "startChar": 1,
+        "endLine": 321,
+        "endChar": 28
+      },
+      "revId": "0883f39599dbe1d872e6d7dd1457df8fcfe6958e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2505bb9_0b5f8125",
+        "filename": "internal/bbsim/responders/dhcp/dhcp_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-07-21T21:12:11Z",
+      "side": 1,
+      "message": "we are not expecting the \"updateDhcpFailed\" to return an error, but that the \"onu.InternalState.Current()\" is \"dhcp_failed\" (thus we should assert that \"updateDhcpFailed\" returns \"err \u003d\u003d nil\".\n\nThis test is now failing",
+      "range": {
+        "startLine": 108,
+        "startChar": 1,
+        "endLine": 111,
+        "endChar": 2
+      },
+      "revId": "0883f39599dbe1d872e6d7dd1457df8fcfe6958e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
