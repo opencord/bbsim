@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6e4c3667_57eee263",
+        "filename": "internal/bbr/devices/olt.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1000663
+      },
+      "writtenOn": "2020-07-21T21:35:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a7f2e26e_f8ee17e0",
+      "range": {
+        "startLine": 321,
+        "startChar": 1,
+        "endLine": 321,
+        "endChar": 28
+      },
+      "revId": "0883f39599dbe1d872e6d7dd1457df8fcfe6958e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e2505bb9_0b5f8125",
         "filename": "internal/bbsim/responders/dhcp/dhcp_test.go",
         "patchSetId": 2
@@ -45,6 +69,30 @@
       "revId": "0883f39599dbe1d872e6d7dd1457df8fcfe6958e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3bf87512_d7669ec6",
+        "filename": "internal/bbsim/responders/dhcp/dhcp_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1000663
+      },
+      "writtenOn": "2020-07-21T21:35:02Z",
+      "side": 1,
+      "message": "This has been already been resolved in the later patches.",
+      "parentUuid": "e2505bb9_0b5f8125",
+      "range": {
+        "startLine": 108,
+        "startChar": 1,
+        "endLine": 111,
+        "endChar": 2
+      },
+      "revId": "0883f39599dbe1d872e6d7dd1457df8fcfe6958e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
