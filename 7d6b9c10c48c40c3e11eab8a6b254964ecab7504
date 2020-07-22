@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47371133_3bcea0fe",
+        "filename": "api/legacy/bbsim.proto",
+        "patchSetId": 9
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-07-22T18:27:05Z",
+      "side": 1,
+      "message": "given that this file has changed the protos needs to be rebuilt.\nrun \"make protos\" and commit the result",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 17
+      },
+      "revId": "7d6b9c10c48c40c3e11eab8a6b254964ecab7504",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
