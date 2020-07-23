@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"sync"
 
 	"time"
 
@@ -53,6 +54,7 @@ type Onu struct {
 	ID                  uint32
 	PonPortID           uint32
 	PonPort             *PonPort
+	vlanGemMapping      sync.Map
 	STag                int
 	CTag                int
 	Auth                bool // automatically start EAPOL if set to true
@@ -160,15 +162,15 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, sTag int, cTag int, auth
 			{Name: "eap_response_success_received", Src: []string{"eap_response_challenge_sent"}, Dst: "eap_response_success_received"},
 			{Name: "auth_failed", Src: []string{"auth_started", "eap_start_sent", "eap_response_identity_sent", "eap_response_challenge_sent"}, Dst: "auth_failed"},
 			// DHCP
-			{Name: "start_dhcp", Src: []string{"enabled", "eap_response_success_received", "dhcp_discovery_sent", "dhcp_request_sent", "dhcp_ack_received", "dhcp_failed", "igmp_join_started", "igmp_left", "igmp_join_error"}, Dst: "dhcp_started"},
+			{Name: "start_dhcp", Src: []string{"enabled", "gem_port_added", "eap_response_success_received", "dhcp_discovery_sent", "dhcp_request_sent", "dhcp_ack_received", "dhcp_failed", "igmp_join_started", "igmp_left", "igmp_join_error"}, Dst: "dhcp_started"},
 			{Name: "dhcp_discovery_sent", Src: []string{"dhcp_started"}, Dst: "dhcp_discovery_sent"},
 			{Name: "dhcp_request_sent", Src: []string{"dhcp_discovery_sent"}, Dst: "dhcp_request_sent"},
 			{Name: "dhcp_ack_received", Src: []string{"dhcp_request_sent"}, Dst: "dhcp_ack_received"},
 			{Name: "dhcp_failed", Src: []string{"dhcp_started", "dhcp_discovery_sent", "dhcp_request_sent"}, Dst: "dhcp_failed"},
 			// BBR States
 			// TODO add start OMCI state
-			{Name: "send_eapol_flow", Src: []string{"initialized"}, Dst: "eapol_flow_sent"},
-			{Name: "send_dhcp_flow", Src: []string{"eapol_flow_sent"}, Dst: "dhcp_flow_sent"},
+			//{Name: "send_eapol_flow", Src: []string{"initialized"}, Dst: "eapol_flow_sent"},
+			{Name: "send_dhcp_flow", Src: []string{"initialized"}, Dst: "dhcp_flow_sent"},
 			// IGMP
 			{Name: "igmp_join_start", Src: []string{"eap_response_success_received", "dhcp_ack_received", "igmp_left", "igmp_join_error", "igmp_join_started"}, Dst: "igmp_join_started"},
 			{Name: "igmp_join_startv3", Src: []string{"eap_response_success_received", "dhcp_ack_received", "igmp_left", "igmp_join_error", "igmp_join_started"}, Dst: "igmp_join_started"},
@@ -296,10 +298,11 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, sTag int, cTag int, auth
 					return
 				}
 
-				if o.GemPortAdded == false {
-					e.Cancel(errors.New("cannot-go-to-dhcp-started-as-gemport-is-missing"))
-					return
-				}
+				//This check is not required since we get the gemports from flows.
+				//if o.GemPortAdded == false {
+				//	e.Cancel(errors.New("cannot-go-to-dhcp-started-as-gemport-is-missing"))
+				//	return
+				//}
 			},
 			"enter_dhcp_started": func(e *fsm.Event) {
 				msg := Message{
@@ -432,7 +435,7 @@ loop:
 				} else if msg.Type == packetHandlers.DHCP {
 					// NOTE here we receive packets going from the DHCP Server to the ONU
 					// for now we expect them to be double-tagged, but ideally the should be single tagged
-					dhcp.HandleNextPacket(o.PonPort.Olt.ID, o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.CTag, o.InternalState, msg.Packet, stream)
+					dhcp.HandleNextPacket(o.PonPort.Olt.ID, o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, msg.Packet, stream, o.vlanGemMapping)
 				}
 			case OnuPacketIn:
 				// NOTE we only receive BBR packets here.
@@ -551,7 +554,7 @@ func (o *Onu) handleEAPOLStart(stream openolt.Openolt_EnableIndicationServer) {
 func (o *Onu) handleDHCPStart(stream openolt.Openolt_EnableIndicationServer) {
 	log.Infof("Receive StartDHCP message on ONU Channel")
 	// FIXME use id, ponId as SendEapStart
-	dhcp.SendDHCPDiscovery(o.PonPort.Olt.ID, o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
+	dhcp.SendDHCPDiscovery(o.PonPort.Olt.ID, o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, stream, o.vlanGemMapping)
 	go func(delay time.Duration) {
 		time.Sleep(delay)
 		if (o.InternalState.Current() == "dhcp_discovery_sent" ||
@@ -760,7 +763,7 @@ func (o *Onu) SetID(id uint32) {
 	o.ID = id
 }
 
-func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
+func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) error {
 	onuLogger.WithFields(log.Fields{
 		"DstPort":          msg.Flow.Classifier.DstPort,
 		"EthType":          fmt.Sprintf("%x", msg.Flow.Classifier.EthType),
@@ -777,6 +780,8 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 		"SrcPort":          msg.Flow.Classifier.SrcPort,
 		"UniID":            msg.Flow.UniId,
 		"ClassifierOPbits": msg.Flow.Classifier.OPbits,
+		"Action IVid":      msg.Flow.Action.IVid,
+		"Action OVid":      msg.Flow.Action.OVid,
 	}).Debug("ONU receives FlowAdd")
 
 	if msg.Flow.UniId != 0 {
@@ -786,10 +791,11 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 			"OnuId":        o.ID,
 			"SerialNumber": o.Sn(),
 		}).Debug("Ignoring flow as it's not for the first UNI")
-		return
+		return errors.New("Ignoring flow as it's not for the first UNI")
 	}
 
 	o.FlowIds = append(o.FlowIds, msg.Flow.FlowId)
+	o.storePortNumber(uint32(msg.Flow.PortNo))
 
 	if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeEAPOL) && msg.Flow.Classifier.OVid == 4091 {
 		// NOTE storing the PortNO, it's needed when sending PacketIndications
@@ -826,40 +832,16 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 		}
 	} else if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeIPv4) &&
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
-		msg.Flow.Classifier.DstPort == uint32(67) &&
-		(msg.Flow.Classifier.OPbits == 0 || msg.Flow.Classifier.OPbits == 255) {
+		msg.Flow.Classifier.DstPort == uint32(67) {
+
+		o.DhcpFlowReceived = true
+		o.vlanGemMapping.Store(int(msg.Flow.Classifier.OVid), int(msg.Flow.GemportId))
 
 		if o.Dhcp == true {
-			if o.DhcpFlowReceived == false {
-				// keep track that we received the DHCP Flows
-				// so that we can transition the state to dhcp_started
-				// this is needed as a check in case someone trigger DHCP from the CLI
-				o.DhcpFlowReceived = true
-
-				if !o.GemPortAdded {
-					// wait for Gem and then start DHCP
-					go func() {
-						for v := range o.GetGemPortChan() {
-							if v == true {
-								if err := o.InternalState.Event("start_dhcp"); err != nil {
-									log.Errorf("Can't go to dhcp_started: %v", err)
-								}
-							}
-						}
-					}()
-				} else {
-					// start the DHCP state machine
-					if err := o.InternalState.Event("start_dhcp"); err != nil {
-						log.Errorf("Can't go to dhcp_started: %v", err)
-					}
-				}
-			} else {
-				onuLogger.WithFields(log.Fields{
-					"IntfId":           o.PonPortID,
-					"OnuId":            o.ID,
-					"SerialNumber":     o.Sn(),
-					"DhcpFlowReceived": o.DhcpFlowReceived,
-				}).Warn("DHCP already started")
+			// NOTE we are receiving multiple DHCP flows but we shouldn't call the transition multiple times
+			if err := o.InternalState.Event("start_dhcp"); err != nil {
+				log.Errorf("Can't go to dhcp_started: %v", err)
+				return errors.New("Can't go to dhcp_started")
 			}
 		} else {
 			onuLogger.WithFields(log.Fields{
@@ -869,6 +851,7 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 			}).Warn("Not starting DHCP as Dhcp bit is not set in CLI parameters")
 		}
 	}
+	return nil
 }
 
 func (o *Onu) handleFlowRemove(msg OnuFlowUpdateMessage) {
@@ -1020,7 +1003,16 @@ func (o *Onu) handleOmci(msg OmciIndicationMessage, client openolt.OpenoltClient
 			sendOmciMsg(gemReq, o.PonPortID, o.ID, o.SerialNumber, "CreateGemPortRequest", client)
 			o.GemPortAdded = true
 		} else {
-			if err := o.InternalState.Event("send_eapol_flow"); err != nil {
+			nextEvent := "send_eapol_flow"
+			if !o.Auth && o.Dhcp {
+				nextEvent = "send_dhcp_flow"
+			}
+			onuLogger.WithFields(log.Fields{
+				"nextEvent": nextEvent,
+				"Auth":      o.Auth,
+				"DHCP":      o.Dhcp,
+			}).Debug("OMCI CreateResponse ")
+			if err := o.InternalState.Event(nextEvent); err != nil {
 				onuLogger.WithFields(log.Fields{
 					"OnuId":  o.ID,
 					"IntfId": o.PonPortID,

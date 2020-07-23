@@ -66,6 +66,8 @@ func main() {
 		"BBSimPort":    options.BBSimPort,
 		"LogLevel":     options.BBR.LogLevel,
 		"TotalOnus":    options.Olt.PonPorts * options.Olt.OnusPonPort,
+		"DHCP":         options.BBSim.EnableDhcp,
+		"Auth":         options.BBSim.EnableAuth,
 	}).Info("BroadBand Reflector is on")
 
 	// create the OLT device
