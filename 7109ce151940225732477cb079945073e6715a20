@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7849916_942e50e6",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-24T09:54:04Z",
+      "side": 1,
+      "message": "I think this will break the ATT workflow, given that it expects EAPOL auth immediately after port discovery.",
+      "revId": "7109ce151940225732477cb079945073e6715a20",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36845a2a_b4228705",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-07-24T09:54:04Z",
+      "side": 1,
+      "message": "delete this if useless",
+      "revId": "7109ce151940225732477cb079945073e6715a20",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
