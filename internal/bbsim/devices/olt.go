@@ -57,7 +57,7 @@ type OltDevice struct {
 	channel              chan Message
 	nniPktInChannel      chan *bbsim.PacketMsg // packets coming in from the NNI and going to VOLTHA
 	nniHandle            *pcap.Handle          // handle on the NNI interface, close it when shutting down the NNI channel
-	Flows                map[FlowKey]openolt.Flow
+	Flows                sync.Map
 	Delay                int
 	ControlledActivation mode
 	EventChannel         chan common.Event
@@ -104,7 +104,7 @@ func CreateOLT(options common.BBSimYamlConfig, isMock bool) *OltDevice {
 		Pons:              []*PonPort{},
 		Nnis:              []*NniPort{},
 		Delay:             options.BBSim.Delay,
-		Flows:             make(map[FlowKey]openolt.Flow),
+		Flows:             sync.Map{},
 		enablePerf:        options.BBSim.EnablePerf,
 		PublishEvents:     options.BBSim.Events,
 		PortStatsInterval: options.Olt.PortStatsInterval,
@@ -1017,12 +1017,13 @@ func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.E
 		"FlowId":    flow.FlowId,
 		"UniID":     flow.UniId,
 		"PortNo":    flow.PortNo,
+		"GemPort":   flow.GemportId,
 	}).Tracef("OLT receives FlowAdd")
 
 	flowKey := FlowKey{}
 	if !o.enablePerf {
 		flowKey = FlowKey{ID: flow.FlowId, Direction: flow.FlowType}
-		olt.Flows[flowKey] = *flow
+		o.Flows.Store(flowKey, *flow)
 	}
 
 	if flow.AccessIntfId == -1 {
@@ -1088,12 +1089,12 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 		}
 
 		// Check if flow exists
-		storedFlow, ok := o.Flows[flowKey]
+		loadedFlow, ok := o.Flows.Load(flowKey)
 		if !ok {
 			oltLogger.Errorf("Flow %v not found", flow)
 			return new(openolt.Empty), status.Errorf(codes.NotFound, "Flow not found")
 		}
-
+		storedFlow := loadedFlow.(openolt.Flow)
 		// if its ONU flow remove it from ONU also
 		if storedFlow.AccessIntfId != -1 {
 			pon := o.Pons[uint32(storedFlow.AccessIntfId)]
@@ -1111,7 +1112,7 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 		}
 
 		// delete from olt flows
-		delete(o.Flows, flowKey)
+		o.Flows.Delete(flowKey)
 	}
 
 	if flow.AccessIntfId == -1 {
@@ -1266,6 +1267,7 @@ func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket)
 			OnuId:  onuPkt.OnuId,
 			Packet: rawpkt,
 			Type:   pktType,
+			GemPortId: int32(onuPkt.GemportId),
 		},
 	}
 	onu.Channel <- msg

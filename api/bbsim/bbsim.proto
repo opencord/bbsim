@@ -49,6 +49,13 @@ message ONU {
     int32 CTag = 7;
     string HwAddress = 8;
     int32 PortNo = 9;
+    repeated GemPort GemPorts = 10;
+}
+
+message GemPort {
+    int32 ID = 1;
+    string EapolState = 3;
+    string DHCPState = 4;
 }
 
 message ONUTrafficSchedulers {

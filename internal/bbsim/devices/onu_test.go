@@ -17,7 +17,6 @@
 package devices
 
 import (
-	omcisim "github.com/opencord/omci-sim"
 	"gotest.tools/assert"
 	"testing"
 )
@@ -42,43 +41,60 @@ func Test_Onu_CreateOnu(t *testing.T) {
 	assert.Equal(t, onu.HwAddress.String(), "2e:60:70:00:01:01")
 }
 
-func TestOnu_processOmciMessage_GemPortAdded(t *testing.T) {
-
-	receivedValues := []bool{}
-
-	checker := func(ch chan bool, done chan int) {
-		for v := range ch {
-			receivedValues = append(receivedValues, v)
-		}
-		done <- 0
-	}
-
+func Test_Onu_FindGemPort(t *testing.T) {
 	onu := createTestOnu()
 
-	// create two listeners on the GemPortAdded event
-	ch1 := onu.GetGemPortChan()
-	ch2 := onu.GetGemPortChan()
+	gem1, _ := NewGemPort(onu,1024, 24)
+	gem2, _ := NewGemPort(onu,1025, 25)
+	gem3, _ := NewGemPort(onu,1026, 26)
+	onu.GemPorts[gem1.ID] = gem1
+	onu.GemPorts[gem2.ID] = gem2
+	onu.GemPorts[gem3.ID] = gem3
 
-	msg := omcisim.OmciChMessage{
-		Type: omcisim.GemPortAdded,
-		Data: omcisim.OmciChMessageData{
-			IntfId: 1,
-			OnuId:  1,
-		},
-	}
+	found, gem := onu.findGemPort(1026)
 
-	onu.processOmciMessage(msg, nil)
+	assert.Equal(t, found, true)
+	assert.Equal(t, gem.ID, gem3.ID)
+	assert.Equal(t, gem.ID, gem3.ID)
 
-	done := make(chan int)
+	found, gem = onu.findGemPort(2048)
+	assert.Equal(t, found,false)
+}
 
-	go checker(ch1, done)
-	go checker(ch2, done)
+func Test_Onu_AddGemPort(t *testing.T) {
+	onu := createTestOnu()
 
-	// wait for the messages to be received on the "done" channel
-	<-done
-	<-done
+	assert.Equal(t, len(onu.GemPorts), 0)
 
-	// make sure all channel are closed and removed
-	assert.Equal(t, len(onu.GemPortChannels), 0)
-	assert.Equal(t, len(receivedValues), 2)
+	onu.addGemPort(1024, 24)
+	assert.Equal(t, len(onu.GemPorts), 1)
+
+	// do not duplicate GemPorts
+	onu.addGemPort(1024, 24)
+	assert.Equal(t, len(onu.GemPorts), 1)
+
+	// TODO test VLAN update
+}
+
+func Test_Onu_RemoveGemPort(t *testing.T) {
+	onu := createTestOnu()
+
+	gem1, _ := NewGemPort(onu,1024, 24)
+	gem2, _ := NewGemPort(onu,1025, 25)
+	gem3, _ := NewGemPort(onu,1026, 26)
+	onu.GemPorts[gem1.ID] = gem1
+	onu.GemPorts[gem2.ID] = gem2
+	onu.GemPorts[gem3.ID] = gem3
+
+	assert.Equal(t, len(onu.GemPorts), 3)
+
+	err := onu.removeGemPort(1024)
+
+	assert.NilError(t, err)
+	assert.Equal(t, len(onu.GemPorts), 2)
+
+	// delete  a non-existing gemPort
+	err = onu.removeGemPort(2048)
+	assert.NilError(t, err)
+	assert.Equal(t, len(onu.GemPorts), 2)
 }

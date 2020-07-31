@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"sync"
 
 	"time"
 
@@ -28,9 +29,7 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/jpillora/backoff"
 	"github.com/looplab/fsm"
-	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
-	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
 	"github.com/opencord/bbsim/internal/bbsim/responders/igmp"
 	"github.com/opencord/bbsim/internal/common"
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
@@ -53,6 +52,7 @@ type Onu struct {
 	ID                  uint32
 	PonPortID           uint32
 	PonPort             *PonPort
+	vlanGemMapping      sync.Map // deprecated
 	STag                int
 	CTag                int
 	Auth                bool // automatically start EAPOL if set to true
@@ -67,8 +67,9 @@ type Onu struct {
 	// There is one PortNo per UNI Port, for now we're only storing the first one
 	// FIXME add support for multiple UNIs (each UNI has a different PortNo)
 	PortNo            uint32
-	GemPortAdded      bool
-	EapolFlowReceived bool
+	GemPortAdded      bool // deprecated
+	GemPorts          map[int32]*GemPort
+	EapolFlowReceived bool // deprecated
 	DhcpFlowReceived  bool
 	Flows             []FlowKey
 	FlowIds           []uint32 // keep track of the flows we currently have in the ONU
@@ -76,8 +77,7 @@ type Onu struct {
 	OperState    *fsm.FSM
 	SerialNumber *openolt.SerialNumber
 
-	Channel         chan Message // this Channel is to track state changes OMCI messages, EAPOL and DHCP packets
-	GemPortChannels []chan bool  // this channels are used to notify everyone that is interested that a GemPort has been added
+	Channel chan Message // this Channel is to track state changes OMCI messages, EAPOL and DHCP packets
 
 	// OMCI params
 	tid       uint16
@@ -90,12 +90,6 @@ type Onu struct {
 
 func (o *Onu) Sn() string {
 	return common.OnuSnToString(o.SerialNumber)
-}
-
-func (o *Onu) GetGemPortChan() chan bool {
-	listener := make(chan bool, 1)
-	o.GemPortChannels = append(o.GemPortChannels, listener)
-	return listener
 }
 
 func CreateONU(olt *OltDevice, pon *PonPort, id uint32, sTag int, cTag int, auth bool, dhcp bool, delay time.Duration, isMock bool) *Onu {
@@ -128,6 +122,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, sTag int, cTag int, auth
 		Flows:               []FlowKey{},
 		DiscoveryDelay:      delay,
 		Backoff:             b,
+		GemPorts:            make(map[int32]*GemPort),
 	}
 	o.SerialNumber = o.NewSN(olt.ID, pon.ID, id)
 	// NOTE this state machine is used to track the operational
@@ -146,8 +141,8 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, sTag int, cTag int, auth
 			{Name: "initialize", Src: []string{"created", "disabled", "pon_disabled"}, Dst: "initialized"},
 			{Name: "discover", Src: []string{"initialized"}, Dst: "discovered"},
 			{Name: "enable", Src: []string{"discovered", "pon_disabled"}, Dst: "enabled"},
-			{Name: "receive_eapol_flow", Src: []string{"enabled", "gem_port_added"}, Dst: "eapol_flow_received"},
-			{Name: "add_gem_port", Src: []string{"enabled", "eapol_flow_received"}, Dst: "gem_port_added"},
+			{Name: "receive_eapol_flow", Src: []string{"enabled"}, Dst: "eapol_flow_received"},
+			// {Name: "add_gem_port", Src: []string{"enabled", "eapol_flow_received"}, Dst: "gem_port_added"},
 			// NOTE should disabled state be different for oper_disabled (emulating an error) and admin_disabled (received a disabled call via VOLTHA)?
 			{Name: "disable", Src: []string{"enabled", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed", "pon_disabled"}, Dst: "disabled"},
 			// ONU state when PON port is disabled but ONU is power ON(more states should be added in src?)
@@ -421,19 +416,46 @@ loop:
 
 				msg, _ := message.Data.(OnuPacketMessage)
 
-				log.WithFields(log.Fields{
+				onuLogger.WithFields(log.Fields{
 					"IntfId":  msg.IntfId,
 					"OnuId":   msg.OnuId,
 					"pktType": msg.Type,
-				}).Trace("Received OnuPacketOut Message")
+					"OnuSn":   o.Sn(),
+				}).Debug("Received OnuPacketOut Message")
 
-				if msg.Type == packetHandlers.EAPOL {
-					eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream, client)
-				} else if msg.Type == packetHandlers.DHCP {
-					// NOTE here we receive packets going from the DHCP Server to the ONU
-					// for now we expect them to be double-tagged, but ideally the should be single tagged
-					_ = dhcp.HandleNextPacket(o.PonPort.Olt.ID, o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.CTag, o.InternalState, msg.Packet, stream)
+				found, gem := o.findGemPort(msg.GemPortId)
+
+				if found == false {
+					onuLogger.WithFields(log.Fields{
+						"IntfId":    msg.IntfId,
+						"OnuId":     msg.OnuId,
+						"pktType":   msg.Type,
+						"GemPortId": msg.GemPortId,
+						"OnuSn":     o.Sn(),
+					}).Error("Cannot find GemPort associated with packet")
 				}
+
+				onuLogger.WithFields(log.Fields{
+					"IntfId":    msg.IntfId,
+					"OnuId":     msg.OnuId,
+					"pktType":   msg.Type,
+					"OnuSn":     o.Sn(),
+					"GemPortID": gem.ID,
+				}).Debug("Sending packet to GemPort")
+
+				//go func() {
+					gem.PacketCh <- msg
+				//}()
+
+				onuLogger.Warn("TEO after send on gem.PacketCh")
+
+				//if msg.Type == packetHandlers.EAPOL {
+				//	eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream, client, o.vlanGemMapping)
+				//} else if msg.Type == packetHandlers.DHCP {
+				//	// NOTE here we receive packets going from the DHCP Server to the ONU
+				//	// for now we expect them to be double-tagged, but ideally the should be single tagged
+				//	_ = dhcp.HandleNextPacket(o.PonPort.Olt.ID, o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.CTag, o.InternalState, msg.Packet, stream, o.vlanGemMapping)
+				//}
 			case OnuPacketIn:
 				// NOTE we only receive BBR packets here.
 				// Eapol.HandleNextPacket can handle both BBSim and BBr cases so the call is the same
@@ -446,11 +468,12 @@ loop:
 					"pktType": msg.Type,
 				}).Trace("Received OnuPacketIn Message")
 
-				if msg.Type == packetHandlers.EAPOL {
-					eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream, client)
-				} else if msg.Type == packetHandlers.DHCP {
-					_ = dhcp.HandleNextBbrPacket(o.ID, o.PonPortID, o.Sn(), o.STag, o.HwAddress, o.DoneChannel, msg.Packet, client)
-				}
+				// FIXME BBR will be broken with the GemPort changes
+				//if msg.Type == packetHandlers.EAPOL {
+				//	eapol.HandleNextPacket(msg.OnuId, msg.IntfId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream, client, o.vlanGemMapping)
+				//} else if msg.Type == packetHandlers.DHCP {
+				//	_ = dhcp.HandleNextBbrPacket(o.ID, o.PonPortID, o.Sn(), o.STag, o.HwAddress, o.DoneChannel, msg.Packet, client)
+				//}
 			case OmciIndication:
 				msg, _ := message.Data.(OmciIndicationMessage)
 				o.handleOmci(msg, client)
@@ -511,47 +534,35 @@ func (o *Onu) processOmciMessage(message omcisim.OmciChMessage, stream openolt.O
 			"Type":         message.Type,
 			"omciPacket":   omciInd.Pkt,
 		}).Info("UNI Link alarm sent")
-
-	case omcisim.GemPortAdded:
-		log.WithFields(log.Fields{
-			"OnuId":  message.Data.OnuId,
-			"IntfId": message.Data.IntfId,
-			"OnuSn":  o.Sn(),
-		}).Infof("GemPort Added")
-
-		o.GemPortAdded = true
-
-		// broadcast the change to all listeners
-		// and close the channels as once the GemPort is set
-		// it won't change anymore
-		for _, ch := range o.GemPortChannels {
-			ch <- true
-			close(ch)
-		}
-		o.GemPortChannels = []chan bool{}
 	}
 }
 
 func (o *Onu) handleEAPOLStart(stream openolt.Openolt_EnableIndicationServer) {
 	log.Infof("Receive StartEAPOL message on ONU Channel")
-	_ = eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, stream)
-	go func(delay time.Duration) {
-		time.Sleep(delay)
-		if (o.InternalState.Current() == "eap_start_sent" ||
-			o.InternalState.Current() == "eap_response_identity_sent" ||
-			o.InternalState.Current() == "eap_response_challenge_sent" ||
-			o.InternalState.Current() == "auth_failed") && common.Options.BBSim.AuthRetry {
-			_ = o.InternalState.Event("start_auth")
-		} else if o.InternalState.Current() == "eap_response_success_received" {
-			o.Backoff.Reset()
-		}
-	}(o.Backoff.Duration())
+
+	// start the EAPOL process for all the Gemports associated with this ONU
+	for _, gem := range o.GemPorts {
+		gem.HandleAuth(stream)
+	}
+
+	//_ = eapol.SendEapStart(o.ID, o.PonPortID, o.Sn(), o.PortNo, o.HwAddress, o.InternalState, stream, o.vlanGemMapping)
+	//go func(delay time.Duration) {
+	//	time.Sleep(delay)
+	//	if (o.InternalState.Current() == "eap_start_sent" ||
+	//		o.InternalState.Current() == "eap_response_identity_sent" ||
+	//		o.InternalState.Current() == "eap_response_challenge_sent" ||
+	//		o.InternalState.Current() == "auth_failed") && common.Options.BBSim.AuthRetry {
+	//		_ = o.InternalState.Event("start_auth")
+	//	} else if o.InternalState.Current() == "eap_response_success_received" {
+	//		o.Backoff.Reset()
+	//	}
+	//}(o.Backoff.Duration())
 }
 
 func (o *Onu) handleDHCPStart(stream openolt.Openolt_EnableIndicationServer) {
 	log.Infof("Receive StartDHCP message on ONU Channel")
 	// FIXME use id, ponId as SendEapStart
-	_ = dhcp.SendDHCPDiscovery(o.PonPort.Olt.ID, o.PonPortID, o.ID, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, o.CTag, stream)
+	_ = dhcp.SendDHCPDiscovery(o.PonPort.Olt.ID, o.PonPortID, o.ID, o.CTag, o.STag, o.Sn(), o.PortNo, o.InternalState, o.HwAddress, stream, o.vlanGemMapping)
 	go func(delay time.Duration) {
 		time.Sleep(delay)
 		if (o.InternalState.Current() == "dhcp_discovery_sent" ||
@@ -737,7 +748,7 @@ func (o *Onu) storePortNumber(portNo uint32) {
 	// we need to add support for multiple UNIs
 	// the action plan is:
 	// - refactor the omcisim-sim library to use https://github.com/cboling/omci instead of canned messages
-	// - change the library so that it reports a single UNI and remove this workaroung
+	// - change the library so that it reports a single UNI and remove this workaround
 	// - add support for multiple UNIs in BBSim
 	if o.PortNo == 0 || portNo < o.PortNo {
 		onuLogger.WithFields(log.Fields{
@@ -760,23 +771,26 @@ func (o *Onu) SetID(id uint32) {
 	o.ID = id
 }
 
-func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
+func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) error {
 	onuLogger.WithFields(log.Fields{
 		"DstPort":          msg.Flow.Classifier.DstPort,
 		"EthType":          fmt.Sprintf("%x", msg.Flow.Classifier.EthType),
 		"FlowId":           msg.Flow.FlowId,
 		"FlowType":         msg.Flow.FlowType,
-		"GemportId":        msg.Flow.GemportId,
-		"InnerVlan":        msg.Flow.Classifier.IVid,
 		"IntfId":           msg.Flow.AccessIntfId,
 		"IpProto":          msg.Flow.Classifier.IpProto,
 		"OnuId":            msg.Flow.OnuId,
 		"OnuSn":            o.Sn(),
-		"OuterVlan":        msg.Flow.Classifier.OVid,
 		"PortNo":           msg.Flow.PortNo,
 		"SrcPort":          msg.Flow.Classifier.SrcPort,
 		"UniID":            msg.Flow.UniId,
 		"ClassifierOPbits": msg.Flow.Classifier.OPbits,
+		"GemportId":        msg.Flow.GemportId,
+		"ClassifierIVid":   msg.Flow.Classifier.IVid,
+		"ClassifierOVid":   msg.Flow.Classifier.OVid,
+		"ActionIVid":       msg.Flow.Action.IVid,
+		"ActionOVid":       msg.Flow.Action.OVid,
+		"ActionCmd":        msg.Flow.Action.Cmd,
 	}).Debug("ONU receives FlowAdd")
 
 	if msg.Flow.UniId != 0 {
@@ -786,36 +800,37 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 			"OnuId":        o.ID,
 			"SerialNumber": o.Sn(),
 		}).Debug("Ignoring flow as it's not for the first UNI")
-		return
+		return errors.New("Ignoring flow as it's not for the first UNI")
 	}
 
 	o.FlowIds = append(o.FlowIds, msg.Flow.FlowId)
 
+	o.addGemPort(msg.Flow.GemportId, msg.Flow.FlowId)
+
 	if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeEAPOL) && msg.Flow.Classifier.OVid == 4091 {
+
+		// FIXME in the TT workflow we have multiple DHCP flows, thus we can't start DHCP when we receive the first one.
+		// That will result in duplicated packets, for example:
+		// - we receive the flow for vlan 55
+		// - the ONU moves to dhcp_started
+		// - the DHCPDiscover packet for vlan 55 is sent and the state changes to dhcp_discovery_sent
+		// - we receive the flow for vlan 444
+		// - the ONU moves back to dhcp_started
+		// - DHCPDiscover packets for both vlan 55 and 444 (the packet for VLAN 55 is duplicated)
+
 		// NOTE storing the PortNO, it's needed when sending PacketIndications
 		o.storePortNumber(uint32(msg.Flow.PortNo))
 		o.EapolFlowReceived = true
+		o.vlanGemMapping.Store(int(msg.Flow.Classifier.OVid), int(msg.Flow.GemportId))
+
 		// if authentication is not enabled, do nothing
 		if o.Auth {
+			o.GemPortAdded = true
 			// NOTE if we receive the EAPOL flows but we don't have GemPorts
 			// wait for it before starting auth
-			if !o.GemPortAdded {
-				// wait for Gem and then start auth
-				go func() {
-					for v := range o.GetGemPortChan() {
-						if v {
-							if err := o.InternalState.Event("start_auth"); err != nil {
-								onuLogger.Warnf("Can't go to auth_started: %v", err)
-							}
-						}
-					}
-					onuLogger.Trace("GemPortChannel closed")
-				}()
-			} else {
-				// start the EAPOL state machine
-				if err := o.InternalState.Event("start_auth"); err != nil {
-					onuLogger.Warnf("Can't go to auth_started: %v", err)
-				}
+			if err := o.InternalState.Event("start_auth"); err != nil {
+				log.Errorf("Can't go to auth_started: %v", err)
+				return errors.New("Can't go to auth_started")
 			}
 		} else {
 			onuLogger.WithFields(log.Fields{
@@ -827,40 +842,20 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 	} else if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeIPv4) &&
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
 		msg.Flow.Classifier.DstPort == uint32(67) &&
-		(msg.Flow.Classifier.OPbits == 0 || msg.Flow.Classifier.OPbits == 255) {
+		(msg.Flow.Classifier.OPbits == 0 || msg.Flow.Classifier.OPbits == 255) { //SHREY: needs to be reviewed for TT Workflow
+
+		o.DhcpFlowReceived = true
+		o.vlanGemMapping.Store(int(msg.Flow.Classifier.OVid), int(msg.Flow.GemportId))
 
 		if o.Dhcp {
-			if !o.DhcpFlowReceived {
-				// keep track that we received the DHCP Flows
-				// so that we can transition the state to dhcp_started
-				// this is needed as a check in case someone trigger DHCP from the CLI
-				o.DhcpFlowReceived = true
+			o.GemPortAdded = true
 
-				if !o.GemPortAdded {
-					// wait for Gem and then start DHCP
-					go func() {
-						for v := range o.GetGemPortChan() {
-							if v {
-								if err := o.InternalState.Event("start_dhcp"); err != nil {
-									log.Errorf("Can't go to dhcp_started: %v", err)
-								}
-							}
-						}
-					}()
-				} else {
-					// start the DHCP state machine
-					if err := o.InternalState.Event("start_dhcp"); err != nil {
-						log.Errorf("Can't go to dhcp_started: %v", err)
-					}
-				}
-			} else {
-				onuLogger.WithFields(log.Fields{
-					"IntfId":           o.PonPortID,
-					"OnuId":            o.ID,
-					"SerialNumber":     o.Sn(),
-					"DhcpFlowReceived": o.DhcpFlowReceived,
-				}).Warn("DHCP already started")
+			// start the DHCP state machine
+			if err := o.InternalState.Event("start_dhcp"); err != nil {
+				log.Errorf("Can't go to dhcp_started: %v", err)
+				return errors.New("Can't go to dhcp_started")
 			}
+
 		} else {
 			onuLogger.WithFields(log.Fields{
 				"IntfId":       o.PonPortID,
@@ -869,6 +864,7 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 			}).Warn("Not starting DHCP as Dhcp bit is not set in CLI parameters")
 		}
 	}
+	return nil
 }
 
 func (o *Onu) handleFlowRemove(msg OnuFlowUpdateMessage) {
@@ -878,10 +874,16 @@ func (o *Onu) handleFlowRemove(msg OnuFlowUpdateMessage) {
 		"SerialNumber": o.Sn(),
 		"FlowId":       msg.Flow.FlowId,
 		"FlowType":     msg.Flow.FlowType,
+		"GemPortId":    msg.Flow.GemportId,
 	}).Debug("ONU receives FlowRemove")
 
+	if msg.Flow.GemportId != 0 {
+		// TODO why some flow comes without the GemPortId??
+		o.removeGemPort(msg.Flow.GemportId)
+	}
+
 	for idx, flow := range o.FlowIds {
-		// If the gemport is found, delete it from local cache.
+		// If the flow is found, delete it from local cache.
 		if flow == msg.Flow.FlowId {
 			o.FlowIds = append(o.FlowIds[:idx], o.FlowIds[idx+1:]...)
 			break
@@ -907,6 +909,74 @@ func (o *Onu) handleFlowRemove(msg OnuFlowUpdateMessage) {
 			close(o.Channel)
 		}
 	}
+}
+
+func (o *Onu) findGemPort(gemPortId int32) (bool, *GemPort) {
+	onuLogger.WithFields(log.Fields{
+		"IntfId":       o.PonPortID,
+		"OnuId":        o.ID,
+		"SerialNumber": o.Sn(),
+		"GemPortId":    gemPortId,
+	}).Debug("Getting GemPort")
+
+	if gem, ok := o.GemPorts[gemPortId]; ok {
+		return true, gem
+	}
+
+	return false, nil
+}
+
+func (o *Onu) addGemPort(gemPortId int32, flowId uint32) (*GemPort, error) {
+
+	onuLogger.WithFields(log.Fields{
+		"IntfId":       o.PonPortID,
+		"OnuId":        o.ID,
+		"SerialNumber": o.Sn(),
+		"GemPortId":    gemPortId,
+		"FlowId":       flowId,
+	}).Debug("Adding GemPort")
+
+	found, gem := o.findGemPort(gemPortId)
+	if found == true {
+		// the GemPort already exist for this ONU, nothing to do
+
+		// TODO check if the VLANs are different and update
+		return gem, nil
+	}
+
+	gem, err := NewGemPort(o, gemPortId, flowId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	o.GemPorts[gemPortId] = gem
+
+	return gem, nil
+}
+
+func (o *Onu) removeGemPort(gemPortId int32) error {
+
+	found, _ := o.findGemPort(gemPortId)
+
+	if !found {
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"OnuId":        o.ID,
+			"SerialNumber": o.Sn(),
+			"GemPortId":    gemPortId,
+		}).Warn("Remove GemPort requested for non-existing port")
+	}
+
+	onuLogger.WithFields(log.Fields{
+		"IntfId":       o.PonPortID,
+		"OnuId":        o.ID,
+		"SerialNumber": o.Sn(),
+		"GemPortId":    gemPortId,
+	}).Debug("Remove GemPort")
+
+	delete(o.GemPorts, gemPortId)
+	return nil
 }
 
 // HexDecode converts the hex encoding to binary
@@ -1020,7 +1090,17 @@ func (o *Onu) handleOmci(msg OmciIndicationMessage, client openolt.OpenoltClient
 			sendOmciMsg(gemReq, o.PonPortID, o.ID, o.SerialNumber, "CreateGemPortRequest", client)
 			o.GemPortAdded = true
 		} else {
-			if err := o.InternalState.Event("send_eapol_flow"); err != nil {
+			nextEvent := "send_eapol_flow"
+			if !o.Auth && o.Dhcp {
+				nextEvent = "send_dhcp_flow"
+			}
+			onuLogger.WithFields(log.Fields{
+				"nextEvent": nextEvent,
+				"Auth":      o.Auth,
+				"DHCP":      o.Dhcp,
+			}).Debug("OMCI CreateResponse ")
+
+			if err := o.InternalState.Event(nextEvent); err != nil {
 				onuLogger.WithFields(log.Fields{
 					"OnuId":  o.ID,
 					"IntfId": o.PonPortID,

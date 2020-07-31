@@ -35,6 +35,7 @@ import (
 
 const (
 	DEFAULT_ONU_DEVICE_HEADER_FORMAT = "table{{ .PonPortID }}\t{{ .ID }}\t{{ .PortNo }}\t{{ .SerialNumber }}\t{{ .HwAddress }}\t{{ .STag }}\t{{ .CTag }}\t{{ .OperState }}\t{{ .InternalState }}"
+	DEFAULT_ONU_DEVICE_GEM_PORT_HEADER_FORMAT = "table{{ .ID }}\t{{ .EapolState }}\t{{ .DHCPState }}"
 )
 
 type OnuSnString string
@@ -95,6 +96,12 @@ type ONUFlows struct {
 	} `positional-args:"yes" required:"yes"`
 }
 
+type ONUGemPorts struct {
+	Args struct {
+		OnuSn OnuSnString
+	} `positional-args:"yes" required:"yes"`
+}
+
 type ONUOptions struct {
 	List              ONUList              `command:"list"`
 	Get               ONUGet               `command:"get"`
@@ -106,6 +113,7 @@ type ONUOptions struct {
 	TrafficSchedulers ONUTrafficSchedulers `command:"traffic_schedulers"`
 	Alarms            AlarmOptions         `command:"alarms"`
 	Flows             ONUFlows             `command:"flows"`
+	GemPorts          ONUGemPorts          `command:"gems"`
 }
 
 func RegisterONUCommands(parser *flags.Parser) {
@@ -163,7 +171,7 @@ func (options *ONUGet) Execute(args []string) error {
 	res, err := client.GetONU(ctx, &req)
 
 	if err != nil {
-		log.Fatalf("Cannot not shutdown ONU %s: %v", options.Args.OnuSn, err)
+		log.Fatalf("Cannot retrieve ONU %s: %v", options.Args.OnuSn, err)
 		return err
 	}
 
@@ -478,6 +486,32 @@ func (options *ONUTrafficSchedulers) Execute(args []string) error {
 	tableShap.SetHeader(ShapingInfoHeader)
 	tableShap.Append(ShapingInfoVals)
 	tableShap.Render()
+
+	return nil
+}
+
+func (options *ONUGemPorts) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+	req := pb.ONURequest{
+		SerialNumber: string(options.Args.OnuSn),
+	}
+	res, err := client.GetONU(ctx, &req)
+
+	if err != nil {
+		log.Fatalf("Cannot retrieve GemPorts for ONU %s: %v", options.Args.OnuSn, err)
+		return err
+	}
+
+	fmt.Fprintf(os.Stdout, "ONU %s Gemports:\n", options.Args.OnuSn)
+
+	tableFormat := format.Format(DEFAULT_ONU_DEVICE_GEM_PORT_HEADER_FORMAT)
+	if err := tableFormat.Execute(os.Stdout, true, res.GemPorts); err != nil {
+		log.Fatalf("Error while formatting ONUs table: %s", err)
+	}
 
 	return nil
 }
