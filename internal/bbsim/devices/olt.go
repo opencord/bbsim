@@ -18,6 +18,7 @@ package devices
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"net"
 	"sync"
@@ -57,7 +58,7 @@ type OltDevice struct {
 	channel              chan Message
 	nniPktInChannel      chan *bbsim.PacketMsg // packets coming in from the NNI and going to VOLTHA
 	nniHandle            *pcap.Handle          // handle on the NNI interface, close it when shutting down the NNI channel
-	Flows                map[FlowKey]openolt.Flow
+	Flows                sync.Map
 	Delay                int
 	ControlledActivation mode
 	EventChannel         chan common.Event
@@ -73,7 +74,7 @@ type OltDevice struct {
 	enableContext       context.Context
 	enableContextCancel context.CancelFunc
 
-	OpenoltStream *openolt.Openolt_EnableIndicationServer
+	OpenoltStream openolt.Openolt_EnableIndicationServer
 	enablePerf    bool
 }
 
@@ -104,7 +105,7 @@ func CreateOLT(options common.BBSimYamlConfig, isMock bool) *OltDevice {
 		Pons:              []*PonPort{},
 		Nnis:              []*NniPort{},
 		Delay:             options.BBSim.Delay,
-		Flows:             make(map[FlowKey]openolt.Flow),
+		Flows:             sync.Map{},
 		enablePerf:        options.BBSim.EnablePerf,
 		PublishEvents:     options.BBSim.Events,
 		PortStatsInterval: options.Olt.PortStatsInterval,
@@ -351,7 +352,7 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) {
 	wg := sync.WaitGroup{}
 	wg.Add(3)
 
-	o.OpenoltStream = &stream
+	o.OpenoltStream = stream
 
 	// create Go routine to process all OLT events
 	go o.processOltMessages(o.enableContext, stream, &wg)
@@ -577,7 +578,7 @@ func (o *OltDevice) sendNniIndication(msg NniIndicationMessage, stream openolt.O
 
 func (o *OltDevice) sendPonIndication(ponPortID uint32) {
 
-	stream := *o.OpenoltStream
+	stream := o.OpenoltStream
 	pon, _ := o.GetPonById(ponPortID)
 	// Send IntfIndication for PON port
 	discoverData := &openolt.Indication_IntfInd{IntfInd: &openolt.IntfIndication{
@@ -624,7 +625,7 @@ func (o *OltDevice) sendPortStatsIndication(stats *openolt.PortStatistics, portI
 		data := &openolt.Indication_PortStats{
 			PortStats: stats,
 		}
-		stream := *o.OpenoltStream
+		stream := o.OpenoltStream
 		if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
 			oltLogger.Errorf("Failed to send PortStats: %v", err)
 			return
@@ -731,6 +732,10 @@ loop:
 				break loop
 			}
 			oltLogger.Tracef("Received packets on NNI Channel")
+
+			oltLogger.WithFields(log.Fields{
+				"packet": hex.EncodeToString(message.Pkt.Data()),
+			}).Info("[TEO] Received DHCP packet out of the NNI")
 
 			onuMac, err := packetHandlers.GetDstMacAddressFromPacket(message.Pkt)
 
@@ -963,7 +968,7 @@ func (o *OltDevice) DisablePonIf(_ context.Context, intf *openolt.Interface) (*o
 			OnuID:     onu.ID,
 			OnuSN:     onu.SerialNumber,
 		}
-		onu.sendOnuIndication(onuIndication, *o.OpenoltStream)
+		onu.sendOnuIndication(onuIndication, o.OpenoltStream)
 
 	}
 
@@ -999,7 +1004,7 @@ func (o *OltDevice) EnablePonIf(_ context.Context, intf *openolt.Interface) (*op
 			OnuID:     onu.ID,
 			OnuSN:     onu.SerialNumber,
 		}
-		onu.sendOnuIndication(onuIndication, *o.OpenoltStream)
+		onu.sendOnuIndication(onuIndication, o.OpenoltStream)
 
 	}
 
@@ -1017,12 +1022,13 @@ func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.E
 		"FlowId":    flow.FlowId,
 		"UniID":     flow.UniId,
 		"PortNo":    flow.PortNo,
+		"GemPort":   flow.GemportId,
 	}).Tracef("OLT receives FlowAdd")
 
 	flowKey := FlowKey{}
 	if !o.enablePerf {
 		flowKey = FlowKey{ID: flow.FlowId, Direction: flow.FlowType}
-		olt.Flows[flowKey] = *flow
+		o.Flows.Store(flowKey, *flow)
 	}
 
 	if flow.AccessIntfId == -1 {
@@ -1088,12 +1094,12 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 		}
 
 		// Check if flow exists
-		storedFlow, ok := o.Flows[flowKey]
+		loadedFlow, ok := o.Flows.Load(flowKey)
 		if !ok {
 			oltLogger.Errorf("Flow %v not found", flow)
 			return new(openolt.Empty), status.Errorf(codes.NotFound, "Flow not found")
 		}
-
+		storedFlow := loadedFlow.(openolt.Flow)
 		// if its ONU flow remove it from ONU also
 		if storedFlow.AccessIntfId != -1 {
 			pon := o.Pons[uint32(storedFlow.AccessIntfId)]
@@ -1111,7 +1117,7 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 		}
 
 		// delete from olt flows
-		delete(o.Flows, flowKey)
+		o.Flows.Delete(flowKey)
 	}
 
 	if flow.AccessIntfId == -1 {
@@ -1266,6 +1272,7 @@ func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket)
 			OnuId:  onuPkt.OnuId,
 			Packet: rawpkt,
 			Type:   pktType,
+			GemPortId: int32(onuPkt.GemportId),
 		},
 	}
 	onu.Channel <- msg

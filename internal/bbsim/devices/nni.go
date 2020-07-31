@@ -18,6 +18,7 @@ package devices
 
 import (
 	"bytes"
+	"encoding/hex"
 	"os/exec"
 
 	"github.com/google/gopacket"
@@ -89,6 +90,9 @@ func (n *NniPort) sendNniPacket(packet gopacket.Packet) error {
 	}
 
 	if isDhcp {
+		nniLogger.WithFields(log.Fields{
+			"packet": hex.EncodeToString(packet.Data()),
+		}).Info("[TEO] Sending DHCP packet out of the NNI")
 		packet, err := packetHandlers.PopDoubleTag(packet)
 		if err != nil {
 			nniLogger.WithFields(log.Fields{

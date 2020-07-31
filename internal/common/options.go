@@ -288,10 +288,6 @@ func GetBBSimOpts() *BBSimYamlConfig {
 		log.Fatal(err)
 	}
 
-	if sf == SadisFormatTt {
-		log.Fatalf("Sadis format %s is not yet supported", sf.String())
-	}
-
 	conf.Olt.ID = int(*olt_id)
 	conf.Olt.NniPorts = uint32(*nni)
 	conf.Olt.PonPorts = uint32(*pon)

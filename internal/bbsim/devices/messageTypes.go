@@ -130,17 +130,18 @@ type PacketMessage struct {
 }
 
 type OnuPacketMessage struct {
-	IntfId uint32
-	OnuId  uint32
-	Packet gopacket.Packet
-	Type   packetHandlers.PacketType
+	IntfId    uint32
+	OnuId     uint32
+	Packet    gopacket.Packet
+	Type      packetHandlers.PacketType
+	GemPortId int32
 }
 
 type OperState int
 
 const (
 	UP   OperState = iota
-	DOWN           // The device has been discovered, but not yet activated
+	DOWN  // The device has been discovered, but not yet activated
 )
 
 func (m OperState) String() string {

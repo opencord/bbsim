@@ -36,6 +36,27 @@ type sadisServer struct {
 	olt *devices.OltDevice
 }
 
+const (
+	TechProfileId   = 64
+
+	// TT defaults
+	ServiceNameHsia = "HSIA"
+	ServiceNameVoip = "VOIP"
+	ServiceNameVod  = "VOD"
+	ServiceNameMc   = "MC"
+
+	// TT Service Tags
+	TtVoipCtag = 444
+	TtVoipStag = 333
+
+	TtVodCtag = 55
+	TtVodStag = 555
+
+	TtMcCtag = 55
+	TtMcStag = 550
+
+)
+
 // bandwidthProfiles contains some dummy profiles
 var bandwidthProfiles = []*SadisBWPEntry{
 	{ID: "User_Bandwidth1", AIR: 100000, CBS: 10000, CIR: 30000, EBS: 1000, EIR: 100000},
@@ -113,6 +134,62 @@ type SadisUniTagDt struct {
 	TechnologyProfileID        int    `json:"technologyProfileId,omitempty"`
 	UpstreamBandwidthProfile   string `json:"upstreamBandwidthProfile,omitempty"`
 	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile,omitempty"`
+}
+
+type SadisUniTagTtHsia struct {
+	UniTagMatch                int    `json:"uniTagMatch,omitempty"`
+	PonCTag                    int    `json:"ponCTag,omitempty"`
+	PonSTag                    int    `json:"ponSTag,omitempty"`
+	UsPonCTagPriority          int    `json:"usPonCTagPriority,omitempty"`
+	UsPonSTagPriority          int    `json:"usPonSTagPriority,omitempty"`
+	DsPonCTagPriority          int    `json:"dsPonCTagPriority,omitempty"`
+	DsPonSTagPriority          int    `json:"dsPonSTagPriority,omitempty"`
+	TechnologyProfileID        int    `json:"technologyProfileId,omitempty"`
+	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile,omitempty"`
+	UpstreamBandwidthProfile   string `json:"upstreamBandwidthProfile,omitempty"`
+	ServiceName                string `json:"serviceName,omitempty"`
+}
+
+type SadisUniTagTtVoip struct {
+	UniTagMatch                int    `json:"uniTagMatch,omitempty"`
+	PonCTag                    int    `json:"ponCTag,omitempty"`
+	PonSTag                    int    `json:"ponSTag,omitempty"`
+	UsPonCTagPriority          int    `json:"usPonCTagPriority,omitempty"`
+	UsPonSTagPriority          int    `json:"usPonSTagPriority,omitempty"`
+	DsPonCTagPriority          int    `json:"dsPonCTagPriority,omitempty"`
+	DsPonSTagPriority          int    `json:"dsPonSTagPriority,omitempty"`
+	TechnologyProfileID        int    `json:"technologyProfileId,omitempty"`
+	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile,omitempty"`
+	UpstreamBandwidthProfile   string `json:"upstreamBandwidthProfile,omitempty"`
+	ServiceName                string `json:"serviceName,omitempty"`
+	IsDhcpRequired             bool   `json:"isDhcpRequired,omitempty"`
+	ConfiguredMacAddress       string `json:"configuredMacAddress,omitempty"`
+}
+
+type SadisUniTagTtVod struct {
+	UniTagMatch                int    `json:"uniTagMatch,omitempty"`
+	PonCTag                    int    `json:"ponCTag,omitempty"`
+	PonSTag                    int    `json:"ponSTag,omitempty"`
+	UsPonCTagPriority          int    `json:"usPonCTagPriority,omitempty"`
+	UsPonSTagPriority          int    `json:"usPonSTagPriority,omitempty"`
+	DsPonCTagPriority          int    `json:"dsPonCTagPriority,omitempty"`
+	DsPonSTagPriority          int    `json:"dsPonSTagPriority,omitempty"`
+	TechnologyProfileID        int    `json:"technologyProfileId,omitempty"`
+	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile,omitempty"`
+	UpstreamBandwidthProfile   string `json:"upstreamBandwidthProfile,omitempty"`
+	ServiceName                string `json:"serviceName,omitempty"`
+	ConfiguredMacAddress       string `json:"configuredMacAddress,omitempty"`
+	IsDhcpRequired             bool   `json:"isDhcpRequired,omitempty"`
+	IsIgmpRequired             bool   `json:"isIgmpRequired,omitempty"`
+}
+
+type SadisUniTagTtMC struct {
+	PonCTag             int    `json:"ponCTag,omitempty"`
+	PonSTag             int    `json:"ponSTag,omitempty"`
+	DsPonCTagPriority   int    `json:"dsPonCTagPriority,omitempty"`
+	DsPonSTagPriority   int    `json:"dsPonSTagPriority,omitempty"`
+	TechnologyProfileID int    `json:"technologyProfileId,omitempty"`
+	ServiceName         string `json:"serviceName,omitempty"`
 }
 
 // SADIS BandwithProfile Entry
@@ -198,16 +275,13 @@ func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*Sad
 		RemoteID:  onu.Sn() + uniSuffix,
 	}
 
-	// base structure common to all use cases
-	var sonuUniTag interface{}
-
 	// set workflow specific params
 	switch common.Options.BBSim.SadisFormat {
 	case common.SadisFormatAtt:
-		sonuUniTag = SadisUniTagAtt{
+		sonuUniTag := SadisUniTagAtt{
 			PonCTag:             onu.CTag,
 			PonSTag:             onu.STag,
-			TechnologyProfileID: 64,
+			TechnologyProfileID: TechProfileId,
 			// NOTE do we want to select a random bandwidth profile?
 			// if so use bandwidthProfiles[rand.Intn(len(bandwidthProfiles))].ID
 			UpstreamBandwidthProfile:   "Default",
@@ -215,20 +289,81 @@ func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*Sad
 			IsDhcpRequired:             common.Options.BBSim.EnableDhcp,
 			IsIgmpRequired:             common.Options.BBSim.EnableIgmp,
 		}
+		sonuv2.UniTagList = append(sonuv2.UniTagList, sonuUniTag)
 	case common.SadisFormatDt:
-		sonuUniTag = SadisUniTagDt{
+		sonuUniTag := SadisUniTagDt{
 			PonCTag:             4096,
 			PonSTag:             onu.STag,
-			TechnologyProfileID: 64,
+			TechnologyProfileID: TechProfileId,
 			// NOTE do we want to select a random bandwidth profile?
 			// if so use bandwidthProfiles[rand.Intn(len(bandwidthProfiles))].ID
 			UpstreamBandwidthProfile:   "Default",
 			DownstreamBandwidthProfile: "User_Bandwidth1",
 			UniTagMatch:                4096,
 		}
+		sonuv2.UniTagList = append(sonuv2.UniTagList, sonuUniTag)
+	case common.SadisFormatTt:
+		HsiaUniTag := SadisUniTagTtHsia{
+			UniTagMatch:                35,
+			PonCTag:                    onu.CTag,
+			PonSTag:                    onu.STag,
+			UsPonCTagPriority:          0,
+			UsPonSTagPriority:          0,
+			DsPonCTagPriority:          0,
+			DsPonSTagPriority:          0,
+			TechnologyProfileID:        TechProfileId,
+			DownstreamBandwidthProfile: "User_Bandwidth1",
+			UpstreamBandwidthProfile:   "User_Bandwidth2",
+			ServiceName:                ServiceNameHsia,
+		}
+		sonuv2.UniTagList = append(sonuv2.UniTagList, HsiaUniTag)
+
+		voipUniTag := SadisUniTagTtVoip{
+			UniTagMatch:                65,
+			PonCTag:                    TtVoipCtag,
+			PonSTag:                    TtVoipStag,
+			UsPonCTagPriority:          7,
+			UsPonSTagPriority:          7,
+			DsPonCTagPriority:          7,
+			DsPonSTagPriority:          7,
+			TechnologyProfileID:        TechProfileId + 1,
+			DownstreamBandwidthProfile: "User_Bandwidth1",
+			UpstreamBandwidthProfile:   "User_Bandwidth2",
+			ConfiguredMacAddress:       onu.HwAddress.String(),
+			IsDhcpRequired:             common.Options.BBSim.EnableDhcp,
+			ServiceName:                ServiceNameVoip,
+		}
+		sonuv2.UniTagList = append(sonuv2.UniTagList, voipUniTag)
+
+		vodUniTag := SadisUniTagTtVod{
+			UniTagMatch:                55,
+			PonCTag:                    TtVodCtag,
+			PonSTag:                    TtVodStag,
+			UsPonCTagPriority:          5,
+			UsPonSTagPriority:          5,
+			DsPonCTagPriority:          5,
+			DsPonSTagPriority:          5,
+			TechnologyProfileID:        TechProfileId + 2,
+			DownstreamBandwidthProfile: "User_Bandwidth1",
+			UpstreamBandwidthProfile:   "User_Bandwidth2",
+			ConfiguredMacAddress:       onu.HwAddress.String(),
+			IsDhcpRequired:             common.Options.BBSim.EnableDhcp,
+			IsIgmpRequired:             common.Options.BBSim.EnableIgmp,
+			ServiceName:                ServiceNameVod,
+		}
+		sonuv2.UniTagList = append(sonuv2.UniTagList, vodUniTag)
+
+		mcUniTag := SadisUniTagTtMC{
+			PonCTag:             TtMcCtag,
+			PonSTag:             TtMcStag,
+			DsPonCTagPriority:   5,
+			DsPonSTagPriority:   5,
+			TechnologyProfileID: TechProfileId + 2,
+			ServiceName:         ServiceNameMc,
+		}
+		sonuv2.UniTagList = append(sonuv2.UniTagList, mcUniTag)
 	}
 
-	sonuv2.UniTagList = append(sonuv2.UniTagList, sonuUniTag)
 	return sonuv2, nil
 }
 

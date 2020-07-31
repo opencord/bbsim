@@ -78,6 +78,9 @@ func TestSadisServer_GetOnuEntryV2_Att(t *testing.T) {
 	assert.Equal(t, res.ID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
 	assert.Equal(t, res.RemoteID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
 
+	// assert the correct number of UniTags
+	assert.Equal(t, len(res.UniTagList), 1)
+
 	// assert the correct type
 	uniTagList, ok := res.UniTagList[0].(SadisUniTagAtt)
 	if !ok {
@@ -107,6 +110,9 @@ func TestSadisServer_GetOnuEntryV2_Dt(t *testing.T) {
 	assert.Equal(t, res.ID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
 	assert.Equal(t, res.RemoteID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
 
+	// assert the correct number of UniTags
+	assert.Equal(t, len(res.UniTagList), 1)
+
 	// assert the correct type
 	uniTagList, ok := res.UniTagList[0].(SadisUniTagDt)
 	if !ok {
@@ -119,4 +125,65 @@ func TestSadisServer_GetOnuEntryV2_Dt(t *testing.T) {
 	assert.Equal(t, uniTagList.UpstreamBandwidthProfile, "Default")
 	assert.Equal(t, uniTagList.TechnologyProfileID, 64)
 	assert.Equal(t, uniTagList.UniTagMatch, 4096)
+}
+
+func TestSadisServer_GetOnuEntryV2_Tt(t *testing.T) {
+	common.Options.BBSim.SadisFormat = common.SadisFormatTt
+	olt, onu := createMockDevices()
+
+	uni := "1"
+
+	res, err := GetOnuEntryV2(olt, onu, uni)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, res.ID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
+	assert.Equal(t, res.RemoteID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
+
+	// assert the correct number of UniTags
+	assert.Equal(t, len(res.UniTagList), 4)
+
+	// assert the correct type
+	hsiaUniTag, ok := res.UniTagList[0].(SadisUniTagTtHsia)
+	if !ok {
+		t.Fatal("UniTagList for HSIA has the wrong type")
+	}
+	assert.Equal(t, hsiaUniTag.PonCTag, onu.CTag)
+	assert.Equal(t, hsiaUniTag.PonSTag, onu.STag)
+	assert.Equal(t, hsiaUniTag.TechnologyProfileID, TechProfileId)
+	assert.Equal(t, hsiaUniTag.ServiceName, ServiceNameHsia)
+
+	voipUniTag, ok := res.UniTagList[1].(SadisUniTagTtVoip)
+	if !ok {
+		t.Fatal("UniTagList for VOIP has the wrong type")
+	}
+	assert.Equal(t, voipUniTag.PonCTag, TtVoipCtag)
+	assert.Equal(t, voipUniTag.PonSTag, TtVoipStag)
+	assert.Equal(t, voipUniTag.TechnologyProfileID, TechProfileId + 1)
+	assert.Equal(t, voipUniTag.ServiceName, ServiceNameVoip)
+	assert.Equal(t, voipUniTag.ConfiguredMacAddress, onu.HwAddress.String())
+	assert.Equal(t, voipUniTag.IsDhcpRequired, common.Options.BBSim.EnableDhcp)
+
+
+	vodUniTag, ok := res.UniTagList[2].(SadisUniTagTtVod)
+	if !ok {
+		t.Fatal("UniTagList for VOD has the wrong type")
+	}
+	assert.Equal(t, vodUniTag.PonCTag, TtVodCtag)
+	assert.Equal(t, vodUniTag.PonSTag, TtVodStag)
+	assert.Equal(t, vodUniTag.TechnologyProfileID, TechProfileId + 2)
+	assert.Equal(t, vodUniTag.ServiceName, ServiceNameVod)
+	assert.Equal(t, vodUniTag.ConfiguredMacAddress, onu.HwAddress.String())
+	assert.Equal(t, vodUniTag.IsDhcpRequired, common.Options.BBSim.EnableDhcp)
+	assert.Equal(t, vodUniTag.IsIgmpRequired, common.Options.BBSim.EnableIgmp)
+
+	mcUniTag, ok := res.UniTagList[3].(SadisUniTagTtMC)
+	if !ok {
+		t.Fatal("UniTagList for VOIP has the wrong type")
+	}
+	assert.Equal(t, mcUniTag.PonCTag, TtMcCtag)
+	assert.Equal(t, mcUniTag.PonSTag, TtMcStag)
+	assert.Equal(t, mcUniTag.TechnologyProfileID, TechProfileId + 2)
+	assert.Equal(t, mcUniTag.ServiceName, ServiceNameMc)
 }

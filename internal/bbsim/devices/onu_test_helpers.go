@@ -125,8 +125,15 @@ func createMockOnu(id uint32, ponPortId uint32, sTag int, cTag int, auth bool, d
 
 // this method creates a real ONU to be used in the tests
 func createTestOnu() *Onu {
+
+	stream := &mockStreamSuccess{
+		Calls: make(map[int]*openolt.PacketIndication),
+		fail:  false,
+	}
+
 	olt := OltDevice{
 		ID: 0,
+		OpenoltStream: stream,
 	}
 	pon := PonPort{
 		ID:  1,
@@ -137,4 +144,20 @@ func createTestOnu() *Onu {
 	_ = onu.InternalState.Event("initialize")
 	onu.DiscoveryRetryDelay = 100 * time.Millisecond
 	return onu
+}
+
+type mockStreamSuccess struct {
+	grpc.ServerStream
+	CallCount int
+	Calls     map[int]*openolt.PacketIndication
+	fail      bool
+}
+
+func (s *mockStreamSuccess) Send(ind *openolt.Indication) error {
+	s.CallCount++
+	if s.fail {
+		return errors.New("fake-error")
+	}
+	s.Calls[s.CallCount] = ind.GetPktInd()
+	return nil
 }
