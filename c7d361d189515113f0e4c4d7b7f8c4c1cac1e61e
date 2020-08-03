@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c524eb94_cde28594",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-08-03T21:44:08Z",
+      "side": 1,
+      "message": "this can be removed if it\u0027s unused",
+      "range": {
+        "startLine": 152,
+        "startChar": 14,
+        "endLine": 152,
+        "endChar": 26
+      },
+      "revId": "c7d361d189515113f0e4c4d7b7f8c4c1cac1e61e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
