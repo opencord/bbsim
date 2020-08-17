@@ -71,6 +71,7 @@ func main() {
 	// create the OLT device
 	olt := devices.CreateOLT(
 		*options.BBSimYamlConfig,
+		common.Services,
 		true,
 	)
 

@@ -129,6 +129,7 @@ func startLegacyApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 
 func main() {
 
+	common.LoadConfigs("configs/bbsim.yaml", "configs/services.yaml")
 	options := common.GetBBSimOpts()
 
 	common.SetLogLevel(log.StandardLogger(), options.BBSim.LogLevel, options.BBSim.LogCaller)
@@ -150,18 +151,11 @@ func main() {
 		"NumPonPerOlt":         options.Olt.PonPorts,
 		"NumOnuPerPon":         options.Olt.OnusPonPort,
 		"TotalOnus":            options.Olt.PonPorts * options.Olt.OnusPonPort,
-		"EnableAuth":           options.BBSim.EnableAuth,
-		"Dhcp":                 options.BBSim.EnableDhcp,
-		"Igmp":                 options.BBSim.EnableIgmp,
 		"Delay":                options.BBSim.Delay,
 		"Events":               options.BBSim.Events,
 		"KafkaEventTopic":      options.BBSim.KafkaEventTopic,
 		"ControlledActivation": options.BBSim.ControlledActivation,
 		"EnablePerf":           options.BBSim.EnablePerf,
-		"CTag":                 options.BBSim.CTag,
-		"CTagAllocation":       options.BBSim.CTagAllocation,
-		"STag":                 options.BBSim.STag,
-		"STagAllocation":       options.BBSim.STagAllocation,
 		"SadisFormat":          options.BBSim.SadisFormat,
 		"DhcpRetry":            options.BBSim.DhcpRetry,
 		"AuthRetry":            options.BBSim.AuthRetry,
@@ -172,6 +166,7 @@ func main() {
 
 	olt := devices.CreateOLT(
 		*options,
+		common.Services,
 		false,
 	)
 
