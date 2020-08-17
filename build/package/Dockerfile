@@ -64,6 +64,7 @@ COPY --from=builder /app/bbsimctl /usr/bin/bbsimctl
 RUN mv /usr/sbin/tcpdump /usr/bin/tcpdump
 RUN chmod a+x /app/bbsim
 RUN chmod a+x /usr/bin/bbsimctl
-RUN bbsimctl completion bash >> "$HOME/.bashrc"
 COPY ./configs/bbsim.yaml ./configs/bbsim.yaml
+COPY ./configs/services.yaml ./configs/services.yaml
+RUN bbsimctl completion bash >> "$HOME/.bashrc"
 CMD [ "/app/bbsim" ]

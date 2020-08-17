@@ -20,6 +20,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
+	"net"
 )
 
 type MessageType int
@@ -34,6 +35,7 @@ const (
 	FlowAdd           MessageType = 6
 	FlowRemoved       MessageType = 18
 	StartEAPOL        MessageType = 7
+	// deprecated
 	StartDHCP         MessageType = 8
 	OnuPacketOut      MessageType = 9
 
@@ -130,17 +132,18 @@ type PacketMessage struct {
 }
 
 type OnuPacketMessage struct {
-	IntfId uint32
-	OnuId  uint32
-	Packet gopacket.Packet
-	Type   packetHandlers.PacketType
+	IntfId     uint32
+	OnuId      uint32
+	Packet     gopacket.Packet
+	Type       packetHandlers.PacketType
+	MacAddress net.HardwareAddr
 }
 
 type OperState int
 
 const (
 	UP   OperState = iota
-	DOWN           // The device has been discovered, but not yet activated
+	DOWN  // The device has been discovered, but not yet activated
 )
 
 func (m OperState) String() string {
