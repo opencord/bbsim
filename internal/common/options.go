@@ -23,8 +23,9 @@ import (
 	"net"
 	"strings"
 
-	"github.com/ghodss/yaml"
+	"github.com/imdario/mergo"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 )
 
 var tagAllocationValues = []string{
@@ -41,7 +42,7 @@ func (t TagAllocation) String() string {
 
 func tagAllocationFromString(s string) (TagAllocation, error) {
 	for i, v := range tagAllocationValues {
-		if v == s {
+		if v == strings.TrimSpace(s) {
 			return TagAllocation(i), nil
 		}
 	}
@@ -57,47 +58,15 @@ const (
 	TagAllocationUnique
 )
 
-var sadisFormatValues = []string{
-	"unknown",
-	"att",
-	"dt",
-	"tt",
-}
-
-type SadisFormat int
-
-func (s SadisFormat) String() string {
-	return sadisFormatValues[s]
-}
-
-func sadisFormatFromString(s string) (SadisFormat, error) {
-	for i, v := range sadisFormatValues {
-		if v == s {
-			return SadisFormat(i), nil
-		}
-	}
-	log.WithFields(log.Fields{
-		"ValidValues": strings.Join(sadisFormatValues[1:], ", "),
-	}).Errorf("%s-is-not-a-valid-sadis-format", s)
-	return SadisFormat(0), fmt.Errorf("%s-is-not-a-valid-sadis-format", s)
-}
-
-const (
-	_ SadisFormat = iota
-	SadisFormatAtt
-	SadisFormatDt
-	SadisFormatTt
-)
-
 type BBRCliOptions struct {
-	*BBSimYamlConfig
+	*GlobalConfig
 	BBSimIp      string
 	BBSimPort    string
 	BBSimApiPort string
 	LogFile      string
 }
 
-type BBSimYamlConfig struct {
+type GlobalConfig struct {
 	BBSim BBSimConfig
 	Olt   OltConfig
 	BBR   BBRConfig
@@ -120,32 +89,26 @@ type OltConfig struct {
 }
 
 type BBSimConfig struct {
-	DhcpRetry            bool          `yaml:"dhcp_retry"`
-	AuthRetry            bool          `yaml:"auth_retry"`
-	EnableIgmp           bool          `yaml:"enable_igmp"`
-	EnableDhcp           bool          `yaml:"enable_dhcp"`
-	EnableAuth           bool          `yaml:"enable_auth"`
-	LogLevel             string        `yaml:"log_level"`
-	LogCaller            bool          `yaml:"log_caller"`
-	Delay                int           `yaml:"delay"`
-	CpuProfile           *string       `yaml:"cpu_profile"`
-	CTagAllocation       TagAllocation `yaml:"c_tag_allocation"`
-	CTag                 int           `yaml:"c_tag"`
-	STagAllocation       TagAllocation `yaml:"s_tag_allocation"`
-	STag                 int           `yaml:"s_tag"`
-	OpenOltAddress       string        `yaml:"openolt_address"`
-	ApiAddress           string        `yaml:"api_address"`
-	RestApiAddress       string        `yaml:"rest_api_address"`
-	LegacyApiAddress     string        `yaml:"legacy_api_address"`
-	LegacyRestApiAddress string        `yaml:"legacy_rest_api_address"`
-	SadisRestAddress     string        `yaml:"sadis_rest_address"`
-	SadisServer          bool          `yaml:"sadis_server"`
-	SadisFormat          SadisFormat   `yaml:"sadis_format"`
-	KafkaAddress         string        `yaml:"kafka_address"`
-	Events               bool          `yaml:"enable_events"`
-	ControlledActivation string        `yaml:"controlled_activation"`
-	EnablePerf           bool          `yaml:"enable_perf"`
-	KafkaEventTopic      string        `yaml:"kafka_event_topic"`
+	ConfigFile           string
+	ServiceConfigFile    string
+	DhcpRetry            bool    `yaml:"dhcp_retry"`
+	AuthRetry            bool    `yaml:"auth_retry"`
+	LogLevel             string  `yaml:"log_level"`
+	LogCaller            bool    `yaml:"log_caller"`
+	Delay                int     `yaml:"delay"`
+	CpuProfile           *string `yaml:"cpu_profile"`
+	OpenOltAddress       string  `yaml:"openolt_address"`
+	ApiAddress           string  `yaml:"api_address"`
+	RestApiAddress       string  `yaml:"rest_api_address"`
+	LegacyApiAddress     string  `yaml:"legacy_api_address"`
+	LegacyRestApiAddress string  `yaml:"legacy_rest_api_address"`
+	SadisRestAddress     string  `yaml:"sadis_rest_address"`
+	SadisServer          bool    `yaml:"sadis_server"`
+	KafkaAddress         string  `yaml:"kafka_address"`
+	Events               bool    `yaml:"enable_events"`
+	ControlledActivation string  `yaml:"controlled_activation"`
+	EnablePerf           bool    `yaml:"enable_perf"`
+	KafkaEventTopic      string  `yaml:"kafka_event_topic"`
 }
 
 type BBRConfig struct {
@@ -154,24 +117,166 @@ type BBRConfig struct {
 	LogCaller bool   `yaml:"log_caller"`
 }
 
-var Options *BBSimYamlConfig
-
-func init() {
-	// load settings from config file first
-	Options, _ = LoadBBSimConf("configs/bbsim.yaml")
+type ServiceYaml struct {
+	Name                string
+	CTag                int    `yaml:"c_tag"`
+	STag                int    `yaml:"s_tag"`
+	NeedsEapol          bool   `yaml:"needs_eapol"`
+	NeedsDchp           bool   `yaml:"needs_dhcp"`
+	NeedsIgmp           bool   `yaml:"needs_igmp"`
+	CTagAllocation      string `yaml:"c_tag_allocation"`
+	STagAllocation      string `yaml:"s_tag_allocation"`
+	TechnologyProfileID int    `yaml:"tp_id"`
+	UniTagMatch         int    `yaml:"uni_tag_match"`
+	ConfigureMacAddress bool   `yaml:"configure_mac_address"`
+	UsPonCTagPriority   int    `yaml:"us_pon_c_tag_priority"`
+	UsPonSTagPriority   int    `yaml:"us_pon_s_tag_priority"`
+	DsPonCTagPriority   int    `yaml:"ds_pon_c_tag_priority"`
+	DsPonSTagPriority   int    `yaml:"ds_pon_s_tag_priority"`
+}
+type YamlServiceConfig struct {
+	Workflow string
+	Services []ServiceYaml `yaml:"services,flow"`
 }
 
-func getDefaultOps() *BBSimYamlConfig {
+func (cfg *YamlServiceConfig) String() string {
+	str := fmt.Sprintf("[workflow: %s, Services: ", cfg.Workflow)
 
-	c := &BBSimYamlConfig{
+	for _, s := range cfg.Services {
+		str = fmt.Sprintf("%s[", str)
+		str = fmt.Sprintf("%sname=%s, c_tag=%d, s_tag=%d, ",
+			str, s.Name, s.CTag, s.STag)
+		str = fmt.Sprintf("%sc_tag_allocation=%s, s_tag_allocation=%s, ",
+			str, s.CTagAllocation, s.STagAllocation)
+		str = fmt.Sprintf("%sneeds_eapol=%t, needs_dhcp=%t, needs_igmp=%t",
+			str, s.NeedsEapol, s.NeedsDchp, s.NeedsIgmp)
+		str = fmt.Sprintf("%stp_id=%d, uni_tag_match=%d",
+			str, s.TechnologyProfileID, s.UniTagMatch)
+		str = fmt.Sprintf("%s]", str)
+	}
+	str = fmt.Sprintf("%s]", str)
+	return str
+}
+
+var (
+	Config   *GlobalConfig
+	Services []ServiceYaml
+)
+
+// Load the BBSim configuration. This is a combination of CLI parameters and YAML files
+// We proceed in this order:
+// - Read CLI parameters
+// - Using those we read the yaml files (config and services)
+// - we merge the configuration (CLI has priority over yaml files)
+func LoadConfig() {
+
+	Config = getDefaultOps()
+
+	cliConf := readCliParams()
+
+	yamlConf, err := loadBBSimConf(cliConf.BBSim.ConfigFile)
+
+	if err != nil {
+		log.WithFields(log.Fields{
+			"file": cliConf.BBSim.ConfigFile,
+			"err":  err,
+		}).Fatal("Can't read config file")
+	}
+
+	// merging Yaml and Default Values
+	if err := mergo.Merge(Config, yamlConf, mergo.WithOverride); err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Fatal("Can't merge YAML and Config")
+	}
+
+	// merging CLI values on top of the yaml ones
+	if err := mergo.Merge(Config, cliConf, mergo.WithOverride); err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Fatal("Can't merge CLI and Config")
+	}
+
+	services, err := loadBBSimServices(Config.BBSim.ServiceConfigFile)
+
+	if err != nil {
+		log.WithFields(log.Fields{
+			"file": Config.BBSim.ServiceConfigFile,
+			"err":  err,
+		}).Fatal("Can't read services file")
+	}
+
+	Services = services
+
+}
+
+func readCliParams() *GlobalConfig {
+
+	conf := GlobalConfig{}
+
+	configFile := flag.String("config", conf.BBSim.ConfigFile, "Configuration file path")
+	servicesFile := flag.String("services", conf.BBSim.ServiceConfigFile, "Service Configuration file path")
+
+	olt_id := flag.Int("olt_id", conf.Olt.ID, "OLT device ID")
+	nni := flag.Int("nni", int(conf.Olt.NniPorts), "Number of NNI ports per OLT device to be emulated")
+	pon := flag.Int("pon", int(conf.Olt.PonPorts), "Number of PON ports per OLT device to be emulated")
+	onu := flag.Int("onu", int(conf.Olt.OnusPonPort), "Number of ONU devices per PON port to be emulated")
+
+	openolt_address := flag.String("openolt_address", conf.BBSim.OpenOltAddress, "IP address:port")
+	api_address := flag.String("api_address", conf.BBSim.ApiAddress, "IP address:port")
+	rest_api_address := flag.String("rest_api_address", conf.BBSim.RestApiAddress, "IP address:port")
+
+	profileCpu := flag.String("cpuprofile", "", "write cpu profile to file")
+
+	logLevel := flag.String("logLevel", conf.BBSim.LogLevel, "Set the log level (trace, debug, info, warn, error)")
+	logCaller := flag.Bool("logCaller", conf.BBSim.LogCaller, "Whether to print the caller filename or not")
+
+	delay := flag.Int("delay", conf.BBSim.Delay, "The delay between ONU DISCOVERY batches in milliseconds (1 ONU per each PON PORT at a time")
+
+	controlledActivation := flag.String("ca", conf.BBSim.ControlledActivation, "Set the mode for controlled activation of PON ports and ONUs")
+	enablePerf := flag.Bool("enableperf", conf.BBSim.EnablePerf, "Setting this flag will cause BBSim to not store data like traffic schedulers, flows of ONUs etc..")
+	enableEvents := flag.Bool("enableEvents", conf.BBSim.Events, "Enable sending BBSim events on configured kafka server")
+	kafkaAddress := flag.String("kafkaAddress", conf.BBSim.KafkaAddress, "IP:Port for kafka")
+	kafkaEventTopic := flag.String("kafkaEventTopic", conf.BBSim.KafkaEventTopic, "Ability to configure the topic on which BBSim publishes events on Kafka")
+	dhcpRetry := flag.Bool("dhcpRetry", conf.BBSim.DhcpRetry, "Set this flag if BBSim should retry DHCP upon failure until success")
+	authRetry := flag.Bool("authRetry", conf.BBSim.AuthRetry, "Set this flag if BBSim should retry EAPOL (Authentication) upon failure until success")
+	flag.Parse()
+
+	conf.Olt.ID = int(*olt_id)
+	conf.Olt.NniPorts = uint32(*nni)
+	conf.Olt.PonPorts = uint32(*pon)
+	conf.Olt.OnusPonPort = uint32(*onu)
+	conf.BBSim.ConfigFile = *configFile
+	conf.BBSim.ServiceConfigFile = *servicesFile
+	conf.BBSim.CpuProfile = profileCpu
+	conf.BBSim.LogLevel = *logLevel
+	conf.BBSim.LogCaller = *logCaller
+	conf.BBSim.Delay = *delay
+	conf.BBSim.ControlledActivation = *controlledActivation
+	conf.BBSim.EnablePerf = *enablePerf
+	conf.BBSim.Events = *enableEvents
+	conf.BBSim.KafkaAddress = *kafkaAddress
+	conf.BBSim.OpenOltAddress = *openolt_address
+	conf.BBSim.ApiAddress = *api_address
+	conf.BBSim.RestApiAddress = *rest_api_address
+	conf.BBSim.KafkaEventTopic = *kafkaEventTopic
+	conf.BBSim.AuthRetry = *authRetry
+	conf.BBSim.DhcpRetry = *dhcpRetry
+
+	// update device id if not set
+	if conf.Olt.DeviceId == "" {
+		conf.Olt.DeviceId = net.HardwareAddr{0xA, 0xA, 0xA, 0xA, 0xA, byte(conf.Olt.ID)}.String()
+	}
+
+	return &conf
+}
+
+func getDefaultOps() *GlobalConfig {
+
+	c := &GlobalConfig{
 		BBSimConfig{
-			STagAllocation:       TagAllocationShared,
-			STag:                 900,
-			CTagAllocation:       TagAllocationUnique,
-			CTag:                 900,
-			EnableIgmp:           false,
-			EnableDhcp:           false,
-			EnableAuth:           false,
+			ConfigFile:           "configs/bbsim.yaml",
+			ServiceConfigFile:    "configs/att-services.yaml",
 			LogLevel:             "debug",
 			LogCaller:            false,
 			Delay:                200,
@@ -182,7 +287,6 @@ func getDefaultOps() *BBSimYamlConfig {
 			LegacyRestApiAddress: ":50073",
 			SadisRestAddress:     ":50074",
 			SadisServer:          true,
-			SadisFormat:          SadisFormatAtt,
 			KafkaAddress:         ":9092",
 			Events:               false,
 			ControlledActivation: "default",
@@ -214,131 +318,74 @@ func getDefaultOps() *BBSimYamlConfig {
 }
 
 // LoadBBSimConf loads the BBSim configuration from a YAML file
-func LoadBBSimConf(filename string) (*BBSimYamlConfig, error) {
+func loadBBSimConf(filename string) (*GlobalConfig, error) {
 	yamlConfig := getDefaultOps()
 
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
-		fmt.Printf("Cannot load BBSim configuration file: %s. Using defaults.\n", err)
+		log.WithFields(log.Fields{
+			"err":      err,
+			"filename": filename,
+		}).Error("Cannot load BBSim configuration file. Using defaults.")
 		return yamlConfig, nil
 	}
 
 	err = yaml.Unmarshal(yamlFile, yamlConfig)
 	if err != nil {
-		fmt.Printf("Error parsing YAML file: %s\n", err)
+		return nil, err
 	}
-
-	// TODO convert from string to TagAllocation
 
 	return yamlConfig, nil
 }
 
-// GetBBSimOpts loads the BBSim configuration file and over-rides options with corresponding CLI flags if set
-func GetBBSimOpts() *BBSimYamlConfig {
-	conf := Options
+// LoadBBSimServices parses a file describing the services that need to be created for each UNI
+func loadBBSimServices(filename string) ([]ServiceYaml, error) {
 
-	olt_id := flag.Int("olt_id", conf.Olt.ID, "OLT device ID")
-	nni := flag.Int("nni", int(conf.Olt.NniPorts), "Number of NNI ports per OLT device to be emulated")
-	pon := flag.Int("pon", int(conf.Olt.PonPorts), "Number of PON ports per OLT device to be emulated")
-	onu := flag.Int("onu", int(conf.Olt.OnusPonPort), "Number of ONU devices per PON port to be emulated")
+	yamlServiceCfg := YamlServiceConfig{}
 
-	openolt_address := flag.String("openolt_address", conf.BBSim.OpenOltAddress, "IP address:port")
-	api_address := flag.String("api_address", conf.BBSim.ApiAddress, "IP address:port")
-	rest_api_address := flag.String("rest_api_address", conf.BBSim.RestApiAddress, "IP address:port")
-
-	s_tag_allocation := flag.String("s_tag_allocation", conf.BBSim.STagAllocation.String(), "Use 'unique' for incremental values, 'shared' to use the same value in all the ONUs")
-	s_tag := flag.Int("s_tag", conf.BBSim.STag, "S-Tag initial value")
-
-	c_tag_allocation := flag.String("c_tag_allocation", conf.BBSim.CTagAllocation.String(), "Use 'unique' for incremental values, 'shared' to use the same value in all the ONUs")
-	c_tag := flag.Int("c_tag", conf.BBSim.CTag, "C-Tag starting value, each ONU will get a sequential one (targeting 1024 ONUs per BBSim instance the range is big enough)")
-
-	sadisFormat := flag.String("sadisFormat", conf.BBSim.SadisFormat.String(), fmt.Sprintf("Which format should sadis expose? [%s]", strings.Join(sadisFormatValues[1:], "|")))
-
-	auth := flag.Bool("auth", conf.BBSim.EnableAuth, "Set this flag if you want authentication to start automatically")
-	dhcp := flag.Bool("dhcp", conf.BBSim.EnableDhcp, "Set this flag if you want DHCP to start automatically")
-	igmp := flag.Bool("igmp", conf.BBSim.EnableIgmp, "Set this flag if you want IGMP to start automatically")
-	profileCpu := flag.String("cpuprofile", "", "write cpu profile to file")
-
-	logLevel := flag.String("logLevel", conf.BBSim.LogLevel, "Set the log level (trace, debug, info, warn, error)")
-	logCaller := flag.Bool("logCaller", conf.BBSim.LogCaller, "Whether to print the caller filename or not")
-
-	delay := flag.Int("delay", conf.BBSim.Delay, "The delay between ONU DISCOVERY batches in milliseconds (1 ONU per each PON PORT at a time")
-
-	controlledActivation := flag.String("ca", conf.BBSim.ControlledActivation, "Set the mode for controlled activation of PON ports and ONUs")
-	enablePerf := flag.Bool("enableperf", conf.BBSim.EnablePerf, "Setting this flag will cause BBSim to not store data like traffic schedulers, flows of ONUs etc..")
-	enableEvents := flag.Bool("enableEvents", conf.BBSim.Events, "Enable sending BBSim events on configured kafka server")
-	kafkaAddress := flag.String("kafkaAddress", conf.BBSim.KafkaAddress, "IP:Port for kafka")
-	kafkaEventTopic := flag.String("kafkaEventTopic", conf.BBSim.KafkaEventTopic, "Ability to configure the topic on which BBSim publishes events on Kafka")
-	dhcpRetry := flag.Bool("dhcpRetry", conf.BBSim.DhcpRetry, "Set this flag if BBSim should retry DHCP upon failure until success")
-	authRetry := flag.Bool("authRetry", conf.BBSim.AuthRetry, "Set this flag if BBSim should retry EAPOL (Authentication) upon failure until success")
-	flag.Parse()
-
-	sTagAlloc, err := tagAllocationFromString(*s_tag_allocation)
+	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	cTagAlloc, err := tagAllocationFromString(*c_tag_allocation)
+	err = yaml.Unmarshal([]byte(yamlFile), &yamlServiceCfg)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	sf, err := sadisFormatFromString(*sadisFormat)
-	if err != nil {
-		log.Fatal(err)
+	for _, service := range yamlServiceCfg.Services {
+
+		if service.CTagAllocation == "" || service.STagAllocation == "" {
+			log.Fatal("c_tag_allocation and s_tag_allocation are mandatory fields")
+		}
+
+		if _, err := tagAllocationFromString(string(service.CTagAllocation)); err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Fatal("c_tag_allocation is not valid")
+		}
 	}
 
-	if sf == SadisFormatTt {
-		log.Fatalf("Sadis format %s is not yet supported", sf.String())
-	}
-
-	conf.Olt.ID = int(*olt_id)
-	conf.Olt.NniPorts = uint32(*nni)
-	conf.Olt.PonPorts = uint32(*pon)
-	conf.Olt.OnusPonPort = uint32(*onu)
-	conf.BBSim.STagAllocation = sTagAlloc
-	conf.BBSim.STag = int(*s_tag)
-	conf.BBSim.CTagAllocation = cTagAlloc
-	conf.BBSim.CTag = int(*c_tag)
-	conf.BBSim.CpuProfile = profileCpu
-	conf.BBSim.LogLevel = *logLevel
-	conf.BBSim.LogCaller = *logCaller
-	conf.BBSim.EnableAuth = *auth
-	conf.BBSim.EnableDhcp = *dhcp
-	conf.BBSim.EnableIgmp = *igmp
-	conf.BBSim.Delay = *delay
-	conf.BBSim.ControlledActivation = *controlledActivation
-	conf.BBSim.EnablePerf = *enablePerf
-	conf.BBSim.Events = *enableEvents
-	conf.BBSim.KafkaAddress = *kafkaAddress
-	conf.BBSim.OpenOltAddress = *openolt_address
-	conf.BBSim.ApiAddress = *api_address
-	conf.BBSim.RestApiAddress = *rest_api_address
-	conf.BBSim.SadisFormat = sf
-	conf.BBSim.KafkaEventTopic = *kafkaEventTopic
-	conf.BBSim.AuthRetry = *authRetry
-	conf.BBSim.DhcpRetry = *dhcpRetry
-
-	// update device id if not set
-	if conf.Olt.DeviceId == "" {
-		conf.Olt.DeviceId = net.HardwareAddr{0xA, 0xA, 0xA, 0xA, 0xA, byte(conf.Olt.ID)}.String()
-	}
-
-	Options = conf
-	return conf
+	log.WithFields(log.Fields{
+		"services": yamlServiceCfg.String(),
+	}).Debug("BBSim services description correctly loaded")
+	return yamlServiceCfg.Services, nil
 }
 
+// This is only used by BBR
 func GetBBROpts() BBRCliOptions {
+
+	LoadConfig()
 
 	bbsimIp := flag.String("bbsimIp", "127.0.0.1", "BBSim IP")
 	bbsimPort := flag.String("bbsimPort", "50060", "BBSim Port")
 	bbsimApiPort := flag.String("bbsimApiPort", "50070", "BBSim API Port")
 	logFile := flag.String("logfile", "", "Log to a file")
 
-	options := GetBBSimOpts()
+	flag.Parse()
 
 	bbrOptions := BBRCliOptions{
-		options,
+		Config,
 		*bbsimIp,
 		*bbsimPort,
 		*bbsimApiPort,

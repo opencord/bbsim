@@ -19,7 +19,6 @@ package devices
 import (
 	"context"
 	"errors"
-	"net"
 	"time"
 
 	"github.com/opencord/voltha-protos/v2/go/openolt"
@@ -107,19 +106,18 @@ func (s *mockClient) EnableIndication(ctx context.Context, in *openolt.Empty, op
 }
 
 // this method creates a fake ONU used in the tests
-func createMockOnu(id uint32, ponPortId uint32, sTag int, cTag int, auth bool, dhcp bool) *Onu {
+func createMockOnu(id uint32, ponPortId uint32) *Onu {
 	o := Onu{
 		ID:           id,
 		PonPortID:    ponPortId,
-		STag:         sTag,
-		CTag:         cTag,
-		HwAddress:    net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(ponPortId), byte(id)},
 		PortNo:       0,
-		Auth:         auth,
-		Dhcp:         dhcp,
 		GemPortAdded: true,
+		PonPort: &PonPort{
+			Olt: &OltDevice{},
+		},
 	}
 	o.SerialNumber = o.NewSN(0, ponPortId, o.ID)
+	o.Channel = make(chan Message, 10)
 	return &o
 }
 
@@ -132,7 +130,7 @@ func createTestOnu() *Onu {
 		ID:  1,
 		Olt: &olt,
 	}
-	onu := CreateONU(&olt, &pon, 1, 900, 900, false, false, time.Duration(1*time.Millisecond), true)
+	onu := CreateONU(&olt, &pon, 1, time.Duration(1*time.Millisecond), true)
 	// NOTE we need this in order to create the OnuChannel
 	_ = onu.InternalState.Event("initialize")
 	onu.DiscoveryRetryDelay = 100 * time.Millisecond
