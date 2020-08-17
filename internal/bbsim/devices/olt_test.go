@@ -17,6 +17,7 @@
 package devices
 
 import (
+	"github.com/opencord/bbsim/internal/common"
 	"net"
 	"testing"
 
@@ -40,7 +41,6 @@ func createMockOlt(numPon int, numOnu int) *OltDevice {
 				ID:        onuId,
 				PonPort:   &pon,
 				PonPortID: pon.ID,
-				HwAddress: net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(pon.ID), byte(onuId)},
 			}
 			onu.SerialNumber = onu.NewSN(olt.ID, pon.ID, onu.ID)
 			pon.Onus = append(pon.Onus, &onu)
@@ -48,6 +48,65 @@ func createMockOlt(numPon int, numOnu int) *OltDevice {
 		olt.Pons = append(olt.Pons, &pon)
 	}
 	return olt
+}
+
+// check the creation of an OLT with a single Service
+func TestCreateOLT(t *testing.T) {
+
+	common.Services = []common.ServiceYaml{
+		{Name: "hsia", CTag: 900, CTagAllocation: "unique", STag: 900, STagAllocation: "shared", NeedsEapol: true, NeedsDchp: true, NeedsIgmp: true},
+	}
+
+	common.Options = &common.BBSimYamlConfig{
+		Olt: common.OltConfig{
+			ID:          1,
+			PonPorts:    2,
+			OnusPonPort: 2,
+		},
+	}
+
+	olt := CreateOLT(*common.Options, common.Services, true)
+
+	assert.Equal(t, len(olt.Pons), int(common.Options.Olt.PonPorts))
+
+	// count the ONUs
+	onus := 0
+	for _, p := range olt.Pons {
+		onus = onus + len(p.Onus)
+	}
+
+	assert.Equal(t, onus, int(common.Options.Olt.PonPorts*common.Options.Olt.OnusPonPort))
+
+	// count the services
+	services := 0
+	for _, p := range olt.Pons {
+		for _, o := range p.Onus {
+			services = services + len(o.Services)
+		}
+	}
+
+	assert.Equal(t, services, int(common.Options.Olt.PonPorts)*int(common.Options.Olt.OnusPonPort)*len(common.Services))
+
+	assert.Equal(t, olt.Pons[0].Onus[0].Services[0].Name, "hsia")
+	assert.Equal(t, olt.Pons[0].Onus[0].Services[0].CTag, 900)
+	assert.Equal(t, olt.Pons[0].Onus[0].Services[0].STag, 900)
+	assert.Equal(t, olt.Pons[0].Onus[0].ID, uint32(1))
+	assert.Equal(t, olt.Pons[0].Onus[0].Services[0].HwAddress.String(), "2e:60:01:00:01:00")
+
+	assert.Equal(t, olt.Pons[0].Onus[1].Services[0].CTag, 901)
+	assert.Equal(t, olt.Pons[0].Onus[1].Services[0].STag, 900)
+	assert.Equal(t, olt.Pons[0].Onus[1].ID, uint32(2))
+	assert.Equal(t, olt.Pons[0].Onus[1].Services[0].HwAddress.String(), "2e:60:01:00:02:00")
+
+	assert.Equal(t, olt.Pons[1].Onus[0].Services[0].CTag, 902)
+	assert.Equal(t, olt.Pons[1].Onus[0].Services[0].STag, 900)
+	assert.Equal(t, olt.Pons[1].Onus[0].ID, uint32(1))
+	assert.Equal(t, olt.Pons[1].Onus[0].Services[0].HwAddress.String(), "2e:60:01:01:01:00")
+
+	assert.Equal(t, olt.Pons[1].Onus[1].Services[0].CTag, 903)
+	assert.Equal(t, olt.Pons[1].Onus[1].Services[0].STag, 900)
+	assert.Equal(t, olt.Pons[1].Onus[1].ID, uint32(2))
+	assert.Equal(t, olt.Pons[1].Onus[1].Services[0].HwAddress.String(), "2e:60:01:01:02:00")
 }
 
 func Test_Olt_FindOnuBySn_Success(t *testing.T) {
@@ -78,7 +137,7 @@ func Test_Olt_FindOnuBySn_Error(t *testing.T) {
 }
 
 func Test_Olt_FindOnuByMacAddress_Success(t *testing.T) {
-
+	t.Skip("We need to look up Services by mac address, this method needs to be rewritten")
 	numPon := 4
 	numOnu := 4
 

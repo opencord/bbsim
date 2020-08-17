@@ -64,6 +64,9 @@ func (m mockSarama) NewAsyncProducer(addrs []string, conf *sarama.Config) (saram
 
 func TestInitializePublisher(t *testing.T) {
 	mockLib := mockSarama{}
+
+	Options = &BBSimYamlConfig{}
+
 	err := InitializePublisher(mockLib.NewAsyncProducer, 0)
 
 	assert.Equal(t, err, nil)

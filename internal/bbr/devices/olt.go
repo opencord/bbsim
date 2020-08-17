@@ -57,7 +57,7 @@ func (o *OltMock) Start() {
 			if err := onu.InternalState.Event("initialize"); err != nil {
 				log.Fatalf("Error initializing ONU: %v", err)
 			}
-			log.Debugf("Created ONU: %s (%d:%d)", onu.Sn(), onu.STag, onu.CTag)
+			log.Debugf("Created ONU: %s", onu.Sn())
 		}
 	}
 
@@ -93,13 +93,13 @@ func (o *OltMock) getDeviceInfo(client openolt.OpenoltClient) (*openolt.DeviceIn
 
 func (o *OltMock) getOnuByTags(sTag int, cTag int) (*devices.Onu, error) {
 
-	for _, pon := range o.Olt.Pons {
-		for _, onu := range pon.Onus {
-			if onu.STag == sTag && onu.CTag == cTag {
-				return onu, nil
-			}
-		}
-	}
+	//for _, pon := range o.Olt.Pons {
+	//	for _, onu := range pon.Onus {
+	//		if onu.STag == sTag && onu.CTag == cTag {
+	//			return onu, nil
+	//		}
+	//	}
+	//}
 
 	return nil, errors.New("cant-find-onu-by-c-s-tags")
 }
