@@ -30,7 +30,7 @@ import (
 type mockStream struct {
 	grpc.ServerStream
 	CallCount int
-	Calls     map[int]*openolt.OnuDiscIndication
+	Calls     map[int]*openolt.Indication
 	channel   chan int
 	fail      bool
 }
@@ -40,8 +40,10 @@ func (s *mockStream) Send(ind *openolt.Indication) error {
 	if s.fail {
 		return errors.New("fake-error")
 	}
-	s.Calls[s.CallCount] = ind.GetOnuDiscInd()
-	s.channel <- s.CallCount
+	s.Calls[s.CallCount] = ind
+	go func() {
+		s.channel <- s.CallCount
+	}()
 	return nil
 }
 
@@ -50,7 +52,7 @@ func Test_Onu_DiscoverIndication_send_on_discovery(t *testing.T) {
 	onu := createTestOnu()
 	stream := &mockStream{
 		CallCount: 0,
-		Calls:     make(map[int]*openolt.OnuDiscIndication),
+		Calls:     make(map[int]*openolt.Indication),
 		fail:      false,
 		channel:   make(chan int, 10),
 	}
@@ -62,9 +64,10 @@ func Test_Onu_DiscoverIndication_send_on_discovery(t *testing.T) {
 	select {
 	default:
 	case <-time.After(90 * time.Millisecond):
+		call := stream.Calls[1].GetOnuDiscInd()
 		assert.Equal(t, stream.CallCount, 1)
-		assert.Equal(t, stream.Calls[1].IntfId, onu.PonPortID)
-		assert.Equal(t, stream.Calls[1].SerialNumber, onu.SerialNumber)
+		assert.Equal(t, call.IntfId, onu.PonPortID)
+		assert.Equal(t, call.SerialNumber, onu.SerialNumber)
 	}
 	cancel()
 }
@@ -74,7 +77,7 @@ func Test_Onu_DiscoverIndication_retry_on_discovery(t *testing.T) {
 	onu := createTestOnu()
 	stream := &mockStream{
 		CallCount: 0,
-		Calls:     make(map[int]*openolt.OnuDiscIndication),
+		Calls:     make(map[int]*openolt.Indication),
 		fail:      false,
 		channel:   make(chan int, 10),
 	}
@@ -97,7 +100,7 @@ func Test_Onu_DiscoverIndication_retry_on_discovery_stops(t *testing.T) {
 	onu.DiscoveryRetryDelay = 500 * time.Millisecond
 	stream := &mockStream{
 		CallCount: 0,
-		Calls:     make(map[int]*openolt.OnuDiscIndication),
+		Calls:     make(map[int]*openolt.Indication),
 		fail:      false,
 		channel:   make(chan int, 10),
 	}

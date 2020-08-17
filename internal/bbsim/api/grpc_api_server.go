@@ -74,7 +74,7 @@ func (s BBSimServer) GetOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Olt, 
 		pons = append(pons, &p)
 	}
 
-	oltAddress := strings.Split(common.Options.BBSim.OpenOltAddress, ":")[0]
+	oltAddress := strings.Split(common.Config.BBSim.OpenOltAddress, ":")[0]
 	if oltAddress == "" {
 		oltAddress = getOltIP().String()
 	}
