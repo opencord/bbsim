@@ -1,0 +1,48 @@
+# Contains a description of the services that needs to be created for each UNI and the corresponding tagging scheme
+
+# TT
+workflow: tt
+services:
+- name: hsia
+  uni_tag_match: 35
+  c_tag: 900
+  c_tag_allocation: unique
+  s_tag: 900
+  s_tag_allocation: shared
+  tp_id: 64
+- name: voip
+  uni_tag_match: 65
+  c_tag: 444
+  c_tag_allocation: shared
+  s_tag: 333
+  s_tag_allocation: shared
+  needs_dhcp: true
+  tp_id: 65
+  configure_mac_address: true
+  us_pon_c_tag_priority: 7
+  us_pon_s_tag_priority: 7
+  ds_pon_c_tag_priority: 7
+  ds_pon_s_tag_priority: 7
+- name: vod
+  uni_tag_match: 55
+  c_tag: 55
+  c_tag_allocation: shared
+  s_tag: 555
+  s_tag_allocation: shared
+  needs_dhcp: true
+  needs_igmp: true
+  tp_id: 66
+  configure_mac_address: true
+  us_pon_c_tag_priority: 5
+  us_pon_s_tag_priority: 5
+  ds_pon_c_tag_priority: 5
+  ds_pon_s_tag_priority: 5
+# NOTE: the multicast service must be called MC unless you set multicastServiceName to something else in org.opencord.olt.impl.Olt
+- name: MC
+  c_tag: 55
+  c_tag_allocation: shared
+  s_tag: 555
+  s_tag_allocation: shared
+  tp_id: 66
+  ds_pon_c_tag_priority: 5
+  ds_pon_s_tag_priority: 5

@@ -34,7 +34,8 @@ import (
 )
 
 const (
-	DEFAULT_ONU_DEVICE_HEADER_FORMAT = "table{{ .PonPortID }}\t{{ .ID }}\t{{ .PortNo }}\t{{ .SerialNumber }}\t{{ .HwAddress }}\t{{ .STag }}\t{{ .CTag }}\t{{ .OperState }}\t{{ .InternalState }}"
+	DEFAULT_ONU_DEVICE_HEADER_FORMAT               = "table{{ .PonPortID }}\t{{ .ID }}\t{{ .PortNo }}\t{{ .SerialNumber }}\t{{ .OperState }}\t{{ .InternalState }}"
+	DEFAULT_ONU_DEVICE_HEADER_FORMAT_WITH_SERVICES = "table{{ .PonPortID }}\t{{ .ID }}\t{{ .PortNo }}\t{{ .SerialNumber }}\t{{ .OperState }}\t{{ .InternalState }}\t{{ .Services }}"
 )
 
 type OnuSnString string
@@ -44,9 +45,18 @@ const IgmpJoinKey string = "join"
 const IgmpLeaveKey string = "leave"
 const IgmpJoinKeyV3 string = "joinv3"
 
-type ONUList struct{}
+type ONUList struct {
+	Verbose bool `short:"v" long:"verbose" description:"Print all the informations we have about ONUs"`
+}
 
 type ONUGet struct {
+	Verbose bool `short:"v" long:"verbose" description:"Print all the informations we have about ONUs"`
+	Args    struct {
+		OnuSn OnuSnString
+	} `positional-args:"yes" required:"yes"`
+}
+
+type ONUServices struct {
 	Args struct {
 		OnuSn OnuSnString
 	} `positional-args:"yes" required:"yes"`
@@ -98,6 +108,7 @@ type ONUFlows struct {
 type ONUOptions struct {
 	List              ONUList              `command:"list"`
 	Get               ONUGet               `command:"get"`
+	Services          ONUServices          `command:"services"`
 	ShutDown          ONUShutDown          `command:"shutdown"`
 	PowerOn           ONUPowerOn           `command:"poweron"`
 	RestartEapol      ONUEapolRestart      `command:"auth_restart"`
@@ -143,7 +154,12 @@ func (options *ONUList) Execute(args []string) error {
 	onus := getONUs()
 
 	// print out
-	tableFormat := format.Format(DEFAULT_ONU_DEVICE_HEADER_FORMAT)
+	var tableFormat format.Format
+	if options.Verbose {
+		tableFormat = format.Format(DEFAULT_ONU_DEVICE_HEADER_FORMAT_WITH_SERVICES)
+	} else {
+		tableFormat = format.Format(DEFAULT_ONU_DEVICE_HEADER_FORMAT)
+	}
 	if err := tableFormat.Execute(os.Stdout, true, onus.Items); err != nil {
 		log.Fatalf("Error while formatting ONUs table: %s", err)
 	}
@@ -163,13 +179,43 @@ func (options *ONUGet) Execute(args []string) error {
 	res, err := client.GetONU(ctx, &req)
 
 	if err != nil {
-		log.Fatalf("Cannot not shutdown ONU %s: %v", options.Args.OnuSn, err)
+		log.Fatalf("Cannot not get ONU %s: %v", options.Args.OnuSn, err)
 		return err
 	}
 
-	tableFormat := format.Format(DEFAULT_ONU_DEVICE_HEADER_FORMAT)
+	var tableFormat format.Format
+	if options.Verbose {
+		tableFormat = format.Format(DEFAULT_ONU_DEVICE_HEADER_FORMAT_WITH_SERVICES)
+	} else {
+		tableFormat = format.Format(DEFAULT_ONU_DEVICE_HEADER_FORMAT)
+	}
 	if err := tableFormat.Execute(os.Stdout, true, []*pb.ONU{res}); err != nil {
 		log.Fatalf("Error while formatting ONUs table: %s", err)
+	}
+
+	return nil
+}
+
+func (options *ONUServices) Execute(args []string) error {
+
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+	req := pb.ONURequest{
+		SerialNumber: string(options.Args.OnuSn),
+	}
+	res, err := client.GetOnuServices(ctx, &req)
+
+	if err != nil {
+		log.Fatalf("Cannot not get services for ONU %s: %v", options.Args.OnuSn, err)
+		return err
+	}
+
+	tableFormat := format.Format(DEFAULT_SERVICE_HEADER_FORMAT)
+	if err := tableFormat.Execute(os.Stdout, true, res.Items); err != nil {
+		log.Fatalf("Error while formatting Services table: %s", err)
 	}
 
 	return nil

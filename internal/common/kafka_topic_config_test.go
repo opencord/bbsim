@@ -64,12 +64,15 @@ func (m mockSarama) NewAsyncProducer(addrs []string, conf *sarama.Config) (saram
 
 func TestInitializePublisher(t *testing.T) {
 	mockLib := mockSarama{}
+
+	Config = &GlobalConfig{}
+
 	err := InitializePublisher(mockLib.NewAsyncProducer, 0)
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, topic, "BBSim-OLT-0-Events")
 
-	Options.BBSim.KafkaEventTopic = "Testing-Topic"
+	Config.BBSim.KafkaEventTopic = "Testing-Topic"
 	err = InitializePublisher(mockLib.NewAsyncProducer, 0)
 	assert.Equal(t, topic, "Testing-Topic")
 	assert.Equal(t, err, nil)

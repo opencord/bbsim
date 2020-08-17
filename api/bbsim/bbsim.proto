@@ -45,10 +45,23 @@ message ONU {
     string OperState = 3;
     string InternalState = 4;
     int32 PonPortID = 5;
-    int32 STag = 6;
-    int32 CTag = 7;
     string HwAddress = 8;
     int32 PortNo = 9;
+    repeated Service services = 10;
+}
+
+message Service {
+    string Name = 1;
+    string HwAddress = 2;
+    string OnuSn = 3;
+    int32 STag = 4;
+    int32 CTag = 5;
+    bool NeedsEapol = 6;
+    bool NeedsDhcp = 7;
+    bool NeedsIgmp = 8;
+    int32 GemPort = 9;
+    string EapolState = 10;
+    string DhcpState = 11;
 }
 
 message ONUTrafficSchedulers {
@@ -57,6 +70,10 @@ message ONUTrafficSchedulers {
 
 message ONUs {
     repeated ONU items = 1;
+}
+
+message Services {
+    repeated Service items = 1;
 }
 
 // Inputs
@@ -109,17 +126,17 @@ message AlarmParameter {
 // plus an optional list of AlarmParameter list that can be used
 // to set additional fields in alarms that support them.
 message ONUAlarmRequest {
-    string AlarmType = 1;                   // name of alarm to raise
-    string SerialNumber = 2;                // serial number of ONU
-    string Status = 3;                      // status of Alarm
+    string AlarmType = 1; // name of alarm to raise
+    string SerialNumber = 2; // serial number of ONU
+    string Status = 3; // status of Alarm
     repeated AlarmParameter Parameters = 4; // optional list of additional parameters
 }
 
 // OLT alarm request
 message OLTAlarmRequest {
-    uint32 InterfaceID = 1;                 // Switch Interface Id
-    string InterfaceType = 2;                // PON or NNI Type
-    string Status = 3;                      // Interface Operstatus
+    uint32 InterfaceID = 1; // Switch Interface Id
+    string InterfaceType = 2; // PON or NNI Type
+    string Status = 3; // Interface Operstatus
 }
 
 // Utils
@@ -148,8 +165,8 @@ enum SubActionTypes {
 }
 
 message IgmpRequest {
-	ONURequest OnuReq = 1;
-	SubActionTypes SubActionVal = 2;
+    ONURequest OnuReq = 1;
+    SubActionTypes SubActionVal = 2;
 }
 
 message Flows {
@@ -157,54 +174,84 @@ message Flows {
     repeated openolt.Flow flows = 2;
 }
 
-message Empty {}
+message Empty {
+}
 
 service BBSim {
     // Get BBSim version
-    rpc Version(Empty) returns (VersionNumber) {}
+    rpc Version (Empty) returns (VersionNumber) {
+    }
     // Set BBSim log level
-    rpc SetLogLevel(LogLevel) returns (LogLevel) {}
+    rpc SetLogLevel (LogLevel) returns (LogLevel) {
+    }
 
     // Get current status of OLT
-    rpc GetOlt(Empty) returns (Olt) {}
+    rpc GetOlt (Empty) returns (Olt) {
+    }
     // Poweron OLT
-    rpc PoweronOlt(Empty) returns (Response) {}
+    rpc PoweronOlt (Empty) returns (Response) {
+    }
     // Shutdown OLT
-    rpc ShutdownOlt(Empty) returns (Response) {}
+    rpc ShutdownOlt (Empty) returns (Response) {
+    }
     // Reboot OLT
-    rpc RebootOlt(Empty) returns (Response) {}
+    rpc RebootOlt (Empty) returns (Response) {
+    }
 
     // Get status of an ONU by serial number
-    rpc GetONU(ONURequest) returns (ONU) {}
+    rpc GetONU (ONURequest) returns (ONU) {
+    }
     // Get status of all ONUs
-    rpc GetONUs(Empty) returns (ONUs) {}
+    rpc GetONUs (Empty) returns (ONUs) {
+    }
+
+    // Get all the Services
+    rpc GetServices (Empty) returns (Services) {
+    }
+
+    // Get all the Services of an ONU by serial number
+    rpc GetOnuServices (ONURequest) returns (Services) {
+    }
 
     // Shutdown an ONU by serial number
-    rpc ShutdownONU (ONURequest) returns (Response) {}
+    rpc ShutdownONU (ONURequest) returns (Response) {
+    }
     // Shutdown all ONUs in OLT
-    rpc ShutdownAllONUs (Empty) returns (Response) {}
+    rpc ShutdownAllONUs (Empty) returns (Response) {
+    }
     // Shutdown all ONUs under a PON by pon-port-ID
-    rpc ShutdownONUsOnPON(PONRequest) returns (Response) {}
+    rpc ShutdownONUsOnPON (PONRequest) returns (Response) {
+    }
 
     // Poweron an ONU by serial number 
-    rpc PoweronONU (ONURequest) returns (Response) {}
+    rpc PoweronONU (ONURequest) returns (Response) {
+    }
     // Poweron all ONUs in OLT
-    rpc PoweronAllONUs (Empty) returns (Response) {}
+    rpc PoweronAllONUs (Empty) returns (Response) {
+    }
     // Poweron all ONUs under a PON by pon-port-ID
-    rpc PoweronONUsOnPON(PONRequest) returns (Response) {}
+    rpc PoweronONUsOnPON (PONRequest) returns (Response) {
+    }
 
     // Restart EAPOL for ONU
-    rpc RestartEapol (ONURequest) returns (Response) {}
+    rpc RestartEapol (ONURequest) returns (Response) {
+    }
     // Resatrt DHCP for ONU
-    rpc RestartDhcp (ONURequest) returns (Response) {}
+    rpc RestartDhcp (ONURequest) returns (Response) {
+    }
     // Send ONU alarm indication
-    rpc SetOnuAlarmIndication (ONUAlarmRequest) returns (Response) {}
+    rpc SetOnuAlarmIndication (ONUAlarmRequest) returns (Response) {
+    }
     // Send OLT alarm indication for Interface type NNI or PON
-    rpc SetOltAlarmIndication (OLTAlarmRequest) returns (Response) {}
+    rpc SetOltAlarmIndication (OLTAlarmRequest) returns (Response) {
+    }
     // Get all flows or ONU specific flows
-    rpc GetFlows(ONURequest) returns(Flows) {}
+    rpc GetFlows (ONURequest) returns (Flows) {
+    }
     // Chnage IGMP state 
-    rpc ChangeIgmpState (IgmpRequest) returns (Response) {}
+    rpc ChangeIgmpState (IgmpRequest) returns (Response) {
+    }
     // Get Traffic scheduler information for ONU
-    rpc GetOnuTrafficSchedulers (ONURequest) returns (ONUTrafficSchedulers) {}
+    rpc GetOnuTrafficSchedulers (ONURequest) returns (ONUTrafficSchedulers) {
+    }
 }

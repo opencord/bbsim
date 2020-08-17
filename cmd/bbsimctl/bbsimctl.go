@@ -38,6 +38,7 @@ func main() {
 	commands.RegisterConfigCommands(parser)
 	commands.RegisterOltCommands(parser)
 	commands.RegisterONUCommands(parser)
+	commands.RegisterServiceCommands(parser)
 	commands.RegisterPonCommands(parser)
 	commands.RegisterCompletionCommands(parser)
 	commands.RegisterLoggingCommands(parser)
@@ -52,13 +53,6 @@ func main() {
 				return
 			}
 		}
-
-		//corderror, ok := err.(corderrors.CordCtlError)
-		//if ok {
-		//	if corderror.ShouldDumpStack() || config.GlobalOptions.Debug {
-		//		os.Stderr.WriteString("\n" + corderror.Stack())
-		//	}
-		//}
 
 		fmt.Fprintf(os.Stderr, "%s: %s\n", os.Args[0], err.Error())
 

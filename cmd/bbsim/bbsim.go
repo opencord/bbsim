@@ -40,7 +40,7 @@ import (
 )
 
 func startApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
-	address := common.Options.BBSim.ApiAddress
+	address := common.Config.BBSim.ApiAddress
 	log.Debugf("APIServer listening on %v", address)
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
@@ -70,7 +70,7 @@ func startApiRestServer(apiDoneChannel chan bool, group *sync.WaitGroup, grpcAdd
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	address := common.Options.BBSim.RestApiAddress
+	address := common.Config.BBSim.RestApiAddress
 
 	mux := runtime.NewServeMux()
 	opts := []grpc.DialOption{grpc.WithInsecure()}
@@ -101,8 +101,8 @@ func startApiRestServer(apiDoneChannel chan bool, group *sync.WaitGroup, grpcAdd
 
 // This server aims to provide compatibility with the previous BBSim version. It is deprecated and will be removed in the future.
 func startLegacyApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
-	grpcAddress := common.Options.BBSim.LegacyApiAddress
-	restAddress := common.Options.BBSim.LegacyRestApiAddress
+	grpcAddress := common.Config.BBSim.LegacyApiAddress
+	restAddress := common.Config.BBSim.LegacyRestApiAddress
 
 	log.Debugf("Legacy APIServer listening on %v", grpcAddress)
 	listener, err := net.Listen("tcp", grpcAddress)
@@ -129,15 +129,14 @@ func startLegacyApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 
 func main() {
 
-	options := common.GetBBSimOpts()
+	common.LoadConfig()
 
-	common.SetLogLevel(log.StandardLogger(), options.BBSim.LogLevel, options.BBSim.LogCaller)
-	log.Tracef("BBSim options: %+v", options)
+	common.SetLogLevel(log.StandardLogger(), common.Config.BBSim.LogLevel, common.Config.BBSim.LogCaller)
 
-	if *options.BBSim.CpuProfile != "" {
+	if *common.Config.BBSim.CpuProfile != "" {
 		// start profiling
-		log.Infof("Creating profile file at: %s", *options.BBSim.CpuProfile)
-		f, err := os.Create(*options.BBSim.CpuProfile)
+		log.Infof("Creating profile file at: %s", *common.Config.BBSim.CpuProfile)
+		f, err := os.Create(*common.Config.BBSim.CpuProfile)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -145,37 +144,30 @@ func main() {
 	}
 
 	log.WithFields(log.Fields{
-		"OltID":                options.Olt.ID,
-		"NumNniPerOlt":         options.Olt.NniPorts,
-		"NumPonPerOlt":         options.Olt.PonPorts,
-		"NumOnuPerPon":         options.Olt.OnusPonPort,
-		"TotalOnus":            options.Olt.PonPorts * options.Olt.OnusPonPort,
-		"EnableAuth":           options.BBSim.EnableAuth,
-		"Dhcp":                 options.BBSim.EnableDhcp,
-		"Igmp":                 options.BBSim.EnableIgmp,
-		"Delay":                options.BBSim.Delay,
-		"Events":               options.BBSim.Events,
-		"KafkaEventTopic":      options.BBSim.KafkaEventTopic,
-		"ControlledActivation": options.BBSim.ControlledActivation,
-		"EnablePerf":           options.BBSim.EnablePerf,
-		"CTag":                 options.BBSim.CTag,
-		"CTagAllocation":       options.BBSim.CTagAllocation,
-		"STag":                 options.BBSim.STag,
-		"STagAllocation":       options.BBSim.STagAllocation,
-		"SadisFormat":          options.BBSim.SadisFormat,
-		"DhcpRetry":            options.BBSim.DhcpRetry,
-		"AuthRetry":            options.BBSim.AuthRetry,
+		"OltID":                common.Config.Olt.ID,
+		"NumNniPerOlt":         common.Config.Olt.NniPorts,
+		"NumPonPerOlt":         common.Config.Olt.PonPorts,
+		"NumOnuPerPon":         common.Config.Olt.OnusPonPort,
+		"TotalOnus":            common.Config.Olt.PonPorts * common.Config.Olt.OnusPonPort,
+		"Delay":                common.Config.BBSim.Delay,
+		"Events":               common.Config.BBSim.Events,
+		"KafkaEventTopic":      common.Config.BBSim.KafkaEventTopic,
+		"ControlledActivation": common.Config.BBSim.ControlledActivation,
+		"EnablePerf":           common.Config.BBSim.EnablePerf,
+		"DhcpRetry":            common.Config.BBSim.DhcpRetry,
+		"AuthRetry":            common.Config.BBSim.AuthRetry,
 	}).Info("BroadBand Simulator is on")
 
 	// control channels, they are only closed when the goroutine needs to be terminated
 	apiDoneChannel := make(chan bool)
 
 	olt := devices.CreateOLT(
-		*options,
+		*common.Config,
+		common.Services,
 		false,
 	)
 
-	log.Debugf("Created OLT with id: %d", options.Olt.ID)
+	log.Debugf("Created OLT with id: %d", common.Config.Olt.ID)
 
 	sigs := make(chan os.Signal, 1)
 	// stop API servers on SIGTERM
@@ -192,12 +184,12 @@ func main() {
 	go startApiServer(apiDoneChannel, &wg)
 	go startLegacyApiServer(apiDoneChannel, &wg)
 	log.Debugf("Started APIService")
-	if common.Options.BBSim.SadisServer {
+	if common.Config.BBSim.SadisServer {
 		wg.Add(1)
 		go sadis.StartRestServer(olt, &wg)
 	}
 
-	if options.BBSim.Events {
+	if common.Config.BBSim.Events {
 		// initialize a publisher
 		if err := common.InitializePublisher(sarama.NewAsyncProducer, olt.ID); err == nil {
 			// start a go routine which will read from channel and publish on kafka
@@ -211,7 +203,7 @@ func main() {
 
 	defer func() {
 		log.Info("BroadBand Simulator is off")
-		if *options.BBSim.CpuProfile != "" {
+		if *common.Config.BBSim.CpuProfile != "" {
 			log.Info("Stopping profiler")
 			pprof.StopCPUProfile()
 		}

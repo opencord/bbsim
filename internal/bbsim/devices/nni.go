@@ -18,6 +18,7 @@ package devices
 
 import (
 	"bytes"
+	"encoding/hex"
 	"os/exec"
 
 	"github.com/google/gopacket"
@@ -110,7 +111,9 @@ func (n *NniPort) sendNniPacket(packet gopacket.Packet) error {
 			return err
 		}
 
-		nniLogger.Infof("Sent packet out of NNI")
+		nniLogger.WithFields(log.Fields{
+			"packet": hex.EncodeToString(packet.Data()),
+		}).Trace("Sent packet out of NNI")
 	} else if isLldp {
 		// TODO rework this when BBSim supports data-plane packets
 		nniLogger.Trace("Received LLDP Packet, ignoring it")

@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/opencord/bbsim/internal/bbsim/devices"
-	"github.com/opencord/bbsim/internal/common"
 	"gotest.tools/assert"
 )
 
@@ -34,89 +33,78 @@ func createMockDevices() (*devices.OltDevice, *devices.Onu) {
 	onu := &devices.Onu{
 		ID:        1,
 		PonPortID: 1,
-		STag:      900,
-		CTag:      923,
-		HwAddress: net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(1), byte(1)},
 		PortNo:    0,
 	}
+
+	mac := net.HardwareAddr{0x2e, 0x60, 0x01, byte(1), byte(1), byte(0)}
+
 	onu.SerialNumber = onu.NewSN(0, onu.PonPortID, onu.ID)
+	onu.Services = []devices.ServiceIf{
+		&devices.Service{Name: "hsia", CTag: 923, STag: 900, NeedsEapol: true, NeedsDhcp: true, NeedsIgmp: true, HwAddress: mac, TechnologyProfileID: 64},
+	}
 
 	return olt, onu
 }
 
-func TestSadisServer_GetOnuEntryV1(t *testing.T) {
+func TestSadisServer_GetOnuEntryV2(t *testing.T) {
 
 	olt, onu := createMockDevices()
 
 	uni := "1"
 
-	res, err := GetOnuEntryV1(olt, onu, uni)
-	if err != nil {
-		t.Fatal(err)
-	}
+	entry, err := GetOnuEntryV2(olt, onu, uni)
 
-	assert.Equal(t, res.ID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
-	assert.Equal(t, res.CTag, 923)
-	assert.Equal(t, res.STag, 900)
-	assert.Equal(t, res.RemoteID, string(olt.SerialNumber))
-	assert.Equal(t, res.DownstreamBandwidthProfile, "Default")
-	assert.Equal(t, res.UpstreamBandwidthProfile, "User_Bandwidth1")
-	assert.Equal(t, res.TechnologyProfileID, 64)
+	assert.NilError(t, err)
 
+	assert.Equal(t, entry.ID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
+	assert.Equal(t, entry.RemoteID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
+
+	assert.Equal(t, entry.UniTagList[0].PonCTag, 923)
+	assert.Equal(t, entry.UniTagList[0].PonSTag, 900)
+	assert.Equal(t, entry.UniTagList[0].DownstreamBandwidthProfile, "User_Bandwidth2")
+	assert.Equal(t, entry.UniTagList[0].UpstreamBandwidthProfile, "User_Bandwidth1")
+	assert.Equal(t, entry.UniTagList[0].TechnologyProfileID, 64)
+	assert.Equal(t, entry.UniTagList[0].IsDhcpRequired, true)
+	assert.Equal(t, entry.UniTagList[0].IsIgmpRequired, true)
 }
 
-func TestSadisServer_GetOnuEntryV2_Att(t *testing.T) {
+func TestSadisServer_GetOnuEntryV2_multi_service(t *testing.T) {
+
+	mac := net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(2)}
+
+	hsia := devices.Service{Name: "hsia", HwAddress: net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(1)},
+		CTag: 900, STag: 900, TechnologyProfileID: 64}
+
+	voip := devices.Service{Name: "voip", HwAddress: mac,
+		CTag: 901, STag: 900, TechnologyProfileID: 65}
+
+	vod := devices.Service{Name: "vod", HwAddress: net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(3)},
+		CTag: 902, STag: 900, TechnologyProfileID: 66}
+
 	olt, onu := createMockDevices()
+
+	onu.Services = []devices.ServiceIf{&hsia, &voip, &vod}
 
 	uni := "1"
 
-	res, err := GetOnuEntryV2(olt, onu, uni)
-	if err != nil {
-		t.Fatal(err)
-	}
+	entry, err := GetOnuEntryV2(olt, onu, uni)
 
-	assert.Equal(t, res.ID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
-	assert.Equal(t, res.RemoteID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
+	assert.NilError(t, err)
 
-	// assert the correct type
-	uniTagList, ok := res.UniTagList[0].(SadisUniTagAtt)
-	if !ok {
-		t.Fatal("UniTagList has the wrong type")
-	}
+	assert.Equal(t, entry.ID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
+	assert.Equal(t, entry.RemoteID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
 
-	assert.Equal(t, uniTagList.PonCTag, 923)
-	assert.Equal(t, uniTagList.PonSTag, 900)
-	assert.Equal(t, uniTagList.DownstreamBandwidthProfile, "User_Bandwidth1")
-	assert.Equal(t, uniTagList.UpstreamBandwidthProfile, "Default")
-	assert.Equal(t, uniTagList.TechnologyProfileID, 64)
-	assert.Equal(t, uniTagList.IsDhcpRequired, false)
-	assert.Equal(t, uniTagList.IsIgmpRequired, false)
-}
+	assert.Equal(t, len(entry.UniTagList), 3)
 
-func TestSadisServer_GetOnuEntryV2_Dt(t *testing.T) {
-	common.Options.BBSim.SadisFormat = common.SadisFormatDt
-	olt, onu := createMockDevices()
+	assert.Equal(t, entry.UniTagList[0].PonCTag, 900)
+	assert.Equal(t, entry.UniTagList[0].PonSTag, 900)
+	assert.Equal(t, entry.UniTagList[0].TechnologyProfileID, 64)
 
-	uni := "1"
+	assert.Equal(t, entry.UniTagList[1].PonCTag, 901)
+	assert.Equal(t, entry.UniTagList[1].PonSTag, 900)
+	assert.Equal(t, entry.UniTagList[1].TechnologyProfileID, 65)
 
-	res, err := GetOnuEntryV2(olt, onu, uni)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assert.Equal(t, res.ID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
-	assert.Equal(t, res.RemoteID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
-
-	// assert the correct type
-	uniTagList, ok := res.UniTagList[0].(SadisUniTagDt)
-	if !ok {
-		t.Fatal("UniTagList has the wrong type")
-	}
-
-	assert.Equal(t, uniTagList.PonCTag, 4096)
-	assert.Equal(t, uniTagList.PonSTag, 900)
-	assert.Equal(t, uniTagList.DownstreamBandwidthProfile, "User_Bandwidth1")
-	assert.Equal(t, uniTagList.UpstreamBandwidthProfile, "Default")
-	assert.Equal(t, uniTagList.TechnologyProfileID, 64)
-	assert.Equal(t, uniTagList.UniTagMatch, 4096)
+	assert.Equal(t, entry.UniTagList[2].PonCTag, 902)
+	assert.Equal(t, entry.UniTagList[2].PonSTag, 900)
+	assert.Equal(t, entry.UniTagList[2].TechnologyProfileID, 66)
 }

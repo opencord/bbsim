@@ -34,12 +34,12 @@ import (
 
 // usage
 func main() {
-	options := common.GetBBROpts()
+	config := common.GetBBROpts()
 
-	common.SetLogLevel(log.StandardLogger(), options.BBR.LogLevel, options.BBR.LogCaller)
+	common.SetLogLevel(log.StandardLogger(), config.BBR.LogLevel, config.BBR.LogCaller)
 
-	if options.LogFile != "" {
-		file, err := os.OpenFile(options.LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if config.LogFile != "" {
+		file, err := os.OpenFile(config.LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err == nil {
 			log.StandardLogger().Out = file
 		} else {
@@ -47,10 +47,10 @@ func main() {
 		}
 	}
 
-	if *options.BBSim.CpuProfile != "" {
+	if *config.BBSim.CpuProfile != "" {
 		// start profiling
-		log.Infof("Creating profile file at: %s", *options.BBSim.CpuProfile)
-		f, err := os.Create(*options.BBSim.CpuProfile)
+		log.Infof("Creating profile file at: %s", *config.BBSim.CpuProfile)
+		f, err := os.Create(*config.BBSim.CpuProfile)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -58,31 +58,32 @@ func main() {
 	}
 
 	log.WithFields(log.Fields{
-		"OltID":        options.Olt.ID,
-		"NumNniPerOlt": options.Olt.NniPorts,
-		"NumPonPerOlt": options.Olt.PonPorts,
-		"NumOnuPerPon": options.Olt.OnusPonPort,
-		"BBSimIp":      options.BBSimIp,
-		"BBSimPort":    options.BBSimPort,
-		"LogLevel":     options.BBR.LogLevel,
-		"TotalOnus":    options.Olt.PonPorts * options.Olt.OnusPonPort,
+		"OltID":        config.Olt.ID,
+		"NumNniPerOlt": config.Olt.NniPorts,
+		"NumPonPerOlt": config.Olt.PonPorts,
+		"NumOnuPerPon": config.Olt.OnusPonPort,
+		"BBSimIp":      config.BBSimIp,
+		"BBSimPort":    config.BBSimPort,
+		"LogLevel":     config.BBR.LogLevel,
+		"TotalOnus":    config.Olt.PonPorts * config.Olt.OnusPonPort,
 	}).Info("BroadBand Reflector is on")
 
 	// create the OLT device
 	olt := devices.CreateOLT(
-		*options.BBSimYamlConfig,
+		*config.GlobalConfig,
+		common.Services,
 		true,
 	)
 
-	onuIdMap := make(map[uint32]uint32, options.Olt.PonPorts)
+	onuIdMap := make(map[uint32]uint32, config.Olt.PonPorts)
 
 	oltMock := bbrdevices.OltMock{
 		Olt:           olt,
-		TargetOnus:    int(options.Olt.PonPorts * options.Olt.OnusPonPort),
+		TargetOnus:    int(config.Olt.PonPorts * config.Olt.OnusPonPort),
 		CompletedOnus: 0,
-		BBSimIp:       options.BBSimIp,
-		BBSimPort:     options.BBSimPort,
-		BBSimApiPort:  options.BBSimApiPort,
+		BBSimIp:       config.BBSimIp,
+		BBSimPort:     config.BBSimPort,
+		BBSimApiPort:  config.BBSimApiPort,
 		LastUsedOnuId: onuIdMap,
 	}
 

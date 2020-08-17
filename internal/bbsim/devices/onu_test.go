@@ -17,8 +17,9 @@
 package devices
 
 import (
-	omcisim "github.com/opencord/omci-sim"
+	"github.com/google/gopacket/layers"
 	"gotest.tools/assert"
+	"net"
 	"testing"
 )
 
@@ -32,53 +33,71 @@ func Test_Onu_CreateOnu(t *testing.T) {
 		Olt: &olt,
 	}
 
-	onu := CreateONU(&olt, &pon, 1, 900, 900, true, false, 0, false)
+	onu := CreateONU(&olt, &pon, 1, 0, false)
 
 	assert.Equal(t, onu.Sn(), "BBSM00000101")
-	assert.Equal(t, onu.STag, 900)
-	assert.Equal(t, onu.CTag, 900)
-	assert.Equal(t, onu.Auth, true)
-	assert.Equal(t, onu.Dhcp, false)
-	assert.Equal(t, onu.HwAddress.String(), "2e:60:70:00:01:01")
 }
 
-func TestOnu_processOmciMessage_GemPortAdded(t *testing.T) {
+func Test_AddGemPortToService_eapol(t *testing.T) {
 
-	receivedValues := []bool{}
-
-	checker := func(ch chan bool, done chan int) {
-		for v := range ch {
-			receivedValues = append(receivedValues, v)
-		}
-		done <- 0
-	}
+	hsia := Service{Name: "hsia", NeedsEapol: true, CTag: 900}
+	voip := Service{Name: "voip", NeedsEapol: false, CTag: 55}
 
 	onu := createTestOnu()
 
-	// create two listeners on the GemPortAdded event
-	ch1 := onu.GetGemPortChan()
-	ch2 := onu.GetGemPortChan()
+	onu.Services = []ServiceIf{&hsia, &voip}
 
-	msg := omcisim.OmciChMessage{
-		Type: omcisim.GemPortAdded,
-		Data: omcisim.OmciChMessageData{
-			IntfId: 1,
-			OnuId:  1,
-		},
-	}
+	onu.addGemPortToService(1024, uint32(layers.EthernetTypeEAPOL), 0, 0)
 
-	onu.processOmciMessage(msg, nil)
+	assert.Equal(t, hsia.GemPort, uint32(1024))
+	assert.Equal(t, voip.GemPort, uint32(0))
+}
 
-	done := make(chan int)
+func Test_AddGemPortToService_dhcp(t *testing.T) {
 
-	go checker(ch1, done)
-	go checker(ch2, done)
+	hsia := Service{Name: "hsia", NeedsEapol: true}
+	voip := Service{Name: "voip", NeedsDhcp: true, CTag: 900}
+	mc := Service{Name: "mc", CTag: 900}
 
-	// wait for the messages to be received on the "done" channel
-	<-done
-	<-done
+	onu := createTestOnu()
 
-	// make sure all channel are closed and removed
-	assert.Equal(t, len(onu.GemPortChannels), 0)
-	assert.Equal(t, len(receivedValues), 2)
+	onu.Services = []ServiceIf{&hsia, &voip, &mc}
+
+	onu.addGemPortToService(1025, uint32(layers.EthernetTypeIPv4), 900, 0)
+
+	assert.Equal(t, hsia.GemPort, uint32(0))
+	assert.Equal(t, voip.GemPort, uint32(1025))
+	assert.Equal(t, mc.GemPort, uint32(0))
+}
+
+func Test_AddGemPortToService_dataplane(t *testing.T) {
+
+	hsia := Service{Name: "hsia", NeedsEapol: true, CTag: 900, STag: 500}
+	voip := Service{Name: "voip", NeedsDhcp: true, CTag: 900}
+
+	onu := createTestOnu()
+
+	onu.Services = []ServiceIf{&hsia, &voip}
+
+	onu.addGemPortToService(1024, uint32(layers.EthernetTypeLLC), 500, 900)
+
+	assert.Equal(t, hsia.GemPort, uint32(1024))
+	assert.Equal(t, voip.GemPort, uint32(0))
+}
+
+func Test_FindServiceByMacAddress(t *testing.T) {
+
+	mac := net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(2)}
+
+	hsia := Service{Name: "hsia", HwAddress: net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(1)}}
+	voip := Service{Name: "voip", HwAddress: mac}
+	vod := Service{Name: "vod", HwAddress: net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(3)}}
+
+	onu := createTestOnu()
+
+	onu.Services = []ServiceIf{&hsia, &voip, &vod}
+
+	service, err := onu.findServiceByMacAddress(mac)
+	assert.NilError(t, err)
+	assert.Equal(t, service.HwAddress.String(), mac.String())
 }

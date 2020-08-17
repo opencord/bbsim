@@ -1,0 +1,12 @@
+# Contains a description of the services that needs to be created for each UNI and the corresponding tagging scheme
+
+# ATT
+workflow: att
+services:
+- name: hsia
+  uni_tag_match: 4096
+  c_tag: 7
+  c_tag_allocation: shared
+  s_tag: 20
+  s_tag_allocation: unique
+  tp_id: 64

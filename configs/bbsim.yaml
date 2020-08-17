@@ -23,10 +23,6 @@ bbsim:
   # log_level: "debug"
   # log_caller: false
   # delay: 200
-  # c_tag_allocation: unique
-  # c_tag: 900
-  # s_tag_allocation: shared
-  # s_tag: 900
   # kafka_event_topic: ""
 
 # OLT device settings

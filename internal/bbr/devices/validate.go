@@ -35,7 +35,7 @@ func ValidateAndClose(olt *OltMock) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	onus, err := client.GetONUs(ctx, &bbsim.Empty{})
+	services, err := client.GetServices(ctx, &bbsim.Empty{})
 
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -43,25 +43,29 @@ func ValidateAndClose(olt *OltMock) {
 		}).Fatalf("Can't reach BBSim API")
 	}
 
-	expectedState := "dhcp_ack_received"
+	expectedEapolState := "eap_response_success_received"
+	expectedDhcpState := "dhcp_ack_received"
 
 	res := true
-	for _, onu := range onus.Items {
-		if onu.InternalState != expectedState {
+	for _, service := range services.Items {
+		if service.DhcpState != expectedDhcpState || service.EapolState != expectedEapolState {
 			res = false
 			log.WithFields(log.Fields{
-				"OnuSN":         onu.SerialNumber,
-				"OnuId":         onu.ID,
-				"InternalState": onu.InternalState,
-				"ExpectedSatte": expectedState,
-			}).Error("Not matching expected state")
+				"OnuSN":              service.OnuSn,
+				"ServiceName":        service.Name,
+				"DhcpState":          service.DhcpState,
+				"EapolState":         service.EapolState,
+				"ExpectedDhcpState":  expectedDhcpState,
+				"ExpectedEapolState": expectedEapolState,
+			}).Fatal("Not matching expected state")
 		}
 	}
 
 	if res {
+		// NOTE that in BBR we expect to have a single service but this is not always the case
 		log.WithFields(log.Fields{
-			"ExpectedState": expectedState,
-		}).Infof("%d ONUs matching expected state", len(onus.Items))
+			"ExpectedState": expectedDhcpState,
+		}).Infof("%d ONUs matching expected state", len(services.Items))
 	}
 
 	olt.conn.Close()
