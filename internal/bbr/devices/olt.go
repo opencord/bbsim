@@ -18,7 +18,7 @@ package devices
 
 import (
 	"context"
-	"errors"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"reflect"
@@ -57,7 +57,7 @@ func (o *OltMock) Start() {
 			if err := onu.InternalState.Event("initialize"); err != nil {
 				log.Fatalf("Error initializing ONU: %v", err)
 			}
-			log.Debugf("Created ONU: %s (%d:%d)", onu.Sn(), onu.STag, onu.CTag)
+			log.Debugf("Created ONU: %s", onu.Sn())
 		}
 	}
 
@@ -89,19 +89,6 @@ func (o *OltMock) getDeviceInfo(client openolt.OpenoltClient) (*openolt.DeviceIn
 	defer cancel()
 
 	return client.GetDeviceInfo(ctx, new(openolt.Empty))
-}
-
-func (o *OltMock) getOnuByTags(sTag int, cTag int) (*devices.Onu, error) {
-
-	for _, pon := range o.Olt.Pons {
-		for _, onu := range pon.Onus {
-			if onu.STag == sTag && onu.CTag == cTag {
-				return onu, nil
-			}
-		}
-	}
-
-	return nil, errors.New("cant-find-onu-by-c-s-tags")
 }
 
 func (o *OltMock) readIndications(client openolt.OpenoltClient) {
@@ -320,28 +307,36 @@ func (o *OltMock) handlePktIndication(client openolt.OpenoltClient, pktIndicatio
 
 	if pktIndication.IntfType == "nni" {
 		// This is an packet that is arriving from the NNI and needs to be sent to an ONU
-		// in this case we need to fin the ONU from the C/S tags
-		// TODO: handle errors in the untagging process
-		sTag, _ := packetHandlers.GetVlanTag(pkt)
-		singleTagPkt, _ := packetHandlers.PopSingleTag(pkt)
-		cTag, _ := packetHandlers.GetVlanTag(singleTagPkt)
 
-		onu, err := o.getOnuByTags(int(sTag), int(cTag))
+		onuMac, err := packetHandlers.GetDstMacAddressFromPacket(pkt)
 
 		if err != nil {
 			log.WithFields(log.Fields{
-				"sTag": sTag,
-				"cTag": cTag,
-			}).Fatalf("Can't find ONU from c/s tags")
+				"IntfType": "nni",
+				"Pkt":      hex.EncodeToString(pkt.Data()),
+			}).Fatal("Can't find Dst MacAddress in packet")
 		}
+
+		s, err := o.Olt.FindServiceByMacAddress(onuMac)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"IntfType":   "nni",
+				"Pkt":        hex.EncodeToString(pkt.Data()),
+				"MacAddress": onuMac.String(),
+			}).Fatal("Can't find ONU with MacAddress")
+		}
+
+		service := s.(*devices.Service)
+		onu := service.Onu
 
 		msg := devices.Message{
 			Type: devices.OnuPacketIn,
 			Data: devices.OnuPacketMessage{
-				IntfId: pktIndication.IntfId,
-				OnuId:  onu.ID,
-				Packet: pkt,
-				Type:   pktType,
+				IntfId:    pktIndication.IntfId,
+				OnuId:     onu.ID,
+				Packet:    pkt,
+				Type:      pktType,
+				GemPortId: pktIndication.GemportId,
 			},
 		}
 		// NOTE we send it on the ONU channel so that is handled as all the others packets in a separate thread
