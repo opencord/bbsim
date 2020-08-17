@@ -84,7 +84,7 @@ func GetOLT() *OltDevice {
 	return &olt
 }
 
-func CreateOLT(options common.BBSimYamlConfig, isMock bool) *OltDevice {
+func CreateOLT(options common.BBSimYamlConfig, services []common.ServiceYaml, isMock bool) *OltDevice {
 	oltLogger.WithFields(log.Fields{
 		"ID":           options.Olt.ID,
 		"NumNni":       options.Olt.NniPorts,
@@ -146,44 +146,59 @@ func CreateOLT(options common.BBSimYamlConfig, isMock bool) *OltDevice {
 		olt.Nnis = append(olt.Nnis, &nniPort)
 	}
 
+	// Create device and Services
+
+	nextCtag := map[string]int{}
+	nextStag := map[string]int{}
+
 	// create PON ports
+	for i := 0; i < olt.NumPon; i++ {
+		p := CreatePonPort(&olt, uint32(i))
 
-	if options.BBSim.STagAllocation == common.TagAllocationShared && options.BBSim.CTagAllocation == common.TagAllocationShared {
-		oltLogger.Fatalf("This configuration will result in duplicate C/S tags combination")
-	} else if options.BBSim.STagAllocation == common.TagAllocationUnique && options.BBSim.CTagAllocation == common.TagAllocationUnique {
-		oltLogger.Fatalf("This configuration is not supported yet")
-	} else if options.BBSim.STagAllocation == common.TagAllocationShared && options.BBSim.CTagAllocation == common.TagAllocationUnique {
-		// ATT case
-		availableCTag := options.BBSim.CTag
-		for i := 0; i < olt.NumPon; i++ {
-			p := CreatePonPort(&olt, uint32(i))
+		// create ONU devices
+		for j := 0; j < olt.NumOnuPerPon; j++ {
+			delay := time.Duration(olt.Delay*j) * time.Millisecond
+			o := CreateONU(&olt, p, uint32(j+1), delay, isMock)
 
-			// create ONU devices
-			for j := 0; j < olt.NumOnuPerPon; j++ {
-				delay := time.Duration(olt.Delay*j) * time.Millisecond
-				o := CreateONU(&olt, p, uint32(j+1), options.BBSim.STag, availableCTag, options.BBSim.EnableAuth, options.BBSim.EnableDhcp, delay, isMock)
-				p.Onus = append(p.Onus, o)
-				availableCTag = availableCTag + 1
+			for k, s := range common.Services {
+
+				// find the correct cTag for this service
+				if _, ok := nextCtag[s.Name]; !ok {
+					// it's the first time we iterate over this service,
+					// so we start from the config value
+					nextCtag[s.Name] = s.CTag
+				} else {
+					// we have a previous value, so we check it
+					// if Allocation is unique, we increment,
+					// otherwise (shared) we do nothing
+					if s.CTagAllocation == common.TagAllocationUnique.String() {
+						nextCtag[s.Name] = nextCtag[s.Name] + 1
+					}
+				}
+
+				// find the correct sTag for this service
+				if _, ok := nextStag[s.Name]; !ok {
+					nextStag[s.Name] = s.STag
+				} else {
+					if s.STagAllocation == common.TagAllocationUnique.String() {
+						nextStag[s.Name] = nextStag[s.Name] + 1
+					}
+				}
+
+
+				mac := net.HardwareAddr{0x2e, 0x60, byte(olt.ID), byte(p.ID), byte(o.ID), byte(k)}
+				service, err := NewService(s.Name, mac, o, nextCtag[s.Name], nextStag[s.Name],
+					s.NeedsEapol, s.NeedsDchp, s.NeedsIgmp)
+
+				if err != nil {
+					oltLogger.Fatal("Can't create Service")
+				}
+
+				o.Services = append(o.Services, service)
 			}
-
-			olt.Pons = append(olt.Pons, p)
+			p.Onus = append(p.Onus, o)
 		}
-	} else if options.BBSim.STagAllocation == common.TagAllocationUnique && options.BBSim.CTagAllocation == common.TagAllocationShared {
-		// DT case
-		availableSTag := options.BBSim.STag
-		for i := 0; i < olt.NumPon; i++ {
-			p := CreatePonPort(&olt, uint32(i))
-
-			// create ONU devices
-			for j := 0; j < olt.NumOnuPerPon; j++ {
-				delay := time.Duration(olt.Delay*j) * time.Millisecond
-				o := CreateONU(&olt, p, uint32(j+1), availableSTag, options.BBSim.CTag, options.BBSim.EnableAuth, options.BBSim.EnableDhcp, delay, isMock)
-				p.Onus = append(p.Onus, o)
-				availableSTag = availableSTag + 1
-			}
-
-			olt.Pons = append(olt.Pons, p)
-		}
+		olt.Pons = append(olt.Pons, p)
 	}
 
 	if !isMock {
@@ -444,7 +459,7 @@ loop:
 				"messageType": message.Type,
 				"OnuId":       message.Data.OnuId,
 				"IntfId":      message.Data.IntfId,
-			}).Info("Received message on OMCI Sim channel")
+			}).Debug("Received message on OMCI Sim channel")
 
 			onuId := message.Data.OnuId
 			intfId := message.Data.IntfId
@@ -743,7 +758,7 @@ loop:
 				return
 			}
 
-			onu, err := o.FindOnuByMacAddress(onuMac)
+			s, err := o.FindServiceByMacAddress(onuMac)
 			if err != nil {
 				log.WithFields(log.Fields{
 					"IntfType":   "nni",
@@ -754,7 +769,9 @@ loop:
 				return
 			}
 
-			doubleTaggedPkt, err := packetHandlers.PushDoubleTag(onu.STag, onu.CTag, message.Pkt)
+			service := s.(*Service)
+
+			doubleTaggedPkt, err := packetHandlers.PushDoubleTag(service.STag, service.CTag, message.Pkt)
 			if err != nil {
 				log.Error("Fail to add double tag to packet")
 			}
@@ -774,8 +791,8 @@ loop:
 				"IntfType": data.PktInd.IntfType,
 				"IntfId":   nniId,
 				"Pkt":      doubleTaggedPkt.Data(),
-				"OnuSn":    onu.Sn(),
-			}).Tracef("Sent PktInd indication")
+				"OnuSn":    service.Onu.Sn(),
+			}).Debug("Sent PktInd indication (from NNI to VOLTHA)")
 		}
 	}
 	wg.Done()
@@ -816,18 +833,20 @@ func (o *OltDevice) FindOnuById(intfId uint32, onuId uint32) (*Onu, error) {
 }
 
 // returns an ONU with a given Mac Address
-func (o *OltDevice) FindOnuByMacAddress(mac net.HardwareAddr) (*Onu, error) {
+// deprecated (now Services have MacAddresses, ONUs don't)
+func (o *OltDevice) FindServiceByMacAddress(mac net.HardwareAddr) (ServiceIf, error) {
 	// TODO this function can be a performance bottleneck when we have many ONUs,
 	// memoizing it will remove the bottleneck
 	for _, pon := range o.Pons {
 		for _, onu := range pon.Onus {
-			if onu.HwAddress.String() == mac.String() {
-				return onu, nil
+			s, err := onu.findServiceByMacAddress(mac)
+			if err == nil {
+				return s, nil
 			}
 		}
 	}
 
-	return &Onu{}, fmt.Errorf("cannot-find-onu-by-mac-address-%s", mac)
+	return nil, fmt.Errorf("cannot-find-service-by-mac-address-%s", mac)
 }
 
 // GRPC Endpoints
@@ -1254,10 +1273,22 @@ func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket)
 		"IntfId": onu.PonPortID,
 		"OnuId":  onu.ID,
 		"OnuSn":  onu.Sn(),
-	}).Tracef("Received OnuPacketOut")
+	}).Info("Received OnuPacketOut")
 
 	rawpkt := gopacket.NewPacket(onuPkt.Pkt, layers.LayerTypeEthernet, gopacket.Default)
 	pktType, _ := packetHandlers.IsEapolOrDhcp(rawpkt)
+
+	pktMac, err := packetHandlers.GetDstMacAddressFromPacket(rawpkt)
+
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IntfId": onu.PonPortID,
+			"OnuId":  onu.ID,
+			"OnuSn":  onu.Sn(),
+			"Pkt":      rawpkt.Data(),
+		}).Error("Can't find Dst MacAddress in packet, droppint it")
+		return new(openolt.Empty), nil
+	}
 
 	msg := Message{
 		Type: OnuPacketOut,
@@ -1266,8 +1297,12 @@ func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket)
 			OnuId:  onuPkt.OnuId,
 			Packet: rawpkt,
 			Type:   pktType,
+			MacAddress: pktMac,
 		},
 	}
+
+
+
 	onu.Channel <- msg
 
 	return new(openolt.Empty), nil

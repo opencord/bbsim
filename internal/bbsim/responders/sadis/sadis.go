@@ -76,27 +76,16 @@ type SadisOltEntry struct {
 	UplinkPort         int    `json:"uplinkPort"`
 }
 
-type SadisOnuEntry struct {
-	ID                         string `json:"id"`
-	CTag                       int    `json:"cTag"`
-	STag                       int    `json:"sTag"`
-	NasPortID                  string `json:"nasPortId"`
-	CircuitID                  string `json:"circuitId"`
-	RemoteID                   string `json:"remoteId"`
-	TechnologyProfileID        int    `json:"technologyProfileId"`
-	UpstreamBandwidthProfile   string `json:"upstreamBandwidthProfile"`
-	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile"`
-}
-
 type SadisOnuEntryV2 struct {
 	ID         string        `json:"id"`
 	NasPortID  string        `json:"nasPortId"`
 	CircuitID  string        `json:"circuitId"`
 	RemoteID   string        `json:"remoteId"`
-	UniTagList []interface{} `json:"uniTagList"` // this can be SadisUniTagAtt, SadisUniTagDt
+	UniTagList []SadisUniTag `json:"uniTagList"` // this can be SadisUniTagAtt, SadisUniTagDt
 }
 
-type SadisUniTagAtt struct {
+type SadisUniTag struct {
+	UniTagMatch                int    `json:"uniTagMatch,omitempty"`
 	PonCTag                    int    `json:"ponCTag,omitempty"`
 	PonSTag                    int    `json:"ponSTag,omitempty"`
 	TechnologyProfileID        int    `json:"technologyProfileId,omitempty"`
@@ -104,15 +93,6 @@ type SadisUniTagAtt struct {
 	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile,omitempty"`
 	IsDhcpRequired             bool   `json:"isDhcpRequired,omitempty"`
 	IsIgmpRequired             bool   `json:"isIgmpRequired,omitempty"`
-}
-
-type SadisUniTagDt struct {
-	UniTagMatch                int    `json:"uniTagMatch,omitempty"`
-	PonCTag                    int    `json:"ponCTag,omitempty"`
-	PonSTag                    int    `json:"ponSTag,omitempty"`
-	TechnologyProfileID        int    `json:"technologyProfileId,omitempty"`
-	UpstreamBandwidthProfile   string `json:"upstreamBandwidthProfile,omitempty"`
-	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile,omitempty"`
 }
 
 // SADIS BandwithProfile Entry
@@ -172,21 +152,6 @@ func GetOltEntry(olt *devices.OltDevice) (*SadisOltEntry, error) {
 	return solt, nil
 }
 
-func GetOnuEntryV1(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*SadisOnuEntry, error) {
-	uniSuffix := "-" + uniId
-	sonu := &SadisOnuEntry{
-		ID:                         onu.Sn() + uniSuffix,
-		CTag:                       onu.CTag,
-		STag:                       onu.STag,
-		NasPortID:                  onu.Sn() + uniSuffix,
-		CircuitID:                  onu.Sn() + uniSuffix,
-		RemoteID:                   olt.SerialNumber,
-		TechnologyProfileID:        64,
-		UpstreamBandwidthProfile:   "User_Bandwidth1",
-		DownstreamBandwidthProfile: "Default",
-	}
-	return sonu, nil
-}
 
 func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*SadisOnuEntryV2, error) {
 	uniSuffix := "-" + uniId
@@ -198,37 +163,28 @@ func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*Sad
 		RemoteID:  onu.Sn() + uniSuffix,
 	}
 
-	// base structure common to all use cases
-	var sonuUniTag interface{}
+	tag := SadisUniTag{}
 
-	// set workflow specific params
-	switch common.Options.BBSim.SadisFormat {
-	case common.SadisFormatAtt:
-		sonuUniTag = SadisUniTagAtt{
-			PonCTag:             onu.CTag,
-			PonSTag:             onu.STag,
-			TechnologyProfileID: 64,
-			// NOTE do we want to select a random bandwidth profile?
-			// if so use bandwidthProfiles[rand.Intn(len(bandwidthProfiles))].ID
-			UpstreamBandwidthProfile:   "Default",
-			DownstreamBandwidthProfile: "User_Bandwidth1",
-			IsDhcpRequired:             common.Options.BBSim.EnableDhcp,
-			IsIgmpRequired:             common.Options.BBSim.EnableIgmp,
+	// createUniTagList
+	for _, s := range onu.Services {
+
+		service := s.(*devices.Service)
+
+		tag.IsIgmpRequired = service.NeedsIgmp
+		tag.IsDhcpRequired = service.NeedsDchp
+		tag.TechnologyProfileID = service.TechnologyProfileID
+		tag.UpstreamBandwidthProfile = "User_Bandwidth1"
+		tag.DownstreamBandwidthProfile = "User_Bandwidth2"
+
+		tag.PonCTag = service.CTag
+		tag.PonSTag = service.STag
+
+		if service.UniTagMatch != 0 {
+			tag.UniTagMatch = service.UniTagMatch
 		}
-	case common.SadisFormatDt:
-		sonuUniTag = SadisUniTagDt{
-			PonCTag:             4096,
-			PonSTag:             onu.STag,
-			TechnologyProfileID: 64,
-			// NOTE do we want to select a random bandwidth profile?
-			// if so use bandwidthProfiles[rand.Intn(len(bandwidthProfiles))].ID
-			UpstreamBandwidthProfile:   "Default",
-			DownstreamBandwidthProfile: "User_Bandwidth1",
-			UniTagMatch:                4096,
-		}
+		sonuv2.UniTagList = append(sonuv2.UniTagList, tag)
 	}
 
-	sonuv2.UniTagList = append(sonuv2.UniTagList, sonuUniTag)
 	return sonuv2, nil
 }
 
@@ -278,14 +234,9 @@ func (s *sadisServer) ServeStaticConfig(w http.ResponseWriter, r *http.Request) 
 	sadisConf.Sadis.Integration.URL = ""
 	for i := range s.olt.Pons {
 		for _, onu := range s.olt.Pons[i].Onus {
-			// FIXME currently we only support one UNI per ONU
-			if vars["version"] == "v1" {
-				sonuV1, _ := GetOnuEntryV1(s.olt, onu, "1")
-				sadisConf.Sadis.Entries = append(sadisConf.Sadis.Entries, sonuV1)
-			} else if vars["version"] == "v2" {
+			if vars["version"] == "v2" {
 				sonuV2, _ := GetOnuEntryV2(s.olt, onu, "1")
 				sadisConf.Sadis.Entries = append(sadisConf.Sadis.Entries, sonuV2)
-
 			}
 		}
 	}
@@ -343,11 +294,12 @@ func (s *sadisServer) ServeEntry(w http.ResponseWriter, r *http.Request) {
 		"OnuPortNo": uni,
 	}).Debug("Received SADIS request")
 
-	w.WriteHeader(http.StatusOK)
 	if vars["version"] == "v1" {
-		sadisConf, _ := GetOnuEntryV1(s.olt, onu, uni)
-		_ = json.NewEncoder(w).Encode(sadisConf)
+		// TODO format error
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode("Sadis v1 is not supported anymore, please go back to an earlier BBSim version")
 	} else if vars["version"] == "v2" {
+		w.WriteHeader(http.StatusOK)
 		sadisConf, _ := GetOnuEntryV2(s.olt, onu, uni)
 		_ = json.NewEncoder(w).Encode(sadisConf)
 	}
