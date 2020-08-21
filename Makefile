@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+SHELL = bash -e -o pipefail
 VERSION     ?= $(shell cat ./VERSION)
 DIFF		?= $(git diff --shortstat 2> /dev/null | tail -n1)
 GIT_STATUS	?= $(shell [ -z "$DIFF" ] && echo "Dirty" || echo "Clean")
