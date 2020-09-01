@@ -212,6 +212,24 @@
     },
     {
       "key": {
+        "uuid": "f38946d0_d685b767",
+        "filename": "internal/bbsim/devices/olt_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-01T21:18:44Z",
+      "side": 1,
+      "message": "I think the service can be extracted too, meaning `hsia` this was maybe the confusion on reusing for the other comment.",
+      "parentUuid": "9377566e_74c1b8a9",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a431973_3c367c86",
         "filename": "internal/bbsim/devices/onu.go",
         "patchSetId": 7
@@ -317,6 +335,24 @@
     },
     {
       "key": {
+        "uuid": "7da56314_15f31e3d",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-01T21:18:44Z",
+      "side": 1,
+      "message": "+1",
+      "parentUuid": "fc3874d6_dca91e0a",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70a28f8b_20f0e456",
         "filename": "internal/bbsim/devices/onu_indications_test.go",
         "patchSetId": 7
@@ -352,6 +388,24 @@
     },
     {
       "key": {
+        "uuid": "b3fe73a7_95f3399b",
+        "filename": "internal/bbsim/devices/onu_indications_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-01T21:18:44Z",
+      "side": 1,
+      "message": "perfect.",
+      "parentUuid": "4a0d3c46_3b6d271f",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ba96b2b9_8e390421",
         "filename": "internal/bbsim/devices/onu_test.go",
         "patchSetId": 7
@@ -381,6 +435,24 @@
       "side": 1,
       "message": "Which constants? Service name are read from the config and not used by BBSim if not in the logs, you can call the service as you want and it\u0027s behavior won\u0027t change",
       "parentUuid": "ba96b2b9_8e390421",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5a7abdc_2dce1b1e",
+        "filename": "internal/bbsim/devices/onu_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-01T21:18:44Z",
+      "side": 1,
+      "message": "the ones you define as per comment here. https://gerrit.opencord.org/c/bbsim/+/20148/7/internal/bbsim/devices/olt_test.go@65",
+      "parentUuid": "130f18f5_6f30741d",
       "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
