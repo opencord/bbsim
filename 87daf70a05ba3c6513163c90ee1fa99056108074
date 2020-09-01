@@ -1,0 +1,191 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a69fda7_75d0af3f",
+        "filename": "internal/bbr/devices/olt.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-01T13:23:18Z",
+      "side": 1,
+      "message": "I think Trace was better",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a1d4a14_983503df",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-01T13:23:18Z",
+      "side": 1,
+      "message": "nit: better names can be more esplicative",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c7144f4_a81e6374",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-01T13:23:18Z",
+      "side": 1,
+      "message": "I would add the error here",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef0c3844_9575bdf1",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-01T13:23:18Z",
+      "side": 1,
+      "message": "packets are usually trace",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a06d509c_b8dcfa3d",
+        "filename": "internal/bbsim/devices/olt_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-01T13:23:18Z",
+      "side": 1,
+      "message": "same",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b406df0_031c435a",
+        "filename": "internal/bbsim/devices/olt_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-01T13:23:18Z",
+      "side": 1,
+      "message": "unique and shared are worth extracting in an enum and re-use everywhere in case we end up chain gin one of the in the future. same old for services",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a431973_3c367c86",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-01T13:23:18Z",
+      "side": 1,
+      "message": "if commented please remove, valid for all elements in the class.",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a817a116_f047c110",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 803,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-01T13:23:18Z",
+      "side": 1,
+      "message": "what is 0 here ?",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba41f784_9a9d1d8e",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-01T13:23:18Z",
+      "side": 1,
+      "message": "doesn\u0027t TT also need DHCP, what if the HSIA service is not the first one on the list ?",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70a28f8b_20f0e456",
+        "filename": "internal/bbsim/devices/onu_indications_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-01T13:23:18Z",
+      "side": 1,
+      "message": "this does not guarantee that the s.CallCount is sent ordered to the channel, is that ok ?",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba96b2b9_8e390421",
+        "filename": "internal/bbsim/devices/onu_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-09-01T13:23:18Z",
+      "side": 1,
+      "message": "reuse the constant pre-defined",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
