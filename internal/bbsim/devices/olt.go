@@ -1273,20 +1273,31 @@ func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket)
 		"IntfId": onu.PonPortID,
 		"OnuId":  onu.ID,
 		"OnuSn":  onu.Sn(),
+		"Pkt": hex.EncodeToString(onuPkt.Pkt),
 	}).Info("Received OnuPacketOut")
 
 	rawpkt := gopacket.NewPacket(onuPkt.Pkt, layers.LayerTypeEthernet, gopacket.Default)
-	pktType, _ := packetHandlers.IsEapolOrDhcp(rawpkt)
-
-	pktMac, err := packetHandlers.GetDstMacAddressFromPacket(rawpkt)
+	pktType, err := packetHandlers.IsEapolOrDhcp(rawpkt)
 
 	if err != nil {
-		log.WithFields(log.Fields{
+		oltLogger.WithFields(log.Fields{
 			"IntfId": onu.PonPortID,
 			"OnuId":  onu.ID,
 			"OnuSn":  onu.Sn(),
 			"Pkt":    rawpkt.Data(),
-		}).Error("Can't find Dst MacAddress in packet, droppint it")
+		}).Error("Can't find packet type, dropping it")
+		return new(openolt.Empty), nil
+	}
+
+	pktMac, err := packetHandlers.GetDstMacAddressFromPacket(rawpkt)
+
+	if err != nil {
+		oltLogger.WithFields(log.Fields{
+			"IntfId": onu.PonPortID,
+			"OnuId":  onu.ID,
+			"OnuSn":  onu.Sn(),
+			"Pkt":    rawpkt.Data(),
+		}).Error("Can't find Dst MacAddress in packet, dropping it")
 		return new(openolt.Empty), nil
 	}
 
@@ -1302,6 +1313,8 @@ func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket)
 	}
 
 	onu.Channel <- msg
+
+	oltLogger.Info("Pkt sent to ONU")
 
 	return new(openolt.Empty), nil
 }

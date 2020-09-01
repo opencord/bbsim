@@ -63,8 +63,11 @@ type Onu struct {
 	// There is one PortNo per UNI Port, for now we're only storing the first one
 	// FIXME add support for multiple UNIs (each UNI has a different PortNo)
 	PortNo            uint32
+	// deprecated
 	GemPortAdded      bool
+	// deprecated
 	EapolFlowReceived bool
+	// deprecated
 	DhcpFlowReceived  bool
 	Flows             []FlowKey
 	FlowIds           []uint32 // keep track of the flows we currently have in the ONU
@@ -403,13 +406,15 @@ loop:
 				o.handleDHCPStart(stream)
 			case OnuPacketOut:
 
+				onuLogger.Warn("TEO OnuPacketOut")
+
 				msg, _ := message.Data.(OnuPacketMessage)
 
-				log.WithFields(log.Fields{
+				onuLogger.WithFields(log.Fields{
 					"IntfId":  msg.IntfId,
 					"OnuId":   msg.OnuId,
 					"pktType": msg.Type,
-				}).Trace("Received OnuPacketOut Message")
+				}).Debug("Received OnuPacketOut Message")
 
 				service, err := o.findServiceByMacAddress(msg.MacAddress)
 				if err != nil {
@@ -796,11 +801,11 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 	}
 
 	o.FlowIds = append(o.FlowIds, msg.Flow.FlowId)
+	o.addGemPortToService(uint32(msg.Flow.GemportId), msg.Flow.Classifier.EthType, msg.Flow.Classifier.OVid, msg.Flow.Classifier.IVid)
 
 	if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeEAPOL) && msg.Flow.Classifier.OVid == 4091 {
 		// NOTE storing the PortNO, it's needed when sending PacketIndications
 		o.storePortNumber(uint32(msg.Flow.PortNo))
-		o.addGemPortToService(uint32(msg.Flow.GemportId), true, 0)
 
 		msg := Message{
 			Type: StartEAPOL,
@@ -814,17 +819,6 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
 		msg.Flow.Classifier.DstPort == uint32(67) &&
 		(msg.Flow.Classifier.OPbits == 0 || msg.Flow.Classifier.OPbits == 255) {
-
-		o.addGemPortToService(uint32(msg.Flow.GemportId), false, msg.Flow.Classifier.OVid)
-
-		//msg := Message{
-		//	Type: StartDHCP,
-		//	Data: PacketMessage{
-		//		PonPortID: o.PonPortID,
-		//		OnuID:     o.ID,
-		//	},
-		//}
-		//o.Channel <- msg
 
 		for _, s := range o.Services {
 			s.HandleDhcp(*o.PonPort.Olt.OpenoltStream, int(msg.Flow.Classifier.OVid))
@@ -856,11 +850,6 @@ func (o *Onu) handleFlowRemove(msg OnuFlowUpdateMessage) {
 			"SerialNumber": o.Sn(),
 		}).Info("Resetting GemPort")
 		o.GemPortAdded = false
-
-		// TODO ideally we should keep track of the flow type (and not only the ID)
-		// so that we can properly set these two flag when the flow is removed
-		o.EapolFlowReceived = false
-		o.DhcpFlowReceived = false
 
 		// check if ONU delete is performed and
 		// terminate the ONU's ProcessOnuMessages Go routine
@@ -1125,19 +1114,23 @@ func (onu *Onu) ReDiscoverOnu() {
 	}
 }
 
-func (onu *Onu) addGemPortToService(gemport uint32, eapol bool, vlan uint32) {
-
+func (onu *Onu) addGemPortToService(gemport uint32, ethType uint32, oVlan uint32, iVlan uint32) {
 	for _, s := range onu.Services {
 		service := s.(*Service)
 		// EAPOL is a strange case, as packets are untagged
 		// but we assume we will have a single service requiring EAPOL
-		if eapol && service.NeedsEapol {
+		if ethType == uint32(layers.EthernetTypeEAPOL) && service.NeedsEapol {
 			service.GemPort = gemport
 		}
 
 		// For DHCP services we single tag the outgoing packets,
 		// thus the flow only contains the CTag and we can use that to match the service
-		if service.CTag == int(vlan) {
+		if ethType == uint32(layers.EthernetTypeIPv4) && service.NeedsDhcp && service.CTag == int(oVlan) {
+			service.GemPort = gemport
+		}
+
+		// for dataplane services match both C and S tags
+		if service.CTag == int(iVlan) && service.STag == int(oVlan) {
 			service.GemPort = gemport
 		}
 	}

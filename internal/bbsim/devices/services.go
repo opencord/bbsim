@@ -17,6 +17,7 @@
 package devices
 
 import (
+	"errors"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
@@ -24,6 +25,7 @@ import (
 	bbsimTypes "github.com/opencord/bbsim/internal/bbsim/types"
 	log "github.com/sirupsen/logrus"
 	"net"
+	"time"
 )
 
 var serviceLogger = log.WithFields(log.Fields{
@@ -97,6 +99,46 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 			"enter_state": func(e *fsm.Event) {
 				service.logStateChange("EapolState", e.Src, e.Dst)
 			},
+			"before_start_auth": func(e *fsm.Event) {
+				if !service.Onu.PonPort.Olt.InternalState.Is("enabled") {
+					serviceLogger.WithFields(log.Fields{
+						"OnuId":  service.Onu.ID,
+						"IntfId": service.Onu.PonPortID,
+						"OnuSn":  service.Onu.Sn(),
+						"Name":   service.Name,
+						"OltState": service.Onu.PonPort.Olt.InternalState.Current(),
+					}).Error("Can't start EAPOL if the OLT is not enabled")
+					e.Cancel(errors.New("Can't start EAPOL if the OLT is not enabled"))
+					return
+				}
+			},
+			"enter_auth_started": func(e *fsm.Event) {
+
+				if err := service.handleEapolStart(*service.Onu.PonPort.Olt.OpenoltStream); err != nil {
+					serviceLogger.WithFields(log.Fields{
+						"OnuId":  service.Onu.ID,
+						"IntfId": service.Onu.PonPortID,
+						"OnuSn":  service.Onu.Sn(),
+						"Name":   service.Name,
+						"err":    err,
+					}).Error("Error while sending EapolStart packet")
+					_ = service.EapolState.Event("auth_failed")
+				}
+
+				go func() {
+					// NOTE if nothing happens within 30 seconds consider DHCP failed so it can be restarted
+					time.Sleep(30 * time.Second)
+					if service.EapolState.Is("auth_started") {
+						serviceLogger.WithFields(log.Fields{
+							"OnuId":  service.Onu.ID,
+							"IntfId": service.Onu.PonPortID,
+							"OnuSn":  service.Onu.Sn(),
+							"Name":   service.Name,
+						}).Warn("Didn't get a response within 30 seconds, considering EAPOL as failed")
+						_ = service.EapolState.Event("auth_failed")
+					}
+				}()
+			},
 		},
 	)
 
@@ -112,6 +154,46 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 		fsm.Callbacks{
 			"enter_state": func(e *fsm.Event) {
 				service.logStateChange("DHCPState", e.Src, e.Dst)
+			},
+			"before_start_dhcp": func(e *fsm.Event) {
+				if !service.Onu.PonPort.Olt.InternalState.Is("enabled") {
+					serviceLogger.WithFields(log.Fields{
+						"OnuId":  service.Onu.ID,
+						"IntfId": service.Onu.PonPortID,
+						"OnuSn":  service.Onu.Sn(),
+						"Name":   service.Name,
+						"OltState": service.Onu.PonPort.Olt.InternalState.Current(),
+					}).Error("Can't start DHCP if the OLT is not enabled")
+					e.Cancel(errors.New("Can't start DHCP if the OLT is not enabled"))
+					return
+				}
+			},
+			"enter_dhcp_started": func(e *fsm.Event) {
+
+				if err := service.handleDHCPStart(*service.Onu.PonPort.Olt.OpenoltStream); err != nil {
+					serviceLogger.WithFields(log.Fields{
+						"OnuId":  service.Onu.ID,
+						"IntfId": service.Onu.PonPortID,
+						"OnuSn":  service.Onu.Sn(),
+						"Name":   service.Name,
+						"err":    err,
+					}).Error("Error while sending DHCPDiscovery packet")
+					_ = service.DHCPState.Event("dhcp_failed")
+				}
+
+				go func() {
+					// NOTE if nothing happens within 30 seconds consider DHCP failed so it can be restarted
+					time.Sleep(30 * time.Second)
+					if service.DHCPState.Is("dhcp_started") {
+						serviceLogger.WithFields(log.Fields{
+							"OnuId":  service.Onu.ID,
+							"IntfId": service.Onu.PonPortID,
+							"OnuSn":  service.Onu.Sn(),
+							"Name":   service.Name,
+						}).Warn("Didn't get a response within 30 seconds, considering DHCP as failed")
+						_ = service.DHCPState.Event("dhcp_failed")
+					}
+				}()
 			},
 		},
 	)
@@ -142,23 +224,11 @@ func (s *Service) HandleAuth(stream bbsimTypes.Stream) {
 			"Name":   s.Name,
 			"err":    err.Error(),
 		}).Error("Can't start auth for this Service")
-	} else {
-		if err := s.handleEapolStart(stream); err != nil {
-			serviceLogger.WithFields(log.Fields{
-				"OnuId":  s.Onu.ID,
-				"IntfId": s.Onu.PonPortID,
-				"OnuSn":  s.Onu.Sn(),
-				"Name":   s.Name,
-				"err":    err,
-			}).Error("Error while sending EapolStart packet")
-			_ = s.EapolState.Event("auth_failed")
-		}
 	}
 }
 
 func (s *Service) HandleDhcp(stream bbsimTypes.Stream, cTag int) {
 
-	// FIXME start dhcp only for the Service that matches the tag
 	if s.CTag != cTag {
 		serviceLogger.WithFields(log.Fields{
 			"OnuId":  s.Onu.ID,
@@ -181,7 +251,7 @@ func (s *Service) HandleDhcp(stream bbsimTypes.Stream, cTag int) {
 		return
 	}
 
-	// TODO check if the EAPOL flow was received before starting auth
+	// TODO check if the DHCP flow was received before starting auth
 
 	if err := s.DHCPState.Event("start_dhcp"); err != nil {
 		serviceLogger.WithFields(log.Fields{
@@ -191,17 +261,6 @@ func (s *Service) HandleDhcp(stream bbsimTypes.Stream, cTag int) {
 			"Name":   s.Name,
 			"err":    err.Error(),
 		}).Error("Can't start DHCP for this Service")
-	} else {
-		if err := s.handleDHCPStart(stream); err != nil {
-			serviceLogger.WithFields(log.Fields{
-				"OnuId":  s.Onu.ID,
-				"IntfId": s.Onu.PonPortID,
-				"OnuSn":  s.Onu.Sn(),
-				"Name":   s.Name,
-				"err":    err,
-			}).Error("Error while sending DHCPDiscovery packet")
-			_ = s.DHCPState.Event("dhcp_failed")
-		}
 	}
 }
 

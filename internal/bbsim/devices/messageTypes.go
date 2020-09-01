@@ -34,6 +34,7 @@ const (
 	OMCI              MessageType = 5
 	FlowAdd           MessageType = 6
 	FlowRemoved       MessageType = 18
+	// deprecated
 	StartEAPOL        MessageType = 7
 	// deprecated
 	StartDHCP    MessageType = 8

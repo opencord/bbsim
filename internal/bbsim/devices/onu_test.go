@@ -17,6 +17,7 @@
 package devices
 
 import (
+	"github.com/google/gopacket/layers"
 	"gotest.tools/assert"
 	"net"
 	"testing"
@@ -46,7 +47,7 @@ func Test_AddGemPortToService_eapol(t *testing.T) {
 
 	onu.Services = []ServiceIf{&hsia, &voip}
 
-	onu.addGemPortToService(1024, true, 0)
+	onu.addGemPortToService(1024, uint32(layers.EthernetTypeEAPOL), 0, 0)
 
 	assert.Equal(t, hsia.GemPort, uint32(1024))
 	assert.Equal(t, voip.GemPort, uint32(0))
@@ -55,16 +56,33 @@ func Test_AddGemPortToService_eapol(t *testing.T) {
 func Test_AddGemPortToService_dhcp(t *testing.T) {
 
 	hsia := Service{Name: "hsia", NeedsEapol: true}
-	voip := Service{Name: "voip", NeedsEapol: false, CTag: 900}
+	voip := Service{Name: "voip", NeedsDhcp: true, CTag: 900}
+	mc := Service{Name: "mc", CTag: 900}
+
+	onu := createTestOnu()
+
+	onu.Services = []ServiceIf{&hsia, &voip, &mc}
+
+	onu.addGemPortToService(1025, uint32(layers.EthernetTypeIPv4), 900, 0)
+
+	assert.Equal(t, hsia.GemPort, uint32(0))
+	assert.Equal(t, voip.GemPort, uint32(1025))
+	assert.Equal(t, mc.GemPort, uint32(0))
+}
+
+func Test_AddGemPortToService_dataplane(t *testing.T) {
+
+	hsia := Service{Name: "hsia", NeedsEapol: true, CTag: 900, STag: 500}
+	voip := Service{Name: "voip", NeedsDhcp: true, CTag: 900}
 
 	onu := createTestOnu()
 
 	onu.Services = []ServiceIf{&hsia, &voip}
 
-	onu.addGemPortToService(1025, false, 900)
+	onu.addGemPortToService(1024, uint32(layers.EthernetTypeLLC), 500, 900)
 
-	assert.Equal(t, hsia.GemPort, uint32(0))
-	assert.Equal(t, voip.GemPort, uint32(1025))
+	assert.Equal(t, hsia.GemPort, uint32(1024))
+	assert.Equal(t, voip.GemPort, uint32(0))
 }
 
 func Test_FindServiceByMacAddress(t *testing.T) {

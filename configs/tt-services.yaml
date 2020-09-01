@@ -1,6 +1,5 @@
 # Contains a description of the services that needs to be created for each UNI and the corresponding tagging scheme
 
-# TT
 workflow: tt
 services:
 - name: hsia
