@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bf5ccd63_24e4fd26",
+        "filename": "internal/bbr/devices/olt.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-09-01T19:36:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a69fda7_75d0af3f",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a1d4a14_983503df",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 7
@@ -33,6 +51,24 @@
       "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6574dc11_ccd4a69c",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-09-01T19:36:33Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6a1d4a14_983503df",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "614a6fff_f0d80d61",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-09-01T19:36:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6c7144f4_a81e6374",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef0c3844_9575bdf1",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 7
@@ -67,6 +121,24 @@
       "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ae9c2c6_5647ba49",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-09-01T19:36:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ef0c3844_9575bdf1",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "33b1398f_d6a0b4a4",
+        "filename": "internal/bbsim/devices/olt_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-09-01T19:36:33Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a06d509c_b8dcfa3d",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1b406df0_031c435a",
         "filename": "internal/bbsim/devices/olt_test.go",
         "patchSetId": 7
@@ -101,6 +191,24 @@
       "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9377566e_74c1b8a9",
+        "filename": "internal/bbsim/devices/olt_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-09-01T19:36:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1b406df0_031c435a",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "902a8e4f_989cc759",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-09-01T19:36:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a431973_3c367c86",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a817a116_f047c110",
         "filename": "internal/bbsim/devices/onu.go",
         "patchSetId": 7
@@ -135,6 +261,24 @@
       "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26e5358b_37c9b998",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 803,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-09-01T19:36:33Z",
+      "side": 1,
+      "message": "It was the outer tag of the flow (not used in the EAPOL case), removed in the last change-set",
+      "parentUuid": "a817a116_f047c110",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "fc3874d6_dca91e0a",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-09-01T19:36:33Z",
+      "side": 1,
+      "message": "BBR is only used to test BBSim, it only emulates the ATT workflow to cover both EAPOL and DHCP cases and it makes the assumption that we are using the ATT config when running BBSim against BBR.\n\nMaking it flexible to support multiple configurations will require adding a lot of complexity to it for a small gain (at the end of the day it\u0027s only responsible to check that BBSim can respond to a certain number of requests and nothing else)",
+      "parentUuid": "ba41f784_9a9d1d8e",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70a28f8b_20f0e456",
         "filename": "internal/bbsim/devices/onu_indications_test.go",
         "patchSetId": 7
@@ -172,6 +334,24 @@
     },
     {
       "key": {
+        "uuid": "4a0d3c46_3b6d271f",
+        "filename": "internal/bbsim/devices/onu_indications_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-09-01T19:36:33Z",
+      "side": 1,
+      "message": "Yes, it doesn\u0027t matter, it\u0027s only used to wait for a certain amount of calls",
+      "parentUuid": "70a28f8b_20f0e456",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ba96b2b9_8e390421",
         "filename": "internal/bbsim/devices/onu_test.go",
         "patchSetId": 7
@@ -186,6 +366,24 @@
       "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "130f18f5_6f30741d",
+        "filename": "internal/bbsim/devices/onu_test.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-09-01T19:36:33Z",
+      "side": 1,
+      "message": "Which constants? Service name are read from the config and not used by BBSim if not in the logs, you can call the service as you want and it\u0027s behavior won\u0027t change",
+      "parentUuid": "ba96b2b9_8e390421",
+      "revId": "87daf70a05ba3c6513163c90ee1fa99056108074",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
