@@ -48,14 +48,18 @@ func TestPushSingleTag(t *testing.T) {
 	)
 
 	untaggedPkt := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
-	taggedPkt, err := packetHandlers.PushSingleTag(111, untaggedPkt)
+
+	taggedPkt, err := packetHandlers.PushSingleTag(111, untaggedPkt, 7)
 	if err != nil {
 		t.Fail()
 		t.Logf("Error in PushSingleTag: %v", err)
 	}
 
 	vlan, _ := packetHandlers.GetVlanTag(taggedPkt)
+	pbit, _ := packetHandlers.GetPbit(taggedPkt)
+
 	assert.Equal(t, vlan, uint16(111))
+	assert.Equal(t, pbit, uint8(7))
 }
 
 func TestPushDoubleTag(t *testing.T) {
@@ -80,7 +84,7 @@ func TestPushDoubleTag(t *testing.T) {
 	)
 
 	untaggedPkt := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
-	taggedPkt, err := packetHandlers.PushDoubleTag(900, 800, untaggedPkt)
+	taggedPkt, err := packetHandlers.PushDoubleTag(900, 800, untaggedPkt, 0)
 	if err != nil {
 		t.Fail()
 		t.Logf("Error in PushSingleTag: %v", err)

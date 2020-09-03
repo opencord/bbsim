@@ -94,10 +94,10 @@ type SadisUniTag struct {
 	IsDhcpRequired             bool   `json:"isDhcpRequired,omitempty"`
 	IsIgmpRequired             bool   `json:"isIgmpRequired,omitempty"`
 	ConfiguredMacAddress       string `json:"configuredMacAddress,omitempty"`
-	UsPonCTagPriority          int    `json:"usPonCTagPriority,omitempty"`
-	UsPonSTagPriority          int    `json:"usPonSTagPriority,omitempty"`
-	DsPonCTagPriority          int    `json:"dsPonCTagPriority,omitempty"`
-	DsPonSTagPriority          int    `json:"dsPonSTagPriority,omitempty"`
+	UsPonCTagPriority          uint8  `json:"usPonCTagPriority,omitempty"`
+	UsPonSTagPriority          uint8  `json:"usPonSTagPriority,omitempty"`
+	DsPonCTagPriority          uint8  `json:"dsPonCTagPriority,omitempty"`
+	DsPonSTagPriority          uint8  `json:"dsPonSTagPriority,omitempty"`
 	ServiceName                string `json:"serviceName,omitempty"`
 }
 
@@ -245,7 +245,6 @@ func (s *sadisServer) ServeBaseConfig(w http.ResponseWriter, r *http.Request) {
 	sadisConf := GetSadisConfig(s.olt, vars["version"])
 
 	sadisJSON, _ := json.Marshal(sadisConf)
-	sadisLogger.Tracef("SADIS JSON: %s", sadisJSON)
 
 	_, _ = w.Write([]byte(sadisJSON))
 

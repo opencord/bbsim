@@ -129,10 +129,10 @@ type ServiceYaml struct {
 	TechnologyProfileID int    `yaml:"tp_id"`
 	UniTagMatch         int    `yaml:"uni_tag_match"`
 	ConfigureMacAddress bool   `yaml:"configure_mac_address"`
-	UsPonCTagPriority   int    `yaml:"us_pon_c_tag_priority"`
-	UsPonSTagPriority   int    `yaml:"us_pon_s_tag_priority"`
-	DsPonCTagPriority   int    `yaml:"ds_pon_c_tag_priority"`
-	DsPonSTagPriority   int    `yaml:"ds_pon_s_tag_priority"`
+	UsPonCTagPriority   uint8  `yaml:"us_pon_c_tag_priority"`
+	UsPonSTagPriority   uint8  `yaml:"us_pon_s_tag_priority"`
+	DsPonCTagPriority   uint8  `yaml:"ds_pon_c_tag_priority"`
+	DsPonSTagPriority   uint8  `yaml:"ds_pon_s_tag_priority"`
 }
 type YamlServiceConfig struct {
 	Workflow string
