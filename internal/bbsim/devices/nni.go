@@ -113,7 +113,7 @@ func (n *NniPort) sendNniPacket(packet gopacket.Packet) error {
 
 		nniLogger.WithFields(log.Fields{
 			"packet": hex.EncodeToString(packet.Data()),
-		}).Trace("Sent packet out of NNI")
+		}).Info("Sent packet out of NNI")
 	} else if isLldp {
 		// TODO rework this when BBSim supports data-plane packets
 		nniLogger.Trace("Received LLDP Packet, ignoring it")

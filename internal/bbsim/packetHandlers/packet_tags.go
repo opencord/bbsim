@@ -23,7 +23,7 @@ import (
 	"github.com/google/gopacket/layers"
 )
 
-func PushSingleTag(tag int, pkt gopacket.Packet) (gopacket.Packet, error) {
+func PushSingleTag(tag int, pkt gopacket.Packet, pbit uint8) (gopacket.Packet, error) {
 	// TODO can this method be semplified?
 	if eth := getEthernetLayer(pkt); eth != nil {
 		ethernetLayer := &layers.Ethernet{
@@ -35,6 +35,7 @@ func PushSingleTag(tag int, pkt gopacket.Packet) (gopacket.Packet, error) {
 		dot1qLayer := &layers.Dot1Q{
 			Type:           eth.EthernetType,
 			VLANIdentifier: uint16(tag),
+			Priority:       pbit,
 		}
 
 		buffer := gopacket.NewSerializeBuffer()
@@ -58,13 +59,13 @@ func PushSingleTag(tag int, pkt gopacket.Packet) (gopacket.Packet, error) {
 	return nil, errors.New("Couldn't extract LayerTypeEthernet from packet")
 }
 
-func PushDoubleTag(stag int, ctag int, pkt gopacket.Packet) (gopacket.Packet, error) {
+func PushDoubleTag(stag int, ctag int, pkt gopacket.Packet, pbit uint8) (gopacket.Packet, error) {
 
-	singleTaggedPkt, err := PushSingleTag(ctag, pkt)
+	singleTaggedPkt, err := PushSingleTag(ctag, pkt, pbit)
 	if err != nil {
 		return nil, err
 	}
-	doubleTaggedPkt, err := PushSingleTag(stag, singleTaggedPkt)
+	doubleTaggedPkt, err := PushSingleTag(stag, singleTaggedPkt, pbit)
 	if err != nil {
 		return nil, err
 	}
@@ -134,4 +135,12 @@ func GetVlanTag(pkt gopacket.Packet) (uint16, error) {
 		return 0, err
 	}
 	return dot1q.VLANIdentifier, nil
+}
+
+func GetPbit(pkt gopacket.Packet) (uint8, error) {
+	dot1q, err := getDot1QLayer(pkt)
+	if err != nil {
+		return 0, err
+	}
+	return dot1q.Priority, nil
 }
