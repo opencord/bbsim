@@ -51,10 +51,10 @@ type Service struct {
 	TechnologyProfileID int
 	UniTagMatch         int
 	ConfigureMacAddress bool
-	UsPonCTagPriority   int
-	UsPonSTagPriority   int
-	DsPonCTagPriority   int
-	DsPonSTagPriority   int
+	UsPonCTagPriority   uint8
+	UsPonSTagPriority   uint8
+	DsPonCTagPriority   uint8
+	DsPonSTagPriority   uint8
 
 	// state
 	GemPort       uint32
@@ -66,7 +66,7 @@ type Service struct {
 
 func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTag int,
 	needsEapol bool, needsDchp bool, needsIgmp bool, tpID int, uniTagMatch int, configMacAddress bool,
-	usPonCTagPriority int, usPonSTagPriority int, dsPonCTagPriority int, dsPonSTagPriority int) (*Service, error) {
+	usPonCTagPriority uint8, usPonSTagPriority uint8, dsPonCTagPriority uint8, dsPonSTagPriority uint8) (*Service, error) {
 
 	service := Service{
 		Name:                name,
@@ -262,7 +262,7 @@ func (s *Service) HandlePackets(stream bbsimTypes.Stream) {
 		if msg.Type == packetHandlers.EAPOL {
 			eapol.HandleNextPacket(msg.OnuId, msg.IntfId, s.GemPort, s.Onu.Sn(), s.Onu.PortNo, s.EapolState, msg.Packet, stream, nil)
 		} else if msg.Type == packetHandlers.DHCP {
-			_ = dhcp.HandleNextPacket(s.Onu.PonPort.Olt.ID, s.Onu.ID, s.Onu.PonPortID, s.Onu.Sn(), s.Onu.PortNo, s.CTag, s.GemPort, s.HwAddress, s.DHCPState, msg.Packet, stream)
+			_ = dhcp.HandleNextPacket(s.Onu.PonPort.Olt.ID, s.Onu.ID, s.Onu.PonPortID, s.Onu.Sn(), s.Onu.PortNo, s.CTag, s.GemPort, s.HwAddress, s.DHCPState, msg.Packet, s.UsPonCTagPriority, stream)
 		}
 	}
 }
@@ -326,7 +326,7 @@ func (s *Service) handleDHCPStart(stream bbsimTypes.Stream) error {
 	}).Debugf("HandleDHCPStart")
 
 	if err := dhcp.SendDHCPDiscovery(s.Onu.PonPort.Olt.ID, s.Onu.PonPortID, s.Onu.ID, int(s.CTag), s.GemPort,
-		s.Onu.Sn(), s.Onu.PortNo, s.DHCPState, s.HwAddress, stream); err != nil {
+		s.Onu.Sn(), s.Onu.PortNo, s.DHCPState, s.HwAddress, s.UsPonCTagPriority, stream); err != nil {
 		serviceLogger.WithFields(log.Fields{
 			"OnuId":     s.Onu.ID,
 			"IntfId":    s.Onu.PonPortID,

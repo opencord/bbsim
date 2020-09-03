@@ -766,7 +766,7 @@ loop:
 
 			service := s.(*Service)
 
-			doubleTaggedPkt, err := packetHandlers.PushDoubleTag(service.STag, service.CTag, message.Pkt)
+			doubleTaggedPkt, err := packetHandlers.PushDoubleTag(service.STag, service.CTag, message.Pkt, service.UsPonCTagPriority)
 			if err != nil {
 				log.Error("Fail to add double tag to packet")
 			}
@@ -787,7 +787,7 @@ loop:
 				"IntfId":   nniId,
 				"Pkt":      hex.EncodeToString(doubleTaggedPkt.Data()),
 				"OnuSn":    service.Onu.Sn(),
-			}).Trace("Sent PktInd indication (from NNI to VOLTHA)")
+			}).Info("Sent PktInd indication (from NNI to VOLTHA)")
 		}
 	}
 	wg.Done()
