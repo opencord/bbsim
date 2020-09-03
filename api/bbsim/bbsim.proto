@@ -62,6 +62,7 @@ message Service {
     int32 GemPort = 9;
     string EapolState = 10;
     string DhcpState = 11;
+    string InternalState = 12;
 }
 
 message ONUTrafficSchedulers {

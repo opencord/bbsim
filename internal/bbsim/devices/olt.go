@@ -277,20 +277,12 @@ func (o *OltDevice) RestartOLT() error {
 		return err
 	}
 
+	// PONs are already handled in the Disable call
 	for _, pon := range olt.Pons {
-		msg := Message{
-			Type: PonIndication,
-			Data: PonIndicationMessage{
-				OperState: DOWN,
-				PonPortID: pon.ID,
-			},
-		}
-		o.channel <- msg
-
+		// ONUs are not automatically disabled when a PON goes down
+		// as it's possible that it's an admin down and in that case the ONUs need to keep their state
 		for _, onu := range pon.Onus {
-			if onu.InternalState.Current() != "initialized" {
-				_ = onu.InternalState.Event("disable")
-			}
+			_ = onu.InternalState.Event("disable")
 		}
 	}
 
@@ -611,7 +603,7 @@ func (o *OltDevice) sendPonIndication(ponPortID uint32) {
 	oltLogger.WithFields(log.Fields{
 		"IntfId":    pon.ID,
 		"OperState": pon.OperState.Current(),
-	}).Debug("Sent Indication_IntfInd")
+	}).Debug("Sent Indication_IntfInd for PON")
 
 	// Send IntfOperIndication for PON port
 	operData := &openolt.Indication_IntfOperInd{IntfOperInd: &openolt.IntfOperIndication{
@@ -1275,7 +1267,7 @@ func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket)
 		"IntfId": onu.PonPortID,
 		"OnuId":  onu.ID,
 		"OnuSn":  onu.Sn(),
-	}).Info("Received OnuPacketOut")
+	}).Trace("Received OnuPacketOut")
 
 	rawpkt := gopacket.NewPacket(onuPkt.Pkt, layers.LayerTypeEthernet, gopacket.Default)
 	pktType, _ := packetHandlers.IsEapolOrDhcp(rawpkt)

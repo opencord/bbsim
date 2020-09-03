@@ -19,7 +19,7 @@ package devices
 import (
 	"github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 	"net"
 	"testing"
 )
@@ -43,6 +43,30 @@ func (s *mockService) HandlePackets(stream types.Stream) {
 	s.HandlePacketsCallCount = s.HandlePacketsCallCount + 1
 }
 
+func (s *mockService) Initialize() {}
+func (s *mockService) Disable()    {}
+
+// test the internalState transitions
+func TestService_InternalState(t *testing.T) {
+	mac := net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(1)}
+	onu := createMockOnu(1, 1)
+	s, err := NewService("testService", mac, onu, 900, 900,
+		false, false, false, 64, 0, false,
+		0, 0, 0, 0)
+
+	assert.Nil(t, err)
+
+	assert.Empty(t, s.PacketCh)
+	s.Initialize()
+
+	assert.NotNil(t, s.PacketCh)
+
+	s.Disable()
+	assert.Equal(t, "created", s.EapolState.Current())
+	assert.Equal(t, "created", s.DHCPState.Current())
+}
+
+// make sure that if the service does not need EAPOL we're not sending any packet
 func TestService_HandleAuth_noEapol(t *testing.T) {
 	mac := net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(1)}
 	onu := createMockOnu(1, 1)
@@ -50,7 +74,7 @@ func TestService_HandleAuth_noEapol(t *testing.T) {
 		false, false, false, 64, 0, false,
 		0, 0, 0, 0)
 
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 
 	stream := &mockStream{
 		Calls:   make(map[int]*openolt.Indication),
@@ -66,6 +90,7 @@ func TestService_HandleAuth_noEapol(t *testing.T) {
 	assert.Equal(t, s.EapolState.Current(), "created")
 }
 
+// make sure that if the service does need EAPOL we're sending any packet
 func TestService_HandleAuth_withEapol(t *testing.T) {
 	mac := net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(1)}
 	onu := createMockOnu(1, 1)
@@ -73,7 +98,7 @@ func TestService_HandleAuth_withEapol(t *testing.T) {
 		true, false, false, 64, 0, false,
 		0, 0, 0, 0)
 
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 
 	stream := &mockStream{
 		Calls: make(map[int]*openolt.Indication),
@@ -86,4 +111,72 @@ func TestService_HandleAuth_withEapol(t *testing.T) {
 
 	// state should not change
 	assert.Equal(t, s.EapolState.Current(), "eap_start_sent")
+}
+
+// make sure that if the service does not need DHCP we're not sending any packet
+func TestService_HandleDhcp_not_needed(t *testing.T) {
+	mac := net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(1)}
+	onu := createMockOnu(1, 1)
+	s, err := NewService("testService", mac, onu, 900, 900,
+		false, false, false, 64, 0, false,
+		0, 0, 0, 0)
+
+	assert.Nil(t, err)
+
+	stream := &mockStream{
+		Calls: make(map[int]*openolt.Indication),
+	}
+
+	s.HandleDhcp(stream, 900)
+
+	assert.Equal(t, stream.CallCount, 0)
+
+	// state should not change
+	assert.Equal(t, s.DHCPState.Current(), "created")
+}
+
+// when we receive a DHCP flow we call HandleDhcp an all the ONU Services
+// each service device whether the tag matches it's own configuration
+func TestService_HandleDhcp_different_c_Tag(t *testing.T) {
+	mac := net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(1)}
+	onu := createMockOnu(1, 1)
+	s, err := NewService("testService", mac, onu, 900, 900,
+		false, false, false, 64, 0, false,
+		0, 0, 0, 0)
+
+	assert.Nil(t, err)
+
+	stream := &mockStream{
+		Calls: make(map[int]*openolt.Indication),
+	}
+
+	// NOTE that the c_tag is different from the one configured in the service
+	s.HandleDhcp(stream, 800)
+
+	assert.Equal(t, stream.CallCount, 0)
+
+	// state should not change
+	assert.Equal(t, s.DHCPState.Current(), "created")
+}
+
+// make sure that if the service does need DHCP we're sending any packet
+func TestService_HandleDhcp_needed(t *testing.T) {
+	mac := net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(1)}
+	onu := createMockOnu(1, 1)
+	s, err := NewService("testService", mac, onu, 900, 900,
+		false, true, false, 64, 0, false,
+		0, 0, 0, 0)
+
+	assert.Nil(t, err)
+
+	stream := &mockStream{
+		Calls: make(map[int]*openolt.Indication),
+	}
+
+	s.HandleDhcp(stream, 900)
+
+	assert.Equal(t, stream.CallCount, 1)
+
+	// state should not change
+	assert.Equal(t, s.DHCPState.Current(), "dhcp_discovery_sent")
 }

@@ -62,7 +62,8 @@ type Onu struct {
 	// PortNo comes with flows and it's used when sending packetIndications,
 	// There is one PortNo per UNI Port, for now we're only storing the first one
 	// FIXME add support for multiple UNIs (each UNI has a different PortNo)
-	PortNo       uint32
+	PortNo uint32
+	// deprecated (gemPort is on a Service basis)
 	GemPortAdded bool
 	Flows        []FlowKey
 	FlowIds      []uint32 // keep track of the flows we currently have in the ONU
@@ -178,6 +179,12 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 					},
 				}
 				o.Channel <- msg
+
+				// Once the ONU is enabled start listening for packets
+				for _, s := range o.Services {
+					s.Initialize()
+					go s.HandlePackets(o.PonPort.Olt.OpenoltStream)
+				}
 			},
 			"enter_disabled": func(event *fsm.Event) {
 
@@ -186,7 +193,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 				o.PortNo = 0
 				o.Flows = []FlowKey{}
 
-				// set the OpenState to disabled
+				// set the OperState to disabled
 				if err := o.OperState.Event("disable"); err != nil {
 					onuLogger.WithFields(log.Fields{
 						"OnuId":  o.ID,
@@ -210,6 +217,10 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 				// terminate the ONU's ProcessOnuMessages Go routine
 				if len(o.FlowIds) == 0 {
 					close(o.Channel)
+				}
+
+				for _, s := range o.Services {
+					s.Disable()
 				}
 			},
 			// BBR states
@@ -346,6 +357,7 @@ loop:
 				} else if msg.Type == packetHandlers.DHCP {
 					_ = dhcp.HandleNextBbrPacket(o.ID, o.PonPortID, o.Sn(), o.DoneChannel, msg.Packet, client)
 				}
+			// BBR specific messages
 			case OmciIndication:
 				msg, _ := message.Data.(OmciIndicationMessage)
 				o.handleOmci(msg, client)
@@ -454,6 +466,7 @@ func (o *Onu) sendOnuIndication(msg OnuIndicationMessage, stream openolt.Openolt
 	if err := stream.Send(&openolt.Indication{Data: indData}); err != nil {
 		// NOTE do we need to transition to a broken state?
 		log.Errorf("Failed to send Indication_OnuInd: %v", err)
+		return
 	}
 	onuLogger.WithFields(log.Fields{
 		"IntfId":     o.PonPortID,
@@ -462,10 +475,6 @@ func (o *Onu) sendOnuIndication(msg OnuIndicationMessage, stream openolt.Openolt
 		"AdminState": msg.OperState.String(),
 		"OnuSn":      o.Sn(),
 	}).Debug("Sent Indication_OnuInd")
-
-	for _, s := range o.Services {
-		go s.HandlePackets(stream)
-	}
 
 }
 

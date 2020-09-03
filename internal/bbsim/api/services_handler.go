@@ -24,17 +24,18 @@ import (
 
 func convertBBSimServiceToProtoService(s *devices.Service) *bbsim.Service {
 	return &bbsim.Service{
-		Name:       s.Name,
-		HwAddress:  s.HwAddress.String(),
-		OnuSn:      s.Onu.Sn(),
-		CTag:       int32(s.CTag),
-		STag:       int32(s.STag),
-		NeedsEapol: s.NeedsEapol,
-		NeedsDhcp:  s.NeedsDhcp,
-		NeedsIgmp:  s.NeedsIgmp,
-		GemPort:    int32(s.GemPort),
-		EapolState: s.EapolState.Current(),
-		DhcpState:  s.DHCPState.Current(),
+		Name:          s.Name,
+		InternalState: s.InternalState.Current(),
+		HwAddress:     s.HwAddress.String(),
+		OnuSn:         s.Onu.Sn(),
+		CTag:          int32(s.CTag),
+		STag:          int32(s.STag),
+		NeedsEapol:    s.NeedsEapol,
+		NeedsDhcp:     s.NeedsDhcp,
+		NeedsIgmp:     s.NeedsIgmp,
+		GemPort:       int32(s.GemPort),
+		EapolState:    s.EapolState.Current(),
+		DhcpState:     s.DHCPState.Current(),
 	}
 }
 

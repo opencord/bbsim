@@ -38,7 +38,7 @@ var eapolLogger = log.WithFields(log.Fields{
 var eapolVersion uint8 = 1
 var GetGemPortId = omci.GetGemPortId
 
-func sendEapolPktIn(msg bbsim.ByteMsg, portNo uint32, gemid uint32, stream bbsim.Stream) {
+func sendEapolPktIn(msg bbsim.ByteMsg, portNo uint32, gemid uint32, stream bbsim.Stream) error {
 	// FIXME unify sendDHCPPktIn and sendEapolPktIn methods
 
 	log.WithFields(log.Fields{
@@ -58,8 +58,9 @@ func sendEapolPktIn(msg bbsim.ByteMsg, portNo uint32, gemid uint32, stream bbsim
 
 	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
 		eapolLogger.Errorf("Fail to send EAPOL PktInd indication. %v", err)
-		return
+		return err
 	}
+	return nil
 }
 
 func getMD5Data(eap *layers.EAP) []byte {
@@ -312,7 +313,10 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, gemPortId uint32, serialNu
 			Bytes:  pkt,
 		}
 
-		sendEapolPktIn(msg, portNo, gemPortId, stream)
+		if err := sendEapolPktIn(msg, portNo, gemPortId, stream); err != nil {
+			_ = stateMachine.Event("auth_failed")
+			return
+		}
 		eapolLogger.WithFields(log.Fields{
 			"OnuId":  onuId,
 			"IntfId": ponPortId,
@@ -360,7 +364,10 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, gemPortId uint32, serialNu
 			Bytes:  pkt,
 		}
 
-		sendEapolPktIn(msg, portNo, gemPortId, stream)
+		if err := sendEapolPktIn(msg, portNo, gemPortId, stream); err != nil {
+			_ = stateMachine.Event("auth_failed")
+			return
+		}
 		eapolLogger.WithFields(log.Fields{
 			"OnuId":  onuId,
 			"IntfId": ponPortId,
