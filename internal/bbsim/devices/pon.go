@@ -121,7 +121,7 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 			},
 			"enter_disabled": func(e *fsm.Event) {
 				for _, onu := range ponPort.Onus {
-					if onu.InternalState.Current() == "initialized" {
+					if onu.InternalState.Current() == "initialized" || onu.InternalState.Current() == "disabled" {
 						continue
 					}
 					if err := onu.InternalState.Event("pon_disabled"); err != nil {

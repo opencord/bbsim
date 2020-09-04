@@ -126,7 +126,7 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 			{Name: "initialize", Src: []string{"created", "deleted"}, Dst: "initialized"},
 			{Name: "enable", Src: []string{"initialized", "disabled"}, Dst: "enabled"},
 			{Name: "disable", Src: []string{"enabled"}, Dst: "disabled"},
-			//delete event in enabled state below is for reboot OLT case.
+			// delete event in enabled state below is for reboot OLT case.
 			{Name: "delete", Src: []string{"disabled", "enabled"}, Dst: "deleted"},
 		},
 		fsm.Callbacks{
@@ -256,11 +256,19 @@ func (o *OltDevice) InitOlt() {
 
 func (o *OltDevice) RestartOLT() error {
 
+	softReboot := false
 	rebootDelay := common.Config.Olt.OltRebootDelay
 
 	oltLogger.WithFields(log.Fields{
 		"oltId": o.ID,
 	}).Infof("Simulating OLT restart... (%ds)", rebootDelay)
+
+	if o.InternalState.Is("enabled") {
+		oltLogger.WithFields(log.Fields{
+			"oltId": o.ID,
+		}).Info("This is an OLT soft reboot")
+		softReboot = true
+	}
 
 	// transition internal state to deleted
 	if err := o.InternalState.Event("delete"); err != nil {
@@ -277,12 +285,32 @@ func (o *OltDevice) RestartOLT() error {
 		return err
 	}
 
-	// PONs are already handled in the Disable call
-	for _, pon := range olt.Pons {
-		// ONUs are not automatically disabled when a PON goes down
-		// as it's possible that it's an admin down and in that case the ONUs need to keep their state
-		for _, onu := range pon.Onus {
-			_ = onu.InternalState.Event("disable")
+	if softReboot {
+		for _, pon := range o.Pons {
+			if pon.InternalState.Current() == "enabled" {
+				// disable PONs
+				msg := Message{
+					Type: PonIndication,
+					Data: PonIndicationMessage{
+						OperState: DOWN,
+						PonPortID: pon.ID,
+					},
+				}
+				o.channel <- msg
+			}
+
+			for _, onu := range pon.Onus {
+				_ = onu.InternalState.Event("disable")
+			}
+		}
+	} else {
+		// PONs are already handled in the Disable call
+		for _, pon := range olt.Pons {
+			// ONUs are not automatically disabled when a PON goes down
+			// as it's possible that it's an admin down and in that case the ONUs need to keep their state
+			for _, onu := range pon.Onus {
+				_ = onu.InternalState.Event("disable")
+			}
 		}
 	}
 
@@ -352,6 +380,7 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) {
 	// new ones
 	o.Lock()
 	if o.enableContext != nil && o.enableContextCancel != nil {
+		oltLogger.Info("This is an OLT reboot")
 		o.enableContextCancel()
 		rebootFlag = true
 	}
@@ -1301,6 +1330,11 @@ func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket)
 }
 
 func (o *OltDevice) Reboot(context.Context, *openolt.Empty) (*openolt.Empty, error) {
+
+	// OLT Reboot is called in two cases:
+	// - when an OLT is being removed (voltctl device disable -> voltctl device delete are called, then a new voltctl device create -> voltctl device enable will be issued)
+	// - when an OLT needs to be rebooted (voltcl device reboot)
+
 	oltLogger.WithFields(log.Fields{
 		"oltId": o.ID,
 	}).Info("Shutting down")
