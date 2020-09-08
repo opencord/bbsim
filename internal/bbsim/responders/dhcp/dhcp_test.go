@@ -74,7 +74,7 @@ func TestSendDHCPDiscovery(t *testing.T) {
 		fail:  false,
 	}
 
-	if err := SendDHCPDiscovery(oltId, ponPortId, onuId, 900, gemPortId, serialNumber, portNo, dhcpStateMachine, mac, 7, stream); err != nil {
+	if err := SendDHCPDiscovery(oltId, ponPortId, onuId, "hsia", 900, gemPortId, serialNumber, portNo, dhcpStateMachine, mac, 7, stream); err != nil {
 		t.Errorf("SendDHCPDiscovery returned an error: %v", err)
 		t.Fail()
 	}

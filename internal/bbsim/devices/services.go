@@ -130,7 +130,9 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 	service.DHCPState = fsm.NewFSM(
 		"created",
 		fsm.Events{
-			{Name: "start_dhcp", Src: []string{"created", "eap_response_success_received", "dhcp_discovery_sent", "dhcp_request_sent", "dhcp_ack_received", "dhcp_failed"}, Dst: "dhcp_started"},
+			// TODO only allow transitions to dhcp_start from success or failure, not in-between states
+			// TODO forcefully fail DHCP if we don't get an ack in X seconds
+			{Name: "start_dhcp", Src: []string{"created", "dhcp_discovery_sent", "dhcp_request_sent", "dhcp_ack_received", "dhcp_failed"}, Dst: "dhcp_started"},
 			{Name: "dhcp_discovery_sent", Src: []string{"dhcp_started"}, Dst: "dhcp_discovery_sent"},
 			{Name: "dhcp_request_sent", Src: []string{"dhcp_discovery_sent"}, Dst: "dhcp_request_sent"},
 			{Name: "dhcp_ack_received", Src: []string{"dhcp_request_sent"}, Dst: "dhcp_ack_received"},
@@ -191,11 +193,10 @@ func (s *Service) HandleDhcp(stream bbsimTypes.Stream, cTag int) {
 			"IntfId": s.Onu.PonPortID,
 			"OnuSn":  s.Onu.Sn(),
 			"Name":   s.Name,
-		}).Debug("DHCP flow is not for this service, ignoring")
+		}).Trace("DHCP flow is not for this service, ignoring")
 		return
 	}
 
-	// NOTE since we're matching the flow tag, this may not be required
 	if !s.NeedsDhcp {
 		serviceLogger.WithFields(log.Fields{
 			"OnuId":     s.Onu.ID,
@@ -203,11 +204,11 @@ func (s *Service) HandleDhcp(stream bbsimTypes.Stream, cTag int) {
 			"OnuSn":     s.Onu.Sn(),
 			"Name":      s.Name,
 			"NeedsDhcp": s.NeedsDhcp,
-		}).Debug("Won't start DHCP as it is not required")
+		}).Trace("Won't start DHCP as it is not required")
 		return
 	}
 
-	// TODO check if the EAPOL flow was received before starting auth
+	// TODO check if the DHCP flow was received before starting auth
 
 	if err := s.DHCPState.Event("start_dhcp"); err != nil {
 		serviceLogger.WithFields(log.Fields{
@@ -257,12 +258,12 @@ func (s *Service) HandlePackets(stream bbsimTypes.Stream) {
 			"OnuSn":       s.Onu.Sn(),
 			"Name":        s.Name,
 			"messageType": msg.Type,
-		}).Debug("Received message on Service Packet Channel")
+		}).Trace("Received message on Service Packet Channel")
 
 		if msg.Type == packetHandlers.EAPOL {
 			eapol.HandleNextPacket(msg.OnuId, msg.IntfId, s.GemPort, s.Onu.Sn(), s.Onu.PortNo, s.EapolState, msg.Packet, stream, nil)
 		} else if msg.Type == packetHandlers.DHCP {
-			_ = dhcp.HandleNextPacket(s.Onu.PonPort.Olt.ID, s.Onu.ID, s.Onu.PonPortID, s.Onu.Sn(), s.Onu.PortNo, s.CTag, s.GemPort, s.HwAddress, s.DHCPState, msg.Packet, s.UsPonCTagPriority, stream)
+			_ = dhcp.HandleNextPacket(s.Onu.PonPort.Olt.ID, s.Onu.ID, s.Onu.PonPortID, s.Name, s.Onu.Sn(), s.Onu.PortNo, s.CTag, s.GemPort, s.HwAddress, s.DHCPState, msg.Packet, s.UsPonCTagPriority, stream)
 		}
 	}
 }
@@ -325,7 +326,7 @@ func (s *Service) handleDHCPStart(stream bbsimTypes.Stream) error {
 		"GemPortId": s.GemPort,
 	}).Debugf("HandleDHCPStart")
 
-	if err := dhcp.SendDHCPDiscovery(s.Onu.PonPort.Olt.ID, s.Onu.PonPortID, s.Onu.ID, int(s.CTag), s.GemPort,
+	if err := dhcp.SendDHCPDiscovery(s.Onu.PonPort.Olt.ID, s.Onu.PonPortID, s.Onu.ID, s.Name, int(s.CTag), s.GemPort,
 		s.Onu.Sn(), s.Onu.PortNo, s.DHCPState, s.HwAddress, s.UsPonCTagPriority, stream); err != nil {
 		serviceLogger.WithFields(log.Fields{
 			"OnuId":     s.Onu.ID,

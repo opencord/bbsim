@@ -357,7 +357,7 @@ loop:
 				} else if msg.Type == packetHandlers.DHCP {
 					_ = dhcp.HandleNextBbrPacket(o.ID, o.PonPortID, o.Sn(), o.DoneChannel, msg.Packet, client)
 				}
-			// BBR specific messages
+				// BBR specific messages
 			case OmciIndication:
 				msg, _ := message.Data.(OmciIndicationMessage)
 				o.handleOmci(msg, client)
@@ -611,6 +611,7 @@ func (o *Onu) SetID(id uint32) {
 
 func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 	onuLogger.WithFields(log.Fields{
+		"Cookie":           msg.Flow.Cookie,
 		"DstPort":          msg.Flow.Classifier.DstPort,
 		"EthType":          fmt.Sprintf("%x", msg.Flow.Classifier.EthType),
 		"FlowId":           msg.Flow.FlowId,
