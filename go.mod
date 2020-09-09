@@ -19,7 +19,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4
 	github.com/opencord/omci-sim v0.0.4
-	github.com/opencord/voltha-protos/v2 v2.1.2
+	github.com/opencord/voltha-protos/v3 v3.4.5
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.4.0

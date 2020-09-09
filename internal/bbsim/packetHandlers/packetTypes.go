@@ -22,6 +22,7 @@ const (
 	UNKNOWN PacketType = iota
 	EAPOL
 	DHCP
+	IGMP
 )
 
 func (t PacketType) String() string {
@@ -29,6 +30,7 @@ func (t PacketType) String() string {
 		"UNKNOWN",
 		"EAPOL",
 		"DHCP",
+		"IGMP",
 	}
 	return names[t]
 }

@@ -25,7 +25,7 @@ import (
 
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
-	"github.com/opencord/voltha-protos/v2/go/openolt"
+	"github.com/opencord/voltha-protos/v3/go/openolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -160,9 +160,14 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, o *devices.OltDevice) (
 	case bbsim.AlarmType_ONU_ITU_PON_STATS:
 		alarm = &openolt.AlarmIndication{
 			Data: &openolt.AlarmIndication_OnuItuPonStatsInd{OnuItuPonStatsInd: &openolt.OnuItuPonStatsIndication{
-				OnuId:     onu.ID,
-				IntfId:    onu.PonPortID,
-				RdiErrors: uint32(extractInt(req.Parameters, "RdiErrors", 0)),
+				OnuId:  onu.ID,
+				IntfId: onu.PonPortID,
+				Stats: &openolt.OnuItuPonStatsIndication_RdiErrorInd{
+					RdiErrorInd: &openolt.RdiErrorIndication{
+						RdiErrorCount: uint64(extractInt(req.Parameters, "RdiErrors", 0)),
+						Status:        req.Status,
+					},
+				},
 			}},
 		}
 	case bbsim.AlarmType_ONU_ALARM_LOS:

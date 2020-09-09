@@ -30,7 +30,7 @@ import (
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
-	"github.com/opencord/voltha-protos/v2/go/openolt"
+	"github.com/opencord/voltha-protos/v3/go/openolt"
 	log "github.com/sirupsen/logrus"
 )
 

@@ -18,6 +18,7 @@ package devices
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
@@ -33,8 +34,8 @@ import (
 	"github.com/opencord/bbsim/internal/common"
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
 	omcisim "github.com/opencord/omci-sim"
-	"github.com/opencord/voltha-protos/v2/go/openolt"
-	"github.com/opencord/voltha-protos/v2/go/tech_profile"
+	"github.com/opencord/voltha-protos/v3/go/openolt"
+	"github.com/opencord/voltha-protos/v3/go/tech_profile"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -235,23 +236,6 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 				}
 				o.Channel <- msg
 			},
-			"igmp_join_start": func(e *fsm.Event) {
-				msg := Message{
-					Type: IGMPMembershipReportV2,
-				}
-				o.Channel <- msg
-			},
-			"igmp_leave": func(e *fsm.Event) {
-				msg := Message{
-					Type: IGMPLeaveGroup}
-				o.Channel <- msg
-			},
-			"igmp_join_startv3": func(e *fsm.Event) {
-				msg := Message{
-					Type: IGMPMembershipReportV3,
-				}
-				o.Channel <- msg
-			},
 		},
 	)
 
@@ -325,26 +309,31 @@ loop:
 					"pktType": msg.Type,
 				}).Trace("Received OnuPacketOut Message")
 
-				service, err := o.findServiceByMacAddress(msg.MacAddress)
-				if err != nil {
-					onuLogger.WithFields(log.Fields{
-						"IntfId":     msg.IntfId,
-						"OnuId":      msg.OnuId,
-						"pktType":    msg.Type,
-						"MacAddress": msg.MacAddress,
-						"OnuSn":      o.Sn(),
-					}).Error("Cannot find Service associated with packet")
-					return
+				if msg.Type == packetHandlers.EAPOL || msg.Type == packetHandlers.DHCP {
+
+					service, err := o.findServiceByMacAddress(msg.MacAddress)
+					if err != nil {
+						onuLogger.WithFields(log.Fields{
+							"IntfId":     msg.IntfId,
+							"OnuId":      msg.OnuId,
+							"pktType":    msg.Type,
+							"MacAddress": msg.MacAddress,
+							"Pkt":        hex.EncodeToString(msg.Packet.Data()),
+							"OnuSn":      o.Sn(),
+						}).Error("Cannot find Service associated with packet")
+						return
+					}
+					service.PacketCh <- msg
+				} else if msg.Type == packetHandlers.IGMP {
+					// if it's an IGMP packet we assume we have a single IGMP service
+					for _, s := range o.Services {
+						service := s.(*Service)
+
+						if service.NeedsIgmp {
+							service.PacketCh <- msg
+						}
+					}
 				}
-
-				service.PacketCh <- msg
-
-				onuLogger.WithFields(log.Fields{
-					"IntfId":      msg.IntfId,
-					"OnuId":       msg.OnuId,
-					"pktType":     msg.Type,
-					"ServiceName": service.Name,
-				}).Info("OnuPacketOut Sent on Service Packet channel")
 
 			case OnuPacketIn:
 				// NOTE we only receive BBR packets here.

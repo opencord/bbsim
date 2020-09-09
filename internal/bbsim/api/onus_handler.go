@@ -224,6 +224,9 @@ func (s BBSimServer) PoweronAllONUs(context.Context, *bbsim.Empty) (*bbsim.Respo
 }
 
 func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest) (*bbsim.Response, error) {
+
+	// TODO check that the ONU is enabled and the services are initialized before changing the state
+
 	res := &bbsim.Response{}
 
 	logger.WithFields(log.Fields{
@@ -250,15 +253,42 @@ func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest
 			event = "igmp_join_startv3"
 		}
 
-		if igmpErr := onu.InternalState.Event(event); igmpErr != nil {
-			logger.WithFields(log.Fields{
-				"OnuId":  onu.ID,
-				"IntfId": onu.PonPortID,
-				"OnuSn":  onu.Sn(),
-			}).Errorf("IGMP request failed: %s", igmpErr.Error())
+		errors := []string{}
+		startedOn := []string{}
+		success := true
+
+		for _, s := range onu.Services {
+			service := s.(*devices.Service)
+			if service.NeedsIgmp {
+
+				logger.WithFields(log.Fields{
+					"OnuId":   onu.ID,
+					"IntfId":  onu.PonPortID,
+					"OnuSn":   onu.Sn(),
+					"Service": service.Name,
+				}).Debugf("Sending %s event on Service %s", event, service.Name)
+
+				if err := service.IGMPState.Event(event); err != nil {
+					logger.WithFields(log.Fields{
+						"OnuId":   onu.ID,
+						"IntfId":  onu.PonPortID,
+						"OnuSn":   onu.Sn(),
+						"Service": service.Name,
+					}).Errorf("IGMP request failed: %s", err.Error())
+					errors = append(errors, fmt.Sprintf("%s: %s", service.Name, err.Error()))
+					success = false
+				}
+				startedOn = append(startedOn, service.Name)
+			}
+		}
+
+		if success {
+			res.StatusCode = int32(codes.OK)
+			res.Message = fmt.Sprintf("Authentication restarted on Services %s for ONU %s.",
+				fmt.Sprintf("%v", startedOn), onu.Sn())
+		} else {
 			res.StatusCode = int32(codes.FailedPrecondition)
-			res.Message = igmpErr.Error()
-			return res, igmpErr
+			res.Message = fmt.Sprintf("%v", errors)
 		}
 	}
 
@@ -283,6 +313,7 @@ func (s BBSimServer) RestartEapol(ctx context.Context, req *bbsim.ONURequest) (*
 	}
 
 	errors := []string{}
+	startedOn := []string{}
 	success := true
 
 	for _, s := range onu.Services {
@@ -298,12 +329,14 @@ func (s BBSimServer) RestartEapol(ctx context.Context, req *bbsim.ONURequest) (*
 				errors = append(errors, fmt.Sprintf("%s: %s", service.Name, err.Error()))
 				success = false
 			}
+			startedOn = append(startedOn, service.Name)
 		}
 	}
 
 	if success {
 		res.StatusCode = int32(codes.OK)
-		res.Message = fmt.Sprintf("Authentication restarted for ONU %s.", onu.Sn())
+		res.Message = fmt.Sprintf("Authentication restarted on Services %s for ONU %s.",
+			fmt.Sprintf("%v", startedOn), onu.Sn())
 	} else {
 		res.StatusCode = int32(codes.FailedPrecondition)
 		res.Message = fmt.Sprintf("%v", errors)
@@ -330,6 +363,7 @@ func (s BBSimServer) RestartDhcp(ctx context.Context, req *bbsim.ONURequest) (*b
 	}
 
 	errors := []string{}
+	startedOn := []string{}
 	success := true
 
 	for _, s := range onu.Services {
@@ -346,12 +380,14 @@ func (s BBSimServer) RestartDhcp(ctx context.Context, req *bbsim.ONURequest) (*b
 				errors = append(errors, fmt.Sprintf("%s: %s", service.Name, err.Error()))
 				success = false
 			}
+			startedOn = append(startedOn, service.Name)
 		}
 	}
 
 	if success {
 		res.StatusCode = int32(codes.OK)
-		res.Message = fmt.Sprintf("DHCP restarted for ONU %s.", onu.Sn())
+		res.Message = fmt.Sprintf("DHCP restarted on Services %s for ONU %s.",
+			fmt.Sprintf("%v", startedOn), onu.Sn())
 	} else {
 		res.StatusCode = int32(codes.FailedPrecondition)
 		res.Message = fmt.Sprintf("%v", errors)

@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/opencord/voltha-protos/v3/go/ext/config"
 	"net"
 	"sync"
 	"time"
@@ -32,8 +33,9 @@ import (
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/bbsim/internal/common"
 	omcisim "github.com/opencord/omci-sim"
-	"github.com/opencord/voltha-protos/v2/go/openolt"
-	"github.com/opencord/voltha-protos/v2/go/tech_profile"
+	common_protos "github.com/opencord/voltha-protos/v3/go/common"
+	"github.com/opencord/voltha-protos/v3/go/openolt"
+	"github.com/opencord/voltha-protos/v3/go/tech_profile"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -1074,7 +1076,21 @@ func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.E
 		}).Debug("Adding OLT flow")
 	} else if flow.FlowType == "multicast" {
 		oltLogger.WithFields(log.Fields{
-			"FlowId": flow.FlowId,
+			"Cookie":           flow.Cookie,
+			"DstPort":          flow.Classifier.DstPort,
+			"EthType":          fmt.Sprintf("%x", flow.Classifier.EthType),
+			"FlowId":           flow.FlowId,
+			"FlowType":         flow.FlowType,
+			"GemportId":        flow.GemportId,
+			"InnerVlan":        flow.Classifier.IVid,
+			"IntfId":           flow.AccessIntfId,
+			"IpProto":          flow.Classifier.IpProto,
+			"OnuId":            flow.OnuId,
+			"OuterVlan":        flow.Classifier.OVid,
+			"PortNo":           flow.PortNo,
+			"SrcPort":          flow.Classifier.SrcPort,
+			"UniID":            flow.UniId,
+			"ClassifierOPbits": flow.Classifier.OPbits,
 		}).Debug("Adding OLT multicast flow")
 	} else {
 		pon, err := o.GetPonById(uint32(flow.AccessIntfId))
@@ -1301,13 +1317,14 @@ func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket)
 	}).Trace("Received OnuPacketOut")
 
 	rawpkt := gopacket.NewPacket(onuPkt.Pkt, layers.LayerTypeEthernet, gopacket.Default)
-	pktType, err := packetHandlers.IsEapolOrDhcp(rawpkt)
+
+	pktType, err := packetHandlers.GetPktType(rawpkt)
 	if err != nil {
 		onuLogger.WithFields(log.Fields{
 			"IntfId": onu.PonPortID,
 			"OnuId":  onu.ID,
 			"OnuSn":  onu.Sn(),
-			"Pkt":    rawpkt.Data(),
+			"Pkt":    hex.EncodeToString(rawpkt.Data()),
 		}).Error("Can't find pktType in packet, droppint it")
 		return new(openolt.Empty), nil
 	}
@@ -1472,4 +1489,40 @@ func (o *OltDevice) SendAlarmIndication(context context.Context, ind *openolt.Al
 
 	o.channel <- msg
 	return nil
+}
+
+func (o *OltDevice) PerformGroupOperation(ctx context.Context, group *openolt.Group) (*openolt.Empty, error) {
+	oltLogger.WithFields(log.Fields{
+		"GroupId": group.GroupId,
+		"Command": group.Command,
+		"Members": group.Members,
+		"Action":  group.Action,
+	}).Debug("received PerformGroupOperation")
+	return &openolt.Empty{}, nil
+}
+
+func (o *OltDevice) DeleteGroup(ctx context.Context, group *openolt.Group) (*openolt.Empty, error) {
+	oltLogger.WithFields(log.Fields{
+		"GroupId": group.GroupId,
+		"Command": group.Command,
+		"Members": group.Members,
+		"Action":  group.Action,
+	}).Debug("received PerformGroupOperation")
+	return &openolt.Empty{}, nil
+}
+
+func (o *OltDevice) GetExtValue(ctx context.Context, in *openolt.ValueParam) (*common_protos.ReturnValues, error) {
+	return &common_protos.ReturnValues{}, nil
+}
+
+func (o *OltDevice) OnuItuPonAlarmSet(ctx context.Context, in *config.OnuItuPonAlarm) (*openolt.Empty, error) {
+	return &openolt.Empty{}, nil
+}
+
+func (o *OltDevice) GetLogicalOnuDistanceZero(ctx context.Context, in *openolt.Onu) (*openolt.OnuLogicalDistance, error) {
+	return &openolt.OnuLogicalDistance{}, nil
+}
+
+func (o *OltDevice) GetLogicalOnuDistance(ctx context.Context, in *openolt.Onu) (*openolt.OnuLogicalDistance, error) {
+	return &openolt.OnuLogicalDistance{}, nil
 }

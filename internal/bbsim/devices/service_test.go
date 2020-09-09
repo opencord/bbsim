@@ -18,7 +18,7 @@ package devices
 
 import (
 	"github.com/opencord/bbsim/internal/bbsim/types"
-	"github.com/opencord/voltha-protos/v2/go/openolt"
+	"github.com/opencord/voltha-protos/v3/go/openolt"
 	"github.com/stretchr/testify/assert"
 	"net"
 	"testing"

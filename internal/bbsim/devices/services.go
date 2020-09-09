@@ -17,10 +17,12 @@
 package devices
 
 import (
+	"encoding/hex"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
+	"github.com/opencord/bbsim/internal/bbsim/responders/igmp"
 	bbsimTypes "github.com/opencord/bbsim/internal/bbsim/types"
 	log "github.com/sirupsen/logrus"
 	"net"
@@ -61,6 +63,7 @@ type Service struct {
 	InternalState *fsm.FSM
 	EapolState    *fsm.FSM
 	DHCPState     *fsm.FSM
+	IGMPState     *fsm.FSM
 	Channel       chan Message          // drive Service lifecycle
 	PacketCh      chan OnuPacketMessage // handle packets
 	Stream        bbsimTypes.Stream     // the gRPC stream to communicate with the adapter, created in the initialize transition
@@ -175,6 +178,35 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 		},
 	)
 
+	service.IGMPState = fsm.NewFSM(
+		"created",
+		fsm.Events{
+			{Name: "igmp_join_start", Src: []string{"created", "igmp_left", "igmp_join_error", "igmp_join_started"}, Dst: "igmp_join_started"},
+			{Name: "igmp_join_startv3", Src: []string{"igmp_left", "igmp_join_error", "igmp_join_started"}, Dst: "igmp_join_started"},
+			{Name: "igmp_join_error", Src: []string{"igmp_join_started"}, Dst: "igmp_join_error"},
+			{Name: "igmp_leave", Src: []string{"igmp_join_started"}, Dst: "igmp_left"},
+		},
+		fsm.Callbacks{
+			"igmp_join_start": func(e *fsm.Event) {
+				msg := Message{
+					Type: IGMPMembershipReportV2,
+				}
+				service.Channel <- msg
+			},
+			"igmp_leave": func(e *fsm.Event) {
+				msg := Message{
+					Type: IGMPLeaveGroup}
+				service.Channel <- msg
+			},
+			"igmp_join_startv3": func(e *fsm.Event) {
+				msg := Message{
+					Type: IGMPMembershipReportV3,
+				}
+				service.Channel <- msg
+			},
+		},
+	)
+
 	return &service, nil
 }
 
@@ -272,6 +304,9 @@ func (s *Service) HandlePackets() {
 			eapol.HandleNextPacket(msg.OnuId, msg.IntfId, s.GemPort, s.Onu.Sn(), s.Onu.PortNo, s.EapolState, msg.Packet, s.Stream, nil)
 		} else if msg.Type == packetHandlers.DHCP {
 			_ = dhcp.HandleNextPacket(s.Onu.PonPort.Olt.ID, s.Onu.ID, s.Onu.PonPortID, s.Name, s.Onu.Sn(), s.Onu.PortNo, s.CTag, s.GemPort, s.HwAddress, s.DHCPState, msg.Packet, s.UsPonCTagPriority, s.Stream)
+		} else if msg.Type == packetHandlers.IGMP {
+			log.Warn(hex.EncodeToString(msg.Packet.Data()))
+			_ = igmp.HandleNextPacket(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, msg.Packet, s.CTag, s.UsPonCTagPriority, s.Stream)
 		}
 	}
 }
@@ -295,7 +330,8 @@ func (s *Service) HandleChannel() {
 		}).Debug("Done Listening on Service Channel")
 	}()
 	for msg := range s.Channel {
-		if msg.Type == StartEAPOL {
+		switch msg.Type {
+		case StartEAPOL:
 			if err := s.handleEapolStart(s.Stream); err != nil {
 				serviceLogger.WithFields(log.Fields{
 					"OnuId":  s.Onu.ID,
@@ -306,7 +342,7 @@ func (s *Service) HandleChannel() {
 				}).Error("Error while sending EapolStart packet")
 				_ = s.EapolState.Event("auth_failed")
 			}
-		} else if msg.Type == StartDHCP {
+		case StartDHCP:
 			if err := s.handleDHCPStart(s.Stream); err != nil {
 				serviceLogger.WithFields(log.Fields{
 					"OnuId":  s.Onu.ID,
@@ -316,7 +352,33 @@ func (s *Service) HandleChannel() {
 					"err":    err,
 				}).Error("Error while sending DHCPDiscovery packet")
 				_ = s.DHCPState.Event("dhcp_failed")
+
 			}
+		case IGMPMembershipReportV2:
+			serviceLogger.WithFields(log.Fields{
+				"OnuId":  s.Onu.ID,
+				"IntfId": s.Onu.PonPortID,
+				"OnuSn":  s.Onu.Sn(),
+				"Name":   s.Name,
+			}).Debug("Recieved IGMPMembershipReportV2 message on ONU channel")
+			_ = igmp.SendIGMPMembershipReportV2(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream)
+		case IGMPLeaveGroup:
+			serviceLogger.WithFields(log.Fields{
+				"OnuId":  s.Onu.ID,
+				"IntfId": s.Onu.PonPortID,
+				"OnuSn":  s.Onu.Sn(),
+				"Name":   s.Name,
+			}).Debug("Recieved IGMPLeaveGroupV2 message on ONU channel")
+			_ = igmp.SendIGMPLeaveGroupV2(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream)
+		case IGMPMembershipReportV3:
+			serviceLogger.WithFields(log.Fields{
+				"OnuId":  s.Onu.ID,
+				"IntfId": s.Onu.PonPortID,
+				"OnuSn":  s.Onu.Sn(),
+				"Name":   s.Name,
+			}).Debug("Recieved IGMPMembershipReportV3 message on ONU channel")
+			_ = igmp.SendIGMPMembershipReportV3(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream)
+
 		}
 	}
 }

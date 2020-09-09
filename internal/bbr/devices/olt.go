@@ -29,7 +29,7 @@ import (
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/common"
-	"github.com/opencord/voltha-protos/v2/go/openolt"
+	"github.com/opencord/voltha-protos/v3/go/openolt"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
@@ -288,7 +288,7 @@ func (o *OltMock) handlePktIndication(client openolt.OpenoltClient, pktIndicatio
 
 	pkt := gopacket.NewPacket(pktIndication.Pkt, layers.LayerTypeEthernet, gopacket.Default)
 
-	pktType, err := packetHandlers.IsEapolOrDhcp(pkt)
+	pktType, err := packetHandlers.GetPktType(pkt)
 
 	if err != nil {
 		log.Warnf("Ignoring packet as it's neither EAPOL or DHCP")
