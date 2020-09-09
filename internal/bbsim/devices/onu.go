@@ -182,8 +182,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 
 				// Once the ONU is enabled start listening for packets
 				for _, s := range o.Services {
-					s.Initialize()
-					go s.HandlePackets(o.PonPort.Olt.OpenoltStream)
+					s.Initialize(o.PonPort.Olt.OpenoltStream)
 				}
 			},
 			"enter_disabled": func(event *fsm.Event) {
@@ -320,7 +319,7 @@ loop:
 
 				msg, _ := message.Data.(OnuPacketMessage)
 
-				log.WithFields(log.Fields{
+				onuLogger.WithFields(log.Fields{
 					"IntfId":  msg.IntfId,
 					"OnuId":   msg.OnuId,
 					"pktType": msg.Type,
@@ -339,6 +338,13 @@ loop:
 				}
 
 				service.PacketCh <- msg
+
+				onuLogger.WithFields(log.Fields{
+					"IntfId":      msg.IntfId,
+					"OnuId":       msg.OnuId,
+					"pktType":     msg.Type,
+					"ServiceName": service.Name,
+				}).Info("OnuPacketOut Sent on Service Packet channel")
 
 			case OnuPacketIn:
 				// NOTE we only receive BBR packets here.
@@ -647,7 +653,7 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 		o.storePortNumber(uint32(msg.Flow.PortNo))
 
 		for _, s := range o.Services {
-			s.HandleAuth(o.PonPort.Olt.OpenoltStream)
+			s.HandleAuth()
 		}
 	} else if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeIPv4) &&
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
@@ -655,7 +661,7 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 		(msg.Flow.Classifier.OPbits == 0 || msg.Flow.Classifier.OPbits == 255) {
 
 		for _, s := range o.Services {
-			s.HandleDhcp(o.PonPort.Olt.OpenoltStream, int(msg.Flow.Classifier.OVid))
+			s.HandleDhcp(int(msg.Flow.Classifier.OVid))
 		}
 	}
 }

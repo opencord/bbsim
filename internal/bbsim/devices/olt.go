@@ -114,6 +114,7 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 	if val, ok := ControlledActivationModes[options.BBSim.ControlledActivation]; ok {
 		olt.ControlledActivation = val
 	} else {
+		// FIXME throw an error if the ControlledActivation is not valid
 		oltLogger.Warn("Unknown ControlledActivation Mode given, running in Default mode")
 		olt.ControlledActivation = Default
 	}
@@ -1296,15 +1297,24 @@ func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket)
 		"IntfId": onu.PonPortID,
 		"OnuId":  onu.ID,
 		"OnuSn":  onu.Sn(),
+		"Packet": hex.EncodeToString(onuPkt.Pkt),
 	}).Trace("Received OnuPacketOut")
 
 	rawpkt := gopacket.NewPacket(onuPkt.Pkt, layers.LayerTypeEthernet, gopacket.Default)
-	pktType, _ := packetHandlers.IsEapolOrDhcp(rawpkt)
+	pktType, err := packetHandlers.IsEapolOrDhcp(rawpkt)
+	if err != nil {
+		onuLogger.WithFields(log.Fields{
+			"IntfId": onu.PonPortID,
+			"OnuId":  onu.ID,
+			"OnuSn":  onu.Sn(),
+			"Pkt":    rawpkt.Data(),
+		}).Error("Can't find pktType in packet, droppint it")
+		return new(openolt.Empty), nil
+	}
 
 	pktMac, err := packetHandlers.GetDstMacAddressFromPacket(rawpkt)
-
 	if err != nil {
-		log.WithFields(log.Fields{
+		onuLogger.WithFields(log.Fields{
 			"IntfId": onu.PonPortID,
 			"OnuId":  onu.ID,
 			"OnuSn":  onu.Sn(),

@@ -380,6 +380,7 @@ func SendDHCPDiscovery(oltId int, ponPortId uint32, onuId uint32, serviceName st
 			"OnuSn":       serialNumber,
 			"ServiceName": serviceName,
 		}).Errorf("Error while transitioning ONU State %v", err)
+		return err
 	}
 	return nil
 }
