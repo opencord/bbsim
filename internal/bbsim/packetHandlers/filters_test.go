@@ -20,6 +20,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
+	"github.com/opencord/bbsim/internal/bbsim/responders/igmp"
 	"gotest.tools/assert"
 	"net"
 	"testing"
@@ -60,6 +61,29 @@ func Test_IsDhcpPacket_False(t *testing.T) {
 
 	res := packetHandlers.IsDhcpPacket(ethernetPkt)
 	assert.Equal(t, res, false)
+}
+
+func Test_IsIgmpPacket(t *testing.T) {
+	igmp := &igmp.IGMP{
+		Type:         layers.IGMPMembershipReportV2, //IGMPV2 Membership Report
+		Checksum:     0,
+		GroupAddress: net.IPv4(224, 0, 0, 22),
+		Version:      2,
+	}
+	buffer := gopacket.NewSerializeBuffer()
+	options := gopacket.SerializeOptions{
+		ComputeChecksums: true,
+		FixLengths:       true,
+	}
+
+	if err := gopacket.SerializeLayers(buffer, options, igmp); err != nil {
+		t.Fatal(err)
+	}
+
+	pkt := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeIGMP, gopacket.DecodeOptions{})
+
+	res := packetHandlers.IsIgmpPacket(pkt)
+	assert.Equal(t, res, true)
 }
 
 func Test_IsLldpPacket_True(t *testing.T) {

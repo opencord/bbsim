@@ -41,8 +41,9 @@ services:
 - name: MC
   c_tag: 55
   c_tag_allocation: shared
-  s_tag: 555
+  s_tag: 550
   s_tag_allocation: shared
   tp_id: 66
   ds_pon_c_tag_priority: 5
   ds_pon_s_tag_priority: 5
+# TODO add mgmt service (same tagging scheme as void/vod), requires DHCP
