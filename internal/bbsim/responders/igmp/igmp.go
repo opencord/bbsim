@@ -15,18 +15,20 @@ package igmp
 
 import (
 	"encoding/binary"
+	"encoding/hex"
+	"errors"
 	"net"
 	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
-	omci "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
 	log "github.com/sirupsen/logrus"
 )
 
-func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, macAddress net.HardwareAddr, stream bbsim.Stream) error {
+func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32,
+	gemPortId uint32, macAddress net.HardwareAddr, stream bbsim.Stream) error {
 	log.WithFields(log.Fields{
 		"OnuId":        onuId,
 		"SerialNumber": serialNumber,
@@ -44,21 +46,11 @@ func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, p
 		return err
 	}
 
-	gemid, err := omci.GetGemPortId(ponPortId, onuId)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"OnuId":        onuId,
-			"IntfId":       ponPortId,
-			"SerialNumber": serialNumber,
-		}).Errorf("Can't retrieve GemPortId for IGMP: %s", err)
-		return err
-	}
-
 	data := &openolt.Indication_PktInd{
 		PktInd: &openolt.PacketIndication{
 			IntfType:  "pon",
 			IntfId:    ponPortId,
-			GemportId: uint32(gemid),
+			GemportId: gemPortId,
 			Pkt:       pkt,
 			PortNo:    portNo,
 		},
@@ -77,7 +69,8 @@ func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, p
 	return nil
 }
 
-func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, macAddress net.HardwareAddr, stream bbsim.Stream) error {
+func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32,
+	gemPortId uint32, macAddress net.HardwareAddr, stream bbsim.Stream) error {
 	log.WithFields(log.Fields{
 		"OnuId":        onuId,
 		"SerialNumber": serialNumber,
@@ -95,21 +88,11 @@ func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber str
 		return err
 	}
 
-	gemid, err := omci.GetGemPortId(ponPortId, onuId)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"OnuId":        onuId,
-			"IntfId":       ponPortId,
-			"SerialNumber": serialNumber,
-		}).Errorf("Can't retrieve GemPortId for IGMP: %s", err)
-		return err
-	}
-
 	data := &openolt.Indication_PktInd{
 		PktInd: &openolt.PacketIndication{
 			IntfType:  "pon",
 			IntfId:    ponPortId,
-			GemportId: uint32(gemid),
+			GemportId: gemPortId,
 			Pkt:       pkt,
 			PortNo:    portNo,
 		},
@@ -128,7 +111,8 @@ func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber str
 	return nil
 }
 
-func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, macAddress net.HardwareAddr, stream bbsim.Stream) error {
+func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32,
+	gemPortId uint32, macAddress net.HardwareAddr, stream bbsim.Stream) error {
 	log.WithFields(log.Fields{
 		"OnuId":        onuId,
 		"SerialNumber": serialNumber,
@@ -146,21 +130,11 @@ func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber str
 		return err
 	}
 
-	gemid, err := omci.GetGemPortId(ponPortId, onuId)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"OnuId":        onuId,
-			"IntfId":       ponPortId,
-			"SerialNumber": serialNumber,
-		}).Errorf("Can't retrieve GemPortId for IGMP: %s", err)
-		return err
-	}
-
 	data := &openolt.Indication_PktInd{
 		PktInd: &openolt.PacketIndication{
 			IntfType:  "pon",
 			IntfId:    ponPortId,
-			GemportId: uint32(gemid),
+			GemportId: gemPortId,
 			Pkt:       pkt,
 			PortNo:    portNo,
 		},
@@ -178,7 +152,34 @@ func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber str
 	return nil
 }
 
-func createIGMPV3MembershipReportPacket() IGMP {
+func HandleNextPacket(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32,
+	gemPortId uint32, macAddress net.HardwareAddr, pkt gopacket.Packet, stream bbsim.Stream) error {
+
+	igmpLayer := pkt.Layer(layers.LayerTypeIGMP)
+	if igmpLayer == nil {
+		log.WithFields(log.Fields{
+			"OnuId":        onuId,
+			"SerialNumber": serialNumber,
+			"PortNo":       portNo,
+			"Pkt":          hex.EncodeToString(pkt.Data()),
+		}).Error("This is not an IGMP packet")
+		return errors.New("packet-is-not-igmp")
+	}
+
+	log.WithFields(log.Fields{
+		"Pkt": pkt.Data(),
+	}).Infof("IGMP packet")
+
+	igmp := igmpLayer.(*layers.IGMPv1or2)
+
+	if igmp.Type == layers.IGMPMembershipQuery {
+		_ = SendIGMPMembershipReportV2(ponPortId, onuId, serialNumber, portNo, gemPortId, macAddress, stream)
+	}
+
+	return nil
+}
+
+func createIGMPV3MembershipReportPacket() *IGMP {
 
 	groupRecord1 := IGMPv3GroupRecord{
 		Type:             IGMPv3GroupRecordType(IGMPIsIn),
@@ -198,8 +199,8 @@ func createIGMPV3MembershipReportPacket() IGMP {
 		AuxData:          0, // NOT USED
 	}
 
-	igmpDefault := IGMP{
-		Type:                    0x22, //IGMPV3 Membership Report
+	igmpDefault := &IGMP{
+		Type:                    layers.IGMPMembershipReportV3, //IGMPV3 Membership Report
 		MaxResponseTime:         time.Duration(1),
 		Checksum:                0,
 		GroupAddress:            net.IPv4(224, 0, 0, 22),
@@ -216,10 +217,18 @@ func createIGMPV3MembershipReportPacket() IGMP {
 	return igmpDefault
 }
 
-//func serializeIgmpPacket(intfId uint32, onuId uint32, srcMac net.HardwareAddr, igmp *layers.IGMP) ([]byte, error) {
-func createIGMPV2MembershipReportPacket() IGMP {
-	return IGMP{
-		Type:            0x16, //IGMPV2 Membership Report
+func createIGMPV2MembershipReportPacket() *IGMP {
+	return &IGMP{
+		Type:         layers.IGMPMembershipReportV2, //IGMPV2 Membership Report
+		Checksum:     0,
+		GroupAddress: net.IPv4(224, 0, 0, 22),
+		Version:      2,
+	}
+}
+
+func createIGMPV2LeaveRequestPacket() *IGMP {
+	return &IGMP{
+		Type:            layers.IGMPLeaveGroup, //IGMPV2 Leave Group
 		MaxResponseTime: time.Duration(1),
 		Checksum:        0,
 		GroupAddress:    net.IPv4(224, 0, 0, 22),
@@ -227,17 +236,7 @@ func createIGMPV2MembershipReportPacket() IGMP {
 	}
 }
 
-func createIGMPV2LeaveRequestPacket() IGMP {
-	return IGMP{
-		Type:            0x17, //IGMPV2 Leave Group
-		MaxResponseTime: time.Duration(1),
-		Checksum:        0,
-		GroupAddress:    net.IPv4(224, 0, 0, 22),
-		Version:         2,
-	}
-}
-
-func serializeIgmpPacket(intfId uint32, onuId uint32, srcMac net.HardwareAddr, igmp IGMP) ([]byte, error) {
+func serializeIgmpPacket(intfId uint32, onuId uint32, srcMac net.HardwareAddr, igmp *IGMP) ([]byte, error) {
 	buffer := gopacket.NewSerializeBuffer()
 	options := gopacket.SerializeOptions{
 		ComputeChecksums: true,
@@ -269,24 +268,10 @@ func serializeIgmpPacket(intfId uint32, onuId uint32, srcMac net.HardwareAddr, i
 }
 
 //-----------------------------------------***********************---------------------------------
-// BaseLayer is a convenience struct which implements the LayerData and
-// LayerPayload functions of the Layer interface.
-type BaseLayer struct {
-	// Contents is the set of bytes that make up this layer.  IE: for an
-	// Ethernet packet, this would be the set of bytes making up the
-	// Ethernet frame.
-	Contents []byte
-	// Payload is the set of bytes contained by (but not part of) this
-	// Layer.  Again, to take Ethernet as an example, this would be the
-	// set of bytes encapsulated by the Ethernet protocol.
-	Payload []byte
-}
-
-type IGMPType uint8
 
 type IGMP struct {
-	BaseLayer
-	Type                    IGMPType
+	layers.BaseLayer
+	Type                    layers.IGMPType
 	MaxResponseTime         time.Duration
 	Checksum                uint16
 	GroupAddress            net.IP
@@ -343,8 +328,7 @@ func (i IGMPv3GroupRecordType) String() string {
 // SerializeTo writes the serialized form of this layer into the
 // SerializationBuffer, implementing gopacket.SerializableLayer.
 // See the docs for gopacket.SerializableLayer for more info.
-func (igmp IGMP) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOptions) error {
-	log.Debugf("Serializing IGMP Packet")
+func (igmp *IGMP) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOptions) error {
 	data, err := b.PrependBytes(8915)
 	if err != nil {
 		return err
@@ -410,4 +394,6 @@ func tcpipChecksum(data []byte, csum uint32) uint16 {
 	return ^uint16(csum)
 }
 
-func (IGMP) LayerType() gopacket.LayerType { return layers.LayerTypeIGMP }
+func (i *IGMP) LayerType() gopacket.LayerType { return layers.LayerTypeIGMP }
+func (i *IGMP) LayerContents() []byte         { return i.Contents }
+func (i *IGMP) LayerPayload() []byte          { return i.Payload }

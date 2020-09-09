@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	DEFAULT_SERVICE_HEADER_FORMAT = "table{{ .OnuSn }}\t{{ .InternalState }}\t{{ .Name }}\t{{ .HwAddress }}\t{{ .STag }}\t{{ .CTag }}\t{{ .NeedsEapol }}\t{{ .NeedsDhcp }}\t{{ .NeedsIgmp }}\t{{ .GemPort }}\t{{ .EapolState }}\t{{ .DhcpState }}"
+	DEFAULT_SERVICE_HEADER_FORMAT = "table{{ .OnuSn }}\t{{ .InternalState }}\t{{ .Name }}\t{{ .HwAddress }}\t{{ .STag }}\t{{ .CTag }}\t{{ .NeedsEapol }}\t{{ .NeedsDhcp }}\t{{ .NeedsIgmp }}\t{{ .GemPort }}\t{{ .EapolState }}\t{{ .DhcpState }}\t{{ .IGMPState }}"
 )
 
 type ServiceList struct{}
