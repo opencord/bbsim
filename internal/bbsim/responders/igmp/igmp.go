@@ -21,12 +21,12 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
-	omci "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/v2/go/openolt"
 	log "github.com/sirupsen/logrus"
 )
 
-func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, macAddress net.HardwareAddr, stream bbsim.Stream) error {
+func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32,
+	gemPortId uint32, macAddress net.HardwareAddr, stream bbsim.Stream) error {
 	log.WithFields(log.Fields{
 		"OnuId":        onuId,
 		"SerialNumber": serialNumber,
@@ -44,21 +44,11 @@ func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, p
 		return err
 	}
 
-	gemid, err := omci.GetGemPortId(ponPortId, onuId)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"OnuId":        onuId,
-			"IntfId":       ponPortId,
-			"SerialNumber": serialNumber,
-		}).Errorf("Can't retrieve GemPortId for IGMP: %s", err)
-		return err
-	}
-
 	data := &openolt.Indication_PktInd{
 		PktInd: &openolt.PacketIndication{
 			IntfType:  "pon",
 			IntfId:    ponPortId,
-			GemportId: uint32(gemid),
+			GemportId: gemPortId,
 			Pkt:       pkt,
 			PortNo:    portNo,
 		},
@@ -77,7 +67,8 @@ func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, p
 	return nil
 }
 
-func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, macAddress net.HardwareAddr, stream bbsim.Stream) error {
+func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32,
+	gemPortId uint32, macAddress net.HardwareAddr, stream bbsim.Stream) error {
 	log.WithFields(log.Fields{
 		"OnuId":        onuId,
 		"SerialNumber": serialNumber,
@@ -95,21 +86,11 @@ func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber str
 		return err
 	}
 
-	gemid, err := omci.GetGemPortId(ponPortId, onuId)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"OnuId":        onuId,
-			"IntfId":       ponPortId,
-			"SerialNumber": serialNumber,
-		}).Errorf("Can't retrieve GemPortId for IGMP: %s", err)
-		return err
-	}
-
 	data := &openolt.Indication_PktInd{
 		PktInd: &openolt.PacketIndication{
 			IntfType:  "pon",
 			IntfId:    ponPortId,
-			GemportId: uint32(gemid),
+			GemportId: gemPortId,
 			Pkt:       pkt,
 			PortNo:    portNo,
 		},
@@ -128,7 +109,8 @@ func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber str
 	return nil
 }
 
-func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, macAddress net.HardwareAddr, stream bbsim.Stream) error {
+func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32,
+	gemPortId uint32, macAddress net.HardwareAddr, stream bbsim.Stream) error {
 	log.WithFields(log.Fields{
 		"OnuId":        onuId,
 		"SerialNumber": serialNumber,
@@ -146,21 +128,11 @@ func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber str
 		return err
 	}
 
-	gemid, err := omci.GetGemPortId(ponPortId, onuId)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"OnuId":        onuId,
-			"IntfId":       ponPortId,
-			"SerialNumber": serialNumber,
-		}).Errorf("Can't retrieve GemPortId for IGMP: %s", err)
-		return err
-	}
-
 	data := &openolt.Indication_PktInd{
 		PktInd: &openolt.PacketIndication{
 			IntfType:  "pon",
 			IntfId:    ponPortId,
-			GemportId: uint32(gemid),
+			GemportId: gemPortId,
 			Pkt:       pkt,
 			PortNo:    portNo,
 		},
@@ -344,7 +316,6 @@ func (i IGMPv3GroupRecordType) String() string {
 // SerializationBuffer, implementing gopacket.SerializableLayer.
 // See the docs for gopacket.SerializableLayer for more info.
 func (igmp IGMP) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOptions) error {
-	log.Debugf("Serializing IGMP Packet")
 	data, err := b.PrependBytes(8915)
 	if err != nil {
 		return err

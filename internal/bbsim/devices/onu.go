@@ -235,23 +235,6 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 				}
 				o.Channel <- msg
 			},
-			"igmp_join_start": func(e *fsm.Event) {
-				msg := Message{
-					Type: IGMPMembershipReportV2,
-				}
-				o.Channel <- msg
-			},
-			"igmp_leave": func(e *fsm.Event) {
-				msg := Message{
-					Type: IGMPLeaveGroup}
-				o.Channel <- msg
-			},
-			"igmp_join_startv3": func(e *fsm.Event) {
-				msg := Message{
-					Type: IGMPMembershipReportV3,
-				}
-				o.Channel <- msg
-			},
 		},
 	)
 
@@ -338,13 +321,6 @@ loop:
 				}
 
 				service.PacketCh <- msg
-
-				onuLogger.WithFields(log.Fields{
-					"IntfId":      msg.IntfId,
-					"OnuId":       msg.OnuId,
-					"pktType":     msg.Type,
-					"ServiceName": service.Name,
-				}).Info("OnuPacketOut Sent on Service Packet channel")
 
 			case OnuPacketIn:
 				// NOTE we only receive BBR packets here.

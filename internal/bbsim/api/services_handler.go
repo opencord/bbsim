@@ -36,6 +36,7 @@ func convertBBSimServiceToProtoService(s *devices.Service) *bbsim.Service {
 		GemPort:       int32(s.GemPort),
 		EapolState:    s.EapolState.Current(),
 		DhcpState:     s.DHCPState.Current(),
+		IGMPState:     s.IGMPState.Current(),
 	}
 }
 

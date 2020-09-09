@@ -1074,7 +1074,21 @@ func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.E
 		}).Debug("Adding OLT flow")
 	} else if flow.FlowType == "multicast" {
 		oltLogger.WithFields(log.Fields{
-			"FlowId": flow.FlowId,
+			"Cookie":           flow.Cookie,
+			"DstPort":          flow.Classifier.DstPort,
+			"EthType":          fmt.Sprintf("%x", flow.Classifier.EthType),
+			"FlowId":           flow.FlowId,
+			"FlowType":         flow.FlowType,
+			"GemportId":        flow.GemportId,
+			"InnerVlan":        flow.Classifier.IVid,
+			"IntfId":           flow.AccessIntfId,
+			"IpProto":          flow.Classifier.IpProto,
+			"OnuId":            flow.OnuId,
+			"OuterVlan":        flow.Classifier.OVid,
+			"PortNo":           flow.PortNo,
+			"SrcPort":          flow.Classifier.SrcPort,
+			"UniID":            flow.UniId,
+			"ClassifierOPbits": flow.Classifier.OPbits,
 		}).Debug("Adding OLT multicast flow")
 	} else {
 		pon, err := o.GetPonById(uint32(flow.AccessIntfId))
@@ -1301,13 +1315,15 @@ func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket)
 	}).Trace("Received OnuPacketOut")
 
 	rawpkt := gopacket.NewPacket(onuPkt.Pkt, layers.LayerTypeEthernet, gopacket.Default)
+
+	// TODO this could also be an IGMP packet
 	pktType, err := packetHandlers.IsEapolOrDhcp(rawpkt)
 	if err != nil {
 		onuLogger.WithFields(log.Fields{
 			"IntfId": onu.PonPortID,
 			"OnuId":  onu.ID,
 			"OnuSn":  onu.Sn(),
-			"Pkt":    rawpkt.Data(),
+			"Pkt":    hex.EncodeToString(rawpkt.Data()),
 		}).Error("Can't find pktType in packet, droppint it")
 		return new(openolt.Empty), nil
 	}
