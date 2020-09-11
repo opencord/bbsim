@@ -63,6 +63,7 @@ message Service {
     string EapolState = 10;
     string DhcpState = 11;
     string InternalState = 12;
+    string IGMPState = 13;
 }
 
 message ONUTrafficSchedulers {

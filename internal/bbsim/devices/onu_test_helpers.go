@@ -19,10 +19,12 @@ package devices
 import (
 	"context"
 	"errors"
+	"github.com/opencord/voltha-protos/v3/go/common"
+	"github.com/opencord/voltha-protos/v3/go/ext/config"
 	"time"
 
-	"github.com/opencord/voltha-protos/v2/go/openolt"
-	"github.com/opencord/voltha-protos/v2/go/tech_profile"
+	"github.com/opencord/voltha-protos/v3/go/openolt"
+	"github.com/opencord/voltha-protos/v3/go/tech_profile"
 	"google.golang.org/grpc"
 )
 
@@ -102,6 +104,24 @@ func (s *mockClient) RemoveTrafficQueues(ctx context.Context, in *tech_profile.T
 	return nil, errors.New("unimplemented-in-mock-client")
 }
 func (s *mockClient) EnableIndication(ctx context.Context, in *openolt.Empty, opts ...grpc.CallOption) (openolt.Openolt_EnableIndicationClient, error) {
+	return nil, errors.New("unimplemented-in-mock-client")
+}
+func (s *mockClient) PerformGroupOperation(ctx context.Context, group *openolt.Group, opts ...grpc.CallOption) (*openolt.Empty, error) {
+	return nil, errors.New("unimplemented-in-mock-client")
+}
+func (s *mockClient) DeleteGroup(ctx context.Context, group *openolt.Group, opts ...grpc.CallOption) (*openolt.Empty, error) {
+	return nil, errors.New("unimplemented-in-mock-client")
+}
+func (s *mockClient) GetExtValue(ctx context.Context, in *openolt.ValueParam, opts ...grpc.CallOption) (*common.ReturnValues, error) {
+	return nil, errors.New("unimplemented-in-mock-client")
+}
+func (s *mockClient) OnuItuPonAlarmSet(ctx context.Context, in *config.OnuItuPonAlarm, opts ...grpc.CallOption) (*openolt.Empty, error) {
+	return nil, errors.New("unimplemented-in-mock-client")
+}
+func (s *mockClient) GetLogicalOnuDistanceZero(ctx context.Context, in *openolt.Onu, opts ...grpc.CallOption) (*openolt.OnuLogicalDistance, error) {
+	return nil, errors.New("unimplemented-in-mock-client")
+}
+func (s *mockClient) GetLogicalOnuDistance(ctx context.Context, in *openolt.Onu, opts ...grpc.CallOption) (*openolt.OnuLogicalDistance, error) {
 	return nil, errors.New("unimplemented-in-mock-client")
 }
 

@@ -17,7 +17,7 @@
 package types
 
 import (
-	"github.com/opencord/voltha-protos/v2/go/openolt"
+	"github.com/opencord/voltha-protos/v3/go/openolt"
 )
 
 // represent a gRPC stream

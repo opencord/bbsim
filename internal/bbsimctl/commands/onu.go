@@ -45,6 +45,8 @@ const IgmpJoinKey string = "join"
 const IgmpLeaveKey string = "leave"
 const IgmpJoinKeyV3 string = "joinv3"
 
+var IgmpAllowedActions = []string{IgmpJoinKey, IgmpLeaveKey, IgmpJoinKeyV3}
+
 type ONUList struct {
 	Verbose bool `short:"v" long:"verbose" description:"Print all the informations we have about ONUs"`
 }
@@ -442,6 +444,16 @@ func (onuSn *OnuSnString) Complete(match string) []flags.Completion {
 		}
 	}
 
+	return list
+}
+
+func (onuSn *IgmpSubAction) Complete(match string) []flags.Completion {
+	list := make([]flags.Completion, 0)
+	for _, k := range IgmpAllowedActions {
+		if strings.HasPrefix(k, match) {
+			list = append(list, flags.Completion{Item: k})
+		}
+	}
 	return list
 }
 

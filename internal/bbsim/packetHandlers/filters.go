@@ -30,6 +30,13 @@ func IsDhcpPacket(pkt gopacket.Packet) bool {
 	return false
 }
 
+func IsIgmpPacket(pkt gopacket.Packet) bool {
+	if igmpLayer := pkt.Layer(layers.LayerTypeIGMP); igmpLayer != nil {
+		return true
+	}
+	return false
+}
+
 func IsLldpPacket(pkt gopacket.Packet) bool {
 	if layer := pkt.Layer(layers.LayerTypeLinkLayerDiscovery); layer != nil {
 		return true
@@ -78,11 +85,13 @@ func GetSrcMacAddressFromPacket(packet gopacket.Packet) (net.HardwareAddr, error
 }
 
 // returns wether it's an EAPOL or DHCP packet, error if it's none
-func IsEapolOrDhcp(pkt gopacket.Packet) (PacketType, error) {
+func GetPktType(pkt gopacket.Packet) (PacketType, error) {
 	if pkt.Layer(layers.LayerTypeEAP) != nil || pkt.Layer(layers.LayerTypeEAPOL) != nil {
 		return EAPOL, nil
 	} else if IsDhcpPacket(pkt) {
 		return DHCP, nil
+	} else if IsIgmpPacket(pkt) {
+		return IGMP, nil
 	}
-	return UNKNOWN, errors.New("packet-is-neither-eapol-or-dhcp")
+	return UNKNOWN, errors.New("unknown-packet-type")
 }

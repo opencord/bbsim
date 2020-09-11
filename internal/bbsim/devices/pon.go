@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	"github.com/looplab/fsm"
-	"github.com/opencord/voltha-protos/v2/go/openolt"
+	"github.com/opencord/voltha-protos/v3/go/openolt"
 	log "github.com/sirupsen/logrus"
 )
 

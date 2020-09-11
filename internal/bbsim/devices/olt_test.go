@@ -21,7 +21,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/opencord/voltha-protos/v2/go/openolt"
+	"github.com/opencord/voltha-protos/v3/go/openolt"
 	"gotest.tools/assert"
 )
 
