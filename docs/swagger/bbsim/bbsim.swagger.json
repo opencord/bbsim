@@ -469,20 +469,18 @@
           "type": "integer",
           "format": "int32"
         },
-        "STag": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "CTag": {
-          "type": "integer",
-          "format": "int32"
-        },
         "HwAddress": {
           "type": "string"
         },
         "PortNo": {
           "type": "integer",
           "format": "int32"
+        },
+        "services": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bbsimService"
+          }
         }
       }
     },
@@ -570,6 +568,67 @@
         }
       }
     },
+    "bbsimService": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "HwAddress": {
+          "type": "string"
+        },
+        "OnuSn": {
+          "type": "string"
+        },
+        "STag": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "CTag": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "NeedsEapol": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "NeedsDhcp": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "NeedsIgmp": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "GemPort": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "EapolState": {
+          "type": "string"
+        },
+        "DhcpState": {
+          "type": "string"
+        },
+        "InternalState": {
+          "type": "string"
+        },
+        "IGMPState": {
+          "type": "string"
+        }
+      }
+    },
+    "bbsimServices": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bbsimService"
+          }
+        }
+      }
+    },
     "bbsimSubActionTypes": {
       "type": "string",
       "enum": [
@@ -640,6 +699,30 @@
           "format": "boolean"
         },
         "trap_to_host": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "remark_outer_pbits": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "remark_inner_pbits": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "add_inner_tag": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "remove_inner_tag": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "translate_inner_tag": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "translate_outer_tag": {
           "type": "boolean",
           "format": "boolean"
         }
@@ -760,6 +843,14 @@
         "port_no": {
           "type": "integer",
           "format": "int64"
+        },
+        "group_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "tech_profile_id": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -837,6 +928,10 @@
         },
         "traffic_shaping_info": {
           "$ref": "#/definitions/tech_profileTrafficShapingInfo"
+        },
+        "tech_profile_id": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },

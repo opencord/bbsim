@@ -1,0 +1,72 @@
+{
+  "sadis": {
+    "integration": {
+      "cache": {
+        "enabled": false,
+        "maxsize": 50,
+        "ttl": "PT0m"
+      }
+    },
+    "entries": [
+      {
+        "id": "BBSIM_OLT_0",
+        "hardwareIdentifier": "0a:0a:0a:0a:0a:00",
+        "ipAddress": "0.0.0.0",
+        "nasId": "BBSIM_OLT_0",
+        "uplinkPort": 1048576
+      },
+      {
+        "id": "BBSM00000001-1",
+        "nasPortId": "BBSM00000001-1",
+        "circuitId": "BBSM00000001-1",
+        "remoteId": "BBSM00000001-1",
+        "uniTagList": [
+          {
+            "ponCTag": 900,
+            "ponSTag": 900,
+            "technologyProfileId": 64,
+            "upstreamBandwidthProfile": "User_Bandwidth1",
+            "downstreamBandwidthProfile": "User_Bandwidth2",
+            "isDhcpRequired": true,
+            "serviceName": "hsia"
+          }
+        ]
+      }
+    ]
+  },
+  "bandwidthprofile": {
+    "integration": {
+      "cache": {
+        "enabled": true,
+        "maxsize": 40,
+        "ttl": "PT1m"
+      }
+    },
+    "entries": [
+      {
+        "id": "User_Bandwidth1",
+        "air": 100000,
+        "cbs": 10000,
+        "cir": 30000,
+        "ebs": 1000,
+        "eir": 100000
+      },
+      {
+        "id": "User_Bandwidth2",
+        "air": 100000,
+        "cbs": 5000,
+        "cir": 100000,
+        "ebs": 5000,
+        "eir": 100000
+      },
+      {
+        "id": "Default",
+        "air": 100000,
+        "cbs": 30,
+        "cir": 600,
+        "ebs": 30,
+        "eir": 400
+      }
+    ]
+  }
+}

@@ -1,5 +1,8 @@
 .. _BBSimAPI:
 
+REST APIs
+=========
+
 BBSimAPI
 --------
 

@@ -1249,7 +1249,7 @@
           "type": "string"
         }
       },
-      "title": "OLT information"
+      "title": "OLT information\nThis supports the older format of the REST APIs (still used from some clients)\nPlease refer to the protos in api/bbsim/bbsim.proto for the latest available version"
     },
     "legacyOLTStatusResponse": {
       "type": "object",
@@ -1418,6 +1418,30 @@
         "trap_to_host": {
           "type": "boolean",
           "format": "boolean"
+        },
+        "remark_outer_pbits": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "remark_inner_pbits": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "add_inner_tag": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "remove_inner_tag": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "translate_inner_tag": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "translate_outer_tag": {
+          "type": "boolean",
+          "format": "boolean"
         }
       }
     },
@@ -1536,6 +1560,14 @@
         "port_no": {
           "type": "integer",
           "format": "int64"
+        },
+        "group_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "tech_profile_id": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -1613,6 +1645,10 @@
         },
         "traffic_shaping_info": {
           "$ref": "#/definitions/tech_profileTrafficShapingInfo"
+        },
+        "tech_profile_id": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },

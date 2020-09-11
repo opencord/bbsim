@@ -128,12 +128,10 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 			{Name: "initialize", Src: []string{"created", "disabled", "pon_disabled"}, Dst: "initialized"},
 			{Name: "discover", Src: []string{"initialized"}, Dst: "discovered"},
 			{Name: "enable", Src: []string{"discovered", "pon_disabled"}, Dst: "enabled"},
-			{Name: "receive_eapol_flow", Src: []string{"enabled", "gem_port_added"}, Dst: "eapol_flow_received"},
-			{Name: "add_gem_port", Src: []string{"enabled", "eapol_flow_received"}, Dst: "gem_port_added"},
 			// NOTE should disabled state be different for oper_disabled (emulating an error) and admin_disabled (received a disabled call via VOLTHA)?
-			{Name: "disable", Src: []string{"enabled", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed", "pon_disabled"}, Dst: "disabled"},
+			{Name: "disable", Src: []string{"enabled", "pon_disabled"}, Dst: "disabled"},
 			// ONU state when PON port is disabled but ONU is power ON(more states should be added in src?)
-			{Name: "pon_disabled", Src: []string{"enabled", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}, Dst: "pon_disabled"},
+			{Name: "pon_disabled", Src: []string{"enabled"}, Dst: "pon_disabled"},
 			// BBR States
 			// TODO add start OMCI state
 			{Name: "send_eapol_flow", Src: []string{"initialized"}, Dst: "eapol_flow_sent"},

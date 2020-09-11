@@ -54,7 +54,7 @@ release = u''
 # ones.
 extensions = [
     'sphinxcontrib.openapi',
-    'sphinx.ext.graphviz'
+    'sphinx.ext.graphviz',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
