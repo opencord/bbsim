@@ -282,19 +282,32 @@ func (s BBSimServer) RestartEapol(ctx context.Context, req *bbsim.ONURequest) (*
 		return res, err
 	}
 
-	if err := onu.InternalState.Event("start_auth"); err != nil {
-		logger.WithFields(log.Fields{
-			"OnuId":  onu.ID,
-			"IntfId": onu.PonPortID,
-			"OnuSn":  onu.Sn(),
-		}).Errorf("Cannot restart authenticaton for ONU: %s", err.Error())
-		res.StatusCode = int32(codes.FailedPrecondition)
-		res.Message = err.Error()
-		return res, err
+	errors := []string{}
+	success := true
+
+	for _, s := range onu.Services {
+		service := s.(*devices.Service)
+		if service.NeedsEapol {
+			if err := service.EapolState.Event("start_auth"); err != nil {
+				logger.WithFields(log.Fields{
+					"OnuId":   onu.ID,
+					"IntfId":  onu.PonPortID,
+					"OnuSn":   onu.Sn(),
+					"Service": service.Name,
+				}).Errorf("Cannot restart authenticaton for Service: %s", err.Error())
+				errors = append(errors, fmt.Sprintf("%s: %s", service.Name, err.Error()))
+				success = false
+			}
+		}
 	}
 
-	res.StatusCode = int32(codes.OK)
-	res.Message = fmt.Sprintf("Authentication restarted for ONU %s.", onu.Sn())
+	if success {
+		res.StatusCode = int32(codes.OK)
+		res.Message = fmt.Sprintf("Authentication restarted for ONU %s.", onu.Sn())
+	} else {
+		res.StatusCode = int32(codes.FailedPrecondition)
+		res.Message = fmt.Sprintf("%v", errors)
+	}
 
 	return res, nil
 }
@@ -316,19 +329,33 @@ func (s BBSimServer) RestartDhcp(ctx context.Context, req *bbsim.ONURequest) (*b
 		return res, err
 	}
 
-	if err := onu.InternalState.Event("start_dhcp"); err != nil {
-		logger.WithFields(log.Fields{
-			"OnuId":  onu.ID,
-			"IntfId": onu.PonPortID,
-			"OnuSn":  onu.Sn(),
-		}).Errorf("Cannot restart DHCP for ONU: %s", err.Error())
-		res.StatusCode = int32(codes.FailedPrecondition)
-		res.Message = err.Error()
-		return res, err
+	errors := []string{}
+	success := true
+
+	for _, s := range onu.Services {
+		service := s.(*devices.Service)
+		if service.NeedsDhcp {
+
+			if err := service.DHCPState.Event("start_dhcp"); err != nil {
+				logger.WithFields(log.Fields{
+					"OnuId":   onu.ID,
+					"IntfId":  onu.PonPortID,
+					"OnuSn":   onu.Sn(),
+					"Service": service.Name,
+				}).Errorf("Cannot restart DHCP for Service: %s", err.Error())
+				errors = append(errors, fmt.Sprintf("%s: %s", service.Name, err.Error()))
+				success = false
+			}
+		}
 	}
 
-	res.StatusCode = int32(codes.OK)
-	res.Message = fmt.Sprintf("DHCP restarted for ONU %s.", onu.Sn())
+	if success {
+		res.StatusCode = int32(codes.OK)
+		res.Message = fmt.Sprintf("DHCP restarted for ONU %s.", onu.Sn())
+	} else {
+		res.StatusCode = int32(codes.FailedPrecondition)
+		res.Message = fmt.Sprintf("%v", errors)
+	}
 
 	return res, nil
 }

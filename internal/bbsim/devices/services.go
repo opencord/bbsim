@@ -31,11 +31,11 @@ var serviceLogger = log.WithFields(log.Fields{
 })
 
 type ServiceIf interface {
-	HandlePackets(stream bbsimTypes.Stream)        // start listening on the PacketCh
-	HandleAuth(stream bbsimTypes.Stream)           // Sends the EapoStart packet
-	HandleDhcp(stream bbsimTypes.Stream, cTag int) // Sends the DHCPDiscover packet
+	HandlePackets()      // start listening on the PacketCh
+	HandleAuth()         // Sends the EapoStart packet
+	HandleDhcp(cTag int) // Sends the DHCPDiscover packet
 
-	Initialize()
+	Initialize(stream bbsimTypes.Stream)
 	Disable()
 }
 
@@ -61,7 +61,9 @@ type Service struct {
 	InternalState *fsm.FSM
 	EapolState    *fsm.FSM
 	DHCPState     *fsm.FSM
-	PacketCh      chan OnuPacketMessage
+	Channel       chan Message          // drive Service lifecycle
+	PacketCh      chan OnuPacketMessage // handle packets
+	Stream        bbsimTypes.Stream     // the gRPC stream to communicate with the adapter, created in the initialize transition
 }
 
 func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTag int,
@@ -97,7 +99,19 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 				service.logStateChange("InternalState", e.Src, e.Dst)
 			},
 			"enter_initialized": func(e *fsm.Event) {
+
+				stream, ok := e.Args[0].(bbsimTypes.Stream)
+				if !ok {
+					serviceLogger.Fatal("initialize invoke with wrong arguments")
+				}
+
+				service.Stream = stream
+
 				service.PacketCh = make(chan OnuPacketMessage)
+				service.Channel = make(chan Message)
+
+				go service.HandlePackets()
+				go service.HandleChannel()
 			},
 			"enter_disabled": func(e *fsm.Event) {
 				// reset the state machines
@@ -106,6 +120,10 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 
 				// stop listening for packets
 				close(service.PacketCh)
+				close(service.Channel)
+
+				service.PacketCh = nil
+				service.Channel = nil
 			},
 		},
 	)
@@ -123,6 +141,12 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 		fsm.Callbacks{
 			"enter_state": func(e *fsm.Event) {
 				service.logStateChange("EapolState", e.Src, e.Dst)
+			},
+			"before_start_auth": func(e *fsm.Event) {
+				msg := Message{
+					Type: StartEAPOL,
+				}
+				service.Channel <- msg
 			},
 		},
 	)
@@ -142,13 +166,20 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 			"enter_state": func(e *fsm.Event) {
 				service.logStateChange("DHCPState", e.Src, e.Dst)
 			},
+			"before_start_dhcp": func(e *fsm.Event) {
+				msg := Message{
+					Type: StartDHCP,
+				}
+				service.Channel <- msg
+			},
 		},
 	)
 
 	return &service, nil
 }
 
-func (s *Service) HandleAuth(stream bbsimTypes.Stream) {
+// HandleAuth is used to start EAPOL for a particular Service when the corresponding flow is received
+func (s *Service) HandleAuth() {
 
 	if !s.NeedsEapol {
 		serviceLogger.WithFields(log.Fields{
@@ -161,8 +192,6 @@ func (s *Service) HandleAuth(stream bbsimTypes.Stream) {
 		return
 	}
 
-	// TODO check if the EAPOL flow was received before starting auth
-
 	if err := s.EapolState.Event("start_auth"); err != nil {
 		serviceLogger.WithFields(log.Fields{
 			"OnuId":  s.Onu.ID,
@@ -171,21 +200,11 @@ func (s *Service) HandleAuth(stream bbsimTypes.Stream) {
 			"Name":   s.Name,
 			"err":    err.Error(),
 		}).Error("Can't start auth for this Service")
-	} else {
-		if err := s.handleEapolStart(stream); err != nil {
-			serviceLogger.WithFields(log.Fields{
-				"OnuId":  s.Onu.ID,
-				"IntfId": s.Onu.PonPortID,
-				"OnuSn":  s.Onu.Sn(),
-				"Name":   s.Name,
-				"err":    err,
-			}).Error("Error while sending EapolStart packet")
-			_ = s.EapolState.Event("auth_failed")
-		}
 	}
 }
 
-func (s *Service) HandleDhcp(stream bbsimTypes.Stream, cTag int) {
+// HandleDhcp is used to start DHCP for a particular Service when the corresponding flow is received
+func (s *Service) HandleDhcp(cTag int) {
 
 	if s.CTag != cTag {
 		serviceLogger.WithFields(log.Fields{
@@ -218,21 +237,10 @@ func (s *Service) HandleDhcp(stream bbsimTypes.Stream, cTag int) {
 			"Name":   s.Name,
 			"err":    err.Error(),
 		}).Error("Can't start DHCP for this Service")
-	} else {
-		if err := s.handleDHCPStart(stream); err != nil {
-			serviceLogger.WithFields(log.Fields{
-				"OnuId":  s.Onu.ID,
-				"IntfId": s.Onu.PonPortID,
-				"OnuSn":  s.Onu.Sn(),
-				"Name":   s.Name,
-				"err":    err,
-			}).Error("Error while sending DHCPDiscovery packet")
-			_ = s.DHCPState.Event("dhcp_failed")
-		}
 	}
 }
 
-func (s *Service) HandlePackets(stream bbsimTypes.Stream) {
+func (s *Service) HandlePackets() {
 	serviceLogger.WithFields(log.Fields{
 		"OnuId":     s.Onu.ID,
 		"IntfId":    s.Onu.PonPortID,
@@ -261,15 +269,60 @@ func (s *Service) HandlePackets(stream bbsimTypes.Stream) {
 		}).Trace("Received message on Service Packet Channel")
 
 		if msg.Type == packetHandlers.EAPOL {
-			eapol.HandleNextPacket(msg.OnuId, msg.IntfId, s.GemPort, s.Onu.Sn(), s.Onu.PortNo, s.EapolState, msg.Packet, stream, nil)
+			eapol.HandleNextPacket(msg.OnuId, msg.IntfId, s.GemPort, s.Onu.Sn(), s.Onu.PortNo, s.EapolState, msg.Packet, s.Stream, nil)
 		} else if msg.Type == packetHandlers.DHCP {
-			_ = dhcp.HandleNextPacket(s.Onu.PonPort.Olt.ID, s.Onu.ID, s.Onu.PonPortID, s.Name, s.Onu.Sn(), s.Onu.PortNo, s.CTag, s.GemPort, s.HwAddress, s.DHCPState, msg.Packet, s.UsPonCTagPriority, stream)
+			_ = dhcp.HandleNextPacket(s.Onu.PonPort.Olt.ID, s.Onu.ID, s.Onu.PonPortID, s.Name, s.Onu.Sn(), s.Onu.PortNo, s.CTag, s.GemPort, s.HwAddress, s.DHCPState, msg.Packet, s.UsPonCTagPriority, s.Stream)
 		}
 	}
 }
 
-func (s *Service) Initialize() {
-	if err := s.InternalState.Event("initialized"); err != nil {
+func (s *Service) HandleChannel() {
+	serviceLogger.WithFields(log.Fields{
+		"OnuId":     s.Onu.ID,
+		"IntfId":    s.Onu.PonPortID,
+		"OnuSn":     s.Onu.Sn(),
+		"GemPortId": s.GemPort,
+		"Name":      s.Name,
+	}).Debug("Listening on Service Channel")
+
+	defer func() {
+		serviceLogger.WithFields(log.Fields{
+			"OnuId":     s.Onu.ID,
+			"IntfId":    s.Onu.PonPortID,
+			"OnuSn":     s.Onu.Sn(),
+			"GemPortId": s.GemPort,
+			"Name":      s.Name,
+		}).Debug("Done Listening on Service Channel")
+	}()
+	for msg := range s.Channel {
+		if msg.Type == StartEAPOL {
+			if err := s.handleEapolStart(s.Stream); err != nil {
+				serviceLogger.WithFields(log.Fields{
+					"OnuId":  s.Onu.ID,
+					"IntfId": s.Onu.PonPortID,
+					"OnuSn":  s.Onu.Sn(),
+					"Name":   s.Name,
+					"err":    err,
+				}).Error("Error while sending EapolStart packet")
+				_ = s.EapolState.Event("auth_failed")
+			}
+		} else if msg.Type == StartDHCP {
+			if err := s.handleDHCPStart(s.Stream); err != nil {
+				serviceLogger.WithFields(log.Fields{
+					"OnuId":  s.Onu.ID,
+					"IntfId": s.Onu.PonPortID,
+					"OnuSn":  s.Onu.Sn(),
+					"Name":   s.Name,
+					"err":    err,
+				}).Error("Error while sending DHCPDiscovery packet")
+				_ = s.DHCPState.Event("dhcp_failed")
+			}
+		}
+	}
+}
+
+func (s *Service) Initialize(stream bbsimTypes.Stream) {
+	if err := s.InternalState.Event("initialized", stream); err != nil {
 		serviceLogger.WithFields(log.Fields{
 			"OnuId":  s.Onu.ID,
 			"IntfId": s.Onu.PonPortID,
@@ -293,14 +346,14 @@ func (s *Service) Disable() {
 }
 
 func (s *Service) handleEapolStart(stream bbsimTypes.Stream) error {
-
+	// TODO fail Auth if it does not succeed in 30 seconds
 	serviceLogger.WithFields(log.Fields{
 		"OnuId":   s.Onu.ID,
 		"IntfId":  s.Onu.PonPortID,
 		"OnuSn":   s.Onu.Sn(),
 		"GemPort": s.GemPort,
 		"Name":    s.Name,
-	}).Debugf("handleEapolStart")
+	}).Trace("handleEapolStart")
 
 	if err := eapol.SendEapStart(s.Onu.ID, s.Onu.PonPortID, s.Onu.Sn(), s.Onu.PortNo,
 		s.HwAddress, s.GemPort, s.EapolState, stream); err != nil {
@@ -317,7 +370,7 @@ func (s *Service) handleEapolStart(stream bbsimTypes.Stream) error {
 }
 
 func (s *Service) handleDHCPStart(stream bbsimTypes.Stream) error {
-
+	// TODO fail DHCP if it does not succeed in 30 seconds
 	serviceLogger.WithFields(log.Fields{
 		"OnuId":     s.Onu.ID,
 		"IntfId":    s.Onu.PonPortID,

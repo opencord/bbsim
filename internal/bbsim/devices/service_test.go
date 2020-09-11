@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"net"
 	"testing"
+	"time"
 )
 
 type mockService struct {
@@ -31,20 +32,20 @@ type mockService struct {
 	HandlePacketsCallCount int
 }
 
-func (s *mockService) HandleAuth(stream types.Stream) {
+func (s *mockService) HandleAuth() {
 	s.HandleAuthCallCount = s.HandleAuthCallCount + 1
 }
 
-func (s *mockService) HandleDhcp(stream types.Stream, cTag int) {
+func (s *mockService) HandleDhcp(cTag int) {
 	s.HandleDhcpCallCount = s.HandleDhcpCallCount + 1
 }
 
-func (s *mockService) HandlePackets(stream types.Stream) {
+func (s *mockService) HandlePackets() {
 	s.HandlePacketsCallCount = s.HandlePacketsCallCount + 1
 }
 
-func (s *mockService) Initialize() {}
-func (s *mockService) Disable()    {}
+func (s *mockService) Initialize(stream types.Stream) {}
+func (s *mockService) Disable()                       {}
 
 // test the internalState transitions
 func TestService_InternalState(t *testing.T) {
@@ -57,13 +58,24 @@ func TestService_InternalState(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Empty(t, s.PacketCh)
-	s.Initialize()
+	s.Initialize(&mockStream{})
 
+	// check that channels have been created
 	assert.NotNil(t, s.PacketCh)
+	assert.NotNil(t, s.Channel)
+
+	// set EAPOL and DHCP states to something else
+	s.EapolState.SetState("eap_response_success_received")
+	s.DHCPState.SetState("dhcp_ack_received")
 
 	s.Disable()
+	// make sure the EAPOL and DHCP states have been reset after disable
 	assert.Equal(t, "created", s.EapolState.Current())
 	assert.Equal(t, "created", s.DHCPState.Current())
+
+	// make sure the channel have been closed
+	assert.Nil(t, s.Channel)
+	assert.Nil(t, s.PacketCh)
 }
 
 // make sure that if the service does not need EAPOL we're not sending any packet
@@ -80,8 +92,10 @@ func TestService_HandleAuth_noEapol(t *testing.T) {
 		Calls:   make(map[int]*openolt.Indication),
 		channel: make(chan int, 10),
 	}
+	s.Initialize(stream)
 
-	s.HandleAuth(stream)
+	s.HandleAuth()
+	time.Sleep(1 * time.Second)
 
 	// if the service does not need EAPOL we don't expect any packet to be generated
 	assert.Equal(t, stream.CallCount, 0)
@@ -103,8 +117,10 @@ func TestService_HandleAuth_withEapol(t *testing.T) {
 	stream := &mockStream{
 		Calls: make(map[int]*openolt.Indication),
 	}
+	s.Initialize(stream)
 
-	s.HandleAuth(stream)
+	s.HandleAuth()
+	time.Sleep(1 * time.Second)
 
 	// if the service does not need EAPOL we don't expect any packet to be generated
 	assert.Equal(t, stream.CallCount, 1)
@@ -126,8 +142,10 @@ func TestService_HandleDhcp_not_needed(t *testing.T) {
 	stream := &mockStream{
 		Calls: make(map[int]*openolt.Indication),
 	}
+	s.Initialize(stream)
 
-	s.HandleDhcp(stream, 900)
+	s.HandleDhcp(900)
+	time.Sleep(1 * time.Second)
 
 	assert.Equal(t, stream.CallCount, 0)
 
@@ -149,9 +167,11 @@ func TestService_HandleDhcp_different_c_Tag(t *testing.T) {
 	stream := &mockStream{
 		Calls: make(map[int]*openolt.Indication),
 	}
+	s.Initialize(stream)
 
 	// NOTE that the c_tag is different from the one configured in the service
-	s.HandleDhcp(stream, 800)
+	s.HandleDhcp(800)
+	time.Sleep(1 * time.Second)
 
 	assert.Equal(t, stream.CallCount, 0)
 
@@ -172,11 +192,11 @@ func TestService_HandleDhcp_needed(t *testing.T) {
 	stream := &mockStream{
 		Calls: make(map[int]*openolt.Indication),
 	}
+	s.Initialize(stream)
 
-	s.HandleDhcp(stream, 900)
+	s.HandleDhcp(900)
+	time.Sleep(1 * time.Second)
 
-	assert.Equal(t, stream.CallCount, 1)
-
-	// state should not change
-	assert.Equal(t, s.DHCPState.Current(), "dhcp_discovery_sent")
+	assert.Equal(t, 1, stream.CallCount)
+	assert.Equal(t, "dhcp_discovery_sent", s.DHCPState.Current())
 }
