@@ -34,6 +34,7 @@ import (
 
 // usage
 func main() {
+
 	config := common.GetBBROpts()
 
 	common.SetLogLevel(log.StandardLogger(), config.BBR.LogLevel, config.BBR.LogCaller)
