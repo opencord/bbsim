@@ -98,7 +98,7 @@ test-unit: clean local-omci-sim builder # @HELP Execute unit tests
 test-bbr: release-bbr docker-build # @HELP Validate that BBSim and BBR are working together
 	DOCKER_RUN_ARGS="-pon 2 -onu 2" make docker-run
 	sleep 5
-	./$(RELEASE_DIR)/$(RELEASE_BBR_NAME)-linux-amd64 -pon 2 -onu 2
+	./$(RELEASE_DIR)/$(RELEASE_BBR_NAME)-linux-amd64 -pon 2 -onu 2 -logfile tmp.logs
 	docker rm -f bbsim
 
 mod-update: # @HELP Download the dependencies to the vendor folder

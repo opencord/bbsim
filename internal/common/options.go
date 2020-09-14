@@ -212,7 +212,7 @@ func LoadConfig() {
 
 func readCliParams() *GlobalConfig {
 
-	conf := GlobalConfig{}
+	conf := getDefaultOps()
 
 	configFile := flag.String("config", conf.BBSim.ConfigFile, "Configuration file path")
 	servicesFile := flag.String("services", conf.BBSim.ServiceConfigFile, "Service Configuration file path")
@@ -268,7 +268,7 @@ func readCliParams() *GlobalConfig {
 		conf.Olt.DeviceId = net.HardwareAddr{0xA, 0xA, 0xA, 0xA, 0xA, byte(conf.Olt.ID)}.String()
 	}
 
-	return &conf
+	return conf
 }
 
 func getDefaultOps() *GlobalConfig {
@@ -375,14 +375,12 @@ func loadBBSimServices(filename string) ([]ServiceYaml, error) {
 // This is only used by BBR
 func GetBBROpts() BBRCliOptions {
 
-	LoadConfig()
-
 	bbsimIp := flag.String("bbsimIp", "127.0.0.1", "BBSim IP")
 	bbsimPort := flag.String("bbsimPort", "50060", "BBSim Port")
 	bbsimApiPort := flag.String("bbsimApiPort", "50070", "BBSim API Port")
 	logFile := flag.String("logfile", "", "Log to a file")
 
-	flag.Parse()
+	LoadConfig()
 
 	bbrOptions := BBRCliOptions{
 		Config,
