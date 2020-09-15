@@ -39,6 +39,30 @@
       "revId": "c11074df77a6305009fd78dd17862e347bfd87e4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "18c546d3_c96ce04b",
+        "filename": "internal/common/options.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-09-15T18:42:41Z",
+      "side": 1,
+      "message": "Correct, there are some defaults in there: https://github.com/opencord/bbsim/blob/master/internal/common/options.go#L274-L318",
+      "parentUuid": "0ce6e23d_09d1262c",
+      "range": {
+        "startLine": 215,
+        "startChar": 9,
+        "endLine": 215,
+        "endChar": 24
+      },
+      "revId": "c11074df77a6305009fd78dd17862e347bfd87e4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
