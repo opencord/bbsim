@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e3d43df9_aab362bb",
+        "filename": "cmd/bbr/bbr.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-09-15T18:31:18Z",
+      "side": 1,
+      "message": "nit: unnecessary change to file.",
+      "revId": "c11074df77a6305009fd78dd17862e347bfd87e4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ce6e23d_09d1262c",
+        "filename": "internal/common/options.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1000107
+      },
+      "writtenOn": "2020-09-15T18:31:18Z",
+      "side": 1,
+      "message": "I assume this returns more than the zero value?  (seems unnecessary if the defaults are all zero values)",
+      "range": {
+        "startLine": 215,
+        "startChar": 9,
+        "endLine": 215,
+        "endChar": 24
+      },
+      "revId": "c11074df77a6305009fd78dd17862e347bfd87e4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
