@@ -322,6 +322,7 @@ func (o *OltDevice) RestartOLT() error {
 	// terminate the OLT's processNniPacketIns go routine
 	go o.nniHandle.Close()
 	close(o.nniPktInChannel)
+	o.enableContextCancel()
 
 	time.Sleep(time.Duration(rebootDelay) * time.Second)
 

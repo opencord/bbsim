@@ -17,6 +17,7 @@
 package devices
 
 import (
+	"context"
 	"github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/v3/go/openolt"
 	"github.com/stretchr/testify/assert"
@@ -47,13 +48,23 @@ func (s *mockService) HandlePackets() {
 func (s *mockService) Initialize(stream types.Stream) {}
 func (s *mockService) Disable()                       {}
 
-// test the internalState transitions
-func TestService_InternalState(t *testing.T) {
+func createTestService(needsEapol bool, needsDchp bool) (*Service, error) {
+
+	enableContext := context.TODO()
+
 	mac := net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(1)}
 	onu := createMockOnu(1, 1)
-	s, err := NewService("testService", mac, onu, 900, 900,
-		false, false, false, 64, 0, false,
+	onu.PonPort = &PonPort{}
+	onu.PonPort.Olt = &OltDevice{}
+	onu.PonPort.Olt.enableContext = enableContext
+	return NewService("testService", mac, onu, 900, 900,
+		needsEapol, needsDchp, false, 64, 0, false,
 		0, 0, 0, 0)
+}
+
+// test the internalState transitions
+func TestService_InternalState(t *testing.T) {
+	s, err := createTestService(false, false)
 
 	assert.Nil(t, err)
 
@@ -80,11 +91,7 @@ func TestService_InternalState(t *testing.T) {
 
 // make sure that if the service does not need EAPOL we're not sending any packet
 func TestService_HandleAuth_noEapol(t *testing.T) {
-	mac := net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(1)}
-	onu := createMockOnu(1, 1)
-	s, err := NewService("testService", mac, onu, 900, 900,
-		false, false, false, 64, 0, false,
-		0, 0, 0, 0)
+	s, err := createTestService(false, false)
 
 	assert.Nil(t, err)
 
@@ -106,11 +113,7 @@ func TestService_HandleAuth_noEapol(t *testing.T) {
 
 // make sure that if the service does need EAPOL we're sending any packet
 func TestService_HandleAuth_withEapol(t *testing.T) {
-	mac := net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(1)}
-	onu := createMockOnu(1, 1)
-	s, err := NewService("testService", mac, onu, 900, 900,
-		true, false, false, 64, 0, false,
-		0, 0, 0, 0)
+	s, err := createTestService(true, false)
 
 	assert.Nil(t, err)
 
@@ -131,11 +134,7 @@ func TestService_HandleAuth_withEapol(t *testing.T) {
 
 // make sure that if the service does not need DHCP we're not sending any packet
 func TestService_HandleDhcp_not_needed(t *testing.T) {
-	mac := net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(1)}
-	onu := createMockOnu(1, 1)
-	s, err := NewService("testService", mac, onu, 900, 900,
-		false, false, false, 64, 0, false,
-		0, 0, 0, 0)
+	s, err := createTestService(false, false)
 
 	assert.Nil(t, err)
 
@@ -156,11 +155,7 @@ func TestService_HandleDhcp_not_needed(t *testing.T) {
 // when we receive a DHCP flow we call HandleDhcp an all the ONU Services
 // each service device whether the tag matches it's own configuration
 func TestService_HandleDhcp_different_c_Tag(t *testing.T) {
-	mac := net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(1)}
-	onu := createMockOnu(1, 1)
-	s, err := NewService("testService", mac, onu, 900, 900,
-		false, false, false, 64, 0, false,
-		0, 0, 0, 0)
+	s, err := createTestService(false, true)
 
 	assert.Nil(t, err)
 
@@ -181,11 +176,7 @@ func TestService_HandleDhcp_different_c_Tag(t *testing.T) {
 
 // make sure that if the service does need DHCP we're sending any packet
 func TestService_HandleDhcp_needed(t *testing.T) {
-	mac := net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(1)}
-	onu := createMockOnu(1, 1)
-	s, err := NewService("testService", mac, onu, 900, 900,
-		false, true, false, 64, 0, false,
-		0, 0, 0, 0)
+	s, err := createTestService(false, true)
 
 	assert.Nil(t, err)
 
@@ -199,4 +190,59 @@ func TestService_HandleDhcp_needed(t *testing.T) {
 
 	assert.Equal(t, 1, stream.CallCount)
 	assert.Equal(t, "dhcp_discovery_sent", s.DHCPState.Current())
+}
+
+// Test that if the EAPOL state machine doesn't complete in 30 seconds we
+// move it to EAPOL failed
+func TestService_EAPOLFailed(t *testing.T) {
+	// override the default wait time
+	eapolWaitTime = 500 * time.Millisecond
+	s, err := createTestService(true, false)
+
+	assert.Nil(t, err)
+
+	stream := &mockStream{
+		Calls: make(map[int]*openolt.Indication),
+	}
+	s.Initialize(stream)
+
+	// set to failed if timeout occurs
+	_ = s.EapolState.Event("start_auth")
+	time.Sleep(1 * time.Second)
+	assert.Equal(t, "auth_failed", s.EapolState.Current())
+
+	// do not set to failed if succeeded
+	s.EapolState.SetState("created")
+	_ = s.EapolState.Event("start_auth")
+	s.EapolState.SetState("eap_response_success_received")
+	time.Sleep(1 * time.Second)
+	assert.Equal(t, "eap_response_success_received", s.EapolState.Current())
+
+}
+
+// Test that if the DHCP state machine doesn't complete in 30 seconds we
+// move it to DHCP failed
+func TestService_DHCPFailed(t *testing.T) {
+	// override the default wait time
+	dhcpWaitTime = 100 * time.Millisecond
+	s, err := createTestService(false, true)
+
+	assert.Nil(t, err)
+
+	stream := &mockStream{
+		Calls: make(map[int]*openolt.Indication),
+	}
+	s.Initialize(stream)
+
+	// set to failed if timeout occurs
+	_ = s.DHCPState.Event("start_dhcp")
+	time.Sleep(1 * time.Second)
+	assert.Equal(t, "dhcp_failed", s.DHCPState.Current())
+
+	// do not set to failed if succeeded
+	s.DHCPState.SetState("created")
+	_ = s.DHCPState.Event("start_dhcp")
+	s.DHCPState.SetState("dhcp_ack_received")
+	time.Sleep(1 * time.Second)
+	assert.Equal(t, "dhcp_ack_received", s.DHCPState.Current())
 }

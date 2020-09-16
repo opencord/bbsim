@@ -26,11 +26,17 @@ import (
 	bbsimTypes "github.com/opencord/bbsim/internal/bbsim/types"
 	log "github.com/sirupsen/logrus"
 	"net"
+	"time"
 )
 
 var serviceLogger = log.WithFields(log.Fields{
 	"module": "SERVICE",
 })
+
+// time to wait before fail EAPOL/DHCP
+// (it's a variable and not a constant so it can be overridden in the tests)
+var eapolWaitTime = 30 * time.Second
+var dhcpWaitTime = 30 * time.Second
 
 type ServiceIf interface {
 	HandlePackets()      // start listening on the PacketCh
@@ -134,7 +140,7 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 	service.EapolState = fsm.NewFSM(
 		"created",
 		fsm.Events{
-			{Name: "start_auth", Src: []string{"created", "eap_start_sent", "eap_response_identity_sent", "eap_response_challenge_sent", "eap_response_success_received", "auth_failed"}, Dst: "auth_started"},
+			{Name: "start_auth", Src: []string{"created", "eap_response_success_received", "auth_failed"}, Dst: "auth_started"},
 			{Name: "eap_start_sent", Src: []string{"auth_started"}, Dst: "eap_start_sent"},
 			{Name: "eap_response_identity_sent", Src: []string{"eap_start_sent"}, Dst: "eap_response_identity_sent"},
 			{Name: "eap_response_challenge_sent", Src: []string{"eap_response_identity_sent"}, Dst: "eap_response_challenge_sent"},
@@ -151,6 +157,31 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 				}
 				service.Channel <- msg
 			},
+			"enter_auth_started": func(e *fsm.Event) {
+				go func() {
+
+				loop:
+					for {
+						select {
+						case <-service.Onu.PonPort.Olt.enableContext.Done():
+							// if the OLT is disabled, then cancel
+							break loop
+						case <-time.After(eapolWaitTime):
+							if service.EapolState.Current() != "eap_response_success_received" {
+								serviceLogger.WithFields(log.Fields{
+									"OnuId":      service.Onu.ID,
+									"IntfId":     service.Onu.PonPortID,
+									"OnuSn":      service.Onu.Sn(),
+									"Name":       service.Name,
+									"EapolState": service.EapolState.Current(),
+								}).Warn("EAPOL failed, resetting EAPOL State")
+								_ = service.EapolState.Event("auth_failed")
+							}
+						}
+
+					}
+				}()
+			},
 		},
 	)
 
@@ -159,7 +190,7 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 		fsm.Events{
 			// TODO only allow transitions to dhcp_start from success or failure, not in-between states
 			// TODO forcefully fail DHCP if we don't get an ack in X seconds
-			{Name: "start_dhcp", Src: []string{"created", "dhcp_discovery_sent", "dhcp_request_sent", "dhcp_ack_received", "dhcp_failed"}, Dst: "dhcp_started"},
+			{Name: "start_dhcp", Src: []string{"created", "dhcp_ack_received", "dhcp_failed"}, Dst: "dhcp_started"},
 			{Name: "dhcp_discovery_sent", Src: []string{"dhcp_started"}, Dst: "dhcp_discovery_sent"},
 			{Name: "dhcp_request_sent", Src: []string{"dhcp_discovery_sent"}, Dst: "dhcp_request_sent"},
 			{Name: "dhcp_ack_received", Src: []string{"dhcp_request_sent"}, Dst: "dhcp_ack_received"},
@@ -174,6 +205,31 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 					Type: StartDHCP,
 				}
 				service.Channel <- msg
+			},
+			"enter_dhcp_started": func(e *fsm.Event) {
+				go func() {
+
+				loop:
+					for {
+						select {
+						case <-service.Onu.PonPort.Olt.enableContext.Done():
+							// if the OLT is disabled, then cancel
+							break loop
+						case <-time.After(dhcpWaitTime):
+							if service.DHCPState.Current() != "dhcp_ack_received" {
+								serviceLogger.WithFields(log.Fields{
+									"OnuId":     service.Onu.ID,
+									"IntfId":    service.Onu.PonPortID,
+									"OnuSn":     service.Onu.Sn(),
+									"Name":      service.Name,
+									"DHCPState": service.DHCPState.Current(),
+								}).Warn("DHCP failed, resetting DHCP State")
+								_ = service.DHCPState.Event("dhcp_failed")
+							}
+						}
+
+					}
+				}()
 			},
 		},
 	)
