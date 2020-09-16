@@ -363,6 +363,7 @@ func (o *OltDevice) StopOltServer() error {
 		oltLogger.WithFields(log.Fields{
 			"oltId": o.SerialNumber,
 		}).Warnf("Stopping OLT gRPC server")
+		o.enableContextCancel()
 		oltServer.Stop()
 		oltServer = nil
 	}
@@ -384,7 +385,6 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) {
 	o.Lock()
 	if o.enableContext != nil && o.enableContextCancel != nil {
 		oltLogger.Info("This is an OLT reboot")
-		o.enableContextCancel()
 		rebootFlag = true
 	}
 	o.enableContext, o.enableContextCancel = context.WithCancel(context.TODO())
