@@ -40,9 +40,11 @@
     }
     stage('64 ONUs (16 ONU x 4 PONs)') {
       steps {
+        sh """
+            docker rm -f bbsim || true
+        """
         timeout(1) {
           sh """
-            docker rm -f bbsim || true
             DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-logLevel warn -enableperf -pon 4 -onu 16" make docker-run
             sleep 5
             ./bbr -pon 4 -onu 16 -logfile bbr_16_4.logs
@@ -54,9 +56,11 @@
     }
     stage('128 ONUs (32 ONU x 4 PONs)') {
       steps {
+        sh """
+            docker rm -f bbsim || true
+        """
         timeout(1) {
           sh """
-            docker rm -f bbsim || true
             DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-logLevel warn -enableperf -pon 4 -onu 32" make docker-run
             sleep 5
             ./bbr -pon 4 -onu 32 -logfile bbr_32_4.logs
@@ -68,9 +72,11 @@
     }
     stage('256 ONUs (32 ONU x 8 PONs)') {
       steps {
+        sh """
+            docker rm -f bbsim || true
+        """
         timeout(1) {
           sh """
-            docker rm -f bbsim || true
             DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-logLevel warn -enableperf -pon 8 -onu 32" make docker-run
             sleep 5
             ./bbr -pon 8 -onu 32 -logfile bbr_32_8.logs
@@ -82,9 +88,11 @@
     }
     stage('512 ONUs (64 ONU x 8 PONs)') {
       steps {
+        sh """
+            docker rm -f bbsim || true
+        """
         timeout(1) {
           sh """
-            docker rm -f bbsim || true
             DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-logLevel warn -enableperf -pon 8 -onu 64" make docker-run
             sleep 5
             ./bbr -pon 8 -onu 64 -logfile bbr_64_8.logs
@@ -96,9 +104,11 @@
     }
     stage('960 ONUs (64 ONU x 15 PONs)') {
       steps {
+        sh """
+            docker rm -f bbsim || true
+        """
         timeout(1) {
           sh """
-            docker rm -f bbsim || true
             DOCKER_REPOSITORY=voltha/ DOCKER_TAG=master DOCKER_RUN_ARGS="-logLevel warn -enableperf -pon 15 -onu 64" make docker-run
             sleep 5
             ./bbr -pon 15 -onu 64 -logfile bbr_64_15.logs
