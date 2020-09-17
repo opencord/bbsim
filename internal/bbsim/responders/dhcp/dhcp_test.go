@@ -18,13 +18,14 @@ package dhcp
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"testing"
 
 	"github.com/looplab/fsm"
 	"github.com/opencord/voltha-protos/v3/go/openolt"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
-	"gotest.tools/assert"
 )
 
 // MOCKS
@@ -58,13 +59,30 @@ func (s *mockStreamSuccess) Send(ind *openolt.Indication) error {
 
 // TESTS
 
+func TestMacAddressToTxId(t *testing.T) {
+	mac1 := net.HardwareAddr{0x2e, 0x60, 0x00, 0x0c, 0x0f, 0x02}
+	mac2 := net.HardwareAddr{0x2e, 0x60, 0x00, 0x0f, 0x0c, 0x02}
+	mac3 := net.HardwareAddr{0x2e, 0x60, 0x00, 0x0c, 0x13, 0x01}
+
+	xid1 := macAddressToTxId(mac1)
+	xid2 := macAddressToTxId(mac2)
+	xid3 := macAddressToTxId(mac3)
+
+	fmt.Println(xid1)
+	fmt.Println(xid2)
+	fmt.Println(xid3)
+
+	assert.NotEqual(t, xid1, xid2)
+	assert.NotEqual(t, xid1, xid3)
+	assert.NotEqual(t, xid2, xid3)
+}
+
 func TestSendDHCPDiscovery(t *testing.T) {
 	dhcpStateMachine.SetState("dhcp_started")
 
 	var onuId uint32 = 1
 	var gemPortId uint32 = 1
 	var ponPortId uint32 = 0
-	var oltId int = 1
 	var serialNumber = "BBSM00000001"
 	var mac = net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(ponPortId), byte(onuId)}
 	var portNo uint32 = 16
@@ -74,7 +92,7 @@ func TestSendDHCPDiscovery(t *testing.T) {
 		fail:  false,
 	}
 
-	if err := SendDHCPDiscovery(oltId, ponPortId, onuId, "hsia", 900, gemPortId, serialNumber, portNo, dhcpStateMachine, mac, 7, stream); err != nil {
+	if err := SendDHCPDiscovery(ponPortId, onuId, "hsia", 900, gemPortId, serialNumber, portNo, dhcpStateMachine, mac, 7, stream); err != nil {
 		t.Errorf("SendDHCPDiscovery returned an error: %v", err)
 		t.Fail()
 	}

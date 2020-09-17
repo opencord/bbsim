@@ -35,8 +35,8 @@ var serviceLogger = log.WithFields(log.Fields{
 
 // time to wait before fail EAPOL/DHCP
 // (it's a variable and not a constant so it can be overridden in the tests)
-var eapolWaitTime = 30 * time.Second
-var dhcpWaitTime = 30 * time.Second
+var eapolWaitTime = 60 * time.Second
+var dhcpWaitTime = 60 * time.Second
 
 type ServiceIf interface {
 	HandlePackets()      // start listening on the PacketCh
@@ -359,7 +359,7 @@ func (s *Service) HandlePackets() {
 		if msg.Type == packetHandlers.EAPOL {
 			eapol.HandleNextPacket(msg.OnuId, msg.IntfId, s.GemPort, s.Onu.Sn(), s.Onu.PortNo, s.EapolState, msg.Packet, s.Stream, nil)
 		} else if msg.Type == packetHandlers.DHCP {
-			_ = dhcp.HandleNextPacket(s.Onu.PonPort.Olt.ID, s.Onu.ID, s.Onu.PonPortID, s.Name, s.Onu.Sn(), s.Onu.PortNo, s.CTag, s.GemPort, s.HwAddress, s.DHCPState, msg.Packet, s.UsPonCTagPriority, s.Stream)
+			_ = dhcp.HandleNextPacket(s.Onu.ID, s.Onu.PonPortID, s.Name, s.Onu.Sn(), s.Onu.PortNo, s.CTag, s.GemPort, s.HwAddress, s.DHCPState, msg.Packet, s.UsPonCTagPriority, s.Stream)
 		} else if msg.Type == packetHandlers.IGMP {
 			log.Warn(hex.EncodeToString(msg.Packet.Data()))
 			_ = igmp.HandleNextPacket(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, msg.Packet, s.CTag, s.UsPonCTagPriority, s.Stream)
@@ -497,7 +497,7 @@ func (s *Service) handleDHCPStart(stream bbsimTypes.Stream) error {
 		"GemPortId": s.GemPort,
 	}).Debugf("HandleDHCPStart")
 
-	if err := dhcp.SendDHCPDiscovery(s.Onu.PonPort.Olt.ID, s.Onu.PonPortID, s.Onu.ID, s.Name, int(s.CTag), s.GemPort,
+	if err := dhcp.SendDHCPDiscovery(s.Onu.PonPortID, s.Onu.ID, s.Name, int(s.CTag), s.GemPort,
 		s.Onu.Sn(), s.Onu.PortNo, s.DHCPState, s.HwAddress, s.UsPonCTagPriority, stream); err != nil {
 		serviceLogger.WithFields(log.Fields{
 			"OnuId":     s.Onu.ID,
