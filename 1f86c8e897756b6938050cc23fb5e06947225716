@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "84f09366_47ab2609",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 622,
+      "author": {
+        "id": 1000068
+      },
+      "writtenOn": "2020-09-19T01:19:14Z",
+      "side": 1,
+      "message": "curious why u only call this classifier when there are other field that are also part of the classifier",
+      "revId": "1f86c8e897756b6938050cc23fb5e06947225716",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
