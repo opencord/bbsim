@@ -620,7 +620,7 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 		"SrcPort":          msg.Flow.Classifier.SrcPort,
 		"UniID":            msg.Flow.UniId,
 		"ClassifierOPbits": msg.Flow.Classifier.OPbits,
-	}).Debug("ONU receives FlowAdd")
+	}).Debug("OLT receives FlowAdd for ONU")
 
 	if msg.Flow.UniId != 0 {
 		// as of now BBSim only support a single UNI, so ignore everything that is not targeted to it
