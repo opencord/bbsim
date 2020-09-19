@@ -644,11 +644,10 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 		}
 	} else if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeIPv4) &&
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
-		msg.Flow.Classifier.DstPort == uint32(67) &&
-		(msg.Flow.Classifier.OPbits == 0 || msg.Flow.Classifier.OPbits == 255) {
+		msg.Flow.Classifier.DstPort == uint32(67) {
 
 		for _, s := range o.Services {
-			s.HandleDhcp(int(msg.Flow.Classifier.OVid))
+			s.HandleDhcp(uint8(msg.Flow.Classifier.OPbits), int(msg.Flow.Classifier.OVid))
 		}
 	}
 }

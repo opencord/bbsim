@@ -37,7 +37,7 @@ func (s *mockService) HandleAuth() {
 	s.HandleAuthCallCount = s.HandleAuthCallCount + 1
 }
 
-func (s *mockService) HandleDhcp(cTag int) {
+func (s *mockService) HandleDhcp(pbit uint8, cTag int) {
 	s.HandleDhcpCallCount = s.HandleDhcpCallCount + 1
 }
 
@@ -59,7 +59,7 @@ func createTestService(needsEapol bool, needsDchp bool) (*Service, error) {
 	onu.PonPort.Olt.enableContext = enableContext
 	return NewService("testService", mac, onu, 900, 900,
 		needsEapol, needsDchp, false, 64, 0, false,
-		0, 0, 0, 0)
+		7, 7, 7, 7)
 }
 
 // test the internalState transitions
@@ -143,7 +143,7 @@ func TestService_HandleDhcp_not_needed(t *testing.T) {
 	}
 	s.Initialize(stream)
 
-	s.HandleDhcp(900)
+	s.HandleDhcp(7, 900)
 	time.Sleep(1 * time.Second)
 
 	assert.Equal(t, stream.CallCount, 0)
@@ -165,13 +165,54 @@ func TestService_HandleDhcp_different_c_Tag(t *testing.T) {
 	s.Initialize(stream)
 
 	// NOTE that the c_tag is different from the one configured in the service
-	s.HandleDhcp(800)
+	s.HandleDhcp(7, 800)
 	time.Sleep(1 * time.Second)
 
 	assert.Equal(t, stream.CallCount, 0)
 
 	// state should not change
 	assert.Equal(t, s.DHCPState.Current(), "created")
+}
+
+// when we receive a DHCP flow we call HandleDhcp an all the ONU Services
+// each service device whether the tag matches it's own configuration
+func TestService_HandleDhcp_different_pbit(t *testing.T) {
+	s, err := createTestService(false, true)
+
+	assert.Nil(t, err)
+
+	stream := &mockStream{
+		Calls: make(map[int]*openolt.Indication),
+	}
+	s.Initialize(stream)
+
+	// NOTE that the c_tag is different from the one configured in the service
+	s.HandleDhcp(5, 900)
+	time.Sleep(1 * time.Second)
+
+	assert.Equal(t, stream.CallCount, 0)
+
+	// state should not change
+	assert.Equal(t, s.DHCPState.Current(), "created")
+}
+
+// if PBIT is 255 it means all of them, so start DHCP if the C_TAG matches
+func TestService_HandleDhcp_pbit_255(t *testing.T) {
+	s, err := createTestService(false, true)
+
+	assert.Nil(t, err)
+
+	stream := &mockStream{
+		Calls: make(map[int]*openolt.Indication),
+	}
+	s.Initialize(stream)
+
+	// NOTE that the c_tag is different from the one configured in the service
+	s.HandleDhcp(255, 900)
+	time.Sleep(1 * time.Second)
+
+	assert.Equal(t, 1, stream.CallCount)
+	assert.Equal(t, s.DHCPState.Current(), "dhcp_discovery_sent")
 }
 
 // make sure that if the service does need DHCP we're sending any packet
@@ -185,7 +226,7 @@ func TestService_HandleDhcp_needed(t *testing.T) {
 	}
 	s.Initialize(stream)
 
-	s.HandleDhcp(900)
+	s.HandleDhcp(7, 900)
 	time.Sleep(1 * time.Second)
 
 	assert.Equal(t, 1, stream.CallCount)

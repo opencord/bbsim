@@ -39,9 +39,9 @@ var eapolWaitTime = 60 * time.Second
 var dhcpWaitTime = 60 * time.Second
 
 type ServiceIf interface {
-	HandlePackets()      // start listening on the PacketCh
-	HandleAuth()         // Sends the EapoStart packet
-	HandleDhcp(cTag int) // Sends the DHCPDiscover packet
+	HandlePackets()                  // start listening on the PacketCh
+	HandleAuth()                     // Sends the EapoStart packet
+	HandleDhcp(pbit uint8, cTag int) // Sends the DHCPDiscover packet
 
 	Initialize(stream bbsimTypes.Stream)
 	Disable()
@@ -292,9 +292,9 @@ func (s *Service) HandleAuth() {
 }
 
 // HandleDhcp is used to start DHCP for a particular Service when the corresponding flow is received
-func (s *Service) HandleDhcp(cTag int) {
+func (s *Service) HandleDhcp(pbit uint8, cTag int) {
 
-	if s.CTag != cTag {
+	if s.CTag != cTag || (s.UsPonCTagPriority != pbit && pbit != 255) {
 		serviceLogger.WithFields(log.Fields{
 			"OnuId":  s.Onu.ID,
 			"IntfId": s.Onu.PonPortID,
