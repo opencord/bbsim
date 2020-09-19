@@ -604,23 +604,25 @@ func (o *Onu) SetID(id uint32) {
 
 func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 	onuLogger.WithFields(log.Fields{
-		"Cookie":           msg.Flow.Cookie,
-		"DstPort":          msg.Flow.Classifier.DstPort,
-		"EthType":          fmt.Sprintf("%x", msg.Flow.Classifier.EthType),
-		"FlowId":           msg.Flow.FlowId,
-		"FlowType":         msg.Flow.FlowType,
-		"GemportId":        msg.Flow.GemportId,
-		"InnerVlan":        msg.Flow.Classifier.IVid,
-		"IntfId":           msg.Flow.AccessIntfId,
-		"IpProto":          msg.Flow.Classifier.IpProto,
-		"OnuId":            msg.Flow.OnuId,
-		"OnuSn":            o.Sn(),
-		"OuterVlan":        msg.Flow.Classifier.OVid,
-		"PortNo":           msg.Flow.PortNo,
-		"SrcPort":          msg.Flow.Classifier.SrcPort,
-		"UniID":            msg.Flow.UniId,
-		"ClassifierOPbits": msg.Flow.Classifier.OPbits,
-	}).Debug("ONU receives FlowAdd")
+		"Cookie":            msg.Flow.Cookie,
+		"DstPort":           msg.Flow.Classifier.DstPort,
+		"FlowId":            msg.Flow.FlowId,
+		"FlowType":          msg.Flow.FlowType,
+		"GemportId":         msg.Flow.GemportId,
+		"InnerVlan":         msg.Flow.Classifier.IVid,
+		"IntfId":            msg.Flow.AccessIntfId,
+		"IpProto":           msg.Flow.Classifier.IpProto,
+		"OnuId":             msg.Flow.OnuId,
+		"OnuSn":             o.Sn(),
+		"OuterVlan":         msg.Flow.Classifier.OVid,
+		"PortNo":            msg.Flow.PortNo,
+		"SrcPort":           msg.Flow.Classifier.SrcPort,
+		"UniID":             msg.Flow.UniId,
+		"ClassifierEthType": fmt.Sprintf("%x", msg.Flow.Classifier.EthType),
+		"ClassifierOPbits":  msg.Flow.Classifier.OPbits,
+		"ClassifierIVid":    msg.Flow.Classifier.IVid,
+		"ClassifierOVid":    msg.Flow.Classifier.OVid,
+	}).Debug("OLT receives FlowAdd for ONU")
 
 	if msg.Flow.UniId != 0 {
 		// as of now BBSim only support a single UNI, so ignore everything that is not targeted to it
