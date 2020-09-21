@@ -16,6 +16,24 @@
       "revId": "1f86c8e897756b6938050cc23fb5e06947225716",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf80f807_618206ea",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 622,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-09-21T16:47:32Z",
+      "side": 1,
+      "message": "That was originally the only field in the Classifier that we were matching on (in order to trigger DHCP Discovery). Now we also match on the \"Classifier.IVid\" and \"Classifier.OVid\", I added them and renamed EthType",
+      "parentUuid": "84f09366_47ab2609",
+      "revId": "1f86c8e897756b6938050cc23fb5e06947225716",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
