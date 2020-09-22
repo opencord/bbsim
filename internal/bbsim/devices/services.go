@@ -176,6 +176,7 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 									"EapolState": service.EapolState.Current(),
 								}).Warn("EAPOL failed, resetting EAPOL State")
 								_ = service.EapolState.Event("auth_failed")
+								break loop
 							}
 						}
 
@@ -225,6 +226,7 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 									"DHCPState": service.DHCPState.Current(),
 								}).Warn("DHCP failed, resetting DHCP State")
 								_ = service.DHCPState.Event("dhcp_failed")
+								break loop
 							}
 						}
 
