@@ -160,12 +160,11 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 			"enter_auth_started": func(e *fsm.Event) {
 				go func() {
 
-				loop:
 					for {
 						select {
 						case <-service.Onu.PonPort.Olt.enableContext.Done():
 							// if the OLT is disabled, then cancel
-							break loop
+							return
 						case <-time.After(eapolWaitTime):
 							if service.EapolState.Current() != "eap_response_success_received" {
 								serviceLogger.WithFields(log.Fields{
@@ -176,7 +175,7 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 									"EapolState": service.EapolState.Current(),
 								}).Warn("EAPOL failed, resetting EAPOL State")
 								_ = service.EapolState.Event("auth_failed")
-								break loop
+								return
 							}
 						}
 
@@ -210,12 +209,11 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 			"enter_dhcp_started": func(e *fsm.Event) {
 				go func() {
 
-				loop:
 					for {
 						select {
 						case <-service.Onu.PonPort.Olt.enableContext.Done():
 							// if the OLT is disabled, then cancel
-							break loop
+							return
 						case <-time.After(dhcpWaitTime):
 							if service.DHCPState.Current() != "dhcp_ack_received" {
 								serviceLogger.WithFields(log.Fields{
@@ -226,7 +224,7 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 									"DHCPState": service.DHCPState.Current(),
 								}).Warn("DHCP failed, resetting DHCP State")
 								_ = service.DHCPState.Event("dhcp_failed")
-								break loop
+								return
 							}
 						}
 
