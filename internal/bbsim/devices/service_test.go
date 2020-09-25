@@ -19,6 +19,7 @@ package devices
 import (
 	"context"
 	"github.com/opencord/bbsim/internal/bbsim/types"
+	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/voltha-protos/v3/go/openolt"
 	"github.com/stretchr/testify/assert"
 	"net"
@@ -236,6 +237,13 @@ func TestService_HandleDhcp_needed(t *testing.T) {
 // Test that if the EAPOL state machine doesn't complete in 30 seconds we
 // move it to EAPOL failed
 func TestService_EAPOLFailed(t *testing.T) {
+
+	common.Config = &common.GlobalConfig{
+		BBSim: common.BBSimConfig{
+			AuthRetry: false,
+		},
+	}
+
 	// override the default wait time
 	eapolWaitTime = 500 * time.Millisecond
 	s, err := createTestService(true, false)
@@ -261,9 +269,42 @@ func TestService_EAPOLFailed(t *testing.T) {
 
 }
 
+func TestService_EAPOLRestart(t *testing.T) {
+
+	common.Config = &common.GlobalConfig{
+		BBSim: common.BBSimConfig{
+			AuthRetry: true,
+		},
+	}
+
+	eapolWaitTime = 500 * time.Millisecond
+	s, err := createTestService(true, false)
+
+	assert.Nil(t, err)
+
+	stream := &mockStream{
+		Calls: make(map[int]*openolt.Indication),
+	}
+	s.Initialize(stream)
+
+	// set to failed if timeout occurs
+	_ = s.EapolState.Event("start_auth")
+
+	// after a second EAPOL should have failed and restarted
+	time.Sleep(1 * time.Second)
+	assert.Equal(t, "eap_start_sent", s.EapolState.Current())
+}
+
 // Test that if the DHCP state machine doesn't complete in 30 seconds we
 // move it to DHCP failed
 func TestService_DHCPFailed(t *testing.T) {
+
+	common.Config = &common.GlobalConfig{
+		BBSim: common.BBSimConfig{
+			DhcpRetry: false,
+		},
+	}
+
 	// override the default wait time
 	dhcpWaitTime = 100 * time.Millisecond
 	s, err := createTestService(false, true)
@@ -286,4 +327,28 @@ func TestService_DHCPFailed(t *testing.T) {
 	s.DHCPState.SetState("dhcp_ack_received")
 	time.Sleep(1 * time.Second)
 	assert.Equal(t, "dhcp_ack_received", s.DHCPState.Current())
+}
+
+func TestService_DHCPRestart(t *testing.T) {
+	common.Config = &common.GlobalConfig{
+		BBSim: common.BBSimConfig{
+			DhcpRetry: true,
+		},
+	}
+
+	// override the default wait time
+	dhcpWaitTime = 100 * time.Millisecond
+	s, err := createTestService(false, true)
+
+	assert.Nil(t, err)
+
+	stream := &mockStream{
+		Calls: make(map[int]*openolt.Indication),
+	}
+	s.Initialize(stream)
+
+	// set to failed if timeout occurs
+	_ = s.DHCPState.Event("start_dhcp")
+	time.Sleep(1 * time.Second)
+	assert.Equal(t, "dhcp_discovery_sent", s.DHCPState.Current())
 }
