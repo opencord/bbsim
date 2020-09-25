@@ -24,6 +24,7 @@ import (
 	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
 	"github.com/opencord/bbsim/internal/bbsim/responders/igmp"
 	bbsimTypes "github.com/opencord/bbsim/internal/bbsim/types"
+	"github.com/opencord/bbsim/internal/common"
 	log "github.com/sirupsen/logrus"
 	"net"
 	"time"
@@ -174,7 +175,12 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 									"Name":       service.Name,
 									"EapolState": service.EapolState.Current(),
 								}).Warn("EAPOL failed, resetting EAPOL State")
+
 								_ = service.EapolState.Event("auth_failed")
+								if common.Config.BBSim.AuthRetry {
+									_ = service.EapolState.Event("start_auth")
+								}
+
 								return
 							}
 						}
@@ -223,7 +229,12 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 									"Name":      service.Name,
 									"DHCPState": service.DHCPState.Current(),
 								}).Warn("DHCP failed, resetting DHCP State")
+
 								_ = service.DHCPState.Event("dhcp_failed")
+								if common.Config.BBSim.DhcpRetry {
+									_ = service.DHCPState.Event("start_dhcp")
+								}
+
 								return
 							}
 						}
