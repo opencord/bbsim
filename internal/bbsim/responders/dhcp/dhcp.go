@@ -82,8 +82,8 @@ func createDefaultDHCPReq(mac net.HardwareAddr) layers.DHCPv4 {
 	}
 }
 
-func createDefaultOpts(intfId uint32, onuId uint32) []layers.DHCPOption {
-	hostname := []byte(fmt.Sprintf("%d.%d.bbsim.onf.org", intfId, onuId))
+func createDefaultOpts(gemPortId uint32, intfId uint32, onuId uint32) []layers.DHCPOption {
+	hostname := []byte(fmt.Sprintf("%d.%d.%d.bbsim.onf.org", gemPortId, intfId, onuId))
 	opts := []layers.DHCPOption{}
 	opts = append(opts, layers.DHCPOption{
 		Type:   layers.DHCPOptHostname,
@@ -106,7 +106,7 @@ func createDefaultOpts(intfId uint32, onuId uint32) []layers.DHCPOption {
 
 func createDHCPDisc(intfId uint32, onuId uint32, gemPort uint32, macAddress net.HardwareAddr) *layers.DHCPv4 {
 	dhcpLayer := createDefaultDHCPReq(macAddress)
-	defaultOpts := createDefaultOpts(intfId, onuId)
+	defaultOpts := createDefaultOpts(gemPort, intfId, onuId)
 	dhcpLayer.Options = append([]layers.DHCPOption{{
 		Type:   layers.DHCPOptMessageType,
 		Data:   []byte{byte(layers.DHCPMsgTypeDiscover)},
@@ -124,9 +124,9 @@ func createDHCPDisc(intfId uint32, onuId uint32, gemPort uint32, macAddress net.
 	return &dhcpLayer
 }
 
-func createDHCPReq(intfId uint32, onuId uint32, macAddress net.HardwareAddr, offeredIp net.IP) *layers.DHCPv4 {
+func createDHCPReq(intfId uint32, onuId uint32, macAddress net.HardwareAddr, offeredIp net.IP, gemPortId uint32) *layers.DHCPv4 {
 	dhcpLayer := createDefaultDHCPReq(macAddress)
-	defaultOpts := createDefaultOpts(intfId, onuId)
+	defaultOpts := createDefaultOpts(gemPortId, intfId, onuId)
 
 	dhcpLayer.Options = append(defaultOpts, layers.DHCPOption{
 		Type:   layers.DHCPOptMessageType,
@@ -276,7 +276,7 @@ func sendDHCPPktIn(msg bbsim.ByteMsg, portNo uint32, gemPortId uint32, stream bb
 func sendDHCPRequest(ponPortId uint32, onuId uint32, serviceName string, serialNumber string, portNo uint32,
 	cTag int, gemPortId uint32, onuStateMachine *fsm.FSM, onuHwAddress net.HardwareAddr,
 	offeredIp net.IP, pbit uint8, stream bbsim.Stream) error {
-	dhcp := createDHCPReq(ponPortId, onuId, onuHwAddress, offeredIp)
+	dhcp := createDHCPReq(ponPortId, onuId, onuHwAddress, offeredIp, gemPortId)
 	pkt, err := serializeDHCPPacket(ponPortId, onuId, cTag, onuHwAddress, dhcp, pbit)
 
 	if err != nil {
