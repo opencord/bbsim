@@ -221,6 +221,7 @@ func readCliParams() *GlobalConfig {
 	nni := flag.Int("nni", int(conf.Olt.NniPorts), "Number of NNI ports per OLT device to be emulated")
 	pon := flag.Int("pon", int(conf.Olt.PonPorts), "Number of PON ports per OLT device to be emulated")
 	onu := flag.Int("onu", int(conf.Olt.OnusPonPort), "Number of ONU devices per PON port to be emulated")
+	oltRebootDelay := flag.Int("oltRebootDelay", conf.Olt.OltRebootDelay, "Time that BBSim should before restarting after a reboot")
 
 	openolt_address := flag.String("openolt_address", conf.BBSim.OpenOltAddress, "IP address:port")
 	api_address := flag.String("api_address", conf.BBSim.ApiAddress, "IP address:port")
@@ -240,12 +241,14 @@ func readCliParams() *GlobalConfig {
 	kafkaEventTopic := flag.String("kafkaEventTopic", conf.BBSim.KafkaEventTopic, "Ability to configure the topic on which BBSim publishes events on Kafka")
 	dhcpRetry := flag.Bool("dhcpRetry", conf.BBSim.DhcpRetry, "Set this flag if BBSim should retry DHCP upon failure until success")
 	authRetry := flag.Bool("authRetry", conf.BBSim.AuthRetry, "Set this flag if BBSim should retry EAPOL (Authentication) upon failure until success")
+
 	flag.Parse()
 
 	conf.Olt.ID = int(*olt_id)
 	conf.Olt.NniPorts = uint32(*nni)
 	conf.Olt.PonPorts = uint32(*pon)
 	conf.Olt.OnusPonPort = uint32(*onu)
+	conf.Olt.OltRebootDelay = *oltRebootDelay
 	conf.BBSim.ConfigFile = *configFile
 	conf.BBSim.ServiceConfigFile = *servicesFile
 	conf.BBSim.CpuProfile = profileCpu
@@ -306,7 +309,7 @@ func getDefaultOps() *GlobalConfig {
 			OnusPonPort:        1,
 			Technology:         "XGS-PON",
 			ID:                 0,
-			OltRebootDelay:     10,
+			OltRebootDelay:     60,
 			PortStatsInterval:  20,
 		},
 		BBRConfig{
