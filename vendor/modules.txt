@@ -80,11 +80,11 @@ github.com/opencord/cordctl/pkg/format
 github.com/opencord/device-management-interface/go/dmi
 # github.com/opencord/omci-sim v0.0.4
 github.com/opencord/omci-sim
-# github.com/opencord/voltha-protos/v3 v3.4.5
-github.com/opencord/voltha-protos/v3/go/common
-github.com/opencord/voltha-protos/v3/go/ext/config
-github.com/opencord/voltha-protos/v3/go/openolt
-github.com/opencord/voltha-protos/v3/go/tech_profile
+# github.com/opencord/voltha-protos/v4 v4.0.2
+github.com/opencord/voltha-protos/v4/go/common
+github.com/opencord/voltha-protos/v4/go/ext/config
+github.com/opencord/voltha-protos/v4/go/openolt
+github.com/opencord/voltha-protos/v4/go/tech_profile
 # github.com/pierrec/lz4 v2.4.1+incompatible
 github.com/pierrec/lz4
 github.com/pierrec/lz4/internal/xxh32

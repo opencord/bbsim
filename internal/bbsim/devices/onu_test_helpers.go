@@ -19,12 +19,12 @@ package devices
 import (
 	"context"
 	"errors"
-	"github.com/opencord/voltha-protos/v3/go/common"
-	"github.com/opencord/voltha-protos/v3/go/ext/config"
+	"github.com/opencord/voltha-protos/v4/go/common"
+	"github.com/opencord/voltha-protos/v4/go/ext/config"
 	"time"
 
-	"github.com/opencord/voltha-protos/v3/go/openolt"
-	"github.com/opencord/voltha-protos/v3/go/tech_profile"
+	"github.com/opencord/voltha-protos/v4/go/openolt"
+	"github.com/opencord/voltha-protos/v4/go/tech_profile"
 	"google.golang.org/grpc"
 )
 

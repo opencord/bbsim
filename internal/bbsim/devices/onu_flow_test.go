@@ -19,7 +19,7 @@ package devices
 import (
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
-	"github.com/opencord/voltha-protos/v3/go/openolt"
+	"github.com/opencord/voltha-protos/v4/go/openolt"
 	"gotest.tools/assert"
 	"testing"
 )
@@ -41,7 +41,7 @@ func Test_Onu_SendEapolFlow(t *testing.T) {
 	assert.Equal(t, client.FlowAddSpy.Calls[1].AccessIntfId, int32(onu.PonPortID))
 	assert.Equal(t, client.FlowAddSpy.Calls[1].OnuId, int32(onu.ID))
 	assert.Equal(t, client.FlowAddSpy.Calls[1].UniId, int32(0))
-	assert.Equal(t, client.FlowAddSpy.Calls[1].FlowId, onu.ID)
+	assert.Equal(t, client.FlowAddSpy.Calls[1].FlowId, uint64(onu.ID))
 	assert.Equal(t, client.FlowAddSpy.Calls[1].FlowType, "downstream")
 	assert.Equal(t, client.FlowAddSpy.Calls[1].PortNo, onu.ID)
 }
@@ -61,14 +61,14 @@ func Test_HandleFlowAddFlowId(t *testing.T) {
 	}
 	onu.handleFlowAdd(msg)
 	assert.Equal(t, len(onu.FlowIds), 1)
-	assert.Equal(t, onu.FlowIds[0], uint32(64))
+	assert.Equal(t, onu.FlowIds[0], uint64(64))
 }
 
 // checks that we only remove the correct flow
 func Test_HandleFlowRemoveFlowId(t *testing.T) {
 	onu := createMockOnu(1, 1)
 
-	onu.FlowIds = []uint32{1, 2, 34, 64, 92}
+	onu.FlowIds = []uint64{1, 2, 34, 64, 92}
 
 	flow := openolt.Flow{
 		FlowId:     64,
@@ -81,10 +81,10 @@ func Test_HandleFlowRemoveFlowId(t *testing.T) {
 	}
 	onu.handleFlowRemove(msg)
 	assert.Equal(t, len(onu.FlowIds), 4)
-	assert.Equal(t, onu.FlowIds[0], uint32(1))
-	assert.Equal(t, onu.FlowIds[1], uint32(2))
-	assert.Equal(t, onu.FlowIds[2], uint32(34))
-	assert.Equal(t, onu.FlowIds[3], uint32(92))
+	assert.Equal(t, onu.FlowIds[0], uint64(1))
+	assert.Equal(t, onu.FlowIds[1], uint64(2))
+	assert.Equal(t, onu.FlowIds[2], uint64(34))
+	assert.Equal(t, onu.FlowIds[3], uint64(92))
 }
 
 // checks that when the last flow is removed we reset the stored flags in the ONU
@@ -101,7 +101,7 @@ func Test_HandleFlowRemoveFlowId_LastFlow(t *testing.T) {
 
 	onu.GemPortAdded = true
 
-	onu.FlowIds = []uint32{64}
+	onu.FlowIds = []uint64{64}
 
 	flow := openolt.Flow{
 		FlowId:     64,
@@ -134,7 +134,7 @@ func TestOnu_HhandleEAPOLStart(t *testing.T) {
 		AccessIntfId:  int32(onu.PonPortID),
 		OnuId:         int32(onu.ID),
 		UniId:         int32(0),
-		FlowId:        uint32(onu.ID),
+		FlowId:        uint64(onu.ID),
 		FlowType:      "downstream",
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
@@ -181,7 +181,7 @@ func Test_HandleFlowAddEapolWithGem(t *testing.T) {
 		AccessIntfId:  int32(onu.PonPortID),
 		OnuId:         int32(onu.ID),
 		UniId:         int32(0),
-		FlowId:        uint32(onu.ID),
+		FlowId:        uint64(onu.ID),
 		FlowType:      "downstream",
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
@@ -222,7 +222,7 @@ func Test_HandleFlowAddEapolWrongUNI(t *testing.T) {
 		AccessIntfId:  int32(onu.PonPortID),
 		OnuId:         int32(onu.ID),
 		UniId:         int32(1),
-		FlowId:        uint32(onu.ID),
+		FlowId:        uint64(onu.ID),
 		FlowType:      "downstream",
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
@@ -264,7 +264,7 @@ func Test_HandleFlowAddDhcp(t *testing.T) {
 		AccessIntfId:  int32(onu.PonPortID),
 		OnuId:         int32(onu.ID),
 		UniId:         int32(0),
-		FlowId:        uint32(onu.ID),
+		FlowId:        uint64(onu.ID),
 		FlowType:      "downstream",
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
@@ -308,7 +308,7 @@ func Test_HandleFlowAddDhcpPBit255(t *testing.T) {
 		AccessIntfId:  int32(onu.PonPortID),
 		OnuId:         int32(onu.ID),
 		UniId:         int32(0),
-		FlowId:        uint32(onu.ID),
+		FlowId:        uint64(onu.ID),
 		FlowType:      "downstream",
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
@@ -352,7 +352,7 @@ func Test_HandleFlowAddDhcpIgnoreByPbit(t *testing.T) {
 		AccessIntfId:  int32(onu.PonPortID),
 		OnuId:         int32(onu.ID),
 		UniId:         int32(0),
-		FlowId:        uint32(onu.ID),
+		FlowId:        uint64(onu.ID),
 		FlowType:      "downstream",
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
@@ -395,7 +395,7 @@ func Test_HandleFlowAddDhcpNoDhcp(t *testing.T) {
 		AccessIntfId:  int32(onu.PonPortID),
 		OnuId:         int32(onu.ID),
 		UniId:         int32(0),
-		FlowId:        uint32(onu.ID),
+		FlowId:        uint64(onu.ID),
 		FlowType:      "downstream",
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
@@ -442,7 +442,7 @@ func Test_HandleFlowAddDhcpWithoutGem(t *testing.T) {
 		AccessIntfId:  int32(onu.PonPortID),
 		OnuId:         int32(onu.ID),
 		UniId:         int32(0),
-		FlowId:        uint32(onu.ID),
+		FlowId:        uint64(onu.ID),
 		FlowType:      "downstream",
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),

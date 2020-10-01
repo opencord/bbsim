@@ -105,7 +105,7 @@ mod-update: # @HELP Download the dependencies to the vendor folder
 	${GO} mod tidy
 	${GO} mod vendor
 
-docker-build: local-omci-sim# @HELP Build the BBSim docker container (contains BBSimCtl too)
+docker-build: local-omci-sim local-protos# @HELP Build the BBSim docker container (contains BBSimCtl too)
 	docker build \
 	  -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} \
 	  -f build/package/Dockerfile .
@@ -196,6 +196,14 @@ ifdef LOCAL_OMCI_SIM
 	cp -r ${LOCAL_OMCI_SIM}/* vendor/github.com/opencord/omci-sim/
 endif
 
+local-protos: ## Copies a local version of the voltha-protos dependency into the vendor directory
+ifdef LOCAL_PROTOS
+	rm -rf vendor/github.com/opencord/voltha-protos/v4/go
+	mkdir -p vendor/github.com/opencord/voltha-protos/v4/go
+	cp -r ${LOCAL_PROTOS}/go/* vendor/github.com/opencord/voltha-protos/v4/go
+	rm -rf vendor/github.com/opencord/voltha-protos/v4/go/vendor
+endif
+
 # Internals
 
 clean:
@@ -205,7 +213,7 @@ clean:
 	@rm -rf tools/bin
 	@rm -rf release/*
 
-build-bbr: local-omci-sim
+build-bbr: local-omci-sim local-protos
 	@go build -mod vendor \
 	  -ldflags "-w -X main.buildTime=$(shell date +%Y/%m/%d-%H:%M:%S) \
 	    -X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
@@ -231,10 +239,10 @@ build-bbsimctl:
 
 setup_tools:
 	@echo "Downloading dependencies..."
-	@${GO} mod download github.com/grpc-ecosystem/grpc-gateway github.com/opencord/voltha-protos/v3
+	@${GO} mod download github.com/grpc-ecosystem/grpc-gateway github.com/opencord/voltha-protos/v4
 	@echo "Dependencies downloaded OK"
 
-VOLTHA_PROTOS ?= $(shell ${GO} list -f '{{ .Dir }}' -m github.com/opencord/voltha-protos/v3)
+VOLTHA_PROTOS ?= $(shell ${GO} list -f '{{ .Dir }}' -m github.com/opencord/voltha-protos/v4)
 GOOGLEAPI     ?= $(shell ${GO} list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
 
 .PHONY: api/openolt/openolt.pb.go api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go docs/swagger/bbsim/bbsim.swagger.json docs/swagger/leagacy/bbsim.swagger.json
