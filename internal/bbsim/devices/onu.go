@@ -44,7 +44,7 @@ var onuLogger = log.WithFields(log.Fields{
 })
 
 type FlowKey struct {
-	ID        uint32
+	ID        uint64
 	Direction string
 }
 
@@ -67,7 +67,7 @@ type Onu struct {
 	// deprecated (gemPort is on a Service basis)
 	GemPortAdded bool
 	Flows        []FlowKey
-	FlowIds      []uint32 // keep track of the flows we currently have in the ONU
+	FlowIds      []uint64 // keep track of the flows we currently have in the ONU
 
 	OperState    *fsm.FSM
 	SerialNumber *openolt.SerialNumber
@@ -822,7 +822,7 @@ func (o *Onu) sendEapolFlow(client openolt.OpenoltClient) {
 		AccessIntfId:  int32(o.PonPortID),
 		OnuId:         int32(o.ID),
 		UniId:         int32(0), // NOTE do not hardcode this, we need to support multiple UNIs
-		FlowId:        uint32(o.ID),
+		FlowId:        uint64(o.ID),
 		FlowType:      "downstream",
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
@@ -870,7 +870,7 @@ func (o *Onu) sendDhcpFlow(client openolt.OpenoltClient) {
 		AccessIntfId:  int32(o.PonPortID),
 		OnuId:         int32(o.ID),
 		UniId:         int32(0), // FIXME do not hardcode this
-		FlowId:        uint32(o.ID),
+		FlowId:        uint64(o.ID),
 		FlowType:      "downstream",
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
