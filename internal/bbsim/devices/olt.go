@@ -1215,7 +1215,7 @@ func (o *OltDevice) HeartbeatCheck(context.Context, *openolt.Empty) (*openolt.He
 	return &res, nil
 }
 
-func (o *OltDevice) GetOnuByFlowId(flowId uint32) (*Onu, error) {
+func (o *OltDevice) GetOnuByFlowId(flowId uint64) (*Onu, error) {
 	for _, pon := range o.Pons {
 		for _, onu := range pon.Onus {
 			for _, fId := range onu.FlowIds {
