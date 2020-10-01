@@ -9,3 +9,4 @@ release
 *.trace
 .idea
 sca-report/
+.vscode
