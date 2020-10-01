@@ -27,6 +27,7 @@ import (
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
+
 	"time"
 
 	"github.com/cboling/omci"
@@ -46,7 +47,7 @@ var onuLogger = log.WithFields(log.Fields{
 })
 
 type FlowKey struct {
-	ID        uint32
+	ID        uint64
 	Direction string
 }
 
@@ -69,7 +70,7 @@ type Onu struct {
 	// deprecated (gemPort is on a Service basis)
 	GemPortAdded bool
 	Flows        []FlowKey
-	FlowIds      []uint32 // keep track of the flows we currently have in the ONU
+	FlowIds      []uint64 // keep track of the flows we currently have in the ONU
 
 	OperState    *fsm.FSM
 	SerialNumber *openolt.SerialNumber
@@ -624,6 +625,8 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 		"ClassifierOPbits":  msg.Flow.Classifier.OPbits,
 		"ClassifierIVid":    msg.Flow.Classifier.IVid,
 		"ClassifierOVid":    msg.Flow.Classifier.OVid,
+		"ReplicateFlow":     msg.Flow.ReplicateFlow,
+		"PbitToGemport":     msg.Flow.PbitToGemport,
 	}).Debug("OLT receives FlowAdd for ONU")
 
 	if msg.Flow.UniId != 0 {
@@ -637,7 +640,17 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 	}
 
 	o.FlowIds = append(o.FlowIds, msg.Flow.FlowId)
-	o.addGemPortToService(uint32(msg.Flow.GemportId), msg.Flow.Classifier.EthType, msg.Flow.Classifier.OVid, msg.Flow.Classifier.IVid)
+
+	var gemPortId uint32
+	if msg.Flow.ReplicateFlow {
+		// This means that the OLT should replicate the flow for each PBIT, for BBSim it's enough to use the
+		// NOTE different TP may create different mapping between PBits and GemPorts, this may require some changes
+		gemPortId = msg.Flow.PbitToGemport[0]
+	} else {
+		// if replicateFlows is false, then the flow is carrying the correct GemPortId
+		gemPortId = uint32(msg.Flow.GemportId)
+	}
+	o.addGemPortToService(gemPortId, msg.Flow.Classifier.EthType, msg.Flow.Classifier.OVid, msg.Flow.Classifier.IVid)
 
 	if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeEAPOL) && msg.Flow.Classifier.OVid == 4091 {
 		// NOTE storing the PortNO, it's needed when sending PacketIndications
@@ -824,7 +837,7 @@ func (o *Onu) sendEapolFlow(client openolt.OpenoltClient) {
 		AccessIntfId:  int32(o.PonPortID),
 		OnuId:         int32(o.ID),
 		UniId:         int32(0), // NOTE do not hardcode this, we need to support multiple UNIs
-		FlowId:        uint32(o.ID),
+		FlowId:        uint64(o.ID),
 		FlowType:      "downstream",
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
@@ -872,7 +885,7 @@ func (o *Onu) sendDhcpFlow(client openolt.OpenoltClient) {
 		AccessIntfId:  int32(o.PonPortID),
 		OnuId:         int32(o.ID),
 		UniId:         int32(0), // FIXME do not hardcode this
-		FlowId:        uint32(o.ID),
+		FlowId:        uint64(o.ID),
 		FlowType:      "downstream",
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),

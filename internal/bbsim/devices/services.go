@@ -293,9 +293,6 @@ func (s *Service) HandleAuth() {
 		return
 	}
 
-	// introduce a random delay to avoid sending all EAP Start packets at the same time
-	time.Sleep(time.Duration(rand.Intn(packetDelayLimitMs)) * time.Millisecond)
-
 	if err := s.EapolState.Event("start_auth"); err != nil {
 		serviceLogger.WithFields(log.Fields{
 			"OnuId":  s.Onu.ID,
@@ -333,7 +330,6 @@ func (s *Service) HandleDhcp(pbit uint8, cTag int) {
 	}
 
 	// introduce a random delay to avoid sending all DHCP Discovery packets at the same time
-	time.Sleep(time.Duration(rand.Intn(packetDelayLimitMs)) * time.Millisecond)
 
 	if err := s.DHCPState.Event("start_dhcp"); err != nil {
 		serviceLogger.WithFields(log.Fields{
