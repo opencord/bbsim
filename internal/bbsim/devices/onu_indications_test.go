@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/opencord/voltha-protos/v3/go/openolt"
+	"github.com/opencord/voltha-protos/v4/go/openolt"
 	"google.golang.org/grpc"
 	"gotest.tools/assert"
 )

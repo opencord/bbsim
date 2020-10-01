@@ -20,7 +20,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/opencord/voltha-protos/v3/go/ext/config"
+	"github.com/opencord/voltha-protos/v4/go/ext/config"
 	"net"
 	"sync"
 	"time"
@@ -33,9 +33,9 @@ import (
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/bbsim/internal/common"
 	omcisim "github.com/opencord/omci-sim"
-	common_protos "github.com/opencord/voltha-protos/v3/go/common"
-	"github.com/opencord/voltha-protos/v3/go/openolt"
-	"github.com/opencord/voltha-protos/v3/go/tech_profile"
+	common_protos "github.com/opencord/voltha-protos/v4/go/common"
+	"github.com/opencord/voltha-protos/v4/go/openolt"
+	"github.com/opencord/voltha-protos/v4/go/tech_profile"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -1214,7 +1214,7 @@ func (o *OltDevice) HeartbeatCheck(context.Context, *openolt.Empty) (*openolt.He
 	return &res, nil
 }
 
-func (o *OltDevice) GetOnuByFlowId(flowId uint32) (*Onu, error) {
+func (o *OltDevice) GetOnuByFlowId(flowId uint64) (*Onu, error) {
 	for _, pon := range o.Pons {
 		for _, onu := range pon.Onus {
 			for _, fId := range onu.FlowIds {

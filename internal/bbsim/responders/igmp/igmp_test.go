@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
-	"github.com/opencord/voltha-protos/v3/go/openolt"
+	"github.com/opencord/voltha-protos/v4/go/openolt"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"net"

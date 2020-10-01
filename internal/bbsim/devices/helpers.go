@@ -23,7 +23,7 @@ import (
 
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/common"
-	"github.com/opencord/voltha-protos/v3/go/openolt"
+	"github.com/opencord/voltha-protos/v4/go/openolt"
 )
 
 type mode int

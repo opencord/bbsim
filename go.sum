@@ -94,8 +94,8 @@ github.com/opencord/device-management-interface v0.9.1-0.20200930105820-188a84f4
 github.com/opencord/device-management-interface v0.9.1-0.20200930105820-188a84f483b3/go.mod h1:G1owSqGBGaqllrwtjxfLTsy9EDsGhdhmqkJM3XOnPD0=
 github.com/opencord/omci-sim v0.0.4 h1:kN8zi/8gkcHOkXPk27Wp6Wwp8ggUylXcD/egW7PUXmc=
 github.com/opencord/omci-sim v0.0.4/go.mod h1:ToOkj7hkHgoet9XQDadKMhYqgA7qItZsi2j1Pk/mX6Y=
-github.com/opencord/voltha-protos/v3 v3.4.5 h1:8M4RHUgQI+XHMBtTW6FLwinqP9JbZq3kM2UOb9ShgLc=
-github.com/opencord/voltha-protos/v3 v3.4.5/go.mod h1:nl1ETp5Iw3avxOaKD8BJlYY5wYI4KeV95aT1pL63nto=
+github.com/opencord/voltha-protos/v4 v4.0.2 h1:SI25ljqftc8Tc28CgfqSE4IGCLJ5MgCmBQlE96hl9X8=
+github.com/opencord/voltha-protos/v4 v4.0.2/go.mod h1:W/OIFIyvFh/C0vchRUuarIsMylEhzCRM9pNxLvkPtKc=
 github.com/pierrec/lz4 v2.4.1+incompatible h1:mFe7ttWaflA46Mhqh+jUfjp2qTbPYxLB2/OyBppH9dg=
 github.com/pierrec/lz4 v2.4.1+incompatible/go.mod h1:pdkljMzZIN41W+lC3N2tnIh5sFi+IEE17M5jbnwPHcY=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
