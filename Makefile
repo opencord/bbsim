@@ -85,7 +85,7 @@ sca: linter
 	@echo ""
 	@echo "Static code analysis OK"
 
-test: test-unit test-bbr
+test: docs-lint test-unit test-bbr
 
 test-unit: clean local-omci-sim builder # @HELP Execute unit tests
 	@mkdir -p ./tests/results

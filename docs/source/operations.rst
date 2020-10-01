@@ -8,7 +8,8 @@ If you are testing basic functionality using BBSim no operator intervention is r
 When you ``enable`` the device in VOLTHA the simulator will:
 
 - activate all the configured ONUs
-- wait for the EAPOL flow for each Service that requires it and trigger the authentication state machine as soon as it's received
+- wait for the EAPOL flow for each Service that requires it and trigger the authentication state machine as soon as
+  it's received
 - wait for the DHCP flow for each Service that requires it and trigger the DHCP state machine as soon as it's received
 
 BBSimCtl
