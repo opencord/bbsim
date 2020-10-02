@@ -32,6 +32,7 @@ import (
 	"github.com/opencord/bbsim/api/legacy"
 	"github.com/opencord/bbsim/internal/bbsim/api"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
+	"github.com/opencord/bbsim/internal/bbsim/dmiserver"
 	"github.com/opencord/bbsim/internal/bbsim/responders/sadis"
 	"github.com/opencord/bbsim/internal/common"
 	log "github.com/sirupsen/logrus"
@@ -190,6 +191,11 @@ func main() {
 		go sadis.StartRestServer(olt, &wg)
 	}
 
+	dms, dmserr := dmiserver.StartDmiAPIServer()
+	if dmserr != nil {
+		log.Errorf("Failed to start Device Management Interface Server %v", dmserr)
+	}
+
 	if common.Config.BBSim.Events {
 		// initialize a publisher
 		if err := common.InitializePublisher(sarama.NewAsyncProducer, olt.ID); err == nil {
@@ -204,6 +210,9 @@ func main() {
 
 	defer func() {
 		log.Info("BroadBand Simulator is off")
+
+		dms.Stop()
+
 		if *common.Config.BBSim.CpuProfile != "" {
 			log.Info("Stopping profiler")
 			pprof.StopCPUProfile()

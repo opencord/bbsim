@@ -109,6 +109,7 @@ type BBSimConfig struct {
 	ControlledActivation string  `yaml:"controlled_activation"`
 	EnablePerf           bool    `yaml:"enable_perf"`
 	KafkaEventTopic      string  `yaml:"kafka_event_topic"`
+	DmiServerAddress     string  `yaml:"dmi_server_address"`
 }
 
 type BBRConfig struct {
@@ -226,6 +227,7 @@ func readCliParams() *GlobalConfig {
 	openolt_address := flag.String("openolt_address", conf.BBSim.OpenOltAddress, "IP address:port")
 	api_address := flag.String("api_address", conf.BBSim.ApiAddress, "IP address:port")
 	rest_api_address := flag.String("rest_api_address", conf.BBSim.RestApiAddress, "IP address:port")
+	dmi_server_address := flag.String("dmi_server_address", conf.BBSim.DmiServerAddress, "IP address:port")
 
 	profileCpu := flag.String("cpuprofile", "", "write cpu profile to file")
 
@@ -265,6 +267,7 @@ func readCliParams() *GlobalConfig {
 	conf.BBSim.KafkaEventTopic = *kafkaEventTopic
 	conf.BBSim.AuthRetry = *authRetry
 	conf.BBSim.DhcpRetry = *dhcpRetry
+	conf.BBSim.DmiServerAddress = *dmi_server_address
 
 	// update device id if not set
 	if conf.Olt.DeviceId == "" {
@@ -297,6 +300,7 @@ func getDefaultOps() *GlobalConfig {
 			KafkaEventTopic:      "",
 			DhcpRetry:            false,
 			AuthRetry:            false,
+			DmiServerAddress:     ":50075",
 		},
 		OltConfig{
 			Vendor:             "BBSim",

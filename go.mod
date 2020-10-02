@@ -7,8 +7,9 @@ require (
 	github.com/aead/cmac v0.0.0-20160719120800-7af84192f0b1 // indirect
 	github.com/cboling/omci v0.1.0
 	github.com/deckarep/golang-set v1.7.1 // indirect
-	github.com/golang/protobuf v1.3.2
+	github.com/golang/protobuf v1.4.2
 	github.com/google/gopacket v1.1.17
+	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.7.3
 	github.com/grpc-ecosystem/grpc-gateway v1.12.2
 	github.com/imdario/mergo v0.3.11
@@ -17,13 +18,14 @@ require (
 	github.com/looplab/fsm v0.1.0
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4
+	github.com/opencord/device-management-interface v0.9.1-0.20200930105820-188a84f483b3
 	github.com/opencord/omci-sim v0.0.4
 	github.com/opencord/voltha-protos/v3 v3.4.5
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.4.0
 	google.golang.org/genproto v0.0.0-20190927181202-20e1ac93f88c
-	google.golang.org/grpc v1.27.0
+	google.golang.org/grpc v1.29.1
 	gopkg.in/yaml.v2 v2.3.0
 	gotest.tools v2.2.0+incompatible
 )
