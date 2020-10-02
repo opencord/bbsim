@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "107cc5d5_ab67af7b",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 646,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2020-10-02T21:56:59Z",
+      "side": 1,
+      "message": "Not sure I understood this correct. You are using the first gemPort in the map ? Is that OK?",
+      "revId": "318dca1daff6b360e5ae6375b18b0e2555bc9545",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
