@@ -1,0 +1,208 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "36c95537_5d18fa9b",
+        "filename": "cmd/bbsim/bbsim.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-10-02T13:35:19Z",
+      "side": 1,
+      "message": "remove this redundant space",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b80d063d_84b50d00",
+        "filename": "cmd/bbsim/bbsim.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-10-02T13:35:19Z",
+      "side": 1,
+      "message": "I\u0027m also wondering if we want this optional behind a flag, Teo, thoughts ?",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "426732e8_d4a6fb53",
+        "filename": "docs/DMI_Server_README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-10-02T13:35:19Z",
+      "side": 1,
+      "message": "just per my curiosity, why is this empty ?",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fcf7fae3_a02e2926",
+        "filename": "docs/DMI_Server_README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-10-02T13:35:19Z",
+      "side": 1,
+      "message": "useless space",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d94e6f0e_3b4ccc2d",
+        "filename": "internal/bbsim/dmiserver/dmi_api_server.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-10-02T13:35:19Z",
+      "side": 1,
+      "message": "for",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8f235c5_6212979d",
+        "filename": "internal/bbsim/dmiserver/dmi_events_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-10-02T13:35:19Z",
+      "side": 1,
+      "message": "with this we are not actually changing the configuration and we will always returns the same empty list of events, right ?",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40c52c14_199f6e9b",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-10-02T13:35:19Z",
+      "side": 1,
+      "message": "StopManagingDevice",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e3d500b_74cd3fdd",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-10-02T13:35:19Z",
+      "side": 1,
+      "message": "I think you can extract this as an utility method, from line 135 to 139 included and avoid having these many strings all over the place.",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6564cfd1_72cbe6c3",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-10-02T13:35:19Z",
+      "side": 1,
+      "message": "I know I\u0027m being picky, but please change the variable names and the comment",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8057ece_75438f75",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-10-02T13:35:19Z",
+      "side": 1,
+      "message": "this might be worth implementing",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "08b70bf7_35bb2705",
+        "filename": "internal/bbsim/dmiserver/dmi_sw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-10-02T13:35:19Z",
+      "side": 1,
+      "message": "remove useless tab",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72975d9a_fe2533d0",
+        "filename": "internal/bbsim/dmiserver/dmi_sw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-10-02T13:35:19Z",
+      "side": 1,
+      "message": "this actually makes me think if we want to have a Revert_Complete element in the DMI.",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
