@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "7130a792_951cb8f3",
+        "filename": "cmd/bbsim/bbsim.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-10-02T22:42:53Z",
+      "side": 1,
+      "message": "I think it\u0027s fine to activate it by default, it shouldn\u0027t impact performances so I don\u0027t see any issue with running it",
+      "parentUuid": "b80d063d_84b50d00",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "426732e8_d4a6fb53",
         "filename": "docs/DMI_Server_README.md",
         "patchSetId": 1
