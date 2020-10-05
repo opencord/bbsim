@@ -13,7 +13,6 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.12.2
 	github.com/imdario/mergo v0.3.11
 	github.com/jessevdk/go-flags v1.4.0
-	github.com/jhump/protoreflect v1.5.0
 	github.com/jpillora/backoff v1.0.0
 	github.com/looplab/fsm v0.1.0
 	github.com/olekukonko/tablewriter v0.0.4
