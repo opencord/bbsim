@@ -107,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "5eac21a0_3b176b0a",
+        "filename": "docs/DMI_Server_README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-10-05T13:22:19Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a0cd96f1_004f3c8e",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fcf7fae3_a02e2926",
         "filename": "docs/DMI_Server_README.md",
         "patchSetId": 1
@@ -170,6 +188,24 @@
       "side": 1,
       "message": "Yes you are correct. I thought lets not do anything with the Events and Metrics for now. We can take them up subsequently as separate tasks as and when needed. Let me know your thoughts.",
       "parentUuid": "b8f235c5_6212979d",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2dda6823_669372e8",
+        "filename": "internal/bbsim/dmiserver/dmi_events_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-10-05T13:22:19Z",
+      "side": 1,
+      "message": "that is ok by me, maybe add a couple of stories in Jira to add an exemplar event and an exemplar metric. thanks",
+      "parentUuid": "bb9c4d25_79b415db",
       "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -290,6 +326,24 @@
       "side": 1,
       "message": "We could, but it means the same thing right, RevertToStandbyImage means activation of the image in the Standby Partition.",
       "parentUuid": "72975d9a_fe2533d0",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d15bc79_e24da0f8",
+        "filename": "internal/bbsim/dmiserver/dmi_sw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-10-05T13:22:19Z",
+      "side": 1,
+      "message": "indeed, I guess my proposal is just a bit more explicative. let\u0027s discuss on the call.",
+      "parentUuid": "d8760326_7a03bd2d",
       "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
