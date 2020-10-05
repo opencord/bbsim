@@ -89,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "a0cd96f1_004f3c8e",
+        "filename": "docs/DMI_Server_README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2020-10-05T12:00:25Z",
+      "side": 1,
+      "message": "The state is defined as below:\nmessage ComponentState {\n    google.protobuf.Timestamp state_last_changed \u003d 1;\n    ComponentAdminState admin_state \u003d 2;\n    ComponentOperState oper_state \u003d 3;\n    ComponentUsageState usage_state \u003d 4;\n    ComponentAlarmState alarm_state \u003d 5;\n    ComponentStandbyState standby_state \u003d 6;\n}\n\nand I have not set any of them, so its shown up as empty.",
+      "parentUuid": "426732e8_d4a6fb53",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fcf7fae3_a02e2926",
         "filename": "docs/DMI_Server_README.md",
         "patchSetId": 1
@@ -134,6 +152,24 @@
       "writtenOn": "2020-10-02T13:35:19Z",
       "side": 1,
       "message": "with this we are not actually changing the configuration and we will always returns the same empty list of events, right ?",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb9c4d25_79b415db",
+        "filename": "internal/bbsim/dmiserver/dmi_events_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2020-10-05T12:00:25Z",
+      "side": 1,
+      "message": "Yes you are correct. I thought lets not do anything with the Events and Metrics for now. We can take them up subsequently as separate tasks as and when needed. Let me know your thoughts.",
+      "parentUuid": "b8f235c5_6212979d",
       "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
@@ -236,6 +272,24 @@
       "writtenOn": "2020-10-02T13:35:19Z",
       "side": 1,
       "message": "this actually makes me think if we want to have a Revert_Complete element in the DMI.",
+      "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8760326_7a03bd2d",
+        "filename": "internal/bbsim/dmiserver/dmi_sw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2020-10-05T12:00:25Z",
+      "side": 1,
+      "message": "We could, but it means the same thing right, RevertToStandbyImage means activation of the image in the Standby Partition.",
+      "parentUuid": "72975d9a_fe2533d0",
       "revId": "ec5f9b953bef9160032c0a2bb38e49cef7564453",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
