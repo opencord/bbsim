@@ -75,16 +75,9 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 						}
 					}
 				} else if e.Src == "disabled" {
-					for _, onu := range ponPort.Onus {
-						if onu.InternalState.Current() == "pon_disabled" {
-							if err := onu.InternalState.Event("enable"); err != nil {
-								log.WithFields(log.Fields{
-									"Err":    err,
-									"OnuSn":  onu.Sn(),
-									"IntfId": onu.PonPortID,
-								}).Error("Error enabling ONU")
-							}
-						} else if onu.InternalState.Current() == "disabled" {
+					if ponPort.Olt.ControlledActivation == OnlyONU || ponPort.Olt.ControlledActivation == Both {
+						// if ONUs are manually activated then only initialize them
+						for _, onu := range ponPort.Onus {
 							if err := onu.InternalState.Event("initialize"); err != nil {
 								log.WithFields(log.Fields{
 									"Err":    err,
@@ -93,28 +86,49 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 								}).Error("Error initializing ONU")
 								continue
 							}
-							if err := onu.InternalState.Event("discover"); err != nil {
+						}
+					} else {
+						for _, onu := range ponPort.Onus {
+							if onu.InternalState.Current() == "pon_disabled" {
+								if err := onu.InternalState.Event("enable"); err != nil {
+									log.WithFields(log.Fields{
+										"Err":    err,
+										"OnuSn":  onu.Sn(),
+										"IntfId": onu.PonPortID,
+									}).Error("Error enabling ONU")
+								}
+							} else if onu.InternalState.Current() == "disabled" {
+								if err := onu.InternalState.Event("initialize"); err != nil {
+									log.WithFields(log.Fields{
+										"Err":    err,
+										"OnuSn":  onu.Sn(),
+										"IntfId": onu.PonPortID,
+									}).Error("Error initializing ONU")
+									continue
+								}
+								if err := onu.InternalState.Event("discover"); err != nil {
+									log.WithFields(log.Fields{
+										"Err":    err,
+										"OnuSn":  onu.Sn(),
+										"IntfId": onu.PonPortID,
+									}).Error("Error discovering ONU")
+								}
+							} else if onu.InternalState.Current() == "initialized" {
+								if err := onu.InternalState.Event("discover"); err != nil {
+									log.WithFields(log.Fields{
+										"Err":    err,
+										"OnuSn":  onu.Sn(),
+										"IntfId": onu.PonPortID,
+									}).Error("Error discovering ONU")
+								}
+							} else {
+								// this is to loudly report unexpected states in order to address them
 								log.WithFields(log.Fields{
-									"Err":    err,
-									"OnuSn":  onu.Sn(),
-									"IntfId": onu.PonPortID,
-								}).Error("Error discovering ONU")
+									"OnuSn":         onu.Sn(),
+									"IntfId":        onu.PonPortID,
+									"InternalState": onu.InternalState.Current(),
+								}).Error("Unexpected ONU state in PON enabling")
 							}
-						} else if onu.InternalState.Current() == "initialized" {
-							if err := onu.InternalState.Event("discover"); err != nil {
-								log.WithFields(log.Fields{
-									"Err":    err,
-									"OnuSn":  onu.Sn(),
-									"IntfId": onu.PonPortID,
-								}).Error("Error discovering ONU")
-							}
-						} else {
-							// this is to loudly report unexpected states in order to address them
-							log.WithFields(log.Fields{
-								"OnuSn":         onu.Sn(),
-								"IntfId":        onu.PonPortID,
-								"InternalState": onu.InternalState.Current(),
-							}).Error("Unexpected ONU state in PON enabling")
 						}
 					}
 				}
