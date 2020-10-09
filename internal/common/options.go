@@ -110,6 +110,7 @@ type BBSimConfig struct {
 	EnablePerf           bool    `yaml:"enable_perf"`
 	KafkaEventTopic      string  `yaml:"kafka_event_topic"`
 	DmiServerAddress     string  `yaml:"dmi_server_address"`
+	MaxPacketsPerSecond  int     `yaml: max_packets_per_second`
 }
 
 type BBRConfig struct {
@@ -243,6 +244,7 @@ func readCliParams() *GlobalConfig {
 	kafkaEventTopic := flag.String("kafkaEventTopic", conf.BBSim.KafkaEventTopic, "Ability to configure the topic on which BBSim publishes events on Kafka")
 	dhcpRetry := flag.Bool("dhcpRetry", conf.BBSim.DhcpRetry, "Set this flag if BBSim should retry DHCP upon failure until success")
 	authRetry := flag.Bool("authRetry", conf.BBSim.AuthRetry, "Set this flag if BBSim should retry EAPOL (Authentication) upon failure until success")
+	maxPktPerSec := flag.Int("maxPacketsPerSecond", conf.BBSim.Delay, "Limit on the number of pakcet-ins BBSim should send over the Stream")
 
 	flag.Parse()
 
@@ -268,6 +270,7 @@ func readCliParams() *GlobalConfig {
 	conf.BBSim.AuthRetry = *authRetry
 	conf.BBSim.DhcpRetry = *dhcpRetry
 	conf.BBSim.DmiServerAddress = *dmi_server_address
+	conf.BBSim.MaxPacketsPerSecond = *maxPktPerSec
 
 	// update device id if not set
 	if conf.Olt.DeviceId == "" {
@@ -301,6 +304,7 @@ func getDefaultOps() *GlobalConfig {
 			DhcpRetry:            false,
 			AuthRetry:            false,
 			DmiServerAddress:     ":50075",
+			MaxPacketsPerSecond:  100,
 		},
 		OltConfig{
 			Vendor:             "BBSim",
