@@ -26,6 +26,7 @@ import (
 	bbsimTypes "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/bbsim/internal/common"
 	log "github.com/sirupsen/logrus"
+	"math/rand"
 	"net"
 	"time"
 )
@@ -291,6 +292,9 @@ func (s *Service) HandleAuth() {
 		return
 	}
 
+	// introduce a random delay to avoid sending all EAP Start packets at the same time
+	time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
+
 	if err := s.EapolState.Event("start_auth"); err != nil {
 		serviceLogger.WithFields(log.Fields{
 			"OnuId":  s.Onu.ID,
@@ -326,7 +330,8 @@ func (s *Service) HandleDhcp(pbit uint8, cTag int) {
 		return
 	}
 
-	// TODO check if the DHCP flow was received before starting auth
+	// introduce a random delay to avoid sending all DHCP Discovery packets at the same time
+	time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
 
 	if err := s.DHCPState.Event("start_dhcp"); err != nil {
 		serviceLogger.WithFields(log.Fields{
