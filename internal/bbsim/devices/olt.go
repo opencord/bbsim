@@ -76,7 +76,7 @@ type OltDevice struct {
 	enableContext       context.Context
 	enableContextCancel context.CancelFunc
 
-	OpenoltStream openolt.Openolt_EnableIndicationServer
+	OpenoltStream bbsim.Stream
 	enablePerf    bool
 }
 
@@ -394,7 +394,8 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) {
 	wg := sync.WaitGroup{}
 	wg.Add(3)
 
-	o.OpenoltStream = stream
+	// TODO make maxPacketsPerSecond configurable
+	o.OpenoltStream = bbsim.NewPacketStream(stream, common.Config.BBSim.MaxPacketsPerSecond)
 
 	// create Go routine to process all OLT events
 	go o.processOltMessages(o.enableContext, stream, &wg)

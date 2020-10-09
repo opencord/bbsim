@@ -20,11 +20,13 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+
+	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
+	"net"
+
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
-	"net"
-
 	"time"
 
 	"github.com/cboling/omci"
@@ -249,7 +251,7 @@ func (o *Onu) logStateChange(src string, dst string) {
 }
 
 // ProcessOnuMessages starts indication channel for each ONU
-func (o *Onu) ProcessOnuMessages(ctx context.Context, stream openolt.Openolt_EnableIndicationServer, client openolt.OpenoltClient) {
+func (o *Onu) ProcessOnuMessages(ctx context.Context, stream bbsim.Stream, client openolt.OpenoltClient) {
 	onuLogger.WithFields(log.Fields{
 		"onuID":   o.ID,
 		"onuSN":   o.Sn(),
@@ -416,7 +418,7 @@ func (o Onu) NewSN(oltid int, intfid uint32, onuid uint32) *openolt.SerialNumber
 	return sn
 }
 
-func (o *Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o *Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream bbsim.Stream) {
 	discoverData := &openolt.Indication_OnuDiscInd{OnuDiscInd: &openolt.OnuDiscIndication{
 		IntfId:       msg.Onu.PonPortID,
 		SerialNumber: msg.Onu.SerialNumber,
@@ -443,7 +445,7 @@ func (o *Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt
 	}(o.DiscoveryRetryDelay)
 }
 
-func (o *Onu) sendOnuIndication(msg OnuIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o *Onu) sendOnuIndication(msg OnuIndicationMessage, stream bbsim.Stream) {
 	// NOTE voltha returns an ID, but if we use that ID then it complains:
 	// expected_onu_id: 1, received_onu_id: 1024, event: ONU-id-mismatch, can happen if both voltha and the olt rebooted
 	// so we're using the internal ID that is 1
@@ -491,7 +493,7 @@ func (o *Onu) publishOmciEvent(msg OmciMessage) {
 }
 
 // Create a TestResponse packet and send it
-func (o *Onu) sendTestResult(msg OmciMessage, stream openolt.Openolt_EnableIndicationServer) error {
+func (o *Onu) sendTestResult(msg OmciMessage, stream bbsim.Stream) error {
 	resp, err := omcilib.BuildTestResult(HexDecode(msg.omciMsg.Pkt))
 	if err != nil {
 		return err
@@ -521,7 +523,7 @@ func (o *Onu) sendTestResult(msg OmciMessage, stream openolt.Openolt_EnableIndic
 	return nil
 }
 
-func (o *Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o *Onu) handleOmciMessage(msg OmciMessage, stream bbsim.Stream) {
 
 	onuLogger.WithFields(log.Fields{
 		"IntfId":       o.PonPortID,

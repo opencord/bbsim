@@ -299,6 +299,7 @@ func (s *Service) HandleAuth() {
 			"Name":   s.Name,
 			"err":    err.Error(),
 		}).Error("Can't start auth for this Service")
+
 	}
 }
 
@@ -325,8 +326,6 @@ func (s *Service) HandleDhcp(pbit uint8, cTag int) {
 		}).Trace("Won't start DHCP as it is not required")
 		return
 	}
-
-	// TODO check if the DHCP flow was received before starting auth
 
 	if err := s.DHCPState.Event("start_dhcp"); err != nil {
 		serviceLogger.WithFields(log.Fields{
