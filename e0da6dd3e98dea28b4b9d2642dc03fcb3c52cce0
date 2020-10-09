@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52455632_5552a999",
+        "filename": "internal/bbsim/types/interfaces.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-10-09T23:45:34Z",
+      "side": 1,
+      "message": "we should only push to fill up the channel, use (p.maxPacketsPerSecond - len(schedulerCh))",
+      "range": {
+        "startLine": 57,
+        "startChar": 19,
+        "endLine": 57,
+        "endChar": 40
+      },
+      "revId": "e0da6dd3e98dea28b4b9d2642dc03fcb3c52cce0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
