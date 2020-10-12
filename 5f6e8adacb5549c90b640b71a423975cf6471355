@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b73e06df_c5341509",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 646,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-10-12T08:43:51Z",
+      "side": 1,
+      "message": "the what ? I think you are missing some part of the comment.",
+      "revId": "5f6e8adacb5549c90b640b71a423975cf6471355",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
