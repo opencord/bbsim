@@ -57,7 +57,6 @@ func TestSadisServer_GetOnuEntryV2(t *testing.T) {
 	assert.NilError(t, err)
 
 	assert.Equal(t, entry.ID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
-	assert.Equal(t, entry.RemoteID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
 
 	assert.Equal(t, entry.UniTagList[0].PonCTag, 923)
 	assert.Equal(t, entry.UniTagList[0].PonSTag, 900)
@@ -92,7 +91,6 @@ func TestSadisServer_GetOnuEntryV2_multi_service(t *testing.T) {
 	assert.NilError(t, err)
 
 	assert.Equal(t, entry.ID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
-	assert.Equal(t, entry.RemoteID, fmt.Sprintf("%s-%s", onu.Sn(), uni))
 
 	assert.Equal(t, len(entry.UniTagList), 3)
 

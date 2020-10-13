@@ -162,10 +162,7 @@ func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*Sad
 	uniSuffix := "-" + uniId
 
 	sonuv2 := &SadisOnuEntryV2{
-		ID:        onu.Sn() + uniSuffix,
-		NasPortID: onu.Sn() + uniSuffix,
-		CircuitID: onu.Sn() + uniSuffix,
-		RemoteID:  onu.Sn() + uniSuffix,
+		ID: onu.Sn() + uniSuffix,
 	}
 
 	// createUniTagList
