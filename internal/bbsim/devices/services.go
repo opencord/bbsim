@@ -36,7 +36,7 @@ var serviceLogger = log.WithFields(log.Fields{
 
 // time to wait before fail EAPOL/DHCP
 // (it's a variable and not a constant so it can be overridden in the tests)
-var eapolWaitTime = 60 * time.Second
+var eapolWaitTime = 10 * time.Second
 var dhcpWaitTime = 60 * time.Second
 
 type ServiceIf interface {
