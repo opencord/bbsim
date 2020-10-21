@@ -145,6 +145,8 @@ func main() {
 		_ = pprof.StartCPUProfile(f)
 	}
 
+	log.Info("Dummy change to test 'voltha scale' keyword")
+
 	log.WithFields(log.Fields{
 		"OltID":                common.Config.Olt.ID,
 		"NumNniPerOlt":         common.Config.Olt.NniPorts,
