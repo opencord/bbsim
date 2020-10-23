@@ -773,7 +773,9 @@ loop:
 				oltLogger.Debug("NNI Indication processing canceled via channel closed")
 				break loop
 			}
-			oltLogger.Tracef("Received packets on NNI Channel")
+			oltLogger.WithFields(log.Fields{
+				"Pkt": hex.EncodeToString(message.Pkt.Data()),
+			}).Info("[PACKET] Received packets on NNI Channel")
 
 			onuMac, err := packetHandlers.GetDstMacAddressFromPacket(message.Pkt)
 
@@ -781,7 +783,7 @@ loop:
 				log.WithFields(log.Fields{
 					"IntfType": "nni",
 					"IntfId":   nniId,
-					"Pkt":      message.Pkt.Data(),
+					"Pkt":      hex.EncodeToString(message.Pkt.Data()),
 				}).Error("Can't find Dst MacAddress in packet")
 				return
 			}
@@ -791,7 +793,7 @@ loop:
 				log.WithFields(log.Fields{
 					"IntfType":   "nni",
 					"IntfId":     nniId,
-					"Pkt":        message.Pkt.Data(),
+					"Pkt":        hex.EncodeToString(message.Pkt.Data()),
 					"MacAddress": onuMac.String(),
 				}).Error("Can't find ONU with MacAddress")
 				return
@@ -812,7 +814,7 @@ loop:
 				oltLogger.WithFields(log.Fields{
 					"IntfType": data.PktInd.IntfType,
 					"IntfId":   nniId,
-					"Pkt":      doubleTaggedPkt.Data(),
+					"Pkt":      hex.EncodeToString(doubleTaggedPkt.Data()),
 				}).Errorf("Fail to send PktInd indication: %v", err)
 			}
 			oltLogger.WithFields(log.Fields{
@@ -820,7 +822,7 @@ loop:
 				"IntfId":   nniId,
 				"Pkt":      hex.EncodeToString(doubleTaggedPkt.Data()),
 				"OnuSn":    service.Onu.Sn(),
-			}).Trace("Sent PktInd indication (from NNI to VOLTHA)")
+			}).Info("[PACKET] Sent PktInd indication (from NNI to VOLTHA)")
 		}
 	}
 	wg.Done()
