@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/voltha-protos/v4/go/ext/config"
 	"net"
 	"sync"
@@ -27,10 +28,8 @@ import (
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcap"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
-	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/bbsim/internal/common"
 	omcisim "github.com/opencord/omci-sim"
 	common_protos "github.com/opencord/voltha-protos/v4/go/common"
@@ -58,8 +57,7 @@ type OltDevice struct {
 	NumOnuPerPon         int
 	InternalState        *fsm.FSM
 	channel              chan Message
-	nniPktInChannel      chan *bbsim.PacketMsg // packets coming in from the NNI and going to VOLTHA
-	nniHandle            *pcap.Handle          // handle on the NNI interface, close it when shutting down the NNI channel
+	dhcpServer           dhcp.DHCPServerIf
 	Flows                map[FlowKey]openolt.Flow
 	Delay                int
 	ControlledActivation mode
@@ -111,6 +109,7 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		enablePerf:        options.BBSim.EnablePerf,
 		PublishEvents:     options.BBSim.Events,
 		PortStatsInterval: options.Olt.PortStatsInterval,
+		dhcpServer:        dhcp.NewDHCPServer(),
 	}
 
 	if val, ok := ControlledActivationModes[options.BBSim.ControlledActivation]; ok {
@@ -235,25 +234,12 @@ func (o *OltDevice) InitOlt() {
 	// create new channel for processOltMessages Go routine
 	o.channel = make(chan Message)
 
-	o.nniPktInChannel = make(chan *bbsim.PacketMsg, 1024)
 	// FIXME we are assuming we have only one NNI
 	if o.Nnis[0] != nil {
 		// NOTE we want to make sure the state is down when we initialize the OLT,
 		// the NNI may be in a bad state after a disable/reboot as we are not disabling it for
 		// in-band management
 		o.Nnis[0].OperState.SetState("down")
-		ch, handle, err := o.Nnis[0].NewVethChan()
-		if err == nil {
-			oltLogger.WithFields(log.Fields{
-				"Type":      o.Nnis[0].Type,
-				"IntfId":    o.Nnis[0].ID,
-				"OperState": o.Nnis[0].OperState.Current(),
-			}).Info("NNI Channel created")
-			o.nniPktInChannel = ch
-			o.nniHandle = handle
-		} else {
-			oltLogger.Errorf("Error getting NNI channel: %v", err)
-		}
 	}
 }
 
@@ -319,9 +305,7 @@ func (o *OltDevice) RestartOLT() error {
 
 	// terminate the OLT's processOltMessages go routine
 	close(o.channel)
-	// terminate the OLT's processNniPacketIns go routine
-	go o.nniHandle.Close()
-	close(o.nniPktInChannel)
+
 	o.enableContextCancel()
 
 	time.Sleep(time.Duration(rebootDelay) * time.Second)
@@ -398,7 +382,6 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) {
 
 	// create Go routine to process all OLT events
 	go o.processOltMessages(o.enableContext, stream, &wg)
-	go o.processNniPacketIns(o.enableContext, stream, &wg)
 
 	// enable the OLT
 	oltMsg := Message{
@@ -751,82 +734,6 @@ loop:
 	}
 	wg.Done()
 	oltLogger.Warn("Stopped handling OLT Indication Channel")
-}
-
-// processNniPacketIns handles messages received over the NNI interface
-func (o *OltDevice) processNniPacketIns(ctx context.Context, stream openolt.Openolt_EnableIndicationServer, wg *sync.WaitGroup) {
-	oltLogger.WithFields(log.Fields{
-		"nniChannel": o.nniPktInChannel,
-	}).Debug("Started Processing Packets arriving from the NNI")
-	nniId := o.Nnis[0].ID // FIXME we are assuming we have only one NNI
-
-	ch := o.nniPktInChannel
-
-loop:
-	for {
-		select {
-		case <-ctx.Done():
-			oltLogger.Debug("NNI Indication processing canceled via context")
-			break loop
-		case message, ok := <-ch:
-			if !ok || ctx.Err() != nil {
-				oltLogger.Debug("NNI Indication processing canceled via channel closed")
-				break loop
-			}
-			oltLogger.Tracef("Received packets on NNI Channel")
-
-			onuMac, err := packetHandlers.GetDstMacAddressFromPacket(message.Pkt)
-
-			if err != nil {
-				log.WithFields(log.Fields{
-					"IntfType": "nni",
-					"IntfId":   nniId,
-					"Pkt":      message.Pkt.Data(),
-				}).Error("Can't find Dst MacAddress in packet")
-				return
-			}
-
-			s, err := o.FindServiceByMacAddress(onuMac)
-			if err != nil {
-				log.WithFields(log.Fields{
-					"IntfType":   "nni",
-					"IntfId":     nniId,
-					"Pkt":        message.Pkt.Data(),
-					"MacAddress": onuMac.String(),
-				}).Error("Can't find ONU with MacAddress")
-				return
-			}
-
-			service := s.(*Service)
-
-			doubleTaggedPkt, err := packetHandlers.PushDoubleTag(service.STag, service.CTag, message.Pkt, service.UsPonCTagPriority)
-			if err != nil {
-				log.Error("Fail to add double tag to packet")
-			}
-
-			data := &openolt.Indication_PktInd{PktInd: &openolt.PacketIndication{
-				IntfType: "nni",
-				IntfId:   nniId,
-				Pkt:      doubleTaggedPkt.Data()}}
-			if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
-				oltLogger.WithFields(log.Fields{
-					"IntfType": data.PktInd.IntfType,
-					"IntfId":   nniId,
-					"Pkt":      doubleTaggedPkt.Data(),
-				}).Errorf("Fail to send PktInd indication: %v", err)
-			}
-			oltLogger.WithFields(log.Fields{
-				"IntfType": data.PktInd.IntfType,
-				"IntfId":   nniId,
-				"Pkt":      hex.EncodeToString(doubleTaggedPkt.Data()),
-				"OnuSn":    service.Onu.Sn(),
-			}).Trace("Sent PktInd indication (from NNI to VOLTHA)")
-		}
-	}
-	wg.Done()
-	oltLogger.WithFields(log.Fields{
-		"nniChannel": o.nniPktInChannel,
-	}).Warn("Stopped handling NNI Channel")
 }
 
 // returns an ONU with a given Serial Number
@@ -1405,8 +1312,11 @@ func (o *OltDevice) ReenableOlt(context.Context, *openolt.Empty) (*openolt.Empty
 func (o *OltDevice) UplinkPacketOut(context context.Context, packet *openolt.UplinkPacket) (*openolt.Empty, error) {
 	pkt := gopacket.NewPacket(packet.Pkt, layers.LayerTypeEthernet, gopacket.Default)
 
-	_ = o.Nnis[0].sendNniPacket(pkt) // FIXME we are assuming we have only one NNI
-	// NOTE should we return an error if sendNniPakcet fails?
+	err := o.Nnis[0].handleNniPacket(pkt) // FIXME we are assuming we have only one NNI
+
+	if err != nil {
+		return nil, err
+	}
 	return new(openolt.Empty), nil
 }
 

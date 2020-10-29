@@ -17,8 +17,6 @@
 # builder parent
 FROM golang:1.13.8-stretch as builder
 
-RUN apt-get update && apt-get install -y build-essential=12.3 libpcap-dev=1.8.1-3 --no-install-recommends
-
 ENV CGO_ENABLED=1
 
 WORKDIR /app
@@ -41,29 +39,28 @@ RUN go build -mod vendor \
 
 # runtime parent
 FROM ubuntu:18.04
-
-# runtime prereqs
-# the symlink on libpcap is because both alpine and debian come with 1.8.x, but
-# debian symlinks it to 0.8 for historical reasons:
-# https://packages.debian.org/stretch/libpcap0.8-dev
-RUN apt-get update \
- && apt-get install -y libpcap-dev=1.8.1-6ubuntu1.18.04.1 isc-dhcp-server=4.3.5-3ubuntu7.1 \
- network-manager=1.10.6-2ubuntu1.4 tcpdump=4.9.3-0ubuntu0.18.04.1 --no-install-recommends \
- && apt-get clean \
- && rm -rf /var/lib/apt/lists/* \
- && ln -s /usr/lib/libpcap.so.1.8.1 /usr/lib/libpcap.so.0.9
-
-COPY ./configs/dhcpd.conf /etc/dhcp/
-RUN mv /usr/sbin/dhcpd /usr/local/bin/ \
-&& mv /sbin/dhclient /usr/local/bin/ \
-&& touch /var/lib/dhcp/dhcpd.leases
-
 WORKDIR /app
 COPY --from=builder /app/bbsim /app/bbsim
 COPY --from=builder /app/bbsimctl /usr/bin/bbsimctl
-RUN mv /usr/sbin/tcpdump /usr/bin/tcpdump
+COPY ./configs/ ./configs/
 RUN chmod a+x /app/bbsim
 RUN chmod a+x /usr/bin/bbsimctl
-COPY ./configs/ ./configs/
 RUN bbsimctl completion bash >> "$HOME/.bashrc"
 CMD [ "/app/bbsim" ]
+
+# Label image
+ARG org_label_schema_version=unknown
+ARG org_label_schema_vcs_url=unknown
+ARG org_label_schema_vcs_ref=unknown
+ARG org_label_schema_build_date=unknown
+ARG org_opencord_vcs_commit_date=unknown
+ARG org_opencord_vcs_dirty=unknown
+
+LABEL org.label-schema.schema-version=1.0 \
+      org.label-schema.name=voltha-rw-core \
+      org.label-schema.version=$org_label_schema_version \
+      org.label-schema.vcs-url=$org_label_schema_vcs_url \
+      org.label-schema.vcs-ref=$org_label_schema_vcs_ref \
+      org.label-schema.build-date=$org_label_schema_build_date \
+      org.opencord.vcs-commit-date=$org_opencord_vcs_commit_date \
+      org.opencord.vcs-dirty=$org_opencord_vcs_dirty

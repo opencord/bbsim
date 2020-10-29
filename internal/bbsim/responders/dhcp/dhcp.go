@@ -158,7 +158,7 @@ func createDHCPReq(intfId uint32, onuId uint32, macAddress net.HardwareAddr, off
 	return &dhcpLayer
 }
 
-func serializeDHCPPacket(intfId uint32, onuId uint32, cTag int, srcMac net.HardwareAddr, dhcp *layers.DHCPv4, pbit uint8) ([]byte, error) {
+func serializeDHCPPacket(cTag int, srcMac net.HardwareAddr, dhcp *layers.DHCPv4, pbit uint8) (gopacket.Packet, error) {
 	buffer := gopacket.NewSerializeBuffer()
 
 	options := gopacket.SerializeOptions{
@@ -200,7 +200,7 @@ func serializeDHCPPacket(intfId uint32, onuId uint32, cTag int, srcMac net.Hardw
 		return nil, err
 	}
 
-	return gopacket.Payload(taggedPkt.Data()), nil
+	return taggedPkt, nil
 }
 
 func GetDhcpLayer(pkt gopacket.Packet) (*layers.DHCPv4, error) {
@@ -277,7 +277,7 @@ func sendDHCPRequest(ponPortId uint32, onuId uint32, serviceName string, serialN
 	cTag int, gemPortId uint32, onuStateMachine *fsm.FSM, onuHwAddress net.HardwareAddr,
 	offeredIp net.IP, pbit uint8, stream bbsim.Stream) error {
 	dhcp := createDHCPReq(ponPortId, onuId, onuHwAddress, offeredIp, gemPortId)
-	pkt, err := serializeDHCPPacket(ponPortId, onuId, cTag, onuHwAddress, dhcp, pbit)
+	pkt, err := serializeDHCPPacket(cTag, onuHwAddress, dhcp, pbit)
 
 	if err != nil {
 		dhcpLogger.WithFields(log.Fields{
@@ -297,7 +297,7 @@ func sendDHCPRequest(ponPortId uint32, onuId uint32, serviceName string, serialN
 	msg := bbsim.ByteMsg{
 		IntfId: ponPortId,
 		OnuId:  onuId,
-		Bytes:  pkt,
+		Bytes:  pkt.Data(),
 	}
 
 	if err := sendDHCPPktIn(msg, portNo, gemPortId, stream); err != nil {
@@ -339,7 +339,7 @@ func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serviceName string, cTag 
 	pbit uint8, stream bbsim.Stream) error {
 
 	dhcp := createDHCPDisc(ponPortId, onuId, gemPortId, onuHwAddress)
-	pkt, err := serializeDHCPPacket(ponPortId, onuId, cTag, onuHwAddress, dhcp, pbit)
+	pkt, err := serializeDHCPPacket(cTag, onuHwAddress, dhcp, pbit)
 
 	if err != nil {
 		dhcpLogger.WithFields(log.Fields{
@@ -359,7 +359,7 @@ func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serviceName string, cTag 
 	msg := bbsim.ByteMsg{
 		IntfId: ponPortId,
 		OnuId:  onuId,
-		Bytes:  pkt,
+		Bytes:  pkt.Data(),
 	}
 
 	if err := sendDHCPPktIn(msg, portNo, gemPortId, stream); err != nil {
@@ -574,6 +574,7 @@ func HandleNextBbrPacket(onuId uint32, ponPortId uint32, serialNumber string, do
 				"Type":   dhcpType,
 				"error":  err,
 			}).Error("Failed to send DHCP packet out of the NNI Port")
+			return err
 		}
 		dhcpLogger.WithFields(log.Fields{
 			"OnuId":  onuId,

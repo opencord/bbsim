@@ -144,3 +144,21 @@ func GetPbit(pkt gopacket.Packet) (uint8, error) {
 	}
 	return dot1q.Priority, nil
 }
+
+// godet inner and outer tag from a packet
+// TODO unit test
+func GetTagsFromPacket(pkt gopacket.Packet) (uint16, uint16, error) {
+	sTag, err := GetVlanTag(pkt)
+	if err != nil {
+		return 0, 0, err
+	}
+	singleTagPkt, err := PopSingleTag(pkt)
+	if err != nil {
+		return 0, 0, err
+	}
+	cTag, err := GetVlanTag(singleTagPkt)
+	if err != nil {
+		return 0, 0, err
+	}
+	return sTag, cTag, nil
+}

@@ -44,16 +44,14 @@ func IsLldpPacket(pkt gopacket.Packet) bool {
 	return false
 }
 
-// return true if the packet is coming in the OLT from the NNI port
-// it uses the ack to check if the source is the one we assigned to the
-// dhcp server
+// return true if the packet is coming in the OLT from the DHCP Server
+// given that we only check DHCP packets we can use the Operation
+// Request are outgoing (toward the server)
+// Replies are incoming (toward the OLT)
 func IsIncomingPacket(packet gopacket.Packet) bool {
-	if ipLayer := packet.Layer(layers.LayerTypeIPv4); ipLayer != nil {
-
-		ip, _ := ipLayer.(*layers.IPv4)
-
-		// FIXME find a better way to filter outgoing packets
-		if ip.SrcIP.Equal(net.ParseIP("192.168.254.1")) {
+	layerDHCP := packet.Layer(layers.LayerTypeDHCPv4)
+	if dhcp, ok := layerDHCP.(*layers.DHCPv4); ok {
+		if dhcp.Operation == layers.DHCPOpReply {
 			return true
 		}
 	}

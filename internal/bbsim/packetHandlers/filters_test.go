@@ -131,9 +131,8 @@ func Test_IsLldpPacket_False(t *testing.T) {
 }
 
 func Test_IsIncomingPacket_True(t *testing.T) {
-	eth := &layers.IPv4{
-		SrcIP: net.ParseIP("192.168.254.1"),
-		DstIP: net.ParseIP("182.21.0.122"),
+	eth := &layers.DHCPv4{
+		Operation: layers.DHCPOpReply,
 	}
 
 	buffer := gopacket.NewSerializeBuffer()
@@ -143,16 +142,15 @@ func Test_IsIncomingPacket_True(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ethernetPkt := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeIPv4, gopacket.DecodeOptions{})
+	ethernetPkt := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeDHCPv4, gopacket.DecodeOptions{})
 
 	res := packetHandlers.IsIncomingPacket(ethernetPkt)
 	assert.Equal(t, res, true)
 }
 
 func Test_IsIncomingPacket_False(t *testing.T) {
-	eth := &layers.IPv4{
-		SrcIP: net.ParseIP("182.21.0.122"),
-		DstIP: net.ParseIP("192.168.254.1"),
+	eth := &layers.DHCPv4{
+		Operation: layers.DHCPOpRequest,
 	}
 
 	buffer := gopacket.NewSerializeBuffer()
@@ -162,7 +160,7 @@ func Test_IsIncomingPacket_False(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ethernetPkt := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeIPv4, gopacket.DecodeOptions{})
+	ethernetPkt := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeDHCPv4, gopacket.DecodeOptions{})
 
 	res := packetHandlers.IsIncomingPacket(ethernetPkt)
 	assert.Equal(t, res, false)
