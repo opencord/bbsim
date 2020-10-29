@@ -30,21 +30,11 @@ VOLTHA_TOOLS_VERSION ?= 2.2.0
 
 GO                = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golang go
 GO_SH             = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golang sh -c '
-BBSIM_BUILDER     = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg bbsim-builder go
 GO_JUNIT_REPORT   = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app -i voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-go-junit-report go-junit-report
 GOCOVER_COBERTURA = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app -i voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-gocover-cobertura gocover-cobertura
-BBSIM_LINTER      = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg bbsim-linter:${VOLTHA_TOOLS_VERSION}-golangci-lint golangci-lint
+GOLANGCI_LINT     = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golangci-lint golangci-lint
 HADOLINT          = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-hadolint hadolint
 PROTOC            = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-protoc protoc
-
-builder:
-	@docker build -t bbsim-builder:latest -f build/ci/builder.Dockerfile build/ci/
-
-linter:
-	# since this repo depends on C libs (libpcap), they are first added into a local container
-	@[[ "$(docker images -q bbsim-linter:${VOLTHA_TOOLS_VERSION}-golangci-lint 2> /dev/null)" != "" ]] || \
-	  docker build --build-arg=VOLTHA_TOOLS_VERSION=${VOLTHA_TOOLS_VERSION} -t bbsim-linter:${VOLTHA_TOOLS_VERSION}-golangci-lint -f build/ci/linter.Dockerfile build/ci/
-
 
 # Public targets
 all: help
@@ -77,19 +67,20 @@ lint-mod:
 
 lint: lint-mod lint-dockerfile
 
-sca: linter
+sca:
 	@rm -rf ./sca-report
 	@mkdir -p ./sca-report
 	@echo "Running static code analysis..."
-	@${BBSIM_LINTER} run --deadline=4m --out-format junit-xml ./... | tee ./sca-report/sca-report.xml
+	@${GOLANGCI_LINT} run --deadline=4m --out-format junit-xml ./... | tee ./sca-report/sca-report.xml
 	@echo ""
 	@echo "Static code analysis OK"
 
 test: docs-lint test-unit test-bbr
 
-test-unit: clean local-omci-sim builder # @HELP Execute unit tests
+test-unit: clean local-omci-sim # @HELP Execute unit tests
+	@echo "Running unit tests..."
 	@mkdir -p ./tests/results
-	@${BBSIM_BUILDER} test -mod=vendor -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee ./tests/results/go-test-results.out ;\
+	@${GO} test -mod=vendor -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee ./tests/results/go-test-results.out ;\
 	RETURN=$$? ;\
 	${GO_JUNIT_REPORT} < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml ;\
 	${GOCOVER_COBERTURA} < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml ;\
@@ -141,18 +132,18 @@ RELEASE_BBR_NAME      ?= bbr
 RELEASE_BBSIM_NAME    ?= bbsim
 RELEASE_BBSIMCTL_NAME ?= bbsimctl
 
-release-bbr: builder
+release-bbr:
 	@echo "$(RELEASE_BBR_NAME)-linux-amd64"
-	@${BBSIM_BUILDER} build -mod vendor \
+	@${GO} build -mod vendor \
 	  -ldflags "-w -X main.buildTime=$(shell date +%Y/%m/%d-%H:%M:%S) \
 	    -X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
 	    -X main.gitStatus=${GIT_STATUS} \
 	    -X main.version=${VERSION}" \
 	  -o "$(RELEASE_DIR)/$(RELEASE_BBR_NAME)-linux-amd64" ./cmd/bbr
 
-release-bbsim: builder
+release-bbsim:
 	@echo "$(RELEASE_BBSIM_NAME)-linux-amd64"
-	@${BBSIM_BUILDER} build -mod vendor \
+	@${GO} build -mod vendor \
 	  -ldflags "-w -X main.buildTime=$(shell date +%Y/%m/%d-%H:%M:%S) \
 	    -X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
 	    -X main.gitStatus=${GIT_STATUS} \

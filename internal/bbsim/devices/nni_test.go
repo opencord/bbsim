@@ -19,88 +19,82 @@ package devices
 
 import (
 	"errors"
-	"github.com/google/gopacket/pcap"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/opencord/voltha-protos/v4/go/openolt"
+	"github.com/stretchr/testify/assert"
 	"testing"
-
-	"github.com/opencord/bbsim/internal/bbsim/types"
-	"gotest.tools/assert"
 )
 
-func TestSetVethUpSuccess(t *testing.T) {
-	spy := &ExecutorSpy{
-		Calls: make(map[int][]string),
+func TestCreateNNI(t *testing.T) {
+	olt := OltDevice{
+		ID: 0,
 	}
-	err := setVethUp(spy, "test_veth")
-	assert.Equal(t, spy.CommandCallCount, 1)
-	assert.Equal(t, spy.Calls[1][2], "test_veth")
-	assert.Equal(t, err, nil)
+	nni, err := CreateNNI(&olt)
+
+	assert.Nil(t, err)
+	assert.Equal(t, "nni", nni.Type)
+	assert.Equal(t, uint32(0), nni.ID)
+	assert.Equal(t, "down", nni.OperState.Current())
 }
 
-func TestSetVethUpFail(t *testing.T) {
-	spy := &ExecutorSpy{
-		failRun: true,
-		Calls:   make(map[int][]string),
+func TestSendNniPacket(t *testing.T) {
+
+	stream := &mockStream{
+		CallCount: 0,
+		Calls:     make(map[int]*openolt.Indication),
+		fail:      false,
+		channel:   make(chan int, 10),
 	}
-	err := setVethUp(spy, "test_veth")
-	assert.Equal(t, spy.CommandCallCount, 1)
-	assert.Equal(t, err.Error(), "fake-error")
+
+	dhcpServer := &mockDhcpServer{
+		callCount: 0,
+		fail:      false,
+	}
+
+	nni := NniPort{
+		Olt: &OltDevice{
+			OpenoltStream: stream,
+			dhcpServer:    dhcpServer,
+		},
+		ID: 12,
+	}
+
+	// the DHCP server is mocked, so we don't really care about the packet we send in
+	pkt := createTestDhcpPacket(t)
+	err := nni.handleNniPacket(pkt)
+	assert.Nil(t, err)
+	assert.Equal(t, stream.CallCount, 1)
+	indication := stream.Calls[1].GetPktInd()
+	assert.Equal(t, "nni", indication.IntfType)
+	assert.Equal(t, nni.ID, indication.IntfId)
+	assert.Equal(t, pkt.Data(), indication.Pkt)
 }
 
-func TestCreateNNIPair(t *testing.T) {
-
-	startDHCPServerCalled := false
-	_startDHCPServer := startDHCPServer
-	defer func() { startDHCPServer = _startDHCPServer }()
-	startDHCPServer = func(upstreamVeth string, dhcpServerIp string) error {
-		startDHCPServerCalled = true
-		return nil
-	}
-
-	listenOnVethCalled := false
-	_listenOnVeth := listenOnVeth
-	defer func() { listenOnVeth = _listenOnVeth }()
-	listenOnVeth = func(vethName string) (chan *types.PacketMsg, *pcap.Handle, error) {
-		listenOnVethCalled = true
-		return make(chan *types.PacketMsg, 1), nil, nil
-	}
-	spy := &ExecutorSpy{
-		failRun: false,
-		Calls:   make(map[int][]string),
-	}
-
-	olt := OltDevice{}
-	nni := NniPort{}
-
-	err := createNNIPair(spy, &olt, &nni)
-	olt.nniPktInChannel, olt.nniHandle, _ = nni.NewVethChan()
-
-	assert.Equal(t, spy.CommandCallCount, 3)
-	assert.Equal(t, startDHCPServerCalled, true)
-	assert.Equal(t, listenOnVethCalled, true)
-	assert.Equal(t, err, nil)
-	assert.Assert(t, olt.nniPktInChannel != nil)
+type mockDhcpServer struct {
+	callCount int
+	fail      bool
 }
 
-type ExecutorSpy struct {
-	failRun bool
-
-	CommandCallCount int
-	RunCallCount     int
-	Calls            map[int][]string
-}
-
-func (s *ExecutorSpy) Command(name string, arg ...string) Runnable {
-	s.CommandCallCount++
-
-	s.Calls[s.CommandCallCount] = arg
-
-	return s
-}
-
-func (s *ExecutorSpy) Run() error {
-	s.RunCallCount++
-	if s.failRun {
-		return errors.New("fake-error")
+// being a Mock I just return the same packet I got
+func (s mockDhcpServer) HandleServerPacket(pkt gopacket.Packet) (gopacket.Packet, error) {
+	if s.fail {
+		return nil, errors.New("mocked-error")
 	}
-	return nil
+	return pkt, nil
+}
+
+func createTestDhcpPacket(t *testing.T) gopacket.Packet {
+	dhcp := &layers.DHCPv4{
+		Operation: layers.DHCPOpRequest,
+	}
+
+	buffer := gopacket.NewSerializeBuffer()
+	opts := gopacket.SerializeOptions{FixLengths: true}
+	err := gopacket.SerializeLayers(buffer, opts, dhcp)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeDHCPv4, gopacket.DecodeOptions{})
 }
