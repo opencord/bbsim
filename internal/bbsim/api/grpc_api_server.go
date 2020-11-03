@@ -128,6 +128,31 @@ func (s BBSimServer) RebootOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Re
 	return res, nil
 }
 
+func (s BBSimServer) StopgRPCServer(ctx context.Context, req *bbsim.Empty) (*bbsim.Response, error) {
+	res := &bbsim.Response{}
+	o := devices.GetOLT()
+
+	logger.Infof("Received request to stop Openolt gRPC Server")
+
+	o.StopOltServer()
+
+	return res, nil
+}
+
+func (s BBSimServer) StartgRPCServer(ctx context.Context, req *bbsim.Empty) (*bbsim.Response, error) {
+	res := &bbsim.Response{}
+	o := devices.GetOLT()
+
+	logger.Infof("Received request to start Openolt gRPC Server")
+
+	_, err := o.StartOltServer()
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 func (s BBSimServer) SetLogLevel(ctx context.Context, req *bbsim.LogLevel) (*bbsim.LogLevel, error) {
 
 	common.SetLogLevel(log.StandardLogger(), req.Level, req.Caller)

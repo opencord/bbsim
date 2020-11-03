@@ -49,6 +49,10 @@ type OltPoweron struct{}
 
 type OltReboot struct{}
 
+type StopGrpcServer struct{}
+
+type StartGrpcServer struct{}
+
 type OltFlows struct{}
 
 type OltPoweronAllOnus struct{}
@@ -66,6 +70,8 @@ type oltOptions struct {
 	Flows           OltFlows           `command:"flows"`
 	PoweronAllOnus  OltPoweronAllOnus  `command:"poweronAllONUs"`
 	ShutdownAllOnus OltShutdownAllOnus `command:"shutdownAllONUs"`
+	StopServer      StopGrpcServer     `command:"stopServer"`
+	StartServer     StartGrpcServer    `command:"startServer"`
 }
 
 func RegisterOltCommands(parser *flags.Parser) {
@@ -177,6 +183,42 @@ func (o *OltReboot) Execute(args []string) error {
 
 	if err != nil {
 		log.Fatalf("Cannot reboot OLT: %v", err)
+		return err
+	}
+
+	fmt.Println(fmt.Sprintf("[Status: %d] %s", res.StatusCode, res.Message))
+	return nil
+}
+
+func (o *StopGrpcServer) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+
+	res, err := client.StopgRPCServer(ctx, &pb.Empty{})
+
+	if err != nil {
+		log.Fatalf("Cannot stop Openolt server: %v", err)
+		return err
+	}
+
+	fmt.Println(fmt.Sprintf("[Status: %d] %s", res.StatusCode, res.Message))
+	return nil
+}
+
+func (o *StartGrpcServer) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+
+	res, err := client.StartgRPCServer(ctx, &pb.Empty{})
+
+	if err != nil {
+		log.Fatalf("Cannot start Openolt server: %v", err)
 		return err
 	}
 
