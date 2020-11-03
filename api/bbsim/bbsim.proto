@@ -199,6 +199,12 @@ service BBSim {
     // Reboot OLT
     rpc RebootOlt (Empty) returns (Response) {
     }
+    // Closes the Openolt gRPC server
+    rpc StopgRPCServer (Empty) returns (Response) {
+    }
+    // Start the Openolt gRPC server
+    rpc StartgRPCServer (Empty) returns (Response) {
+    }
 
     // Get status of an ONU by serial number
     rpc GetONU (ONURequest) returns (ONU) {
