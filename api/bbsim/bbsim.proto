@@ -256,4 +256,10 @@ service BBSim {
     // Get Traffic scheduler information for ONU
     rpc GetOnuTrafficSchedulers (ONURequest) returns (ONUTrafficSchedulers) {
     }
+    // Closes the gRPC channel
+    rpc ClosegRPCChannel (Empty) returns (Response) {
+    }
+    // Start the gRPC channel
+    rpc StartgRPCChannel (Empty) returns (Response) {
+    }
 }

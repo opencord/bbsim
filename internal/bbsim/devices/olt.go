@@ -136,6 +136,7 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 			"enter_state": func(e *fsm.Event) {
 				oltLogger.Debugf("Changing OLT InternalState from %s to %s", e.Src, e.Dst)
 			},
+			// this is the method that starts the OLT channel
 			"enter_initialized": func(e *fsm.Event) { olt.InitOlt() },
 		},
 	)
@@ -371,6 +372,13 @@ func (o *OltDevice) StopOltServer() error {
 	return nil
 }
 
+//Create start olt server
+//if oltServer == nil {
+//oltServer, _ = o.newOltServer()
+//} else {
+//// FIXME there should never be a server running if we are initializing the OLT
+//oltLogger.Fatal("OLT server already running.")
+//}
 // Device Methods
 
 // Enable implements the OpenOLT EnableIndicationServer functionality

@@ -36,6 +36,7 @@ func main() {
 	}
 
 	commands.RegisterConfigCommands(parser)
+	commands.RegistergRPCCommands(parser)
 	commands.RegisterOltCommands(parser)
 	commands.RegisterONUCommands(parser)
 	commands.RegisterServiceCommands(parser)

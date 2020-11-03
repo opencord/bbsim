@@ -164,3 +164,25 @@ func (s BBSimServer) SetOltAlarmIndication(ctx context.Context, req *bbsim.OLTAl
 	res.Message = fmt.Sprintf("Olt Alarm Indication Sent.")
 	return res, nil
 }
+
+// SetOltAlarmIndication generates OLT Alarms for LOS
+func (s BBSimServer) ClosegRPCChannel(ctx context.Context) (*bbsim.Response, error) {
+	//TODO call here the OLT.go method
+	common.StopServers()
+
+	res := &bbsim.Response{}
+	res.StatusCode = int32(codes.OK)
+	res.Message = fmt.Sprintf("Server is Stopped")
+	return res, nil
+}
+
+// SetOltAlarmIndication generates OLT Alarms for LOS
+func (s BBSimServer) StartgRPCChannel(ctx context.Context) (*bbsim.Response, error) {
+	//TODO call here the OLT.go method
+	common.StartServers()
+
+	res := &bbsim.Response{}
+	res.StatusCode = int32(codes.OK)
+	res.Message = fmt.Sprintf("Server is Started")
+	return res, nil
+}
