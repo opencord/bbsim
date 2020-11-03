@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
@@ -125,6 +126,58 @@ func (s BBSimServer) RebootOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Re
 	go func() { _ = o.RestartOLT() }()
 	res.StatusCode = int32(codes.OK)
 	res.Message = fmt.Sprintf("OLT restart triggered.")
+	return res, nil
+}
+
+func (s BBSimServer) StopgRPCServer(ctx context.Context, req *bbsim.Empty) (*bbsim.Response, error) {
+	res := &bbsim.Response{}
+	res.StatusCode = int32(codes.OK)
+	res.Message = fmt.Sprintf("Openolt gRPC server stopped")
+	o := devices.GetOLT()
+
+	logger.Infof("Received request to stop Openolt gRPC Server")
+
+	o.StopOltServer()
+
+	return res, nil
+}
+
+func (s BBSimServer) StartgRPCServer(ctx context.Context, req *bbsim.Empty) (*bbsim.Response, error) {
+	res := &bbsim.Response{}
+	res.StatusCode = int32(codes.OK)
+	res.Message = fmt.Sprintf("Openolt gRPC server started")
+	o := devices.GetOLT()
+
+	logger.Infof("Received request to start Openolt gRPC Server")
+
+	_, err := o.StartOltServer()
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (s BBSimServer) RestartgRPCServer(ctx context.Context, req *bbsim.Timeout) (*bbsim.Response, error) {
+	o := devices.GetOLT()
+	logger.Infof("Received request to restart Openolt gRPC Server in %v seconds", req.Delay)
+	o.StopOltServer()
+
+	res := &bbsim.Response{}
+	res.StatusCode = int32(codes.OK)
+	res.Message = fmt.Sprintf("Openolt gRPC server stopped, restarting in %v", req.Delay)
+
+	go func() {
+		time.Sleep(time.Duration(req.Delay) * time.Second)
+		_, err := o.StartOltServer()
+		if err != nil {
+			logger.WithFields(log.Fields{
+				"err": err,
+			}).Error("Cannot restart Openolt gRPC server")
+		}
+		logger.Infof("Openolt gRPC Server restarted after %v seconds", req.Delay)
+	}()
+
 	return res, nil
 }
 
