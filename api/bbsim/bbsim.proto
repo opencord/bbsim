@@ -176,6 +176,10 @@ message Flows {
     repeated openolt.Flow flows = 2;
 }
 
+message Timeout {
+    uint32 delay = 1;
+}
+
 message Empty {
 }
 
@@ -198,6 +202,15 @@ service BBSim {
     }
     // Reboot OLT
     rpc RebootOlt (Empty) returns (Response) {
+    }
+    // Closes the Openolt gRPC server
+    rpc StopgRPCServer (Empty) returns (Response) {
+    }
+    // Start the Openolt gRPC server
+    rpc StartgRPCServer (Empty) returns (Response) {
+    }
+    // Restart the Openolt gRPC server after the given timeout
+    rpc RestartgRPCServer (Timeout) returns (Response) {
     }
 
     // Get status of an ONU by serial number

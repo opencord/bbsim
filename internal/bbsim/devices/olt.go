@@ -48,6 +48,7 @@ var oltLogger = log.WithFields(log.Fields{
 
 type OltDevice struct {
 	sync.Mutex
+	oltServer *grpc.Server
 
 	// BBSIM Internals
 	ID                   int
@@ -79,7 +80,6 @@ type OltDevice struct {
 }
 
 var olt OltDevice
-var oltServer *grpc.Server
 
 func GetOLT() *OltDevice {
 	return &olt
@@ -224,10 +224,9 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 
 func (o *OltDevice) InitOlt() {
 
-	if oltServer == nil {
-		oltServer, _ = o.newOltServer()
+	if o.oltServer == nil {
+		o.oltServer, _ = o.StartOltServer()
 	} else {
-		// FIXME there should never be a server running if we are initializing the OLT
 		oltLogger.Fatal("OLT server already running.")
 	}
 
@@ -267,12 +266,8 @@ func (o *OltDevice) RestartOLT() error {
 		return err
 	}
 
-	// TODO handle hard poweroff (i.e. no indications sent to Voltha) vs soft poweroff
 	time.Sleep(1 * time.Second) // we need to give the OLT the time to respond to all the pending gRPC request before stopping the server
-	if err := o.StopOltServer(); err != nil {
-		oltLogger.Errorf("Error in stopping OLT server")
-		return err
-	}
+	o.StopOltServer()
 
 	if softReboot {
 		for _, pon := range o.Pons {
@@ -341,18 +336,28 @@ func (o *OltDevice) newOltServer() (*grpc.Server, error) {
 	return grpcServer, nil
 }
 
+// StartOltServer will create the grpc server that VOLTHA uses
+// to communicate with the device
+func (o *OltDevice) StartOltServer() (*grpc.Server, error) {
+	oltServer, err := o.newOltServer()
+	if err != nil {
+		oltLogger.WithFields(log.Fields{
+			"err": err,
+		}).Error("Cannot OLT gRPC server")
+		return nil, err
+	}
+	return oltServer, nil
+}
+
 // StopOltServer stops the OpenOLT grpc server
-func (o *OltDevice) StopOltServer() error {
-	// TODO handle poweroff vs graceful shutdown
-	if oltServer != nil {
+func (o *OltDevice) StopOltServer() {
+	if o.oltServer != nil {
 		oltLogger.WithFields(log.Fields{
 			"oltId": o.SerialNumber,
 		}).Warnf("Stopping OLT gRPC server")
-		oltServer.Stop()
-		oltServer = nil
+		o.oltServer.Stop()
+		o.oltServer = nil
 	}
-
-	return nil
 }
 
 // Device Methods
