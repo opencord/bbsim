@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "850fe3f8_225943ff",
+        "filename": "api/bbsim/bbsim.proto",
+        "patchSetId": 4
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-06T09:58:05Z",
+      "side": 1,
+      "message": "Restarts the Openolt gRPC server after the given seconds",
+      "revId": "0319edc010bc0f299a73b980c9d27ad7857af415",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
