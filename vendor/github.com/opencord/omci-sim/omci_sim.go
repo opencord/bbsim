@@ -27,7 +27,7 @@ func GetChannel() chan OmciChMessage {
 	return omciCh
 }
 
-func OmciSim(intfId uint32, onuId uint32, request []byte) ([]byte, error) {
+func OmciSim(oltId int, intfId uint32, onuId uint32, request []byte) ([]byte, error) {
 	var resp []byte
 
 	transactionId, deviceId, msgType, class, instance, content, err := ParsePkt(request)
@@ -50,7 +50,7 @@ func OmciSim(intfId uint32, onuId uint32, request []byte) ([]byte, error) {
 		"omciMsg": fmt.Sprintf("%x", content),
 	}).Tracef("Processing OMCI packet")
 
-	key := OnuKey{intfId, onuId}
+	key := OnuKey{OltId: oltId, IntfId: intfId, OnuId: onuId}
 	OnuOmciStateMapLock.Lock()
 	if _, ok := OnuOmciStateMap[key]; !ok {
 		OnuOmciStateMap[key] = NewOnuOmciState()

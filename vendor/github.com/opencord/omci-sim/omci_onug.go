@@ -35,7 +35,7 @@ const (
 	ExtendedTcLayerOptions   OnuGAttributes = 0x0008
 )
 
-type OnuGAttributeHandler func(*uint, []byte) ([]byte, error)
+type OnuGAttributeHandler func(*uint, []byte, OnuKey) ([]byte, error)
 
 var OnuGAttributeHandlers = map[OnuGAttributes]OnuGAttributeHandler{
 	VendorID:                 GetVendorID,
@@ -53,7 +53,7 @@ var OnuGAttributeHandlers = map[OnuGAttributes]OnuGAttributeHandler{
 	ExtendedTcLayerOptions:   GetExtendedTcLayerOptions,
 }
 
-func GetOnuGAttributes(pos *uint, pkt []byte, content OmciContent) ([]byte, error) {
+func GetOnuGAttributes(pos *uint, pkt []byte, content OmciContent, key OnuKey) ([]byte, error) {
 	AttributesMask := getAttributeMask(content)
 
 	for index := uint(16); index >= 1; index-- {
@@ -61,7 +61,7 @@ func GetOnuGAttributes(pos *uint, pkt []byte, content OmciContent) ([]byte, erro
 		reqAttribute := Attribute & AttributesMask
 
 		if reqAttribute != 0 {
-			pkt, _ = OnuGAttributeHandlers[OnuGAttributes(reqAttribute)](pos, pkt)
+			pkt, _ = OnuGAttributeHandlers[OnuGAttributes(reqAttribute)](pos, pkt, key)
 		}
 	}
 
@@ -73,7 +73,7 @@ func GetOnuGAttributes(pos *uint, pkt []byte, content OmciContent) ([]byte, erro
 
 }
 
-func GetVendorID(pos *uint, pkt []byte) ([]byte, error) {
+func GetVendorID(pos *uint, pkt []byte, _ OnuKey) ([]byte, error) {
 	// 4 bytes
 	vendorid := []byte("BBSM")
 	for _, ch := range vendorid {
@@ -83,7 +83,7 @@ func GetVendorID(pos *uint, pkt []byte) ([]byte, error) {
 	return pkt, nil
 }
 
-func GetVersion(pos *uint, pkt []byte) ([]byte, error) {
+func GetVersion(pos *uint, pkt []byte, _ OnuKey) ([]byte, error) {
 	// 14 bytes
 	for i := 1; i <= 14; i++ {
 		b := byte(' ')
@@ -93,10 +93,10 @@ func GetVersion(pos *uint, pkt []byte) ([]byte, error) {
 	return pkt, nil
 }
 
-func GetSerialNumber(pos *uint, pkt []byte) ([]byte, error) {
+func GetSerialNumber(pos *uint, pkt []byte, key OnuKey) ([]byte, error) {
 	// 8 bytes
 	vendorid := []byte("BBSM")
-	serialhex := []byte{0x00, 0x00, 0x00, 0x01}
+	serialhex := []byte{0x00, byte(key.OltId % 256), byte(key.IntfId), byte(key.OnuId)}
 	serialnumber := append(vendorid, serialhex...)
 	for _, ch := range serialnumber {
 		pkt[*pos] = ch
@@ -105,49 +105,49 @@ func GetSerialNumber(pos *uint, pkt []byte) ([]byte, error) {
 	return pkt, nil
 }
 
-func GetTrafficManagementOptions(pos *uint, pkt []byte) ([]byte, error) {
+func GetTrafficManagementOptions(pos *uint, pkt []byte, _ OnuKey) ([]byte, error) {
 	// 1 byte
 	pkt[*pos] = 0x00
 	*pos++
 	return pkt, nil
 }
 
-func GetVpVcCrossConnectOptions(pos *uint, pkt []byte) ([]byte, error) {
+func GetVpVcCrossConnectOptions(pos *uint, pkt []byte, _ OnuKey) ([]byte, error) {
 	// 1 byte
 	pkt[*pos] = 0x00
 	*pos++
 	return pkt, nil
 }
 
-func GetBatteryBackup(pos *uint, pkt []byte) ([]byte, error) {
+func GetBatteryBackup(pos *uint, pkt []byte, _ OnuKey) ([]byte, error) {
 	// 1 byte
 	pkt[*pos] = 0x00
 	*pos++
 	return pkt, nil
 }
 
-func GetAdministrativeState(pos *uint, pkt []byte) ([]byte, error) {
+func GetAdministrativeState(pos *uint, pkt []byte, _ OnuKey) ([]byte, error) {
 	// 1 byte
 	pkt[*pos] = 0x00
 	*pos++
 	return pkt, nil
 }
 
-func GetOperationalState(pos *uint, pkt []byte) ([]byte, error) {
+func GetOperationalState(pos *uint, pkt []byte, _ OnuKey) ([]byte, error) {
 	// 1 byte
 	pkt[*pos] = 0x00
 	*pos++
 	return pkt, nil
 }
 
-func GetOntSurvivalTime(pos *uint, pkt []byte) ([]byte, error) {
+func GetOntSurvivalTime(pos *uint, pkt []byte, _ OnuKey) ([]byte, error) {
 	// 1 byte
 	pkt[*pos] = 0x00
 	*pos++
 	return pkt, nil
 }
 
-func GetLogicalOnuID(pos *uint, pkt []byte) ([]byte, error) {
+func GetLogicalOnuID(pos *uint, pkt []byte, _ OnuKey) ([]byte, error) {
 	// 24 bytes
 	for i := 1; i <= 24; i++ {
 		b := byte(' ')
@@ -157,7 +157,7 @@ func GetLogicalOnuID(pos *uint, pkt []byte) ([]byte, error) {
 	return pkt, nil
 }
 
-func GetLogicalPassword(pos *uint, pkt []byte) ([]byte, error) {
+func GetLogicalPassword(pos *uint, pkt []byte, _ OnuKey) ([]byte, error) {
 	// 24 bytes
 	for i := 1; i <= 24; i++ {
 		b := byte(' ')
@@ -167,14 +167,14 @@ func GetLogicalPassword(pos *uint, pkt []byte) ([]byte, error) {
 	return pkt, nil
 }
 
-func GetCredentialsStatus(pos *uint, pkt []byte) ([]byte, error) {
+func GetCredentialsStatus(pos *uint, pkt []byte, _ OnuKey) ([]byte, error) {
 	// 1 byte
 	pkt[*pos] = 0x00
 	*pos++
 	return pkt, nil
 }
 
-func GetExtendedTcLayerOptions(pos *uint, pkt []byte) ([]byte, error) {
+func GetExtendedTcLayerOptions(pos *uint, pkt []byte, _ OnuKey) ([]byte, error) {
 	// 2 bytes
 	tcbits := []byte{0x00, 0x00}
 	for _, ch := range tcbits {

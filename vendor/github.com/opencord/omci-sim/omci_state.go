@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	log "github.com/sirupsen/logrus"
 )
 
 type OnuOmciState struct {
@@ -61,8 +60,8 @@ func (s *OnuOmciState) ResetOnuOmciState() {
 	s.tcontPointer = 0
 	s.priorQPriority = 0
 }
-func GetOnuOmciState(intfId uint32, onuId uint32) istate {
-	key := OnuKey{intfId, onuId}
+func GetOnuOmciState(oltId int, intfId uint32, onuId uint32) istate {
+	key := OnuKey{oltId,intfId, onuId}
 	OnuOmciStateMapLock.RLock()
 	defer OnuOmciStateMapLock.RUnlock()
 	if onu, ok := OnuOmciStateMap[key]; ok {
@@ -72,8 +71,8 @@ func GetOnuOmciState(intfId uint32, onuId uint32) istate {
 	}
 }
 
-func GetGemPortId(intfId uint32, onuId uint32) (uint16, error) {
-	key := OnuKey{intfId, onuId}
+func GetGemPortId(oltId int, intfId uint32, onuId uint32) (uint16, error) {
+	key := OnuKey{oltId, intfId, onuId}
 	OnuOmciStateMapLock.RLock()
 	defer OnuOmciStateMapLock.RUnlock()
 	if OnuOmciState, ok := OnuOmciStateMap[key]; ok {
@@ -85,9 +84,4 @@ func GetGemPortId(intfId uint32, onuId uint32) (uint16, error) {
 	}
 	errmsg := fmt.Sprintf("ONU {intfid:%d, onuid:%d} - Failed to find a key in OnuOmciStateMap", intfId, onuId)
 	return 0, errors.New(errmsg)
-}
-
-func CheckIsTeo() string {
-	log.Warn("It's TEO!")
-	return "It's TEO!"
 }

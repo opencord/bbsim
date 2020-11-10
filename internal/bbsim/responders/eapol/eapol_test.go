@@ -98,7 +98,7 @@ func TestSendEapStartFailStreamError(t *testing.T) {
 	old := GetGemPortId
 	defer func() { GetGemPortId = old }()
 
-	GetGemPortId = func(intfId uint32, onuId uint32) (uint16, error) {
+	GetGemPortId = func(oltId int, intfId uint32, onuId uint32) (uint16, error) {
 		return 1, nil
 	}
 
