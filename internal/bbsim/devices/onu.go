@@ -532,7 +532,7 @@ func (o *Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableIn
 	o.publishOmciEvent(msg)
 
 	var omciInd openolt.OmciIndication
-	respPkt, err := omcisim.OmciSim(o.PonPortID, o.ID, HexDecode(msg.omciMsg.Pkt))
+	respPkt, err := omcisim.OmciSim(o.PonPort.Olt.ID, o.PonPortID, o.ID, HexDecode(msg.omciMsg.Pkt))
 	if err != nil {
 		onuLogger.WithFields(log.Fields{
 			"IntfId":       o.PonPortID,
