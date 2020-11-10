@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1097630_41c4ce53",
+        "filename": "vendor/github.com/opencord/omci-sim/omci_sim.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-10T08:49:14Z",
+      "side": 1,
+      "message": "please remove this",
+      "revId": "567fc6f57b17cda7e2fb60306714f1f84c749d16",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
