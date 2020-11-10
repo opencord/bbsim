@@ -92,8 +92,8 @@ github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4 h1:Odib2px8tyALzd
 github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4/go.mod h1:/+3S0pwQUy7HeKnH0KfKp5W6hmh/LdZzuZTNT/m7vA4=
 github.com/opencord/device-management-interface v0.9.1-0.20200930105820-188a84f483b3 h1:B5mxBmXaNWbiqvD5BRssHvUhJFUc8GMcf/Sa/u7ECls=
 github.com/opencord/device-management-interface v0.9.1-0.20200930105820-188a84f483b3/go.mod h1:G1owSqGBGaqllrwtjxfLTsy9EDsGhdhmqkJM3XOnPD0=
-github.com/opencord/omci-sim v0.0.4 h1:kN8zi/8gkcHOkXPk27Wp6Wwp8ggUylXcD/egW7PUXmc=
-github.com/opencord/omci-sim v0.0.4/go.mod h1:ToOkj7hkHgoet9XQDadKMhYqgA7qItZsi2j1Pk/mX6Y=
+github.com/opencord/omci-sim v0.0.5 h1:vC6EsdOrPj6w/lRiwCR+Rcx9JRfrKJDR9YwNvfZdvzQ=
+github.com/opencord/omci-sim v0.0.5/go.mod h1:ToOkj7hkHgoet9XQDadKMhYqgA7qItZsi2j1Pk/mX6Y=
 github.com/opencord/voltha-protos/v4 v4.0.2 h1:SI25ljqftc8Tc28CgfqSE4IGCLJ5MgCmBQlE96hl9X8=
 github.com/opencord/voltha-protos/v4 v4.0.2/go.mod h1:W/OIFIyvFh/C0vchRUuarIsMylEhzCRM9pNxLvkPtKc=
 github.com/pierrec/lz4 v2.4.1+incompatible h1:mFe7ttWaflA46Mhqh+jUfjp2qTbPYxLB2/OyBppH9dg=

@@ -19,7 +19,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4
 	github.com/opencord/device-management-interface v0.9.1-0.20200930105820-188a84f483b3
-	github.com/opencord/omci-sim v0.0.4
+	github.com/opencord/omci-sim v0.0.5
 	github.com/opencord/voltha-protos/v4 v4.0.2
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/sirupsen/logrus v1.4.2

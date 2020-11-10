@@ -30,6 +30,7 @@ func (e *OmciError) Error() string {
 }
 
 type OnuKey struct {
+	OltId int
 	IntfId, OnuId uint32
 }
 
@@ -56,7 +57,7 @@ func GetAttributes(class OmciClass, content OmciContent, key OnuKey, pkt []byte)
 
 	case ONUG:
 		pos := uint(11)
-		pkt, _ = GetOnuGAttributes(&pos, pkt, content)
+		pkt, _ = GetOnuGAttributes(&pos, pkt, content, key)
 		return pkt
 
 	case ONU2G:
