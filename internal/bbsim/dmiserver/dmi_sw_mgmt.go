@@ -27,7 +27,7 @@ func (dms *DmiAPIServer) GetSoftwareVersion(ctx context.Context, req *dmi.Hardwa
 	// TODO: Make this more interesting by taking values from BBSim if available
 	logger.Debugf("GetSoftwareVersion invoked with for device %+v", req)
 	return &dmi.GetSoftwareVersionInformationResponse{
-		Status: dmi.Status_OK,
+		Status: dmi.Status_OK_STATUS,
 		Reason: dmi.Reason_UNDEFINED_REASON,
 		Info: &dmi.SoftwareVersionInformation{
 			ActiveVersions: []*dmi.ImageVersion{{
@@ -46,7 +46,7 @@ func (dms *DmiAPIServer) GetSoftwareVersion(ctx context.Context, req *dmi.Hardwa
 func (dms *DmiAPIServer) DownloadImage(req *dmi.DownloadImageRequest, stream dmi.NativeSoftwareManagementService_DownloadImageServer) error {
 	logger.Debugf("DownloadImage invoked with request %+v", req)
 	err := stream.Send(&dmi.ImageStatus{
-		Status: dmi.Status_OK,
+		Status: dmi.Status_OK_STATUS,
 		State:  dmi.ImageStatus_COPYING_IMAGE,
 	})
 	if err != nil {
@@ -61,7 +61,7 @@ func (dms *DmiAPIServer) DownloadImage(req *dmi.DownloadImageRequest, stream dmi
 func (dms *DmiAPIServer) ActivateImage(req *dmi.HardwareID, stream dmi.NativeSoftwareManagementService_ActivateImageServer) error {
 	logger.Debugf("ActivateImage invoked with request %+v", req)
 	err := stream.Send(&dmi.ImageStatus{
-		Status: dmi.Status_OK,
+		Status: dmi.Status_OK_STATUS,
 		State:  dmi.ImageStatus_ACTIVATION_COMPLETE,
 	})
 
@@ -77,7 +77,7 @@ func (dms *DmiAPIServer) ActivateImage(req *dmi.HardwareID, stream dmi.NativeSof
 func (dms *DmiAPIServer) RevertToStandbyImage(req *dmi.HardwareID, stream dmi.NativeSoftwareManagementService_RevertToStandbyImageServer) error {
 	logger.Debugf("RevertToStandbyImage invoked with request %+v", req)
 	err := stream.Send(&dmi.ImageStatus{
-		Status: dmi.Status_OK,
+		Status: dmi.Status_OK_STATUS,
 		State:  dmi.ImageStatus_ACTIVATION_COMPLETE,
 	})
 
@@ -85,5 +85,11 @@ func (dms *DmiAPIServer) RevertToStandbyImage(req *dmi.HardwareID, stream dmi.Na
 		logger.Errorf("Error sending image-status for RevertToStandbyImage, %v", err)
 		return err
 	}
+	return nil
+}
+
+// UpdateStartupConfiguration API can be used to let the devices pickup their properitary configuration which they need at startup.
+func (dms *DmiAPIServer) UpdateStartupConfiguration(*dmi.ConfigRequest, dmi.NativeSoftwareManagementService_UpdateStartupConfigurationServer) error {
+	logger.Debugf("UpdateStartupConfiguration invoked")
 	return nil
 }
