@@ -28,7 +28,7 @@ func (dms *DmiAPIServer) ListEvents(ctx context.Context, req *dmi.HardwareID) (*
 	//empty events
 	events := []*dmi.EventCfg{{}}
 	return &dmi.ListEventsResponse{
-		Status: dmi.Status_OK,
+		Status: dmi.Status_OK_STATUS,
 		Reason: dmi.Reason_UNDEFINED_REASON,
 		Events: &dmi.EventsCfg{
 			Items: events,
@@ -40,6 +40,6 @@ func (dms *DmiAPIServer) ListEvents(ctx context.Context, req *dmi.HardwareID) (*
 func (dms *DmiAPIServer) UpdateEventsConfiguration(ctx context.Context, req *dmi.EventsConfigurationRequest) (*dmi.EventsConfigurationResponse, error) {
 	logger.Debugf("UpdateEventsConfiguration called with request %+v", req)
 	return &dmi.EventsConfigurationResponse{
-		Status: dmi.Status_OK,
+		Status: dmi.Status_OK_STATUS,
 	}, nil
 }

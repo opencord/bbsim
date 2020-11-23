@@ -19,16 +19,19 @@ package dmiserver
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	dmi "github.com/opencord/device-management-interface/go/dmi"
 )
 
 //ListMetrics lists the supported metrics for the passed device.
 func (dms *DmiAPIServer) ListMetrics(ctx context.Context, req *dmi.HardwareID) (*dmi.ListMetricsResponse, error) {
 	logger.Debugf("ListMetrics invoked with request %+v", req)
-	//return empty list of metrics for now
-	metrics := []*dmi.MetricConfig{{}}
+	metrics := getMetricsList()
+
 	return &dmi.ListMetricsResponse{
-		Status: dmi.Status_OK,
+		Status: dmi.Status_OK_STATUS,
 		Reason: 0,
 		Metrics: &dmi.MetricsConfig{
 			Metrics: metrics,
@@ -39,18 +42,50 @@ func (dms *DmiAPIServer) ListMetrics(ctx context.Context, req *dmi.HardwareID) (
 //UpdateMetricsConfiguration updates the configuration of the list of metrics in the request
 func (dms *DmiAPIServer) UpdateMetricsConfiguration(ctx context.Context, req *dmi.MetricsConfigurationRequest) (*dmi.MetricsConfigurationResponse, error) {
 	logger.Debugf("UpdateMetricConfiguration invoked with request %+v", req)
+
+	if req == nil || req.Operation == nil {
+		return &dmi.MetricsConfigurationResponse{
+			Status: dmi.Status_UNDEFINED_STATUS,
+			Reason: dmi.Reason_UNDEFINED_REASON,
+		}, status.Errorf(codes.FailedPrecondition, "request is nil")
+	}
+
+	switch x := req.Operation.(type) {
+	case *dmi.MetricsConfigurationRequest_Changes:
+		for _, chMetric := range x.Changes.Metrics {
+			UpdateMetricConfig(chMetric)
+		}
+	case *dmi.MetricsConfigurationRequest_ResetToDefault:
+		logger.Debugf("To be implemented later")
+	case nil:
+		// The field is not set.
+		logger.Debugf("Update request operation type is nil")
+		return &dmi.MetricsConfigurationResponse{
+			Status: dmi.Status_UNDEFINED_STATUS,
+		}, nil
+	}
+
 	return &dmi.MetricsConfigurationResponse{
-		Status: dmi.Status_OK,
+		Status: dmi.Status_OK_STATUS,
 	}, nil
 }
 
 //GetMetric gets the instantenous value of a metric
 func (dms *DmiAPIServer) GetMetric(ctx context.Context, req *dmi.GetMetricRequest) (*dmi.GetMetricResponse, error) {
 	logger.Debugf("GetMetric invoked with request %+v", req)
-	return &dmi.GetMetricResponse{
-		Status: dmi.Status_OK,
-		Reason: dmi.Reason_UNDEFINED_REASON,
-		Metric: &dmi.Metric{},
-	}, nil
 
+	if req == nil || req.GetMetricId() < 0 {
+		return &dmi.GetMetricResponse{
+			Status: dmi.Status_ERROR_STATUS,
+			Reason: dmi.Reason_UNDEFINED_REASON,
+			Metric: &dmi.Metric{},
+		}, status.Errorf(codes.FailedPrecondition, "request is nil")
+	}
+	comp := findComponent(dms.root.Children, req.MetaData.ComponentUuid.Uuid)
+	metric := getMetric(comp, req.GetMetricId())
+	return &dmi.GetMetricResponse{
+		Status: dmi.Status_OK_STATUS,
+		Reason: dmi.Reason_UNDEFINED_REASON,
+		Metric: metric,
+	}, nil
 }
