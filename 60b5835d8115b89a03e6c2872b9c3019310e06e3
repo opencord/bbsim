@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "baf2ac0b_d2e611da",
+        "filename": "docs/source/DMI_Server_README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-23T19:28:15Z",
+      "side": 1,
+      "message": "StopManagingDevice is duplicated",
+      "revId": "60b5835d8115b89a03e6c2872b9c3019310e06e3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "031481f2_399b4c77",
+        "filename": "internal/bbsim/dmiserver/dmi_api_server.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-23T19:28:15Z",
+      "side": 1,
+      "message": "you are ignoring the result here",
+      "revId": "60b5835d8115b89a03e6c2872b9c3019310e06e3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f132fff9_7e20adf1",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-23T19:28:15Z",
+      "side": 1,
+      "message": "I think you can put this log back, was there a reason you commented it out ? if removal is better you can remove the whole line.",
+      "revId": "60b5835d8115b89a03e6c2872b9c3019310e06e3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e376eb93_8f90f27d",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-23T19:28:15Z",
+      "side": 1,
+      "message": "this return is useless",
+      "revId": "60b5835d8115b89a03e6c2872b9c3019310e06e3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "028a2766_8944b5e8",
+        "filename": "internal/bbsim/dmiserver/dmi_metrics_generator.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-23T19:28:15Z",
+      "side": 1,
+      "message": "you mention 20 seconds but set 60 at line 59.",
+      "revId": "60b5835d8115b89a03e6c2872b9c3019310e06e3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "79af7262_380ed43e",
+        "filename": "internal/bbsim/dmiserver/dmi_metrics_generator.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-23T19:28:15Z",
+      "side": 1,
+      "message": "10 seconds ?",
+      "revId": "60b5835d8115b89a03e6c2872b9c3019310e06e3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45595283_62c2719f",
+        "filename": "internal/bbsim/dmiserver/dmi_metrics_generator.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-23T19:28:15Z",
+      "side": 1,
+      "message": "\u003d\u003d true is redundant",
+      "revId": "60b5835d8115b89a03e6c2872b9c3019310e06e3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9270a7f_55edc1ad",
+        "filename": "internal/bbsim/dmiserver/dmi_metrics_generator.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-23T19:28:15Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "60b5835d8115b89a03e6c2872b9c3019310e06e3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8d20be9_81b0945c",
+        "filename": "internal/bbsim/dmiserver/dmi_metrics_generator.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-23T19:28:15Z",
+      "side": 1,
+      "message": "same",
+      "revId": "60b5835d8115b89a03e6c2872b9c3019310e06e3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67b1b29d_050cd34d",
+        "filename": "internal/bbsim/dmiserver/dmi_metrics_generator.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 351,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-23T19:28:15Z",
+      "side": 1,
+      "message": "this function is unused",
+      "revId": "60b5835d8115b89a03e6c2872b9c3019310e06e3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
