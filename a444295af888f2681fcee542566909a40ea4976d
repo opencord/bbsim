@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71e968ab_e3fb25c3",
+        "filename": "internal/bbsim/dmiserver/dmi_metrics_generator.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-11-24T22:50:31Z",
+      "side": 1,
+      "message": "Is this enabled by default? I am slightly concerned it could affect BBSim performances, I\u0027ll try to run it a couple times through the scale test.\n\nAlso, does this continue to run when the OLT is rebooting?",
+      "range": {
+        "startLine": 44,
+        "startChar": 5,
+        "endLine": 44,
+        "endChar": 25
+      },
+      "revId": "a444295af888f2681fcee542566909a40ea4976d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
