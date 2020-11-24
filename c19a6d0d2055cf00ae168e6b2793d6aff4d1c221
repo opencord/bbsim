@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50f57fc7_1e776da9",
+        "filename": "internal/bbsim/dmiserver/dmi_metrics_generator.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-11-24T08:40:46Z",
+      "side": 1,
+      "message": "you say 60 but it\u0027s actually 120",
+      "revId": "c19a6d0d2055cf00ae168e6b2793d6aff4d1c221",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
