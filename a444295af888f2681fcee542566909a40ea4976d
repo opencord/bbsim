@@ -1,0 +1,9 @@
+Verified+1: Jenkins Technical User <do-not-reply@opennetworking.org>
+Code-Review+1: Holger Schulz <holger.schulz@adtran.com>
+Code-Review+1: Matteo Scandolo <teo@opennetworking.org>
+Code-Review+2: Andrea Campanella <andrea@opennetworking.org>
+Submitted-by: Andrea Campanella <andrea@opennetworking.org>
+Submitted-at: Wed, 25 Nov 2020 21:56:48 +0000
+Reviewed-on: https://gerrit.opencord.org/c/bbsim/+/21797
+Project: bbsim
+Branch: refs/heads/master
