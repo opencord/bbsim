@@ -22,6 +22,30 @@
       "revId": "a444295af888f2681fcee542566909a40ea4976d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5014cecf_aa35345c",
+        "filename": "internal/bbsim/dmiserver/dmi_metrics_generator.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2020-11-25T07:41:40Z",
+      "side": 1,
+      "message": "Hi Matteo, this is not enabled by default. The metric generation would start only when the StartManagingDevice API is triggered to manage the device over the DMI interface. Also if you look at it, it iterates once per second on the list of configured metrices (which are 5 right now) and with the default configured periodicity submits 1 per 60 secs (for CPU usage) and 2 metrics per 120 secs (for the fan speed). This really should not cause much performance overhead.\n\nLet us know the scale tests results and we could turn all the metrics to false depending on your results .The only way to make the bbsim emit the metrics would be using the UpdateMetricConfig API.\n\nYes right now it keeps on running when the OLT is rebooting. We did not want to change anything in the existing bbsim code for the dmi server implementation. To stop this during the reboot command processing by bbsim, we will need to create a cross reference in bbsim and trigger the stopping of this. We will work on taking care of this and will resubmit a patchset.",
+      "parentUuid": "71e968ab_e3fb25c3",
+      "range": {
+        "startLine": 44,
+        "startChar": 5,
+        "endLine": 44,
+        "endChar": 25
+      },
+      "revId": "a444295af888f2681fcee542566909a40ea4976d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
