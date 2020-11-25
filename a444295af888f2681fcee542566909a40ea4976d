@@ -46,6 +46,30 @@
       "revId": "a444295af888f2681fcee542566909a40ea4976d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9af2bb05_e6daef09",
+        "filename": "internal/bbsim/dmiserver/dmi_metrics_generator.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2020-11-25T17:01:57Z",
+      "side": 1,
+      "message": "My bad, I had missed the:\n\nif now.Before(v.t) {\n  continue\n}\n\nGiven that and that this is not enabled by default I don\u0027t think it will affect performances.\n\n\nIf you want to start/stop the server and metric generation when the olt is rebooted, you can listen to olt.enableContext, that context is closed when the OLT is rebooted, but that\u0027s totally your call, if you\u0027re fine with having the server running even the OLT is technically rebooted I\u0027m ok with that, given this is most likely only used for testing.",
+      "parentUuid": "5014cecf_aa35345c",
+      "range": {
+        "startLine": 44,
+        "startChar": 5,
+        "endLine": 44,
+        "endChar": 25
+      },
+      "revId": "a444295af888f2681fcee542566909a40ea4976d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
