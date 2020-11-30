@@ -166,6 +166,12 @@ $ grpcurl -plaintext -d '{"device_uuid": {"uuid": "5295a1d5-a121-372e-b8dc-6f7ed
   }
 }
 ```
+### StopManagingDevice API
+``` sh
+grpcurl -plaintext -d '{"name":"SomeOlt"}' 172.17.0.2:50075 dmi.NativeHWManagementService.StopManagingDevice{
+  "status": "OK_STATUS"
+}
+```
 ### List NativeMetricsManagementService APIs
 ``` sh
 $ grpcurl -plaintext 172.17.0.2:50075 list dmi.NativeMetricsManagementService

@@ -33,6 +33,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const (
+	metricChannelSize = 100
+)
+
 func getUUID(seed string) string {
 	return guuid.NewMD5(guuid.Nil, []byte(seed)).String()
 }
@@ -60,6 +64,10 @@ func (dms *DmiAPIServer) StartManagingDevice(req *dmi.ModifiableComponent, strea
 
 	dms.ponTransceiverUuids = make([]string, olt.NumPon)
 	dms.ponTransceiverCageUuids = make([]string, olt.NumPon)
+
+	// Start device metrics generator
+	dms.metricChannel = make(chan interface{}, metricChannelSize)
+	StartMetricGenerator(dms)
 
 	var components []*dmi.Component
 
@@ -244,8 +252,36 @@ func createInnerSurroundingTempComponentSensor(sensorIdx int) *dmi.Component {
 }
 
 //StopManagingDevice stops management of a device and cleans up any context and caches for that device
-func (dms *DmiAPIServer) StopManagingDevice(context.Context, *dmi.StopManagingDeviceRequest) (*dmi.StopManagingDeviceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "rpc StopManagingDevice not implemented")
+func (dms *DmiAPIServer) StopManagingDevice(ctx context.Context, req *dmi.StopManagingDeviceRequest) (*dmi.StopManagingDeviceResponse, error) {
+	logger.Debugf("StopManagingDevice API invoked")
+	if req == nil {
+		return &dmi.StopManagingDeviceResponse{Status: dmi.Status_ERROR_STATUS, Reason: dmi.Reason_UNKNOWN_DEVICE}, status.Errorf(codes.FailedPrecondition, "request is empty")
+	}
+
+	if req.Name == "" {
+		return &dmi.StopManagingDeviceResponse{Status: dmi.Status_ERROR_STATUS, Reason: dmi.Reason_UNKNOWN_DEVICE},
+			status.Errorf(codes.InvalidArgument, "'Name' can not be empty in the request")
+	}
+
+	// Stop the components/go routines created
+	StopMetricGenerator()
+
+	if dms.mPublisherCancelFunc != nil {
+		dms.mPublisherCancelFunc()
+	}
+
+	dms.deviceName = ""
+	dms.kafkaEndpoint = ""
+	dms.ipAddress = ""
+	dms.deviceSerial = ""
+	dms.ponTransceiverUuids = nil
+	dms.ponTransceiverCageUuids = nil
+	dms.uuid = ""
+	dms.root = nil
+	dms.metricChannel = nil
+
+	logger.Infof("Stopped managing the device")
+	return &dmi.StopManagingDeviceResponse{Status: dmi.Status_OK_STATUS}, nil
 }
 
 //GetPhysicalInventory gets the HW inventory details of the Device
@@ -370,6 +406,11 @@ func (dms *DmiAPIServer) GetHWComponentInfo(req *dmi.HWComponentInfoGetRequest, 
 		return status.Errorf(codes.Internal, "stream to send is nil, can not send response from gRPC server")
 	}
 
+	//if component list is empty, return error
+	if dms.root == nil {
+		logger.Errorf("Error occurred, device is not managed")
+		return status.Errorf(codes.Internal, "Error occurred, device is not managed, please start managing device")
+	}
 	// Search for the component and return it
 	c := findComponent(dms.root.Children, req.ComponentUuid.Uuid)
 

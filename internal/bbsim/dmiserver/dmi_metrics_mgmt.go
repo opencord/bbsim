@@ -45,7 +45,9 @@ func (dms *DmiAPIServer) UpdateMetricsConfiguration(ctx context.Context, req *dm
 
 	if req == nil || req.Operation == nil {
 		return &dmi.MetricsConfigurationResponse{
-			Status: dmi.Status_UNDEFINED_STATUS,
+			Status: dmi.Status_ERROR_STATUS,
+			//TODO reason must be INVALID_PARAMS, currently this is available in Device Management interface (DMI),
+			// change below reason with type INVALID_PARAMS once DMI is updated
 			Reason: dmi.Reason_UNDEFINED_REASON,
 		}, status.Errorf(codes.FailedPrecondition, "request is nil")
 	}
@@ -77,9 +79,19 @@ func (dms *DmiAPIServer) GetMetric(ctx context.Context, req *dmi.GetMetricReques
 	if req == nil || req.GetMetricId() < 0 {
 		return &dmi.GetMetricResponse{
 			Status: dmi.Status_ERROR_STATUS,
+			//TODO reason must be INVALID_PARAMS, currently this is available in Device Management interface (DMI),
+			// change below reason with type INVALID_PARAMS once DMI is updated
 			Reason: dmi.Reason_UNDEFINED_REASON,
 			Metric: &dmi.Metric{},
 		}, status.Errorf(codes.FailedPrecondition, "request is nil")
+	}
+
+	if dms.root == nil {
+		return &dmi.GetMetricResponse{
+			Status: dmi.Status_ERROR_STATUS,
+			Reason: dmi.Reason_INTERNAL_ERROR,
+			Metric: &dmi.Metric{},
+		}, status.Errorf(codes.FailedPrecondition, "Device is not managed, please start managing device to get the metric")
 	}
 	comp := findComponent(dms.root.Children, req.MetaData.ComponentUuid.Uuid)
 	metric := getMetric(comp, req.GetMetricId())
