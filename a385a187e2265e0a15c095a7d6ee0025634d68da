@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e2d4d45_7945c910",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2020-11-30T07:20:27Z",
+      "side": 1,
+      "message": "Should we call it metricChannelSize to make it more readable/understandable?",
+      "revId": "a385a187e2265e0a15c095a7d6ee0025634d68da",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ffc404fd_d2bd4e69",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2020-11-30T07:20:27Z",
+      "side": 1,
+      "message": "Shouldn\u0027t the status be ERROR here? Also should the reason be UNKNOWN_DEVICE (https://github.com/opencord/device-management-interface/blob/master/protos/dmi/commons.proto#L17)",
+      "revId": "a385a187e2265e0a15c095a7d6ee0025634d68da",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b502efef_151d2348",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2020-11-30T07:20:27Z",
+      "side": 1,
+      "message": "Same error and reason as above can be returned here",
+      "revId": "a385a187e2265e0a15c095a7d6ee0025634d68da",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df771c51_bfbc613a",
+        "filename": "internal/bbsim/dmiserver/dmi_metrics_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2020-11-30T07:20:27Z",
+      "side": 1,
+      "message": "reason could be INVAID_PARAMS, yes it does not exist right now but we can create one. Could you please put TODO in the code with the type of REASON needed and we could collate all of them and create them in the interface?",
+      "revId": "a385a187e2265e0a15c095a7d6ee0025634d68da",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac4e8e46_467ee28e",
+        "filename": "internal/bbsim/dmiserver/dmi_metrics_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2020-11-30T07:20:27Z",
+      "side": 1,
+      "message": "Could you return the reason as INTERNAL_ERROR (https://github.com/opencord/device-management-interface/blob/master/protos/dmi/commons.proto#L18)? The UNDEFINED_REASON is not be used really, whenever we use this, it means that we are missing a valid reason and the interface should be enhanced to create one. Would be good to note those and put TODO\u0027s in the code for the same, will let to an overall improvement of the interface.",
+      "revId": "a385a187e2265e0a15c095a7d6ee0025634d68da",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
