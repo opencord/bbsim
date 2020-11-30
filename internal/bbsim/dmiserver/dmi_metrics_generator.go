@@ -17,6 +17,8 @@
 package dmiserver
 
 import (
+	"context"
+	log "github.com/sirupsen/logrus"
 	"math/rand"
 	"sync"
 	"time"
@@ -24,6 +26,9 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	dmi "github.com/opencord/device-management-interface/go/dmi"
 )
+
+//MetricGenerationFunc to generate the metrics to the kafka bus
+type MetricGenerationFunc func(*dmi.Component, *DmiAPIServer) *dmi.Metric
 
 // MetricTriggerConfig is the configuration of a metric and the time at which it will be exported
 type MetricTriggerConfig struct {
@@ -36,13 +41,14 @@ type DmiMetricsGenerator struct {
 	apiSrv            *DmiAPIServer
 	configuredMetrics map[dmi.MetricNames]MetricTriggerConfig
 	access            sync.Mutex
+	mgCancelFunc      context.CancelFunc
 }
 
 var dmiMG DmiMetricsGenerator
 
 //StartMetricGenerator starts the metric generator
 func StartMetricGenerator(apiSrv *DmiAPIServer) {
-
+	log.Debugf("StartMetricGenerator invoked")
 	// Seed the rand for use later on
 	rand.Seed(time.Now().UnixNano())
 
@@ -105,8 +111,32 @@ func StartMetricGenerator(apiSrv *DmiAPIServer) {
 		t:   time.Unix(0, 0),
 	}
 
-	go func() {
-		for {
+	StartGeneratingMetrics()
+}
+
+// StartGeneratingMetrics starts the goroutine which submits metrics to the metrics channel
+func StartGeneratingMetrics() {
+	if dmiMG.apiSrv == nil {
+		// Metric Generator is not yet initialized/started.
+		// Means that the device is not managed on the DMI interface
+		return
+	}
+
+	// initialize a new context
+	var mgCtx context.Context
+	mgCtx, dmiMG.mgCancelFunc = context.WithCancel(context.Background())
+
+	go generateMetrics(mgCtx)
+}
+
+func generateMetrics(ctx context.Context) {
+loop:
+	for {
+		select {
+		case <-ctx.Done():
+			log.Infof("Stopping generation of metrics ")
+			break loop
+		default:
 			c := make(map[dmi.MetricNames]MetricTriggerConfig)
 
 			dmiMG.access.Lock()
@@ -184,7 +214,7 @@ func StartMetricGenerator(apiSrv *DmiAPIServer) {
 			}
 			time.Sleep(1 * time.Second)
 		}
-	}()
+	}
 }
 
 func sendOutMetric(metric interface{}, apiSrv *DmiAPIServer) {
@@ -343,4 +373,23 @@ func getMetric(comp *dmi.Component, metricID dmi.MetricNames) *dmi.Metric {
 		return metric
 	}
 	return nil
+}
+
+// StopGeneratingMetrics stops the goroutine which submits metrics to the metrics channel
+func StopGeneratingMetrics() {
+	if dmiMG.mgCancelFunc != nil {
+		dmiMG.mgCancelFunc()
+	}
+}
+
+// StopMetricGenerator stops the generation of metrics and cleans up all local context
+func StopMetricGenerator() {
+	logger.Debugf("StopMetricGenerator invoked")
+
+	StopGeneratingMetrics()
+
+	dmiMG.access.Lock()
+	// reset it to an empty map
+	dmiMG.configuredMetrics = make(map[dmi.MetricNames]MetricTriggerConfig)
+	dmiMG.access.Unlock()
 }

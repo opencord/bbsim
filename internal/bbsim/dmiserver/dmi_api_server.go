@@ -74,10 +74,6 @@ func (dms *DmiAPIServer) newDmiAPIServer() (*grpc.Server, error) {
 
 	go func() { _ = grpcServer.Serve(lis) }()
 	logger.Debugf("DMI grpc Server listening on %v", address)
-	//buffer upto 100 metrics
-	dms.metricChannel = make(chan interface{}, 100)
-
-	StartMetricGenerator(dms)
 
 	return grpcServer, nil
 }

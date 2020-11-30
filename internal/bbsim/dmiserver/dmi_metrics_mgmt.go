@@ -81,6 +81,14 @@ func (dms *DmiAPIServer) GetMetric(ctx context.Context, req *dmi.GetMetricReques
 			Metric: &dmi.Metric{},
 		}, status.Errorf(codes.FailedPrecondition, "request is nil")
 	}
+
+	if dms.root == nil {
+		return &dmi.GetMetricResponse{
+			Status: dmi.Status_ERROR_STATUS,
+			Reason: dmi.Reason_UNDEFINED_REASON,
+			Metric: &dmi.Metric{},
+		}, status.Errorf(codes.FailedPrecondition, "Device is not managed, please start managing device to get the metric")
+	}
 	comp := findComponent(dms.root.Children, req.MetaData.ComponentUuid.Uuid)
 	metric := getMetric(comp, req.GetMetricId())
 	return &dmi.GetMetricResponse{
