@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0b04ba62_71ca3758",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2020-11-30T07:56:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8e2d4d45_7945c910",
+      "revId": "a385a187e2265e0a15c095a7d6ee0025634d68da",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ffc404fd_d2bd4e69",
         "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
         "patchSetId": 1
@@ -33,6 +51,24 @@
       "revId": "a385a187e2265e0a15c095a7d6ee0025634d68da",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "824f3569_37340f3c",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2020-11-30T07:56:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ffc404fd_d2bd4e69",
+      "revId": "a385a187e2265e0a15c095a7d6ee0025634d68da",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "cfcee6f7_15c6756b",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2020-11-30T07:56:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b502efef_151d2348",
+      "revId": "a385a187e2265e0a15c095a7d6ee0025634d68da",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "df771c51_bfbc613a",
         "filename": "internal/bbsim/dmiserver/dmi_metrics_mgmt.go",
         "patchSetId": 1
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "8c67ac39_08830de4",
+        "filename": "internal/bbsim/dmiserver/dmi_metrics_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2020-11-30T07:56:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "df771c51_bfbc613a",
+      "revId": "a385a187e2265e0a15c095a7d6ee0025634d68da",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ac4e8e46_467ee28e",
         "filename": "internal/bbsim/dmiserver/dmi_metrics_mgmt.go",
         "patchSetId": 1
@@ -84,6 +156,24 @@
       "revId": "a385a187e2265e0a15c095a7d6ee0025634d68da",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a7e21f0_de6ebc23",
+        "filename": "internal/bbsim/dmiserver/dmi_metrics_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2020-11-30T07:56:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ac4e8e46_467ee28e",
+      "revId": "a385a187e2265e0a15c095a7d6ee0025634d68da",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
