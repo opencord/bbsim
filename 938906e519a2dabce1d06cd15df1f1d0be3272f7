@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab03f800_33ada198",
+        "filename": "VERSION",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2020-12-14T17:10:22Z",
+      "side": 1,
+      "message": "can you change the version to 1.4.2?",
+      "revId": "938906e519a2dabce1d06cd15df1f1d0be3272f7",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
