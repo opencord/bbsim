@@ -22,6 +22,30 @@
       "revId": "a5ea0fdb4e36e25d9226f7a749d924f8f845e35f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae1ae89c_bae5932a",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 982,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2020-12-14T18:10:54Z",
+      "side": 1,
+      "message": "let me use a sync map",
+      "parentUuid": "33913723_4e9d037d",
+      "range": {
+        "startLine": 982,
+        "startChar": 2,
+        "endLine": 982,
+        "endChar": 10
+      },
+      "revId": "a5ea0fdb4e36e25d9226f7a749d924f8f845e35f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
