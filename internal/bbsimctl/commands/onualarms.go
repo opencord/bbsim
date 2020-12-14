@@ -20,9 +20,10 @@ package commands
 import (
 	"context"
 	"fmt"
-	"github.com/opencord/bbsim/internal/common"
 	"os"
 	"strings"
+
+	"github.com/opencord/bbsim/internal/common"
 
 	"github.com/jessevdk/go-flags"
 	"github.com/olekukonko/tablewriter"

@@ -57,6 +57,13 @@ var GlobalConfig = GlobalConfigSpec{
 	},
 }
 
+var DmiConfig = GlobalConfigSpec{
+	Server: "localhost:50075",
+	Grpc: GrpcConfigSpec{
+		Timeout: time.Second * 10,
+	},
+}
+
 func ProcessGlobalOptions() {
 	if len(GlobalOptions.Config) == 0 {
 		home, err := os.UserHomeDir()

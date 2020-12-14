@@ -20,6 +20,7 @@ import (
 	"context"
 	"net"
 
+	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/common"
 	dmi "github.com/opencord/device-management-interface/go/dmi"
 	log "github.com/sirupsen/logrus"
@@ -42,6 +43,7 @@ type DmiAPIServer struct {
 	ponTransceiverCageUuids []string
 	root                    *dmi.Component
 	metricChannel           chan interface{}
+	eventChannel            chan interface{}
 	kafkaEndpoint           string
 	mPublisherCancelFunc    context.CancelFunc
 }
@@ -69,6 +71,7 @@ func (dms *DmiAPIServer) newDmiAPIServer() (*grpc.Server, error) {
 	dmi.RegisterNativeSoftwareManagementServiceServer(grpcServer, dms)
 	dmi.RegisterNativeEventsManagementServiceServer(grpcServer, dms)
 	dmi.RegisterNativeMetricsManagementServiceServer(grpcServer, dms)
+	bbsim.RegisterBBsimDmiServer(grpcServer, dms)
 
 	reflection.Register(grpcServer)
 

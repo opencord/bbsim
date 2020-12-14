@@ -1419,7 +1419,7 @@ type BBSimClient interface {
 	StopgRPCServer(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Response, error)
 	// Start the Openolt gRPC server
 	StartgRPCServer(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Response, error)
-	// Start the Openolt gRPC server
+	// Restart the Openolt gRPC server after the given timeout
 	RestartgRPCServer(ctx context.Context, in *Timeout, opts ...grpc.CallOption) (*Response, error)
 	// Get status of an ONU by serial number
 	GetONU(ctx context.Context, in *ONURequest, opts ...grpc.CallOption) (*ONU, error)
@@ -1717,7 +1717,7 @@ type BBSimServer interface {
 	StopgRPCServer(context.Context, *Empty) (*Response, error)
 	// Start the Openolt gRPC server
 	StartgRPCServer(context.Context, *Empty) (*Response, error)
-	// Start the Openolt gRPC server
+	// Restart the Openolt gRPC server after the given timeout
 	RestartgRPCServer(context.Context, *Timeout) (*Response, error)
 	// Get status of an ONU by serial number
 	GetONU(context.Context, *ONURequest) (*ONU, error)
