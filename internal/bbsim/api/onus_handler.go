@@ -19,6 +19,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"github.com/opencord/voltha-protos/v4/go/openolt"
 
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
@@ -406,11 +407,12 @@ func (s BBSimServer) GetFlows(ctx context.Context, req *bbsim.ONURequest) (*bbsi
 	res := &bbsim.Flows{}
 
 	if req.SerialNumber == "" {
-		for flowKey := range olt.Flows {
-			flow := olt.Flows[flowKey]
-			res.Flows = append(res.Flows, &flow)
-		}
-		res.FlowCount = uint32(len(olt.Flows))
+		olt.Flows.Range(func(flowKey, flow interface{}) bool {
+			flowObj := flow.(openolt.Flow)
+			res.Flows = append(res.Flows, &flowObj)
+			return true
+		})
+		res.FlowCount = uint32(len(res.Flows))
 	} else {
 		onu, err := olt.FindOnuBySn(req.SerialNumber)
 		if err != nil {
@@ -420,8 +422,9 @@ func (s BBSimServer) GetFlows(ctx context.Context, req *bbsim.ONURequest) (*bbsi
 			return nil, err
 		}
 		for _, flowKey := range onu.Flows {
-			flow := olt.Flows[flowKey]
-			res.Flows = append(res.Flows, &flow)
+			flow, _ := olt.Flows.Load(flowKey)
+			flowObj := flow.(openolt.Flow)
+			res.Flows = append(res.Flows, &flowObj)
 		}
 		res.FlowCount = uint32(len(onu.Flows))
 	}

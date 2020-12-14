@@ -59,7 +59,7 @@ type OltDevice struct {
 	InternalState        *fsm.FSM
 	channel              chan Message
 	dhcpServer           dhcp.DHCPServerIf
-	Flows                map[FlowKey]openolt.Flow
+	Flows                sync.Map
 	Delay                int
 	ControlledActivation mode
 	EventChannel         chan common.Event
@@ -105,7 +105,6 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		Pons:              []*PonPort{},
 		Nnis:              []*NniPort{},
 		Delay:             options.BBSim.Delay,
-		Flows:             make(map[FlowKey]openolt.Flow),
 		enablePerf:        options.BBSim.EnablePerf,
 		PublishEvents:     options.BBSim.Events,
 		PortStatsInterval: options.Olt.PortStatsInterval,
@@ -980,7 +979,7 @@ func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.E
 	flowKey := FlowKey{}
 	if !o.enablePerf {
 		flowKey = FlowKey{ID: flow.FlowId, Direction: flow.FlowType}
-		olt.Flows[flowKey] = *flow
+		olt.Flows.Store(flowKey, *flow)
 	}
 
 	if flow.AccessIntfId == -1 {
@@ -1060,11 +1059,13 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 		}
 
 		// Check if flow exists
-		storedFlow, ok := o.Flows[flowKey]
+		storedFlowIntf, ok := o.Flows.Load(flowKey)
 		if !ok {
 			oltLogger.Errorf("Flow %v not found", flow)
 			return new(openolt.Empty), status.Errorf(codes.NotFound, "Flow not found")
 		}
+
+		storedFlow := storedFlowIntf.(openolt.Flow)
 
 		// if its ONU flow remove it from ONU also
 		if storedFlow.AccessIntfId != -1 {
@@ -1083,7 +1084,7 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 		}
 
 		// delete from olt flows
-		delete(o.Flows, flowKey)
+		o.Flows.Delete(flowKey)
 	}
 
 	if flow.AccessIntfId == -1 {
