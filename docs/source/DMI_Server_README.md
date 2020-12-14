@@ -277,3 +277,104 @@ $ grpcurl -plaintext -d '{"uuid": {"uuid":"5295a1d5-a121-372e-b8dc-6f7eda83f0ba"
   }
 }
 ```
+### List NativeEventsManagementService APIs
+``` sh
+$ grpcurl -plaintext 172.17.0.2:50075 list dmi.NativeEventsManagementService
+dmi.NativeEventsManagementService.ListEvents
+dmi.NativeEventsManagementService.UpdateEventsConfiguration
+```
+### ListEvents API
+``` sh
+$ grpcurl -plaintext -d '{"uuid": {"uuid":"5295a1d5-a121-372e-b8dc-6f7eda83f0ba"}}' 172.17.0.2:50075 dmi.NativeEventsManagementService.ListEvents
+{
+  "status": "OK_STATUS",
+  "events": {
+    "items": [
+      {
+        "eventId": "EVENT_FAN_FAILURE",
+        "isConfigured": true
+      },
+      {
+        "eventId": "EVENT_CPU_TEMPERATURE_ABOVE_CRITICAL",
+        "isConfigured": true,
+        "thresholds": {
+          "upper": {
+            "high": {
+              "intVal": "95"
+            },
+            "low": {
+              "intVal": "90"
+            }
+          }
+        }
+      },
+      {
+        "eventId": "EVENT_PSU_FAILURE",
+        "isConfigured": true
+      }
+    ]
+  }
+}
+
+```
+
+### UpdateEventsConfiguration API
+For FAN Failure, event_id must be set to 300 in grpc curl since enum value is 300
+Please refer enums values corresponding to events in
+https://github.com/opencord/device-management-interface/blob/master/protos/dmi/hw_events_mgmt_service.proto
+``` sh
+$ grpcurl -plaintext -d '{"device_uuid": {"uuid":"5295a1d5-a121-372e-b8dc-6f7eda83f0ba"}, "changes": {"items":{"event_id":"300", "is_configured": "false"}}}' 172.17.0.2:50075 dmi.NativeEventsManagementService.UpdateEventsConfiguration
+{
+  "status": "OK_STATUS"
+}
+```
+## Generate DMI Events
+Access bbsimctl
++++++++++++++++
+
+When running a test you can check the state of each ONU using ``BBSimCtl``.
+
+The easiest way to use ``bbsimctl`` is to ``exec`` inside the ``bbsim`` container:
+
+.. code:: bash
+
+    kubectl -n voltha exec -it $(kubectl -n voltha get pods -l app=bbsim -o name) -- /bin/bash
+
+In case you prefer to run ``bbsimctl`` on your machine,
+it can be configured via a config file such as:
+
+.. code:: bash
+
+    $ cat ~/.bbsim/config
+    apiVersion: v1
+    server: 127.0.0.1:50070
+    grpc:
+      timeout: 10s
+
+Note : For event names, refer EventIds enum in https://github.com/opencord/device-management-interface/blob/master/protos/dmi/hw_events_mgmt_service.proto .
+
+$ bsimctl dmi events raise <event_name>
+
+###  FAN FAILURE EVENT
+
+.. code:: bash
+```
+$ bsimctl dmi events create EVENT_FAN_FAILURE
+[Status: 0] DMI Event Indication Sent.
+```
+
+###  PSU FAILURE EVENT
+
+.. code:: bash
+```
+$ bsimctl dmi events create EVENT_PSU_FAILURE
+[Status: 0] DMI Event Indication Sent.
+```
+
+###  HW DEVICE TEMPERATURE ABOVE CRITICAL EVENT
+
+.. code:: bash
+```
+$ bsimctl dmi events create EVENT_HW_DEVICE_TEMPERATURE_ABOVE_CRITICAL
+[Status: 0] DMI Event Indication Sent.
+```

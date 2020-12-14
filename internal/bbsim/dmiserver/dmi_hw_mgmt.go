@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	metricChannelSize = 100
+	kafkaChannelSize = 100
 )
 
 func getUUID(seed string) string {
@@ -66,8 +66,12 @@ func (dms *DmiAPIServer) StartManagingDevice(req *dmi.ModifiableComponent, strea
 	dms.ponTransceiverCageUuids = make([]string, olt.NumPon)
 
 	// Start device metrics generator
-	dms.metricChannel = make(chan interface{}, metricChannelSize)
+	dms.metricChannel = make(chan interface{}, kafkaChannelSize)
 	StartMetricGenerator(dms)
+
+	// Start device event generator
+	dms.eventChannel = make(chan interface{}, kafkaChannelSize)
+	StartEventsGenerator(dms)
 
 	var components []*dmi.Component
 
@@ -113,11 +117,12 @@ func (dms *DmiAPIServer) StartManagingDevice(req *dmi.ModifiableComponent, strea
 	}
 	components = append(components, fans...)
 
-	// Create 1 disk, 1 Processor and 1 ram
+	// Create 1 disk, 1 processor, 1 ram, 1 temperature sensor and power supply unit
 	components = append(components, createDiskComponent(0))
 	components = append(components, createProcessorComponent(0))
 	components = append(components, createMemoryComponent(0))
 	components = append(components, createInnerSurroundingTempComponentSensor(0))
+	components = append(components, createPowerSupplyComponent(0))
 
 	// create the root component
 	dms.root = &dmi.Component{
@@ -246,6 +251,25 @@ func createInnerSurroundingTempComponentSensor(sensorIdx int) *dmi.Component {
 		IsFru:        false,
 		Uuid: &dmi.Uuid{
 			Uuid: getUUID(sensorName),
+		},
+		State: &dmi.ComponentState{},
+	}
+}
+
+func createPowerSupplyComponent(psuIdx int) *dmi.Component {
+	psuName := fmt.Sprintf("Thermal/PSU/SystemPSU/%d", psuIdx)
+	psuSerial := fmt.Sprintf("bbsim-psu-serial-%d", psuIdx)
+	return &dmi.Component{
+		Name:         psuName,
+		Class:        dmi.ComponentType_COMPONENT_TYPE_POWER_SUPPLY,
+		Description:  "bbsim-psu",
+		Parent:       "",
+		ParentRelPos: 0,
+		SerialNum:    psuSerial,
+		MfgName:      "bbsim-psu",
+		IsFru:        false,
+		Uuid: &dmi.Uuid{
+			Uuid: getUUID(psuName),
 		},
 		State: &dmi.ComponentState{},
 	}
@@ -452,10 +476,12 @@ func (dms *DmiAPIServer) SetMsgBusEndpoint(ctx context.Context, request *dmi.Set
 	nCtx, dms.mPublisherCancelFunc = context.WithCancel(context.Background())
 	// initialize a publisher
 	if err := InitializeDMKafkaPublishers(sarama.NewAsyncProducer, olt.ID, dms.kafkaEndpoint); err == nil {
-		// start a go routine which will read from channel and publish on kafka
+		// start a go routine which will read from channel and publish on kafka topic dm.metrics
 		go DMKafkaPublisher(nCtx, dms.metricChannel, "dm.metrics")
+		// start a go routine which will read from channel and publish on kafka topic dm.events
+		go DMKafkaPublisher(nCtx, dms.eventChannel, "dm.events")
 	} else {
-		logger.Errorf("Failed to start kafka publisher: %v", err)
+		logger.Errorf("Failed to start metric kafka publisher: %v", err)
 		return &dmi.SetRemoteEndpointResponse{Status: dmi.Status_ERROR_STATUS, Reason: dmi.Reason_KAFKA_ENDPOINT_ERROR}, err
 	}
 

@@ -26,7 +26,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var metricsProducer sarama.AsyncProducer
+var producer sarama.AsyncProducer
 
 // InitializeDMKafkaPublishers initializes  metrics kafka publisher
 func InitializeDMKafkaPublishers(NewAsyncProducer func([]string, *sarama.Config) (sarama.AsyncProducer, error), oltID int, msgBusEndPoint string) error {
@@ -37,9 +37,9 @@ func InitializeDMKafkaPublishers(NewAsyncProducer func([]string, *sarama.Config)
 	config.Producer.Retry.Max = 5
 	config.Metadata.Retry.Max = 10
 	config.Metadata.Retry.Backoff = 10 * time.Second
-	config.ClientID = "BBSim-OLT-Metrics-" + strconv.Itoa(oltID)
+	config.ClientID = "BBSim-OLT-DMIServer-" + strconv.Itoa(oltID)
 
-	metricsProducer, err = NewAsyncProducer([]string{msgBusEndPoint}, config)
+	producer, err = NewAsyncProducer([]string{msgBusEndPoint}, config)
 	return err
 }
 
@@ -49,16 +49,16 @@ func DMKafkaPublisher(ctx context.Context, ch chan interface{}, topic string) {
 loop:
 	for {
 		select {
-		case metric := <-ch:
-			log.Tracef("Writing to kafka topic(%s): %v", topic, metric)
-			jsonMet, err := json.Marshal(metric)
+		case data := <-ch:
+			log.Tracef("Writing to kafka topic(%s): %v", topic, data)
+			jsonData, err := json.Marshal(data)
 			if err != nil {
-				log.Errorf("Failed to get json metric %v", err)
+				log.Errorf("Failed to get json %v", err)
 				continue
 			}
-			metricsProducer.Input() <- &sarama.ProducerMessage{
+			producer.Input() <- &sarama.ProducerMessage{
 				Topic: topic,
-				Value: sarama.ByteEncoder(jsonMet),
+				Value: sarama.ByteEncoder(jsonData),
 			}
 		case <-ctx.Done():
 			log.Infof("Stopping DM Kafka Publisher for topic %s", topic)

@@ -42,6 +42,7 @@ func main() {
 	commands.RegisterPonCommands(parser)
 	commands.RegisterCompletionCommands(parser)
 	commands.RegisterLoggingCommands(parser)
+	commands.RegisterDMICommands(parser)
 
 	_, err = parser.ParseArgs(os.Args[1:])
 	if err != nil {
