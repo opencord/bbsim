@@ -979,8 +979,10 @@ func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.E
 
 	flowKey := FlowKey{}
 	if !o.enablePerf {
+		o.Lock()
 		flowKey = FlowKey{ID: flow.FlowId, Direction: flow.FlowType}
 		olt.Flows[flowKey] = *flow
+		o.Unlock()
 	}
 
 	if flow.AccessIntfId == -1 {
