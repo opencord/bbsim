@@ -39,7 +39,7 @@ PROTOC            = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app
 # Public targets
 all: help
 
-protos: api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go # @HELP Build proto files
+protos: api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go api/bbsim/bbsim_dmi.pb.go # @HELP Build proto files
 
 .PHONY: build
 build: protos build-bbsim build-bbsimctl build-bbr
@@ -238,6 +238,13 @@ GOOGLEAPI     ?= $(shell ${GO} list -f '{{ .Dir }}' -m github.com/grpc-ecosystem
 
 .PHONY: api/openolt/openolt.pb.go api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go docs/swagger/bbsim/bbsim.swagger.json docs/swagger/leagacy/bbsim.swagger.json
 api/openolt/openolt.pb.go: api/openolt/openolt.proto setup_tools
+	@echo $@
+	@${PROTOC} -I. \
+      -I${GOOGLEAPI}/third_party/googleapis \
+      --go_out=plugins=grpc:./ \
+      $<
+
+api/bbsim/bbsim_dmi.pb.go: api/bbsim/bbsim_dmi.proto setup_tools
 	@echo $@
 	@${PROTOC} -I. \
       -I${GOOGLEAPI}/third_party/googleapis \
