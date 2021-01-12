@@ -19,6 +19,7 @@ package devices
 import (
 	"context"
 	"errors"
+	"github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/v4/go/common"
 	"github.com/opencord/voltha-protos/v4/go/ext/config"
 	"time"
@@ -137,7 +138,7 @@ func createMockOnu(id uint32, ponPortId uint32) *Onu {
 		},
 	}
 	o.SerialNumber = o.NewSN(0, ponPortId, o.ID)
-	o.Channel = make(chan Message, 10)
+	o.Channel = make(chan types.Message, 10)
 	return &o
 }
 

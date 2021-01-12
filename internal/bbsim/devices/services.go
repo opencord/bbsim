@@ -71,9 +71,9 @@ type Service struct {
 	EapolState    *fsm.FSM
 	DHCPState     *fsm.FSM
 	IGMPState     *fsm.FSM
-	Channel       chan Message          // drive Service lifecycle
-	PacketCh      chan OnuPacketMessage // handle packets
-	Stream        bbsimTypes.Stream     // the gRPC stream to communicate with the adapter, created in the initialize transition
+	Channel       chan bbsimTypes.Message          // drive Service lifecycle
+	PacketCh      chan bbsimTypes.OnuPacketMessage // handle packets
+	Stream        bbsimTypes.Stream                // the gRPC stream to communicate with the adapter, created in the initialize transition
 }
 
 func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTag int,
@@ -117,8 +117,8 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 
 				service.Stream = stream
 
-				service.PacketCh = make(chan OnuPacketMessage)
-				service.Channel = make(chan Message)
+				service.PacketCh = make(chan bbsimTypes.OnuPacketMessage)
+				service.Channel = make(chan bbsimTypes.Message)
 
 				go service.HandlePackets()
 				go service.HandleChannel()
@@ -153,8 +153,8 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 				service.logStateChange("EapolState", e.Src, e.Dst)
 			},
 			"before_start_auth": func(e *fsm.Event) {
-				msg := Message{
-					Type: StartEAPOL,
+				msg := bbsimTypes.Message{
+					Type: bbsimTypes.StartEAPOL,
 				}
 				service.Channel <- msg
 			},
@@ -207,8 +207,8 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 				service.logStateChange("DHCPState", e.Src, e.Dst)
 			},
 			"before_start_dhcp": func(e *fsm.Event) {
-				msg := Message{
-					Type: StartDHCP,
+				msg := bbsimTypes.Message{
+					Type: bbsimTypes.StartDHCP,
 				}
 				service.Channel <- msg
 			},
@@ -255,30 +255,30 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 		},
 		fsm.Callbacks{
 			"igmp_join_start": func(e *fsm.Event) {
-				igmpInfo, _ := e.Args[0].(IgmpMessage)
-				msg := Message{
-					Type: IGMPMembershipReportV2,
-					Data: IgmpMessage{
+				igmpInfo, _ := e.Args[0].(bbsimTypes.IgmpMessage)
+				msg := bbsimTypes.Message{
+					Type: bbsimTypes.IGMPMembershipReportV2,
+					Data: bbsimTypes.IgmpMessage{
 						GroupAddress: igmpInfo.GroupAddress,
 					},
 				}
 				service.Channel <- msg
 			},
 			"igmp_leave": func(e *fsm.Event) {
-				igmpInfo, _ := e.Args[0].(IgmpMessage)
-				msg := Message{
-					Type: IGMPLeaveGroup,
-					Data: IgmpMessage{
+				igmpInfo, _ := e.Args[0].(bbsimTypes.IgmpMessage)
+				msg := bbsimTypes.Message{
+					Type: bbsimTypes.IGMPLeaveGroup,
+					Data: bbsimTypes.IgmpMessage{
 						GroupAddress: igmpInfo.GroupAddress,
 					},
 				}
 				service.Channel <- msg
 			},
 			"igmp_join_startv3": func(e *fsm.Event) {
-				igmpInfo, _ := e.Args[0].(IgmpMessage)
-				msg := Message{
-					Type: IGMPMembershipReportV3,
-					Data: IgmpMessage{
+				igmpInfo, _ := e.Args[0].(bbsimTypes.IgmpMessage)
+				msg := bbsimTypes.Message{
+					Type: bbsimTypes.IGMPMembershipReportV3,
+					Data: bbsimTypes.IgmpMessage{
 						GroupAddress: igmpInfo.GroupAddress,
 					},
 				}
@@ -411,7 +411,7 @@ func (s *Service) HandleChannel() {
 	}()
 	for msg := range s.Channel {
 		switch msg.Type {
-		case StartEAPOL:
+		case bbsimTypes.StartEAPOL:
 			if err := s.handleEapolStart(s.Stream); err != nil {
 				serviceLogger.WithFields(log.Fields{
 					"OnuId":  s.Onu.ID,
@@ -422,7 +422,7 @@ func (s *Service) HandleChannel() {
 				}).Error("Error while sending EapolStart packet")
 				_ = s.EapolState.Event("auth_failed")
 			}
-		case StartDHCP:
+		case bbsimTypes.StartDHCP:
 			if err := s.handleDHCPStart(s.Stream); err != nil {
 				serviceLogger.WithFields(log.Fields{
 					"OnuId":  s.Onu.ID,
@@ -434,8 +434,8 @@ func (s *Service) HandleChannel() {
 				_ = s.DHCPState.Event("dhcp_failed")
 
 			}
-		case IGMPMembershipReportV2:
-			igmpInfo, _ := msg.Data.(IgmpMessage)
+		case bbsimTypes.IGMPMembershipReportV2:
+			igmpInfo, _ := msg.Data.(bbsimTypes.IgmpMessage)
 			serviceLogger.WithFields(log.Fields{
 				"OnuId":  s.Onu.ID,
 				"IntfId": s.Onu.PonPortID,
@@ -443,8 +443,8 @@ func (s *Service) HandleChannel() {
 				"Name":   s.Name,
 			}).Debug("Received IGMPMembershipReportV2 message on ONU channel")
 			_ = igmp.SendIGMPMembershipReportV2(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
-		case IGMPLeaveGroup:
-			igmpInfo, _ := msg.Data.(IgmpMessage)
+		case bbsimTypes.IGMPLeaveGroup:
+			igmpInfo, _ := msg.Data.(bbsimTypes.IgmpMessage)
 			serviceLogger.WithFields(log.Fields{
 				"OnuId":  s.Onu.ID,
 				"IntfId": s.Onu.PonPortID,
@@ -452,8 +452,8 @@ func (s *Service) HandleChannel() {
 				"Name":   s.Name,
 			}).Debug("Received IGMPLeaveGroupV2 message on ONU channel")
 			_ = igmp.SendIGMPLeaveGroupV2(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
-		case IGMPMembershipReportV3:
-			igmpInfo, _ := msg.Data.(IgmpMessage)
+		case bbsimTypes.IGMPMembershipReportV3:
+			igmpInfo, _ := msg.Data.(bbsimTypes.IgmpMessage)
 			serviceLogger.WithFields(log.Fields{
 				"OnuId":  s.Onu.ID,
 				"IntfId": s.Onu.PonPortID,

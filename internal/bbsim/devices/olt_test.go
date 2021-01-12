@@ -17,6 +17,7 @@
 package devices
 
 import (
+	"github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/bbsim/internal/common"
 	"net"
 	"testing"
@@ -202,7 +203,7 @@ func Test_Olt_GetOnuByFlowId(t *testing.T) {
 		FlowId:     64,
 		Classifier: &openolt.Classifier{},
 	}
-	msg1 := OnuFlowUpdateMessage{
+	msg1 := types.OnuFlowUpdateMessage{
 		OnuID:     onu1.ID,
 		PonPortID: onu1.PonPortID,
 		Flow:      &flow1,
@@ -214,7 +215,7 @@ func Test_Olt_GetOnuByFlowId(t *testing.T) {
 		FlowId:     72,
 		Classifier: &openolt.Classifier{},
 	}
-	msg2 := OnuFlowUpdateMessage{
+	msg2 := types.OnuFlowUpdateMessage{
 		OnuID:     onu2.ID,
 		PonPortID: onu2.PonPortID,
 		Flow:      &flow2,

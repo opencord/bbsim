@@ -19,6 +19,7 @@ package devices
 import (
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
+	"github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/v4/go/openolt"
 	"gotest.tools/assert"
 	"testing"
@@ -54,7 +55,7 @@ func Test_HandleFlowAddFlowId(t *testing.T) {
 		FlowId:     64,
 		Classifier: &openolt.Classifier{},
 	}
-	msg := OnuFlowUpdateMessage{
+	msg := types.OnuFlowUpdateMessage{
 		OnuID:     onu.ID,
 		PonPortID: onu.PonPortID,
 		Flow:      &flow,
@@ -74,7 +75,7 @@ func Test_HandleFlowRemoveFlowId(t *testing.T) {
 		FlowId:     64,
 		Classifier: &openolt.Classifier{},
 	}
-	msg := OnuFlowUpdateMessage{
+	msg := types.OnuFlowUpdateMessage{
 		OnuID:     onu.ID,
 		PonPortID: onu.PonPortID,
 		Flow:      &flow,
@@ -107,7 +108,7 @@ func Test_HandleFlowRemoveFlowId_LastFlow(t *testing.T) {
 		FlowId:     64,
 		Classifier: &openolt.Classifier{},
 	}
-	msg := OnuFlowUpdateMessage{
+	msg := types.OnuFlowUpdateMessage{
 		OnuID:     onu.ID,
 		PonPortID: onu.PonPortID,
 		Flow:      &flow,
@@ -147,7 +148,7 @@ func TestOnu_HhandleEAPOLStart(t *testing.T) {
 		PortNo:   uint32(onu.ID), // NOTE we are using this to map an incoming packetIndication to an ONU
 	}
 
-	msg := OnuFlowUpdateMessage{
+	msg := types.OnuFlowUpdateMessage{
 		PonPortID: 1,
 		OnuID:     1,
 		Flow:      &flow,
@@ -194,7 +195,7 @@ func Test_HandleFlowAddEapolWithGem(t *testing.T) {
 		PortNo:   uint32(onu.ID), // NOTE we are using this to map an incoming packetIndication to an ONU
 	}
 
-	msg := OnuFlowUpdateMessage{
+	msg := types.OnuFlowUpdateMessage{
 		PonPortID: 1,
 		OnuID:     1,
 		Flow:      &flow,
@@ -235,7 +236,7 @@ func Test_HandleFlowAddEapolWrongUNI(t *testing.T) {
 		PortNo:   uint32(onu.ID), // NOTE we are using this to map an incoming packetIndication to an ONU
 	}
 
-	msg := OnuFlowUpdateMessage{
+	msg := types.OnuFlowUpdateMessage{
 		PonPortID: 1,
 		OnuID:     1,
 		Flow:      &flow,
@@ -279,7 +280,7 @@ func Test_HandleFlowAddDhcp(t *testing.T) {
 		PortNo:   uint32(onu.ID), // NOTE we are using this to map an incoming packetIndication to an ONU
 	}
 
-	msg := OnuFlowUpdateMessage{
+	msg := types.OnuFlowUpdateMessage{
 		PonPortID: 1,
 		OnuID:     1,
 		Flow:      &flow,
@@ -323,7 +324,7 @@ func Test_HandleFlowAddDhcpPBit255(t *testing.T) {
 		PortNo:   uint32(onu.ID), // NOTE we are using this to map an incoming packetIndication to an ONU
 	}
 
-	msg := OnuFlowUpdateMessage{
+	msg := types.OnuFlowUpdateMessage{
 		PonPortID: 1,
 		OnuID:     1,
 		Flow:      &flow,
@@ -367,7 +368,7 @@ func Test_HandleFlowAddDhcpIgnoreByPbit(t *testing.T) {
 		PortNo:   uint32(onu.ID), // NOTE we are using this to map an incoming packetIndication to an ONU
 	}
 
-	msg := OnuFlowUpdateMessage{
+	msg := types.OnuFlowUpdateMessage{
 		PonPortID: 1,
 		OnuID:     1,
 		Flow:      &flow,
@@ -409,7 +410,7 @@ func Test_HandleFlowAddDhcpNoDhcp(t *testing.T) {
 		PortNo:   uint32(onu.ID), // NOTE we are using this to map an incoming packetIndication to an ONU
 	}
 
-	msg := OnuFlowUpdateMessage{
+	msg := types.OnuFlowUpdateMessage{
 		PonPortID: 1,
 		OnuID:     1,
 		Flow:      &flow,
@@ -457,7 +458,7 @@ func Test_HandleFlowAddDhcpWithoutGem(t *testing.T) {
 		PortNo:   uint32(onu.ID), // NOTE we are using this to map an incoming packetIndication to an ONU
 	}
 
-	msg := OnuFlowUpdateMessage{
+	msg := types.OnuFlowUpdateMessage{
 		PonPortID: 1,
 		OnuID:     1,
 		Flow:      &flow,
