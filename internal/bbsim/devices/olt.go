@@ -31,7 +31,6 @@ import (
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/common"
-	omcisim "github.com/opencord/omci-sim"
 	common_protos "github.com/opencord/voltha-protos/v4/go/common"
 	"github.com/opencord/voltha-protos/v4/go/openolt"
 	"github.com/opencord/voltha-protos/v4/go/tech_profile"
@@ -409,8 +408,6 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) {
 		o.channel <- msg
 	}
 
-	go o.processOmciMessages(o.enableContext, stream, &wg)
-
 	if rebootFlag {
 		for _, pon := range o.Pons {
 			if pon.InternalState.Current() == "disabled" {
@@ -452,43 +449,6 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) {
 	}
 
 	wg.Wait()
-}
-
-func (o *OltDevice) processOmciMessages(ctx context.Context, stream openolt.Openolt_EnableIndicationServer, wg *sync.WaitGroup) {
-	ch := omcisim.GetChannel()
-
-	oltLogger.Debug("Starting OMCI Indication Channel")
-
-loop:
-	for {
-		select {
-		case <-ctx.Done():
-			oltLogger.Debug("OMCI processing canceled via context")
-			break loop
-		case message, ok := <-ch:
-			if !ok || ctx.Err() != nil {
-				oltLogger.Debug("OMCI processing canceled via channel close")
-				break loop
-			}
-
-			oltLogger.WithFields(log.Fields{
-				"messageType": message.Type,
-				"OnuId":       message.Data.OnuId,
-				"IntfId":      message.Data.IntfId,
-			}).Debug("Received message on OMCI Sim channel")
-
-			onuId := message.Data.OnuId
-			intfId := message.Data.IntfId
-			onu, err := o.FindOnuById(intfId, onuId)
-			if err != nil {
-				oltLogger.Errorf("Failed to find onu: %v", err)
-				continue
-			}
-			go onu.processOmciMessage(message, stream)
-		}
-	}
-
-	wg.Done()
 }
 
 func (o *OltDevice) periodicPortStats(ctx context.Context) {
