@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/opencord/bbsim/api/bbsim"
-	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"github.com/opencord/bbsim/internal/common"
 	log "github.com/sirupsen/logrus"
@@ -193,12 +192,22 @@ func (s BBSimServer) SetLogLevel(ctx context.Context, req *bbsim.LogLevel) (*bbs
 
 func (s BBSimServer) SetOnuAlarmIndication(ctx context.Context, req *bbsim.ONUAlarmRequest) (*bbsim.Response, error) {
 	o := devices.GetOLT()
-	err := alarmsim.SimulateOnuAlarm(ctx, req, o)
+
+	res := &bbsim.Response{}
+
+	onu, err := o.FindOnuBySn(req.SerialNumber)
 	if err != nil {
+		res.StatusCode = int32(codes.NotFound)
+		res.Message = err.Error()
 		return nil, err
 	}
 
-	res := &bbsim.Response{}
+	if err := onu.SetAlarm(req.AlarmType, req.Status); err != nil {
+		res.StatusCode = int32(codes.Internal)
+		res.Message = err.Error()
+		return nil, err
+	}
+
 	res.StatusCode = int32(codes.OK)
 	res.Message = fmt.Sprintf("Onu Alarm Indication Sent.")
 	return res, nil
@@ -207,12 +216,14 @@ func (s BBSimServer) SetOnuAlarmIndication(ctx context.Context, req *bbsim.ONUAl
 // SetOltAlarmIndication generates OLT Alarms for LOS
 func (s BBSimServer) SetOltAlarmIndication(ctx context.Context, req *bbsim.OLTAlarmRequest) (*bbsim.Response, error) {
 	o := devices.GetOLT()
-	err := alarmsim.SimulateOltAlarm(ctx, req, o)
-	if err != nil {
+	res := &bbsim.Response{}
+
+	if err := o.SetAlarm(req.InterfaceID, req.InterfaceType, req.Status); err != nil {
+		res.StatusCode = int32(codes.Internal)
+		res.Message = err.Error()
 		return nil, err
 	}
 
-	res := &bbsim.Response{}
 	res.StatusCode = int32(codes.OK)
 	res.Message = fmt.Sprintf("Olt Alarm Indication Sent.")
 	return res, nil

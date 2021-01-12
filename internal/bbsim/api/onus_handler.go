@@ -19,10 +19,10 @@ package api
 import (
 	"context"
 	"fmt"
+	"github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/v4/go/openolt"
 
 	"github.com/opencord/bbsim/api/bbsim"
-	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
@@ -270,7 +270,7 @@ func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest
 					"Service": service.Name,
 				}).Debugf("Sending %s event on Service %s", event, service.Name)
 
-				if err := service.IGMPState.Event(event, devices.IgmpMessage{GroupAddress: req.GroupAddress}); err != nil {
+				if err := service.IGMPState.Event(event, types.IgmpMessage{GroupAddress: req.GroupAddress}); err != nil {
 					logger.WithFields(log.Fields{
 						"OnuId":   onu.ID,
 						"IntfId":  onu.PonPortID,
@@ -452,62 +452,11 @@ func (s BBSimServer) GetOnuTrafficSchedulers(ctx context.Context, req *bbsim.ONU
 
 func handlePoweronONU(onu *devices.Onu) (*bbsim.Response, error) {
 	res := &bbsim.Response{}
-	olt := devices.GetOLT()
-	intitalState := onu.InternalState.Current()
-	if onu.InternalState.Current() == "created" || onu.InternalState.Current() == "disabled" {
-		if err := onu.InternalState.Event("initialize"); err != nil {
-			logger.WithFields(log.Fields{
-				"OnuId":  onu.ID,
-				"IntfId": onu.PonPortID,
-				"OnuSn":  onu.Sn(),
-			}).Errorf("Cannot poweron ONU: %s", err.Error())
-			res.StatusCode = int32(codes.FailedPrecondition)
-			res.Message = err.Error()
-			return res, err
-		}
-	}
 
-	losReq := bbsim.ONUAlarmRequest{
-		AlarmType:    "ONU_ALARM_LOS",
-		SerialNumber: onu.Sn(),
-		Status:       "off",
-	}
-
-	if err := alarmsim.SimulateOnuAlarm(context.TODO(), &losReq, olt); err != nil {
-		logger.WithFields(log.Fields{
-			"OnuId":  onu.ID,
-			"IntfId": onu.PonPortID,
-			"OnuSn":  onu.Sn(),
-		}).Errorf("Cannot send LOS: %s", err.Error())
+	if err := onu.HandlePowerOnONU(); err != nil {
 		res.StatusCode = int32(codes.FailedPrecondition)
 		res.Message = err.Error()
 		return res, err
-	}
-
-	if err := onu.InternalState.Event("discover"); err != nil {
-		logger.WithFields(log.Fields{
-			"OnuId":  onu.ID,
-			"IntfId": onu.PonPortID,
-			"OnuSn":  onu.Sn(),
-		}).Errorf("Cannot poweron ONU: %s", err.Error())
-		res.StatusCode = int32(codes.FailedPrecondition)
-		res.Message = err.Error()
-		return res, err
-	}
-	// move onu directly to enable state only when its a powercycle case
-	// in case of first time onu poweron onu will be moved to enable on
-	// receiving ActivateOnu request from openolt adapter
-	if intitalState == "disabled" {
-		if err := onu.InternalState.Event("enable"); err != nil {
-			logger.WithFields(log.Fields{
-				"OnuId":  onu.ID,
-				"IntfId": onu.PonPortID,
-				"OnuSn":  onu.Sn(),
-			}).Errorf("Cannot enable ONU: %s", err.Error())
-			res.StatusCode = int32(codes.FailedPrecondition)
-			res.Message = err.Error()
-			return res, err
-		}
 	}
 
 	res.StatusCode = int32(codes.OK)
@@ -518,50 +467,8 @@ func handlePoweronONU(onu *devices.Onu) (*bbsim.Response, error) {
 
 func handleShutdownONU(onu *devices.Onu) (*bbsim.Response, error) {
 	res := &bbsim.Response{}
-	olt := devices.GetOLT()
 
-	dyingGasp := bbsim.ONUAlarmRequest{
-		AlarmType:    "DYING_GASP",
-		SerialNumber: onu.Sn(),
-		Status:       "on",
-	}
-
-	if err := alarmsim.SimulateOnuAlarm(context.TODO(), &dyingGasp, olt); err != nil {
-		logger.WithFields(log.Fields{
-			"OnuId":  onu.ID,
-			"IntfId": onu.PonPortID,
-			"OnuSn":  onu.Sn(),
-		}).Errorf("Cannot send Dying Gasp: %s", err.Error())
-		res.StatusCode = int32(codes.FailedPrecondition)
-		res.Message = err.Error()
-		return res, err
-	}
-
-	losReq := bbsim.ONUAlarmRequest{
-		AlarmType:    "ONU_ALARM_LOS",
-		SerialNumber: onu.Sn(),
-		Status:       "on",
-	}
-
-	if err := alarmsim.SimulateOnuAlarm(context.TODO(), &losReq, olt); err != nil {
-		logger.WithFields(log.Fields{
-			"OnuId":  onu.ID,
-			"IntfId": onu.PonPortID,
-			"OnuSn":  onu.Sn(),
-		}).Errorf("Cannot send LOS: %s", err.Error())
-		res.StatusCode = int32(codes.FailedPrecondition)
-		res.Message = err.Error()
-		return res, err
-	}
-
-	// TODO if it's the last ONU on the PON, then send a PON LOS
-
-	if err := onu.InternalState.Event("disable"); err != nil {
-		logger.WithFields(log.Fields{
-			"OnuId":  onu.ID,
-			"IntfId": onu.PonPortID,
-			"OnuSn":  onu.Sn(),
-		}).Errorf("Cannot shutdown ONU: %s", err.Error())
+	if err := onu.HandleShutdownONU(); err != nil {
 		res.StatusCode = int32(codes.FailedPrecondition)
 		res.Message = err.Error()
 		return res, err

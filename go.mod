@@ -4,9 +4,6 @@ go 1.12
 
 require (
 	github.com/Shopify/sarama v1.26.1
-	github.com/aead/cmac v0.0.0-20160719120800-7af84192f0b1 // indirect
-	github.com/cboling/omci v0.1.0
-	github.com/deckarep/golang-set v1.7.1 // indirect
 	github.com/golang/protobuf v1.4.2
 	github.com/google/gopacket v1.1.17
 	github.com/google/uuid v1.1.2
@@ -19,11 +16,11 @@ require (
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4
 	github.com/opencord/device-management-interface v0.9.5
-	github.com/opencord/omci-sim v0.0.5
+	github.com/opencord/omci-lib-go v0.13.6
 	github.com/opencord/voltha-protos/v4 v4.0.2
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	google.golang.org/genproto v0.0.0-20190927181202-20e1ac93f88c
 	google.golang.org/grpc v1.29.1
 	gopkg.in/yaml.v2 v2.3.0
