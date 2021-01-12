@@ -21,8 +21,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
+	"github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/v4/go/ext/config"
 	"net"
+	"strconv"
 	"sync"
 	"time"
 
@@ -31,7 +33,6 @@ import (
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/common"
-	omcisim "github.com/opencord/omci-sim"
 	common_protos "github.com/opencord/voltha-protos/v4/go/common"
 	"github.com/opencord/voltha-protos/v4/go/openolt"
 	"github.com/opencord/voltha-protos/v4/go/tech_profile"
@@ -57,7 +58,7 @@ type OltDevice struct {
 	NumPon               int
 	NumOnuPerPon         int
 	InternalState        *fsm.FSM
-	channel              chan Message
+	channel              chan types.Message
 	dhcpServer           dhcp.DHCPServerIf
 	Flows                sync.Map
 	Delay                int
@@ -230,7 +231,7 @@ func (o *OltDevice) InitOlt() {
 	}
 
 	// create new channel for processOltMessages Go routine
-	o.channel = make(chan Message)
+	o.channel = make(chan types.Message)
 
 	// FIXME we are assuming we have only one NNI
 	if o.Nnis[0] != nil {
@@ -272,10 +273,10 @@ func (o *OltDevice) RestartOLT() error {
 		for _, pon := range o.Pons {
 			if pon.InternalState.Current() == "enabled" {
 				// disable PONs
-				msg := Message{
-					Type: PonIndication,
-					Data: PonIndicationMessage{
-						OperState: DOWN,
+				msg := types.Message{
+					Type: types.PonIndication,
+					Data: types.PonIndicationMessage{
+						OperState: types.DOWN,
 						PonPortID: pon.ID,
 					},
 				}
@@ -388,35 +389,33 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) {
 	go o.processOltMessages(o.enableContext, stream, &wg)
 
 	// enable the OLT
-	oltMsg := Message{
-		Type: OltIndication,
-		Data: OltIndicationMessage{
-			OperState: UP,
+	oltMsg := types.Message{
+		Type: types.OltIndication,
+		Data: types.OltIndicationMessage{
+			OperState: types.UP,
 		},
 	}
 	o.channel <- oltMsg
 
 	// send NNI Port Indications
 	for _, nni := range o.Nnis {
-		msg := Message{
-			Type: NniIndication,
-			Data: NniIndicationMessage{
-				OperState: UP,
+		msg := types.Message{
+			Type: types.NniIndication,
+			Data: types.NniIndicationMessage{
+				OperState: types.UP,
 				NniPortID: nni.ID,
 			},
 		}
 		o.channel <- msg
 	}
 
-	go o.processOmciMessages(o.enableContext, stream, &wg)
-
 	if rebootFlag {
 		for _, pon := range o.Pons {
 			if pon.InternalState.Current() == "disabled" {
-				msg := Message{
-					Type: PonIndication,
-					Data: PonIndicationMessage{
-						OperState: UP,
+				msg := types.Message{
+					Type: types.PonIndication,
+					Data: types.PonIndicationMessage{
+						OperState: types.UP,
 						PonPortID: pon.ID,
 					},
 				}
@@ -431,10 +430,10 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) {
 		if o.ControlledActivation == Default || o.ControlledActivation == OnlyONU {
 			// send PON Port indications
 			for _, pon := range o.Pons {
-				msg := Message{
-					Type: PonIndication,
-					Data: PonIndicationMessage{
-						OperState: UP,
+				msg := types.Message{
+					Type: types.PonIndication,
+					Data: types.PonIndicationMessage{
+						OperState: types.UP,
 						PonPortID: pon.ID,
 					},
 				}
@@ -451,43 +450,6 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) {
 	}
 
 	wg.Wait()
-}
-
-func (o *OltDevice) processOmciMessages(ctx context.Context, stream openolt.Openolt_EnableIndicationServer, wg *sync.WaitGroup) {
-	ch := omcisim.GetChannel()
-
-	oltLogger.Debug("Starting OMCI Indication Channel")
-
-loop:
-	for {
-		select {
-		case <-ctx.Done():
-			oltLogger.Debug("OMCI processing canceled via context")
-			break loop
-		case message, ok := <-ch:
-			if !ok || ctx.Err() != nil {
-				oltLogger.Debug("OMCI processing canceled via channel close")
-				break loop
-			}
-
-			oltLogger.WithFields(log.Fields{
-				"messageType": message.Type,
-				"OnuId":       message.Data.OnuId,
-				"IntfId":      message.Data.IntfId,
-			}).Debug("Received message on OMCI Sim channel")
-
-			onuId := message.Data.OnuId
-			intfId := message.Data.IntfId
-			onu, err := o.FindOnuById(intfId, onuId)
-			if err != nil {
-				oltLogger.Errorf("Failed to find onu: %v", err)
-				continue
-			}
-			go onu.processOmciMessage(message, stream)
-		}
-	}
-
-	wg.Done()
 }
 
 func (o *OltDevice) periodicPortStats(ctx context.Context) {
@@ -525,6 +487,55 @@ func (o *OltDevice) periodicPortStats(ctx context.Context) {
 
 // Helpers method
 
+func (o *OltDevice) SetAlarm(interfaceId uint32, interfaceType string, alarmStatus string) error {
+
+	switch interfaceType {
+	case "nni":
+		if !o.HasNni(interfaceId) {
+			return status.Errorf(codes.NotFound, strconv.Itoa(int(interfaceId))+" NNI not present in olt")
+		}
+
+	case "pon":
+		if !o.HasPon(interfaceId) {
+			return status.Errorf(codes.NotFound, strconv.Itoa(int(interfaceId))+" PON not present in olt")
+		}
+	}
+
+	alarmIndication := &openolt.AlarmIndication{
+		Data: &openolt.AlarmIndication_LosInd{LosInd: &openolt.LosIndication{
+			Status: alarmStatus,
+			IntfId: InterfaceIDToPortNo(interfaceId, interfaceType),
+		}},
+	}
+
+	msg := types.Message{
+		Type: types.AlarmIndication,
+		Data: alarmIndication,
+	}
+
+	o.channel <- msg
+
+	return nil
+}
+
+func (o *OltDevice) HasNni(id uint32) bool {
+	for _, intf := range o.Nnis {
+		if intf.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
+func (o *OltDevice) HasPon(id uint32) bool {
+	for _, intf := range o.Pons {
+		if intf.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
 func (o *OltDevice) GetPonById(id uint32) (*PonPort, error) {
 	for _, pon := range o.Pons {
 		if pon.ID == id {
@@ -555,7 +566,7 @@ func (o *OltDevice) sendAlarmIndication(alarmInd *openolt.AlarmIndication, strea
 	}).Debug("Sent Indication_AlarmInd")
 }
 
-func (o *OltDevice) sendOltIndication(msg OltIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o *OltDevice) sendOltIndication(msg types.OltIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
 	data := &openolt.Indication_OltInd{OltInd: &openolt.OltIndication{OperState: msg.OperState.String()}}
 	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
 		oltLogger.Errorf("Failed to send Indication_OltInd: %v", err)
@@ -567,9 +578,9 @@ func (o *OltDevice) sendOltIndication(msg OltIndicationMessage, stream openolt.O
 	}).Debug("Sent Indication_OltInd")
 }
 
-func (o *OltDevice) sendNniIndication(msg NniIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o *OltDevice) sendNniIndication(msg types.NniIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
 	nni, _ := o.getNniById(msg.NniPortID)
-	if msg.OperState == UP {
+	if msg.OperState == types.UP {
 		if err := nni.OperState.Event("enable"); err != nil {
 			log.WithFields(log.Fields{
 				"Type":      nni.Type,
@@ -577,7 +588,7 @@ func (o *OltDevice) sendNniIndication(msg NniIndicationMessage, stream openolt.O
 				"OperState": nni.OperState.Current(),
 			}).Errorf("Can't move NNI Port to enabled state: %v", err)
 		}
-	} else if msg.OperState == DOWN {
+	} else if msg.OperState == types.DOWN {
 		if err := nni.OperState.Event("disable"); err != nil {
 			log.WithFields(log.Fields{
 				"Type":      nni.Type,
@@ -685,26 +696,26 @@ loop:
 			}).Trace("Received message")
 
 			switch message.Type {
-			case OltIndication:
-				msg, _ := message.Data.(OltIndicationMessage)
-				if msg.OperState == UP {
+			case types.OltIndication:
+				msg, _ := message.Data.(types.OltIndicationMessage)
+				if msg.OperState == types.UP {
 					_ = o.InternalState.Event("enable")
 					_ = o.OperState.Event("enable")
-				} else if msg.OperState == DOWN {
+				} else if msg.OperState == types.DOWN {
 					_ = o.InternalState.Event("disable")
 					_ = o.OperState.Event("disable")
 				}
 				o.sendOltIndication(msg, stream)
-			case AlarmIndication:
+			case types.AlarmIndication:
 				alarmInd, _ := message.Data.(*openolt.AlarmIndication)
 				o.sendAlarmIndication(alarmInd, stream)
-			case NniIndication:
-				msg, _ := message.Data.(NniIndicationMessage)
+			case types.NniIndication:
+				msg, _ := message.Data.(types.NniIndicationMessage)
 				o.sendNniIndication(msg, stream)
-			case PonIndication:
-				msg, _ := message.Data.(PonIndicationMessage)
+			case types.PonIndication:
+				msg, _ := message.Data.(types.PonIndicationMessage)
 				pon, _ := o.GetPonById(msg.PonPortID)
-				if msg.OperState == UP {
+				if msg.OperState == types.UP {
 					if err := pon.OperState.Event("enable"); err != nil {
 						oltLogger.WithFields(log.Fields{
 							"IntfId": msg.PonPortID,
@@ -717,7 +728,7 @@ loop:
 							"Err":    err,
 						}).Error("Can't Enable Internal state for PON Port")
 					}
-				} else if msg.OperState == DOWN {
+				} else if msg.OperState == types.DOWN {
 					if err := pon.OperState.Event("disable"); err != nil {
 						oltLogger.WithFields(log.Fields{
 							"IntfId": msg.PonPortID,
@@ -873,10 +884,10 @@ func (o *OltDevice) DisableOlt(context.Context, *openolt.Empty) (*openolt.Empty,
 	for _, pon := range o.Pons {
 		if pon.InternalState.Current() == "enabled" {
 			// disable PONs
-			msg := Message{
-				Type: PonIndication,
-				Data: PonIndicationMessage{
-					OperState: DOWN,
+			msg := types.Message{
+				Type: types.PonIndication,
+				Data: types.PonIndicationMessage{
+					OperState: types.DOWN,
 					PonPortID: pon.ID,
 				},
 			}
@@ -888,10 +899,10 @@ func (o *OltDevice) DisableOlt(context.Context, *openolt.Empty) (*openolt.Empty,
 	// The reason for that is in-band management
 
 	// disable OLT
-	oltMsg := Message{
-		Type: OltIndication,
-		Data: OltIndicationMessage{
-			OperState: DOWN,
+	oltMsg := types.Message{
+		Type: types.OltIndication,
+		Data: types.OltIndicationMessage{
+			OperState: types.DOWN,
 		},
 	}
 	o.channel <- oltMsg
@@ -903,10 +914,10 @@ func (o *OltDevice) DisablePonIf(_ context.Context, intf *openolt.Interface) (*o
 	ponID := intf.GetIntfId()
 	pon, _ := o.GetPonById(intf.IntfId)
 
-	msg := Message{
-		Type: PonIndication,
-		Data: PonIndicationMessage{
-			OperState: DOWN,
+	msg := types.Message{
+		Type: types.PonIndication,
+		Data: types.PonIndicationMessage{
+			OperState: types.DOWN,
 			PonPortID: ponID,
 		},
 	}
@@ -914,8 +925,8 @@ func (o *OltDevice) DisablePonIf(_ context.Context, intf *openolt.Interface) (*o
 
 	for _, onu := range pon.Onus {
 
-		onuIndication := OnuIndicationMessage{
-			OperState: DOWN,
+		onuIndication := types.OnuIndicationMessage{
+			OperState: types.DOWN,
 			PonPortID: ponID,
 			OnuID:     onu.ID,
 			OnuSN:     onu.SerialNumber,
@@ -939,10 +950,10 @@ func (o *OltDevice) EnablePonIf(_ context.Context, intf *openolt.Interface) (*op
 	ponID := intf.GetIntfId()
 	pon, _ := o.GetPonById(intf.IntfId)
 
-	msg := Message{
-		Type: PonIndication,
-		Data: PonIndicationMessage{
-			OperState: UP,
+	msg := types.Message{
+		Type: types.PonIndication,
+		Data: types.PonIndicationMessage{
+			OperState: types.UP,
 			PonPortID: ponID,
 		},
 	}
@@ -950,8 +961,8 @@ func (o *OltDevice) EnablePonIf(_ context.Context, intf *openolt.Interface) (*op
 
 	for _, onu := range pon.Onus {
 
-		onuIndication := OnuIndicationMessage{
-			OperState: UP,
+		onuIndication := types.OnuIndicationMessage{
+			OperState: types.UP,
 			PonPortID: ponID,
 			OnuID:     onu.ID,
 			OnuSN:     onu.SerialNumber,
@@ -1030,9 +1041,9 @@ func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.E
 			}
 		}
 
-		msg := Message{
-			Type: FlowAdd,
-			Data: OnuFlowUpdateMessage{
+		msg := types.Message{
+			Type: types.FlowAdd,
+			Data: types.OnuFlowUpdateMessage{
 				PonPortID: pon.ID,
 				OnuID:     onu.ID,
 				Flow:      flow,
@@ -1107,9 +1118,9 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 			return nil, err
 		}
 
-		msg := Message{
-			Type: FlowRemoved,
-			Data: OnuFlowUpdateMessage{
+		msg := types.Message{
+			Type: types.FlowRemoved,
+			Data: types.OnuFlowUpdateMessage{
 				Flow: flow,
 			},
 		}
@@ -1193,12 +1204,12 @@ func (o *OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (
 		"OnuId":  onu.ID,
 		"OnuSn":  onu.Sn(),
 	}).Tracef("Received OmciMsgOut")
-	msg := Message{
-		Type: OMCI,
-		Data: OmciMessage{
+	msg := types.Message{
+		Type: types.OMCI,
+		Data: types.OmciMessage{
 			OnuSN:   onu.SerialNumber,
 			OnuID:   onu.ID,
-			omciMsg: omci_msg,
+			OmciMsg: omci_msg,
 		},
 	}
 	onu.Channel <- msg
@@ -1254,9 +1265,9 @@ func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket)
 		return new(openolt.Empty), nil
 	}
 
-	msg := Message{
-		Type: OnuPacketOut,
-		Data: OnuPacketMessage{
+	msg := types.Message{
+		Type: types.OnuPacketOut,
+		Data: types.OnuPacketMessage{
 			IntfId:     onuPkt.IntfId,
 			OnuId:      onuPkt.OnuId,
 			Packet:     rawpkt,
@@ -1291,20 +1302,20 @@ func (o *OltDevice) ReenableOlt(context.Context, *openolt.Empty) (*openolt.Empty
 	publishEvent("OLT-reenable-received", -1, -1, "")
 
 	// enable OLT
-	oltMsg := Message{
-		Type: OltIndication,
-		Data: OltIndicationMessage{
-			OperState: UP,
+	oltMsg := types.Message{
+		Type: types.OltIndication,
+		Data: types.OltIndicationMessage{
+			OperState: types.UP,
 		},
 	}
 	o.channel <- oltMsg
 
 	for _, pon := range o.Pons {
 		if pon.InternalState.Current() == "disabled" {
-			msg := Message{
-				Type: PonIndication,
-				Data: PonIndicationMessage{
-					OperState: UP,
+			msg := types.Message{
+				Type: types.PonIndication,
+				Data: types.PonIndicationMessage{
+					OperState: types.UP,
 					PonPortID: pon.ID,
 				},
 			}
@@ -1395,17 +1406,6 @@ func (s *OltDevice) RemoveTrafficSchedulers(context context.Context, trafficSche
 		onu.TrafficSchedulers = nil
 	}
 	return new(openolt.Empty), nil
-}
-
-// assumes caller has properly formulated an openolt.AlarmIndication
-func (o *OltDevice) SendAlarmIndication(context context.Context, ind *openolt.AlarmIndication) error {
-	msg := Message{
-		Type: AlarmIndication,
-		Data: ind,
-	}
-
-	o.channel <- msg
-	return nil
 }
 
 func (o *OltDevice) PerformGroupOperation(ctx context.Context, group *openolt.Group) (*openolt.Empty, error) {

@@ -94,14 +94,6 @@ func TestSendEapStartFailStreamError(t *testing.T) {
 
 	eapolStateMachine.SetState("auth_started")
 
-	// Save current function and restore at the end:
-	old := GetGemPortId
-	defer func() { GetGemPortId = old }()
-
-	GetGemPortId = func(oltId int, intfId uint32, onuId uint32) (uint16, error) {
-		return 1, nil
-	}
-
 	stream := &mockStream{
 		Calls: make(map[int]*openolt.PacketIndication),
 		fail:  true,

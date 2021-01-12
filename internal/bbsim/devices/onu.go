@@ -20,20 +20,24 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	pb "github.com/opencord/bbsim/api/bbsim"
+	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
+	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
+	me "github.com/opencord/omci-lib-go/generated"
+	"strconv"
+
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
 	"net"
-
 	"time"
 
-	"github.com/cboling/omci"
 	"github.com/google/gopacket/layers"
 	"github.com/jpillora/backoff"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/common"
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
-	omcisim "github.com/opencord/omci-sim"
+	"github.com/opencord/omci-lib-go"
 	"github.com/opencord/voltha-protos/v4/go/openolt"
 	"github.com/opencord/voltha-protos/v4/go/tech_profile"
 	log "github.com/sirupsen/logrus"
@@ -72,7 +76,7 @@ type Onu struct {
 	OperState    *fsm.FSM
 	SerialNumber *openolt.SerialNumber
 
-	Channel chan Message // this Channel is to track state changes OMCI messages, EAPOL and DHCP packets
+	Channel chan bbsim.Message // this Channel is to track state changes OMCI messages, EAPOL and DHCP packets
 
 	// OMCI params
 	tid       uint16
@@ -143,7 +147,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 			},
 			"enter_initialized": func(e *fsm.Event) {
 				// create new channel for ProcessOnuMessages Go routine
-				o.Channel = make(chan Message, 2048)
+				o.Channel = make(chan bbsim.Message, 2048)
 
 				if err := o.OperState.Event("enable"); err != nil {
 					onuLogger.WithFields(log.Fields{
@@ -159,22 +163,21 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 				}
 			},
 			"enter_discovered": func(e *fsm.Event) {
-				msg := Message{
-					Type: OnuDiscIndication,
-					Data: OnuDiscIndicationMessage{
-						Onu:       &o,
-						OperState: UP,
+				msg := bbsim.Message{
+					Type: bbsim.OnuDiscIndication,
+					Data: bbsim.OnuDiscIndicationMessage{
+						OperState: bbsim.UP,
 					},
 				}
 				o.Channel <- msg
 			},
 			"enter_enabled": func(event *fsm.Event) {
-				msg := Message{
-					Type: OnuIndication,
-					Data: OnuIndicationMessage{
+				msg := bbsim.Message{
+					Type: bbsim.OnuIndication,
+					Data: bbsim.OnuIndicationMessage{
 						OnuSN:     o.SerialNumber,
 						PonPortID: o.PonPortID,
-						OperState: UP,
+						OperState: bbsim.UP,
 					},
 				}
 				o.Channel <- msg
@@ -201,12 +204,12 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 				}
 
 				// send the OnuIndication DOWN event
-				msg := Message{
-					Type: OnuIndication,
-					Data: OnuIndicationMessage{
+				msg := bbsim.Message{
+					Type: bbsim.OnuIndication,
+					Data: bbsim.OnuIndicationMessage{
 						OnuSN:     o.SerialNumber,
 						PonPortID: o.PonPortID,
-						OperState: DOWN,
+						OperState: bbsim.DOWN,
 					},
 				}
 				o.Channel <- msg
@@ -223,14 +226,14 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 			},
 			// BBR states
 			"enter_eapol_flow_sent": func(e *fsm.Event) {
-				msg := Message{
-					Type: SendEapolFlow,
+				msg := bbsim.Message{
+					Type: bbsim.SendEapolFlow,
 				}
 				o.Channel <- msg
 			},
 			"enter_dhcp_flow_sent": func(e *fsm.Event) {
-				msg := Message{
-					Type: SendDhcpFlow,
+				msg := bbsim.Message{
+					Type: bbsim.SendDhcpFlow,
 				}
 				o.Channel <- msg
 			},
@@ -280,26 +283,45 @@ loop:
 			}).Tracef("Received message on ONU Channel")
 
 			switch message.Type {
-			case OnuDiscIndication:
-				msg, _ := message.Data.(OnuDiscIndicationMessage)
+			case bbsim.OnuDiscIndication:
+				msg, _ := message.Data.(bbsim.OnuDiscIndicationMessage)
 				// NOTE we need to slow down and send ONU Discovery Indication in batches to better emulate a real scenario
 				time.Sleep(o.DiscoveryDelay)
 				o.sendOnuDiscIndication(msg, stream)
-			case OnuIndication:
-				msg, _ := message.Data.(OnuIndicationMessage)
+			case bbsim.OnuIndication:
+				msg, _ := message.Data.(bbsim.OnuIndicationMessage)
 				o.sendOnuIndication(msg, stream)
-			case OMCI:
-				msg, _ := message.Data.(OmciMessage)
-				o.handleOmciMessage(msg, stream)
-			case FlowAdd:
-				msg, _ := message.Data.(OnuFlowUpdateMessage)
+			case bbsim.OMCI:
+				msg, _ := message.Data.(bbsim.OmciMessage)
+				o.handleOmciRequest(msg, stream)
+			case bbsim.UniStatusAlarm:
+				msg, _ := message.Data.(bbsim.UniStatusAlarmMessage)
+				pkt := omcilib.CreateUniStatusAlarm(msg.AdminState, msg.EntityID)
+				if err := o.sendOmciIndication(pkt, 0, stream); err != nil {
+					onuLogger.WithFields(log.Fields{
+						"IntfId":       o.PonPortID,
+						"SerialNumber": o.Sn(),
+						"omciPacket":   pkt,
+						"adminState":   msg.AdminState,
+						"entityID":     msg.EntityID,
+					}).Errorf("failed-to-send-UNI-Link-Alarm: %v", err)
+				}
+				onuLogger.WithFields(log.Fields{
+					"IntfId":       o.PonPortID,
+					"SerialNumber": o.Sn(),
+					"omciPacket":   pkt,
+					"adminState":   msg.AdminState,
+					"entityID":     msg.EntityID,
+				}).Trace("UNI-Link-alarm-sent")
+			case bbsim.FlowAdd:
+				msg, _ := message.Data.(bbsim.OnuFlowUpdateMessage)
 				o.handleFlowAdd(msg)
-			case FlowRemoved:
-				msg, _ := message.Data.(OnuFlowUpdateMessage)
+			case bbsim.FlowRemoved:
+				msg, _ := message.Data.(bbsim.OnuFlowUpdateMessage)
 				o.handleFlowRemove(msg)
-			case OnuPacketOut:
+			case bbsim.OnuPacketOut:
 
-				msg, _ := message.Data.(OnuPacketMessage)
+				msg, _ := message.Data.(bbsim.OnuPacketMessage)
 
 				onuLogger.WithFields(log.Fields{
 					"IntfId":  msg.IntfId,
@@ -333,11 +355,11 @@ loop:
 					}
 				}
 
-			case OnuPacketIn:
+			case bbsim.OnuPacketIn:
 				// NOTE we only receive BBR packets here.
 				// Eapol.HandleNextPacket can handle both BBSim and BBr cases so the call is the same
 				// in the DHCP case VOLTHA only act as a proxy, the behaviour is completely different thus we have a dhcp.HandleNextBbrPacket
-				msg, _ := message.Data.(OnuPacketMessage)
+				msg, _ := message.Data.(bbsim.OnuPacketMessage)
 
 				log.WithFields(log.Fields{
 					"IntfId":  msg.IntfId,
@@ -351,12 +373,12 @@ loop:
 					_ = dhcp.HandleNextBbrPacket(o.ID, o.PonPortID, o.Sn(), o.DoneChannel, msg.Packet, client)
 				}
 				// BBR specific messages
-			case OmciIndication:
-				msg, _ := message.Data.(OmciIndicationMessage)
-				o.handleOmci(msg, client)
-			case SendEapolFlow:
+			case bbsim.OmciIndication:
+				msg, _ := message.Data.(bbsim.OmciIndicationMessage)
+				o.handleOmciResponse(msg, client)
+			case bbsim.SendEapolFlow:
 				o.sendEapolFlow(client)
-			case SendDhcpFlow:
+			case bbsim.SendDhcpFlow:
 				o.sendDhcpFlow(client)
 			default:
 				onuLogger.Warnf("Received unknown message data %v for type %v in OLT Channel", message.Data, message.Type)
@@ -367,42 +389,6 @@ loop:
 		"onuID": o.ID,
 		"onuSN": o.Sn(),
 	}).Debug("Stopped handling ONU Indication Channel")
-}
-
-func (o *Onu) processOmciMessage(message omcisim.OmciChMessage, stream openolt.Openolt_EnableIndicationServer) {
-	switch message.Type {
-	case omcisim.UniLinkUp, omcisim.UniLinkDown:
-		onuLogger.WithFields(log.Fields{
-			"OnuId":  message.Data.OnuId,
-			"IntfId": message.Data.IntfId,
-			"Type":   message.Type,
-		}).Debug("UNI Link Alarm")
-		// TODO send to OLT
-
-		omciInd := openolt.OmciIndication{
-			IntfId: message.Data.IntfId,
-			OnuId:  message.Data.OnuId,
-			Pkt:    message.Packet,
-		}
-
-		omci := &openolt.Indication_OmciInd{OmciInd: &omciInd}
-		if err := stream.Send(&openolt.Indication{Data: omci}); err != nil {
-			onuLogger.WithFields(log.Fields{
-				"IntfId":       o.PonPortID,
-				"SerialNumber": o.Sn(),
-				"Type":         message.Type,
-				"omciPacket":   omciInd.Pkt,
-			}).Errorf("Failed to send UNI Link Alarm: %v", err)
-			return
-		}
-
-		onuLogger.WithFields(log.Fields{
-			"IntfId":       o.PonPortID,
-			"SerialNumber": o.Sn(),
-			"Type":         message.Type,
-			"omciPacket":   omciInd.Pkt,
-		}).Debug("UNI Link alarm sent")
-	}
 }
 
 func (o Onu) NewSN(oltid int, intfid uint32, onuid uint32) *openolt.SerialNumber {
@@ -416,10 +402,10 @@ func (o Onu) NewSN(oltid int, intfid uint32, onuid uint32) *openolt.SerialNumber
 	return sn
 }
 
-func (o *Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o *Onu) sendOnuDiscIndication(msg bbsim.OnuDiscIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
 	discoverData := &openolt.Indication_OnuDiscInd{OnuDiscInd: &openolt.OnuDiscIndication{
-		IntfId:       msg.Onu.PonPortID,
-		SerialNumber: msg.Onu.SerialNumber,
+		IntfId:       o.PonPortID,
+		SerialNumber: o.SerialNumber,
 	}}
 
 	if err := stream.Send(&openolt.Indication{Data: discoverData}); err != nil {
@@ -428,11 +414,11 @@ func (o *Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt
 	}
 
 	onuLogger.WithFields(log.Fields{
-		"IntfId": msg.Onu.PonPortID,
-		"OnuSn":  msg.Onu.Sn(),
+		"IntfId": o.PonPortID,
+		"OnuSn":  o.Sn(),
 		"OnuId":  o.ID,
 	}).Debug("Sent Indication_OnuDiscInd")
-	publishEvent("ONU-discovery-indication-sent", int32(msg.Onu.PonPortID), int32(o.ID), msg.Onu.Sn())
+	publishEvent("ONU-discovery-indication-sent", int32(o.PonPortID), int32(o.ID), o.Sn())
 
 	// after DiscoveryRetryDelay check if the state is the same and in case send a new OnuDiscIndication
 	go func(delay time.Duration) {
@@ -443,7 +429,7 @@ func (o *Onu) sendOnuDiscIndication(msg OnuDiscIndicationMessage, stream openolt
 	}(o.DiscoveryRetryDelay)
 }
 
-func (o *Onu) sendOnuIndication(msg OnuIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o *Onu) sendOnuIndication(msg bbsim.OnuIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
 	// NOTE voltha returns an ID, but if we use that ID then it complains:
 	// expected_onu_id: 1, received_onu_id: 1024, event: ONU-id-mismatch, can happen if both voltha and the olt rebooted
 	// so we're using the internal ID that is 1
@@ -471,17 +457,136 @@ func (o *Onu) sendOnuIndication(msg OnuIndicationMessage, stream openolt.Openolt
 
 }
 
-func (o *Onu) publishOmciEvent(msg OmciMessage) {
+func (o *Onu) HandleShutdownONU() error {
+
+	dyingGasp := pb.ONUAlarmRequest{
+		AlarmType:    "DYING_GASP",
+		SerialNumber: o.Sn(),
+		Status:       "on",
+	}
+
+	if err := alarmsim.SimulateOnuAlarm(&dyingGasp, o.ID, o.PonPortID, o.PonPort.Olt.channel); err != nil {
+		onuLogger.WithFields(log.Fields{
+			"OnuId":  o.ID,
+			"IntfId": o.PonPortID,
+			"OnuSn":  o.Sn(),
+		}).Errorf("Cannot send Dying Gasp: %s", err.Error())
+		return err
+	}
+
+	losReq := pb.ONUAlarmRequest{
+		AlarmType:    "ONU_ALARM_LOS",
+		SerialNumber: o.Sn(),
+		Status:       "on",
+	}
+
+	if err := alarmsim.SimulateOnuAlarm(&losReq, o.ID, o.PonPortID, o.PonPort.Olt.channel); err != nil {
+		onuLogger.WithFields(log.Fields{
+			"OnuId":  o.ID,
+			"IntfId": o.PonPortID,
+			"OnuSn":  o.Sn(),
+		}).Errorf("Cannot send LOS: %s", err.Error())
+
+		return err
+	}
+
+	// TODO if it's the last ONU on the PON, then send a PON LOS
+
+	if err := o.InternalState.Event("disable"); err != nil {
+		onuLogger.WithFields(log.Fields{
+			"OnuId":  o.ID,
+			"IntfId": o.PonPortID,
+			"OnuSn":  o.Sn(),
+		}).Errorf("Cannot shutdown ONU: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (o *Onu) HandlePowerOnONU() error {
+	intitalState := o.InternalState.Current()
+
+	// initialize the ONU
+	if intitalState == "created" || intitalState == "disabled" {
+		if err := o.InternalState.Event("initialize"); err != nil {
+			onuLogger.WithFields(log.Fields{
+				"OnuId":  o.ID,
+				"IntfId": o.PonPortID,
+				"OnuSn":  o.Sn(),
+			}).Errorf("Cannot poweron ONU: %s", err.Error())
+			return err
+		}
+	}
+
+	// turn off the LOS Alarm
+	losReq := pb.ONUAlarmRequest{
+		AlarmType:    "ONU_ALARM_LOS",
+		SerialNumber: o.Sn(),
+		Status:       "off",
+	}
+
+	if err := alarmsim.SimulateOnuAlarm(&losReq, o.ID, o.PonPortID, o.PonPort.Olt.channel); err != nil {
+		onuLogger.WithFields(log.Fields{
+			"OnuId":  o.ID,
+			"IntfId": o.PonPortID,
+			"OnuSn":  o.Sn(),
+		}).Errorf("Cannot send LOS: %s", err.Error())
+		return err
+	}
+
+	// Send a ONU Discovery indication
+	if err := o.InternalState.Event("discover"); err != nil {
+		onuLogger.WithFields(log.Fields{
+			"OnuId":  o.ID,
+			"IntfId": o.PonPortID,
+			"OnuSn":  o.Sn(),
+		}).Errorf("Cannot poweron ONU: %s", err.Error())
+		return err
+	}
+
+	// move o directly to enable state only when its a powercycle case
+	// in case of first time o poweron o will be moved to enable on
+	// receiving ActivateOnu request from openolt adapter
+	if intitalState == "disabled" {
+		if err := o.InternalState.Event("enable"); err != nil {
+			onuLogger.WithFields(log.Fields{
+				"OnuId":  o.ID,
+				"IntfId": o.PonPortID,
+				"OnuSn":  o.Sn(),
+			}).Errorf("Cannot enable ONU: %s", err.Error())
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *Onu) SetAlarm(alarmType string, status string) error {
+	alarmReq := pb.ONUAlarmRequest{
+		AlarmType:    alarmType,
+		SerialNumber: o.Sn(),
+		Status:       status,
+	}
+
+	err := alarmsim.SimulateOnuAlarm(&alarmReq, o.ID, o.PonPortID, o.PonPort.Olt.channel)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (o *Onu) publishOmciEvent(msg bbsim.OmciMessage) {
 	if olt.PublishEvents {
-		_, _, msgType, _, _, _, err := omcisim.ParsePkt(HexDecode(msg.omciMsg.Pkt))
+		_, omciMsg, err := omcilib.ParseOpenOltOmciPacket(msg.OmciMsg.Pkt)
 		if err != nil {
 			log.Errorf("error in getting msgType %v", err)
 			return
 		}
-		if msgType == omcisim.MibUpload {
+		if omciMsg.MessageType == omci.MibUploadRequestType {
 			o.seqNumber = 0
 			publishEvent("MIB-upload-received", int32(o.PonPortID), int32(o.ID), common.OnuSnToString(o.SerialNumber))
-		} else if msgType == omcisim.MibUploadNext {
+		} else if omciMsg.MessageType == omci.MibUploadNextRequestType {
 			o.seqNumber++
 			if o.seqNumber > 290 {
 				publishEvent("MIB-upload-done", int32(o.PonPortID), int32(o.ID), common.OnuSnToString(o.SerialNumber))
@@ -491,8 +596,8 @@ func (o *Onu) publishOmciEvent(msg OmciMessage) {
 }
 
 // Create a TestResponse packet and send it
-func (o *Onu) sendTestResult(msg OmciMessage, stream openolt.Openolt_EnableIndicationServer) error {
-	resp, err := omcilib.BuildTestResult(HexDecode(msg.omciMsg.Pkt))
+func (o *Onu) sendTestResult(msg bbsim.OmciMessage, stream openolt.Openolt_EnableIndicationServer) error {
+	resp, err := omcilib.BuildTestResult(msg.OmciMsg.Pkt)
 	if err != nil {
 		return err
 	}
@@ -504,12 +609,6 @@ func (o *Onu) sendTestResult(msg OmciMessage, stream openolt.Openolt_EnableIndic
 
 	omci := &openolt.Indication_OmciInd{OmciInd: &omciInd}
 	if err := stream.Send(&openolt.Indication{Data: omci}); err != nil {
-		onuLogger.WithFields(log.Fields{
-			"IntfId":       o.PonPortID,
-			"SerialNumber": o.Sn(),
-			"omciPacket":   omciInd.Pkt,
-			"msg":          msg,
-		}).Errorf("send TestResult omcisim indication failed: %v", err)
 		return err
 	}
 	onuLogger.WithFields(log.Fields{
@@ -521,57 +620,151 @@ func (o *Onu) sendTestResult(msg OmciMessage, stream openolt.Openolt_EnableIndic
 	return nil
 }
 
-func (o *Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableIndicationServer) {
+// handleOmciRequest is responsible to parse the OMCI packets received from the openolt adapter
+// and generate the appropriate response to it
+func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_EnableIndicationServer) {
+
+	omciPkt, omciMsg, err := omcilib.ParseOpenOltOmciPacket(msg.OmciMsg.Pkt)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"SerialNumber": o.Sn(),
+			"omciPacket":   msg.OmciMsg.Pkt,
+		}).Error("cannot-parse-OMCI-packet")
+	}
 
 	onuLogger.WithFields(log.Fields{
+		"omciMsgType":  omciMsg.MessageType,
+		"transCorrId":  strconv.FormatInt(int64(omciMsg.TransactionID), 16),
+		"DeviceIdent":  omciMsg.DeviceIdentifier,
 		"IntfId":       o.PonPortID,
 		"SerialNumber": o.Sn(),
-		"omciPacket":   msg.omciMsg.Pkt,
-	}).Tracef("Received OMCI message")
+	}).Trace("omci-message-decoded")
+
+	var responsePkt []byte
+	switch omciMsg.MessageType {
+	case omci.MibResetRequestType:
+		responsePkt, _ = omcilib.CreateMibResetResponse(omciMsg.TransactionID)
+	case omci.MibUploadRequestType:
+		responsePkt, _ = omcilib.CreateMibUploadResponse(omciMsg.TransactionID)
+	case omci.MibUploadNextRequestType:
+		responsePkt, _ = omcilib.CreateMibUploadNextResponse(omciPkt, omciMsg)
+	case omci.GetRequestType:
+		responsePkt, _ = omcilib.CreateGetResponse(omciPkt, omciMsg)
+	case omci.SetRequestType:
+		responsePkt, _ = omcilib.CreateSetResponse(omciPkt, omciMsg)
+
+		msgObj, _ := omcilib.ParseSetRequest(omciPkt)
+		switch msgObj.EntityClass {
+		case me.PhysicalPathTerminationPointEthernetUniClassID:
+			// if we're Setting a PPTP state
+			// we need to send the appropriate alarm
+
+			if msgObj.EntityInstance == 257 {
+				// for now we're only caring about the first UNI
+				// NOTE that the EntityID for the UNI port is for now hardcoded in
+				// omci/mibpackets.go where the PhysicalPathTerminationPointEthernetUni
+				// are reported during the MIB Upload sequence
+				adminState := msgObj.Attributes["AdministrativeState"].(uint8)
+				msg := bbsim.Message{
+					Type: bbsim.UniStatusAlarm,
+					Data: bbsim.UniStatusAlarmMessage{
+						OnuSN:      o.SerialNumber,
+						OnuID:      o.ID,
+						AdminState: adminState,
+						EntityID:   msgObj.EntityInstance,
+					},
+				}
+				o.Channel <- msg
+			}
+		}
+	case omci.CreateRequestType:
+		responsePkt, _ = omcilib.CreateCreateResponse(omciPkt, omciMsg)
+	case omci.DeleteRequestType:
+		responsePkt, _ = omcilib.CreateDeleteResponse(omciPkt, omciMsg)
+	case omci.RebootRequestType:
+
+		responsePkt, _ = omcilib.CreateRebootResponse(omciPkt, omciMsg)
+
+		// powercycle the ONU
+		go func() {
+			// we run this in a separate goroutine so that
+			// the RebootRequestResponse is sent to VOLTHA
+			onuLogger.WithFields(log.Fields{
+				"IntfId":       o.PonPortID,
+				"SerialNumber": o.Sn(),
+			}).Debug("shutting-down-onu-for-omci-reboot")
+			_ = o.HandleShutdownONU()
+			time.Sleep(10 * time.Second)
+			onuLogger.WithFields(log.Fields{
+				"IntfId":       o.PonPortID,
+				"SerialNumber": o.Sn(),
+			}).Debug("power-on-onu-for-omci-reboot")
+			_ = o.HandlePowerOnONU()
+		}()
+	case omci.TestRequestType:
+
+		// Test message is special, it requires sending two packets:
+		//     first packet: TestResponse, says whether test was started successully, handled by omci-sim
+		//     second packet, TestResult, reports the result of running the self-test
+		// TestResult can come some time after a TestResponse
+		//     TODO: Implement some delay between the TestResponse and the TestResult
+		isTest, err := omcilib.IsTestRequest(msg.OmciMsg.Pkt)
+		if (err == nil) && (isTest) {
+			if sendErr := o.sendTestResult(msg, stream); sendErr != nil {
+				onuLogger.WithFields(log.Fields{
+					"IntfId":       o.PonPortID,
+					"SerialNumber": o.Sn(),
+					"omciPacket":   msg.OmciMsg.Pkt,
+					"msg":          msg,
+					"err":          sendErr,
+				}).Error("send-TestResult-indication-failed")
+			}
+		}
+
+	default:
+		log.WithFields(log.Fields{
+			"omciMsgType":  omciMsg.MessageType,
+			"transCorrId":  omciMsg.TransactionID,
+			"IntfId":       o.PonPortID,
+			"SerialNumber": o.Sn(),
+		}).Warnf("OMCI-message-not-supported")
+	}
+
+	if responsePkt != nil {
+		if err := o.sendOmciIndication(responsePkt, omciMsg.TransactionID, stream); err != nil {
+			onuLogger.WithFields(log.Fields{
+				"IntfId":       o.PonPortID,
+				"SerialNumber": o.Sn(),
+				"omciPacket":   responsePkt,
+				"omciMsgType":  omciMsg.MessageType,
+				"transCorrId":  omciMsg.TransactionID,
+			}).Errorf("failed-to-send-omci-message: %v", err)
+		}
+	}
 
 	o.publishOmciEvent(msg)
+}
 
-	var omciInd openolt.OmciIndication
-	respPkt, err := omcisim.OmciSim(o.PonPort.Olt.ID, o.PonPortID, o.ID, HexDecode(msg.omciMsg.Pkt))
-	if err != nil {
-		onuLogger.WithFields(log.Fields{
-			"IntfId":       o.PonPortID,
-			"SerialNumber": o.Sn(),
-			"omciPacket":   omciInd.Pkt,
-			"msg":          msg,
-		}).Errorf("Error handling OMCI message %v", msg)
-		return
+// sendOmciIndication takes an OMCI packet and sends it up to VOLTHA
+func (o *Onu) sendOmciIndication(responsePkt []byte, txId uint16, stream bbsim.Stream) error {
+	indication := &openolt.Indication_OmciInd{
+		OmciInd: &openolt.OmciIndication{
+			IntfId: o.PonPortID,
+			OnuId:  o.ID,
+			Pkt:    responsePkt,
+		},
 	}
-
-	omciInd.IntfId = o.PonPortID
-	omciInd.OnuId = o.ID
-	omciInd.Pkt = respPkt
-
-	omci := &openolt.Indication_OmciInd{OmciInd: &omciInd}
-	if err := stream.Send(&openolt.Indication{Data: omci}); err != nil {
-		onuLogger.WithFields(log.Fields{
-			"IntfId":       o.PonPortID,
-			"SerialNumber": o.Sn(),
-			"omciPacket":   omciInd.Pkt,
-			"msg":          msg,
-		}).Errorf("send omcisim indication failed: %v", err)
-		return
+	if err := stream.Send(&openolt.Indication{Data: indication}); err != nil {
+		return fmt.Errorf("failed-to-send-omci-message: %v", err)
 	}
 	onuLogger.WithFields(log.Fields{
 		"IntfId":       o.PonPortID,
 		"SerialNumber": o.Sn(),
-		"omciPacket":   omciInd.Pkt,
-	}).Tracef("Sent OMCI message")
-
-	// Test message is special, it requires sending two packets:
-	//     first packet: TestResponse, says whether test was started successully, handled by omci-sim
-	//     second packet, TestResult, reports the result of running the self-test
-	// TestResult can come some time after a TestResponse
-	//     TODO: Implement some delay between the TestResponse and the TestResult
-	isTest, err := omcilib.IsTestRequest(HexDecode(msg.omciMsg.Pkt))
-	if (err == nil) && (isTest) {
-		_ = o.sendTestResult(msg, stream)
-	}
+		"omciPacket":   indication.OmciInd.Pkt,
+		"transCorrId":  txId,
+	}).Trace("omci-message-sent")
+	return nil
 }
 
 func (o *Onu) storePortNumber(portNo uint32) {
@@ -602,7 +795,7 @@ func (o *Onu) SetID(id uint32) {
 	o.ID = id
 }
 
-func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
+func (o *Onu) handleFlowAdd(msg bbsim.OnuFlowUpdateMessage) {
 	onuLogger.WithFields(log.Fields{
 		"Cookie":            msg.Flow.Cookie,
 		"DstPort":           msg.Flow.Classifier.DstPort,
@@ -667,7 +860,7 @@ func (o *Onu) handleFlowAdd(msg OnuFlowUpdateMessage) {
 	}
 }
 
-func (o *Onu) handleFlowRemove(msg OnuFlowUpdateMessage) {
+func (o *Onu) handleFlowRemove(msg bbsim.OnuFlowUpdateMessage) {
 	onuLogger.WithFields(log.Fields{
 		"IntfId":       o.PonPortID,
 		"OnuId":        o.ID,
@@ -698,19 +891,6 @@ func (o *Onu) handleFlowRemove(msg OnuFlowUpdateMessage) {
 			close(o.Channel)
 		}
 	}
-}
-
-// HexDecode converts the hex encoding to binary
-func HexDecode(pkt []byte) []byte {
-	p := make([]byte, len(pkt)/2)
-	for i, j := 0, 0; i < len(pkt); i, j = i+2, j+1 {
-		// Go figure this ;)
-		u := (pkt[i] & 15) + (pkt[i]>>6)*9
-		l := (pkt[i+1] & 15) + (pkt[i+1]>>6)*9
-		p[j] = u<<4 + l
-	}
-	onuLogger.Tracef("Omci decoded: %x.", p)
-	return p
 }
 
 // BBR methods
@@ -762,24 +942,36 @@ func (o *Onu) StartOmci(client openolt.OpenoltClient) {
 	sendOmciMsg(mibReset, o.PonPortID, o.ID, o.SerialNumber, "mibReset", client)
 }
 
-func (o *Onu) handleOmci(msg OmciIndicationMessage, client openolt.OpenoltClient) {
-	msgType, packet := omcilib.DecodeOmci(msg.OmciInd.Pkt)
+// handleOmciResponse is used in BBR to generate the OMCI packets the openolt-adapter would send to the device
+func (o *Onu) handleOmciResponse(msg bbsim.OmciIndicationMessage, client openolt.OpenoltClient) {
+
+	// we need to encode the packet in HEX
+	pkt := make([]byte, len(msg.OmciInd.Pkt)*2)
+	hex.Encode(pkt, msg.OmciInd.Pkt)
+	packet, omciMsg, err := omcilib.ParseOpenOltOmciPacket(pkt)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"SerialNumber": o.Sn(),
+			"omciPacket":   msg.OmciInd.Pkt,
+		}).Error("BBR Cannot parse OMCI packet")
+	}
 
 	log.WithFields(log.Fields{
 		"IntfId":  msg.OmciInd.IntfId,
 		"OnuId":   msg.OmciInd.OnuId,
-		"OnuSn":   common.OnuSnToString(o.SerialNumber),
+		"OnuSn":   o.Sn(),
 		"Pkt":     msg.OmciInd.Pkt,
-		"msgType": msgType,
+		"msgType": omciMsg.MessageType,
 	}).Trace("ONU Receives OMCI Msg")
-	switch msgType {
+	switch omciMsg.MessageType {
 	default:
 		log.WithFields(log.Fields{
 			"IntfId":  msg.OmciInd.IntfId,
 			"OnuId":   msg.OmciInd.OnuId,
-			"OnuSn":   common.OnuSnToString(o.SerialNumber),
+			"OnuSn":   o.Sn(),
 			"Pkt":     msg.OmciInd.Pkt,
-			"msgType": msgType,
+			"msgType": omciMsg.MessageType,
 		}).Fatalf("unexpected frame: %v", packet)
 	case omci.MibResetResponseType:
 		mibUpload, _ := omcilib.CreateMibUploadRequest(o.getNextTid(false))

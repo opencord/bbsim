@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/opencord/bbsim/internal/bbsim/types"
 	"io"
 	"reflect"
 	"time"
@@ -273,9 +274,9 @@ func (o *OltMock) handleOmciIndication(client openolt.OpenoltClient, omciInd *op
 		"Pkt":    omciInd.Pkt,
 	}).Trace("Received Onu omci indication")
 
-	msg := devices.Message{
-		Type: devices.OmciIndication,
-		Data: devices.OmciIndicationMessage{
+	msg := types.Message{
+		Type: types.OmciIndication,
+		Data: types.OmciIndicationMessage{
 			OnuSN:   onu.SerialNumber,
 			OnuID:   onu.ID,
 			OmciInd: omciInd,
@@ -329,9 +330,9 @@ func (o *OltMock) handlePktIndication(client openolt.OpenoltClient, pktIndicatio
 		service := s.(*devices.Service)
 		onu := service.Onu
 
-		msg := devices.Message{
-			Type: devices.OnuPacketIn,
-			Data: devices.OnuPacketMessage{
+		msg := types.Message{
+			Type: types.OnuPacketIn,
+			Data: types.OnuPacketMessage{
 				IntfId:    pktIndication.IntfId,
 				OnuId:     onu.ID,
 				Packet:    pkt,
@@ -362,9 +363,9 @@ func (o *OltMock) handlePktIndication(client openolt.OpenoltClient, pktIndicatio
 		}
 		// NOTE when we push the EAPOL flow we set the PortNo = OnuId for convenience sake
 		// BBsim responds setting the port number that was sent with the flow
-		msg := devices.Message{
-			Type: devices.OnuPacketIn,
-			Data: devices.OnuPacketMessage{
+		msg := types.Message{
+			Type: types.OnuPacketIn,
+			Data: types.OnuPacketMessage{
 				IntfId: pktIndication.IntfId,
 				OnuId:  pktIndication.PortNo,
 				Packet: pkt,

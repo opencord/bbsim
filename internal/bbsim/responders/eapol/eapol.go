@@ -26,7 +26,6 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
-	omci "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/v4/go/openolt"
 	log "github.com/sirupsen/logrus"
 )
@@ -36,7 +35,6 @@ var eapolLogger = log.WithFields(log.Fields{
 })
 
 var eapolVersion uint8 = 1
-var GetGemPortId = omci.GetGemPortId
 
 func sendEapolPktIn(msg bbsim.ByteMsg, portNo uint32, gemid uint32, stream bbsim.Stream) error {
 	// FIXME unify sendDHCPPktIn and sendEapolPktIn methods
