@@ -50,6 +50,7 @@ const (
 
 	AlarmIndication        MessageType = 16 // message data is an openolt.AlarmIndication
 	IGMPMembershipReportV3 MessageType = 17 // Version 3 Membership Report
+	UniStatusAlarm         MessageType = 19
 )
 
 func (m MessageType) String() string {
@@ -72,6 +73,7 @@ func (m MessageType) String() string {
 		"IGMPLeaveGroup",
 		"IGMPMembershipReportV3",
 		"FlowRemoved",
+		"UniStatusAlarm",
 	}
 	return names[m]
 }
@@ -107,12 +109,23 @@ type OnuIndicationMessage struct {
 	OnuSN     *openolt.SerialNumber
 }
 
+// these are OMCI messages going from VOLTHA to the OLT
+// used by BBSim
 type OmciMessage struct {
 	OnuSN   *openolt.SerialNumber
 	OnuID   uint32
 	omciMsg *openolt.OmciMsg
 }
 
+type UniStatusAlarmMessage struct {
+	OnuSN      *openolt.SerialNumber
+	OnuID      uint32
+	AdminState uint8
+	EntityID   uint16
+}
+
+// these are OMCI messages going from the OLT to VOLTHA
+// these messages are received by BBR
 type OmciIndicationMessage struct {
 	OnuSN   *openolt.SerialNumber
 	OnuID   uint32
