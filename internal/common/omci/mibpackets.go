@@ -18,9 +18,9 @@ package omci
 
 import (
 	"encoding/hex"
-	"github.com/cboling/omci"
-	me "github.com/cboling/omci/generated"
 	"github.com/google/gopacket"
+	"github.com/opencord/omci-lib-go"
+	me "github.com/opencord/omci-lib-go/generated"
 	omcisim "github.com/opencord/omci-sim"
 	log "github.com/sirupsen/logrus"
 )
@@ -41,6 +41,8 @@ type ServiceStep struct {
 	RxHandler   rxFrameParser
 }
 
+// NOTE this is basically the same as https://github.com/opencord/voltha-openonu-adapter-go/blob/master/internal/pkg/onuadaptercore/omci_cc.go#L545-L564
+// we should probably move it in "omci-lib-go"
 func serialize(msgType omci.MessageType, request gopacket.SerializableLayer, tid uint16) ([]byte, error) {
 	omciLayer := &omci.OMCI{
 		TransactionID: tid,
@@ -113,7 +115,7 @@ func CreateMibResetRequest(tid uint16) ([]byte, error) {
 
 	request := &omci.MibResetRequest{
 		MeBasePacket: omci.MeBasePacket{
-			EntityClass: me.OnuDataClassId,
+			EntityClass: me.OnuDataClassID,
 		},
 	}
 	pkt, err := serialize(omci.MibResetRequestType, request, tid)
@@ -126,10 +128,27 @@ func CreateMibResetRequest(tid uint16) ([]byte, error) {
 	return hexEncode(pkt)
 }
 
+func CreateMibResetResponse(tid uint16) ([]byte, error) {
+	// TODO reset MDX
+	request := &omci.MibResetResponse{
+		MeBasePacket: omci.MeBasePacket{
+			EntityClass: me.OnuDataClassID,
+		},
+	}
+	pkt, err := serialize(omci.MibResetResponseType, request, tid)
+	if err != nil {
+		omciLogger.WithFields(log.Fields{
+			"Err": err,
+		}).Error("Cannot serialize MibResetResponse")
+		return nil, err
+	}
+	return pkt, nil
+}
+
 func CreateMibUploadRequest(tid uint16) ([]byte, error) {
 	request := &omci.MibUploadRequest{
 		MeBasePacket: omci.MeBasePacket{
-			EntityClass: me.OnuDataClassId,
+			EntityClass: me.OnuDataClassID,
 			// Default Instance ID is 0
 		},
 	}
@@ -143,11 +162,31 @@ func CreateMibUploadRequest(tid uint16) ([]byte, error) {
 	return hexEncode(pkt)
 }
 
+func CreateMibUploadResponse(tid uint16) ([]byte, error) {
+
+	numberOfCommands := uint16(291) //NOTE should this be configurable? (not until we have moved all the messages away from omci-sim)
+
+	request := &omci.MibUploadResponse{
+		MeBasePacket: omci.MeBasePacket{
+			EntityClass: me.OnuDataClassID,
+		},
+		NumberOfCommands: numberOfCommands,
+	}
+	pkt, err := serialize(omci.MibUploadResponseType, request, tid)
+	if err != nil {
+		omciLogger.WithFields(log.Fields{
+			"Err": err,
+		}).Error("Cannot serialize MibUploadResponse")
+		return nil, err
+	}
+	return pkt, nil
+}
+
 func CreateMibUploadNextRequest(tid uint16, seqNumber uint16) ([]byte, error) {
 
 	request := &omci.MibUploadNextRequest{
 		MeBasePacket: omci.MeBasePacket{
-			EntityClass: me.OnuDataClassId,
+			EntityClass: me.OnuDataClassID,
 			// Default Instance ID is 0
 		},
 		CommandSequenceNumber: seqNumber,
