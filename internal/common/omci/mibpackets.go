@@ -18,9 +18,9 @@ package omci
 
 import (
 	"encoding/hex"
-	"github.com/cboling/omci"
-	me "github.com/cboling/omci/generated"
 	"github.com/google/gopacket"
+	"github.com/opencord/omci-lib-go"
+	me "github.com/opencord/omci-lib-go/generated"
 	omcisim "github.com/opencord/omci-sim"
 	log "github.com/sirupsen/logrus"
 )
@@ -113,7 +113,7 @@ func CreateMibResetRequest(tid uint16) ([]byte, error) {
 
 	request := &omci.MibResetRequest{
 		MeBasePacket: omci.MeBasePacket{
-			EntityClass: me.OnuDataClassId,
+			EntityClass: me.OnuDataClassID,
 		},
 	}
 	pkt, err := serialize(omci.MibResetRequestType, request, tid)
@@ -126,10 +126,27 @@ func CreateMibResetRequest(tid uint16) ([]byte, error) {
 	return hexEncode(pkt)
 }
 
+func CreateMibResetResponse(tid uint16) ([]byte, error) {
+
+	request := &omci.MibResetResponse{
+		MeBasePacket: omci.MeBasePacket{
+			EntityClass: me.OnuDataClassID,
+		},
+	}
+	pkt, err := serialize(omci.MibResetResponseType, request, tid)
+	if err != nil {
+		omciLogger.WithFields(log.Fields{
+			"Err": err,
+		}).Error("Cannot serialize MibResetResponse")
+		return nil, err
+	}
+	return pkt, nil
+}
+
 func CreateMibUploadRequest(tid uint16) ([]byte, error) {
 	request := &omci.MibUploadRequest{
 		MeBasePacket: omci.MeBasePacket{
-			EntityClass: me.OnuDataClassId,
+			EntityClass: me.OnuDataClassID,
 			// Default Instance ID is 0
 		},
 	}
@@ -147,7 +164,7 @@ func CreateMibUploadNextRequest(tid uint16, seqNumber uint16) ([]byte, error) {
 
 	request := &omci.MibUploadNextRequest{
 		MeBasePacket: omci.MeBasePacket{
-			EntityClass: me.OnuDataClassId,
+			EntityClass: me.OnuDataClassID,
 			// Default Instance ID is 0
 		},
 		CommandSequenceNumber: seqNumber,

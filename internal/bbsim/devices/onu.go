@@ -20,19 +20,21 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
 	"net"
+	"strconv"
 
 	"time"
 
-	"github.com/cboling/omci"
 	"github.com/google/gopacket/layers"
 	"github.com/jpillora/backoff"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/common"
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
+	"github.com/opencord/omci-lib-go"
 	omcisim "github.com/opencord/omci-sim"
 	"github.com/opencord/voltha-protos/v4/go/openolt"
 	"github.com/opencord/voltha-protos/v4/go/tech_profile"
@@ -291,6 +293,7 @@ loop:
 			case OMCI:
 				msg, _ := message.Data.(OmciMessage)
 				o.handleOmciMessage(msg, stream)
+				o.handleOmciRequest(msg, stream)
 			case FlowAdd:
 				msg, _ := message.Data.(OnuFlowUpdateMessage)
 				o.handleFlowAdd(msg)
@@ -377,7 +380,6 @@ func (o *Onu) processOmciMessage(message omcisim.OmciChMessage, stream openolt.O
 			"IntfId": message.Data.IntfId,
 			"Type":   message.Type,
 		}).Debug("UNI Link Alarm")
-		// TODO send to OLT
 
 		omciInd := openolt.OmciIndication{
 			IntfId: message.Data.IntfId,
@@ -521,13 +523,72 @@ func (o *Onu) sendTestResult(msg OmciMessage, stream openolt.Openolt_EnableIndic
 	return nil
 }
 
+// handleOmciRequest is responsible to parse the OMCI packets received from the openolt adapter
+// and generate the appropriate response to it
+func (o *Onu) handleOmciRequest(msg OmciMessage, stream openolt.Openolt_EnableIndicationServer) {
+
+	omciMsg, err := omcilib.ParseOpenOltOmciPacket(msg.omciMsg)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"SerialNumber": o.Sn(),
+			"omciPacket":   msg.omciMsg.Pkt,
+		}).Error("Cannot parse OMCI packet")
+	}
+
+	onuLogger.WithFields(log.Fields{
+		"omciMsgType":  omciMsg.MessageType,
+		"transCorrId":  strconv.FormatInt(int64(omciMsg.TransactionID), 16),
+		"DeviceIdent":  omciMsg.DeviceIdentifier,
+		"IntfId":       o.PonPortID,
+		"SerialNumber": o.Sn(),
+	}).Debug("omci-message-decoded:")
+
+	var responsePkt []byte
+	if omciMsg.MessageType == omci.MibResetRequestType {
+		responsePkt, _ = omcilib.CreateMibResetResponse(omciMsg.TransactionID)
+	}
+
+	if responsePkt != nil {
+		indication := &openolt.Indication_OmciInd{
+			OmciInd: &openolt.OmciIndication{
+				IntfId: o.PonPortID,
+				OnuId:  o.ID,
+				Pkt:    responsePkt,
+			},
+		}
+		if err := stream.Send(&openolt.Indication{Data: indication}); err != nil {
+			onuLogger.WithFields(log.Fields{
+				"IntfId":       o.PonPortID,
+				"SerialNumber": o.Sn(),
+				"omciPacket":   indication.OmciInd.Pkt,
+				"msg":          msg,
+			}).Errorf("send omci-lib-go indication failed: %v", err)
+			return
+		}
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"SerialNumber": o.Sn(),
+			"omciPacket":   indication.OmciInd.Pkt,
+		}).Debug("Sent OMCI message omci-lib-go")
+	}
+}
+
+// deprecated
+// handleOmciMessage is responsible to reply to all the OMCI packets sent by the openolt adapter (using omci-sim)
 func (o *Onu) handleOmciMessage(msg OmciMessage, stream openolt.Openolt_EnableIndicationServer) {
 
 	onuLogger.WithFields(log.Fields{
 		"IntfId":       o.PonPortID,
 		"SerialNumber": o.Sn(),
 		"omciPacket":   msg.omciMsg.Pkt,
-	}).Tracef("Received OMCI message")
+	}).Trace("Received OMCI message")
+
+	omciMsg, _ := omcilib.ParseOpenOltOmciPacket(msg.omciMsg)
+	if omciMsg.MessageType == omci.MibResetRequestType {
+		// this message is handled in the new library
+		return
+	}
 
 	o.publishOmciEvent(msg)
 
@@ -762,6 +823,7 @@ func (o *Onu) StartOmci(client openolt.OpenoltClient) {
 	sendOmciMsg(mibReset, o.PonPortID, o.ID, o.SerialNumber, "mibReset", client)
 }
 
+// handleOmci is used in BBR to generate the OMCI packets the openolt-adapter would send to the device
 func (o *Onu) handleOmci(msg OmciIndicationMessage, client openolt.OpenoltClient) {
 	msgType, packet := omcilib.DecodeOmci(msg.OmciInd.Pkt)
 
