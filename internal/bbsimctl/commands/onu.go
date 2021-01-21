@@ -40,6 +40,7 @@ const (
 
 type OnuSnString string
 type IgmpSubAction string
+type GroupAddress string
 
 const IgmpJoinKey string = "join"
 const IgmpLeaveKey string = "leave"
@@ -90,8 +91,9 @@ type ONUDhcpRestart struct {
 
 type ONUIgmp struct {
 	Args struct {
-		OnuSn     OnuSnString
-		SubAction IgmpSubAction
+		OnuSn        OnuSnString
+		SubAction    IgmpSubAction
+		GroupAddress GroupAddress
 	} `positional-args:"yes" required:"yes"`
 }
 
@@ -331,6 +333,7 @@ func (options *ONUIgmp) Execute(args []string) error {
 	igmpReq := pb.IgmpRequest{
 		OnuReq:       &req,
 		SubActionVal: subActionVal,
+		GroupAddress: string(options.Args.GroupAddress),
 	}
 	res, err := client.GetONU(ctx, igmpReq.OnuReq)
 	if err != nil {
@@ -340,7 +343,7 @@ func (options *ONUIgmp) Execute(args []string) error {
 	}
 	log.WithFields(log.Fields{
 		"SerialNumber": igmpReq.OnuReq.SerialNumber,
-	}).Debugf("ONU has indentified : %s", res)
+	}).Debugf("ONU has identified : %s", res)
 
 	igmpRes, igmpErr := client.ChangeIgmpState(ctx, &igmpReq)
 	if igmpErr != nil {

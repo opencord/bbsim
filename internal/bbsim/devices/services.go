@@ -255,19 +255,32 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 		},
 		fsm.Callbacks{
 			"igmp_join_start": func(e *fsm.Event) {
+				igmpInfo, _ := e.Args[0].(IgmpMessage)
 				msg := Message{
 					Type: IGMPMembershipReportV2,
+					Data: IgmpMessage{
+						GroupAddress: igmpInfo.GroupAddress,
+					},
 				}
 				service.Channel <- msg
 			},
 			"igmp_leave": func(e *fsm.Event) {
+				igmpInfo, _ := e.Args[0].(IgmpMessage)
 				msg := Message{
-					Type: IGMPLeaveGroup}
+					Type: IGMPLeaveGroup,
+					Data: IgmpMessage{
+						GroupAddress: igmpInfo.GroupAddress,
+					},
+				}
 				service.Channel <- msg
 			},
 			"igmp_join_startv3": func(e *fsm.Event) {
+				igmpInfo, _ := e.Args[0].(IgmpMessage)
 				msg := Message{
 					Type: IGMPMembershipReportV3,
+					Data: IgmpMessage{
+						GroupAddress: igmpInfo.GroupAddress,
+					},
 				}
 				service.Channel <- msg
 			},
@@ -422,29 +435,32 @@ func (s *Service) HandleChannel() {
 
 			}
 		case IGMPMembershipReportV2:
+			igmpInfo, _ := msg.Data.(IgmpMessage)
 			serviceLogger.WithFields(log.Fields{
 				"OnuId":  s.Onu.ID,
 				"IntfId": s.Onu.PonPortID,
 				"OnuSn":  s.Onu.Sn(),
 				"Name":   s.Name,
-			}).Debug("Recieved IGMPMembershipReportV2 message on ONU channel")
-			_ = igmp.SendIGMPMembershipReportV2(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream)
+			}).Debug("Received IGMPMembershipReportV2 message on ONU channel")
+			_ = igmp.SendIGMPMembershipReportV2(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
 		case IGMPLeaveGroup:
+			igmpInfo, _ := msg.Data.(IgmpMessage)
 			serviceLogger.WithFields(log.Fields{
 				"OnuId":  s.Onu.ID,
 				"IntfId": s.Onu.PonPortID,
 				"OnuSn":  s.Onu.Sn(),
 				"Name":   s.Name,
-			}).Debug("Recieved IGMPLeaveGroupV2 message on ONU channel")
-			_ = igmp.SendIGMPLeaveGroupV2(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream)
+			}).Debug("Received IGMPLeaveGroupV2 message on ONU channel")
+			_ = igmp.SendIGMPLeaveGroupV2(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
 		case IGMPMembershipReportV3:
+			igmpInfo, _ := msg.Data.(IgmpMessage)
 			serviceLogger.WithFields(log.Fields{
 				"OnuId":  s.Onu.ID,
 				"IntfId": s.Onu.PonPortID,
 				"OnuSn":  s.Onu.Sn(),
 				"Name":   s.Name,
-			}).Debug("Recieved IGMPMembershipReportV3 message on ONU channel")
-			_ = igmp.SendIGMPMembershipReportV3(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream)
+			}).Debug("Received IGMPMembershipReportV3 message on ONU channel")
+			_ = igmp.SendIGMPMembershipReportV3(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
 
 		}
 	}

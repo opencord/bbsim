@@ -139,6 +139,10 @@ type OnuPacketMessage struct {
 	GemPortId  uint32 // this is used by BBR
 }
 
+type IgmpMessage struct {
+	GroupAddress string
+}
+
 type OperState int
 
 const (
