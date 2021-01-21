@@ -169,6 +169,7 @@ enum SubActionTypes {
 message IgmpRequest {
     ONURequest OnuReq = 1;
     SubActionTypes SubActionVal = 2;
+    string GroupAddress = 3;
 }
 
 message Flows {
@@ -251,7 +252,7 @@ service BBSim {
     // Restart EAPOL for ONU
     rpc RestartEapol (ONURequest) returns (Response) {
     }
-    // Resatrt DHCP for ONU
+    // Restart DHCP for ONU
     rpc RestartDhcp (ONURequest) returns (Response) {
     }
     // Send ONU alarm indication
@@ -263,7 +264,7 @@ service BBSim {
     // Get all flows or ONU specific flows
     rpc GetFlows (ONURequest) returns (Flows) {
     }
-    // Chnage IGMP state 
+    // Change IGMP state
     rpc ChangeIgmpState (IgmpRequest) returns (Response) {
     }
     // Get Traffic scheduler information for ONU

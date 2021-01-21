@@ -231,8 +231,9 @@ func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest
 	res := &bbsim.Response{}
 
 	logger.WithFields(log.Fields{
-		"OnuSn":     req.OnuReq.SerialNumber,
-		"subAction": req.SubActionVal,
+		"OnuSn":        req.OnuReq.SerialNumber,
+		"subAction":    req.SubActionVal,
+		"GroupAddress": req.GroupAddress,
 	}).Infof("Received igmp request for ONU")
 
 	olt := devices.GetOLT()
@@ -269,7 +270,7 @@ func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest
 					"Service": service.Name,
 				}).Debugf("Sending %s event on Service %s", event, service.Name)
 
-				if err := service.IGMPState.Event(event); err != nil {
+				if err := service.IGMPState.Event(event, devices.IgmpMessage{GroupAddress: req.GroupAddress}); err != nil {
 					logger.WithFields(log.Fields{
 						"OnuId":   onu.ID,
 						"IntfId":  onu.PonPortID,

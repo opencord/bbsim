@@ -29,13 +29,14 @@ import (
 )
 
 func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32,
-	gemPortId uint32, macAddress net.HardwareAddr, cTag int, pbit uint8, stream bbsim.Stream) error {
+	gemPortId uint32, macAddress net.HardwareAddr, cTag int, pbit uint8, stream bbsim.Stream, groupAddress string) error {
 	log.WithFields(log.Fields{
 		"OnuId":        onuId,
 		"SerialNumber": serialNumber,
 		"PortNo":       portNo,
+		"GroupAddress": groupAddress,
 	}).Debugf("Entered SendIGMPLeaveGroupV2")
-	igmp := createIGMPV2LeaveRequestPacket()
+	igmp := createIGMPV2LeaveRequestPacket(groupAddress)
 	pkt, err := serializeIgmpPacket(ponPortId, onuId, cTag, macAddress, pbit, igmp)
 
 	if err != nil {
@@ -43,6 +44,7 @@ func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, p
 			"OnuId":        onuId,
 			"IntfId":       ponPortId,
 			"SerialNumber": serialNumber,
+			"GroupAddress": groupAddress,
 		}).Errorf("Seriliazation of igmp packet failed :  %s", err)
 		return err
 	}
@@ -63,6 +65,7 @@ func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, p
 			"SerialNumber": serialNumber,
 			"PortNo":       portNo,
 			"IntfId":       ponPortId,
+			"GroupAddress": groupAddress,
 			"err":          err,
 		}).Error("Fail to send IGMP PktInd indication for ONU")
 		return err
@@ -71,9 +74,9 @@ func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, p
 }
 
 func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32,
-	gemPortId uint32, macAddress net.HardwareAddr, cTag int, pbit uint8, stream bbsim.Stream) error {
+	gemPortId uint32, macAddress net.HardwareAddr, cTag int, pbit uint8, stream bbsim.Stream, groupAddress string) error {
 
-	igmp := createIGMPV2MembershipReportPacket()
+	igmp := createIGMPV2MembershipReportPacket(groupAddress)
 	pkt, err := serializeIgmpPacket(ponPortId, onuId, cTag, macAddress, pbit, igmp)
 
 	if err != nil {
@@ -81,6 +84,7 @@ func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber str
 			"OnuId":        onuId,
 			"IntfId":       ponPortId,
 			"SerialNumber": serialNumber,
+			"GroupAddress": groupAddress,
 		}).Errorf("Seriliazation of igmp packet failed :  %s", err)
 		return err
 	}
@@ -101,6 +105,7 @@ func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber str
 			"SerialNumber": serialNumber,
 			"PortNo":       portNo,
 			"IntfId":       ponPortId,
+			"GroupAddress": groupAddress,
 			"err":          err,
 		}).Errorf("Fail to send IGMP PktInd indication")
 		return err
@@ -110,18 +115,21 @@ func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber str
 		"OnuId":        onuId,
 		"SerialNumber": serialNumber,
 		"PortNo":       portNo,
+		"GroupAddress": groupAddress,
 	}).Debugf("Sent SendIGMPMembershipReportV2")
 	return nil
 }
 
 func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32,
-	gemPortId uint32, macAddress net.HardwareAddr, cTag int, pbit uint8, stream bbsim.Stream) error {
+	gemPortId uint32, macAddress net.HardwareAddr, cTag int, pbit uint8, stream bbsim.Stream, groupAddress string) error {
+
 	log.WithFields(log.Fields{
 		"OnuId":        onuId,
 		"SerialNumber": serialNumber,
 		"PortNo":       portNo,
+		"GroupAddress": groupAddress,
 	}).Debugf("Entered SendIGMPMembershipReportV3")
-	igmp := createIGMPV3MembershipReportPacket()
+	igmp := createIGMPV3MembershipReportPacket(groupAddress)
 	pkt, err := serializeIgmpPacket(ponPortId, onuId, cTag, macAddress, pbit, igmp)
 
 	if err != nil {
@@ -129,6 +137,7 @@ func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber str
 			"OnuId":        onuId,
 			"IntfId":       ponPortId,
 			"SerialNumber": serialNumber,
+			"GroupAddress": groupAddress,
 		}).Errorf("Seriliazation of igmp packet failed :  %s", err)
 		return err
 	}
@@ -148,6 +157,7 @@ func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber str
 			"OnuId":        onuId,
 			"IntfId":       ponPortId,
 			"SerialNumber": serialNumber,
+			"GroupAddress": groupAddress,
 			"err":          err,
 		}).Errorf("Fail to send IGMP PktInd indication")
 		return err
@@ -176,13 +186,14 @@ func HandleNextPacket(ponPortId uint32, onuId uint32, serialNumber string, portN
 	igmp := igmpLayer.(*layers.IGMPv1or2)
 
 	if igmp.Type == layers.IGMPMembershipQuery {
-		_ = SendIGMPMembershipReportV2(ponPortId, onuId, serialNumber, portNo, gemPortId, macAddress, cTag, pbit, stream)
+		_ = SendIGMPMembershipReportV2(ponPortId, onuId, serialNumber, portNo, gemPortId, macAddress,
+			cTag, pbit, stream, igmp.GroupAddress.String())
 	}
 
 	return nil
 }
 
-func createIGMPV3MembershipReportPacket() *IGMP {
+func createIGMPV3MembershipReportPacket(groupAddress string) *IGMP {
 
 	groupRecord1 := IGMPv3GroupRecord{
 		Type:             IGMPv3GroupRecordType(IGMPIsIn),
@@ -206,7 +217,7 @@ func createIGMPV3MembershipReportPacket() *IGMP {
 		Type:                    layers.IGMPMembershipReportV3, //IGMPV3 Membership Report
 		MaxResponseTime:         time.Duration(1),
 		Checksum:                0,
-		GroupAddress:            net.IPv4(224, 0, 0, 22),
+		GroupAddress:            net.ParseIP(groupAddress),
 		SupressRouterProcessing: false,
 		RobustnessValue:         0,
 		IntervalTime:            time.Duration(1),
@@ -220,21 +231,21 @@ func createIGMPV3MembershipReportPacket() *IGMP {
 	return igmpDefault
 }
 
-func createIGMPV2MembershipReportPacket() *IGMP {
+func createIGMPV2MembershipReportPacket(groupAddress string) *IGMP {
 	return &IGMP{
 		Type:         layers.IGMPMembershipReportV2, //IGMPV2 Membership Report
 		Checksum:     0,
-		GroupAddress: net.IPv4(224, 0, 0, 22),
+		GroupAddress: net.ParseIP(groupAddress),
 		Version:      2,
 	}
 }
 
-func createIGMPV2LeaveRequestPacket() *IGMP {
+func createIGMPV2LeaveRequestPacket(groupAddress string) *IGMP {
 	return &IGMP{
 		Type:            layers.IGMPLeaveGroup, //IGMPV2 Leave Group
 		MaxResponseTime: time.Duration(1),
 		Checksum:        0,
-		GroupAddress:    net.IPv4(224, 0, 0, 22),
+		GroupAddress:    net.ParseIP(groupAddress),
 		Version:         2,
 	}
 }
@@ -258,7 +269,7 @@ func serializeIgmpPacket(intfId uint32, onuId uint32, cTag int, srcMac net.Hardw
 		Id:       0,
 		TTL:      128,
 		SrcIP:    []byte{0, 0, 0, 0},
-		DstIP:    []byte{224, 0, 0, 22},
+		DstIP:    igmp.GroupAddress,
 		Protocol: layers.IPProtocolIGMP,
 		Options:  []layers.IPv4Option{{OptionType: 148, OptionLength: 4, OptionData: make([]byte, 0)}}, //Adding router alert option
 	}
