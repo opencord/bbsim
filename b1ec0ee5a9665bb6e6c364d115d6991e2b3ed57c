@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "371770dc_321fbb0d",
+        "filename": "internal/common/omci/create.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-22T09:13:37Z",
+      "side": 1,
+      "message": "Debug",
+      "revId": "b1ec0ee5a9665bb6e6c364d115d6991e2b3ed57c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c1b0954_b0e89488",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-22T09:13:37Z",
+      "side": 1,
+      "message": "same",
+      "revId": "b1ec0ee5a9665bb6e6c364d115d6991e2b3ed57c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25fec7b5_968ff5a5",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-22T09:13:37Z",
+      "side": 1,
+      "message": "I\u0027m not sure this is used, should be removed ?",
+      "revId": "b1ec0ee5a9665bb6e6c364d115d6991e2b3ed57c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb593b3d_385e2463",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-22T09:13:37Z",
+      "side": 1,
+      "message": "the manage entity id is the same of the Onug response, is this correct ?",
+      "revId": "b1ec0ee5a9665bb6e6c364d115d6991e2b3ed57c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6bf785ba_938cf430",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-22T09:13:37Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "b1ec0ee5a9665bb6e6c364d115d6991e2b3ed57c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c3d389a_126d2469",
+        "filename": "internal/common/omci/get_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-22T09:13:37Z",
+      "side": 1,
+      "message": "same, is this used ?",
+      "revId": "b1ec0ee5a9665bb6e6c364d115d6991e2b3ed57c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f47b2c29_9bf7d1b0",
+        "filename": "internal/common/omci/mibpackets.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-22T09:13:37Z",
+      "side": 1,
+      "message": "do you mind opening a jira for chip about this ?",
+      "revId": "b1ec0ee5a9665bb6e6c364d115d6991e2b3ed57c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
