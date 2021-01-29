@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "461d64dc_b68fc367",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-29T10:29:33Z",
+      "side": 1,
+      "message": "is this needed ?",
+      "revId": "4feedd09fbe31081c5f75ad7933c0ec97729dace",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "957e9325_7ff62bcf",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-29T10:29:33Z",
+      "side": 1,
+      "message": "maybe log an error if this fails",
+      "revId": "4feedd09fbe31081c5f75ad7933c0ec97729dace",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71d154ce_76731a68",
+        "filename": "internal/common/omci/mibpackets.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-29T10:29:33Z",
+      "side": 1,
+      "message": "probably not just these two lines. Also do you mind creating a jira for this ? thanks!",
+      "revId": "4feedd09fbe31081c5f75ad7933c0ec97729dace",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13d5ae90_a313f3a8",
+        "filename": "internal/common/omci/omci_base.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-01-29T10:29:33Z",
+      "side": 1,
+      "message": "I\u0027m amazed there is no library/helper function for this, seems so error prone to copy it everywhere.",
+      "revId": "4feedd09fbe31081c5f75ad7933c0ec97729dace",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
