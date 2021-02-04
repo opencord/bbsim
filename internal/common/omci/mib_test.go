@@ -17,13 +17,16 @@
 package omci
 
 import (
-	"fmt"
 	"github.com/google/gopacket"
 	"github.com/opencord/omci-lib-go"
 	me "github.com/opencord/omci-lib-go/generated"
 	"gotest.tools/assert"
 	"testing"
 )
+
+// used to verify that the first message in the MIB Sync (OnuData)
+// reports the correct MDS
+const MDS = uint8(128)
 
 func TestCreateMibResetResponse(t *testing.T) {
 	data, _ := CreateMibResetResponse(1)
@@ -51,6 +54,7 @@ type mibExpected struct {
 	messageType   omci.MessageType
 	transactionId uint16
 	entityClass   me.ClassID
+	entityID      uint16
 	attributes    map[string]interface{}
 }
 
@@ -73,20 +77,20 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 		want mibExpected
 	}{
 		{"mibUploadNext-0", createTestMibUploadNextArgs(t, 1, 0),
-			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 1, entityClass: me.OnuDataClassID, attributes: map[string]interface{}{"MibDataSync": uint8(0)}}},
+			mibExpected{messageType: omci.MibUploadNextResponseType, entityID: 0, transactionId: 1, entityClass: me.OnuDataClassID, attributes: map[string]interface{}{"MibDataSync": MDS}}},
 		{"mibUploadNext-1", createTestMibUploadNextArgs(t, 2, 1),
-			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 2, entityClass: me.CircuitPackClassID, attributes: map[string]interface{}{"Type": uint8(47), "NumberOfPorts": uint8(4)}}},
+			mibExpected{messageType: omci.MibUploadNextResponseType, entityID: 0, transactionId: 2, entityClass: me.CircuitPackClassID, attributes: map[string]interface{}{"Type": uint8(47), "NumberOfPorts": uint8(4)}}},
 		{"mibUploadNext-4", createTestMibUploadNextArgs(t, 3, 4),
-			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 3, entityClass: me.CircuitPackClassID, attributes: map[string]interface{}{"PowerShedOverride": uint32(0)}}},
+			mibExpected{messageType: omci.MibUploadNextResponseType, entityID: 0, transactionId: 3, entityClass: me.CircuitPackClassID, attributes: map[string]interface{}{"PowerShedOverride": uint32(0)}}},
 		{"mibUploadNext-10", createTestMibUploadNextArgs(t, 4, 10),
-			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 4, entityClass: me.CircuitPackClassID, attributes: map[string]interface{}{"SensedType": uint8(47)}}},
+			mibExpected{messageType: omci.MibUploadNextResponseType, entityID: 258, transactionId: 4, entityClass: me.CircuitPackClassID, attributes: map[string]interface{}{"SensedType": uint8(47)}}},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
 			// create the packet starting from the mibUploadNextRequest
-			data, _ := CreateMibUploadNextResponse(tt.args.omciPkt, tt.args.omciMsg)
+			data, _ := CreateMibUploadNextResponse(tt.args.omciPkt, tt.args.omciMsg, MDS)
 			omciMsg, omciPkt := omciBytesToMsg(t, data)
 
 			assert.Equal(t, omciMsg.MessageType, tt.want.messageType)
@@ -98,14 +102,8 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 			}
 
 			assert.Equal(t, omciMsg.TransactionID, tt.want.transactionId) // tid
-			// GetAttribute("ManagedEntityId") returns nil,
-			// msgObj.EntityClass is always OnuDataClassID
-			// how do we check this?
-			//meId, _ := msgObj.ReportedME.GetAttribute("ManagedEntityId")
-			//assert.Equal(t, meId, tt.want.entityClass)
-			//assert.Equal(t, msgObj.EntityClass, tt.want.entityClass)
 
-			fmt.Println(msgObj.EntityInstance, msgObj.ReportedME.GetEntityID())
+			assert.Equal(t, msgObj.ReportedME.GetEntityID(), tt.want.entityID)
 
 			for k, v := range tt.want.attributes {
 				attr, _ := msgObj.ReportedME.GetAttribute(k)

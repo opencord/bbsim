@@ -79,6 +79,9 @@ type Onu struct {
 	Channel chan bbsim.Message // this Channel is to track state changes OMCI messages, EAPOL and DHCP packets
 
 	// OMCI params
+	MibDataSync uint8
+
+	// OMCI params (Used in BBR)
 	tid       uint16
 	hpTid     uint16
 	seqNumber uint16
@@ -92,13 +95,6 @@ func (o *Onu) Sn() string {
 }
 
 func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isMock bool) *Onu {
-	b := &backoff.Backoff{
-		//These are the defaults
-		Min:    5 * time.Second,
-		Max:    35 * time.Second,
-		Factor: 1.5,
-		Jitter: false,
-	}
 
 	o := Onu{
 		ID:                  id,
@@ -113,7 +109,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 		DiscoveryRetryDelay: 60 * time.Second, // this is used to send OnuDiscoveryIndications until an activate call is received
 		Flows:               []FlowKey{},
 		DiscoveryDelay:      delay,
-		Backoff:             b,
+		MibDataSync:         0,
 	}
 	o.SerialNumber = o.NewSN(olt.ID, pon.ID, id)
 	// NOTE this state machine is used to track the operational
@@ -292,6 +288,7 @@ loop:
 				msg, _ := message.Data.(bbsim.OnuIndicationMessage)
 				o.sendOnuIndication(msg, stream)
 			case bbsim.OMCI:
+				// these are OMCI messages received by the ONU
 				msg, _ := message.Data.(bbsim.OmciMessage)
 				o.handleOmciRequest(msg, stream)
 			case bbsim.UniStatusAlarm:
@@ -374,6 +371,7 @@ loop:
 				}
 				// BBR specific messages
 			case bbsim.OmciIndication:
+				// these are OMCI messages received by BBR (VOLTHA emulator)
 				msg, _ := message.Data.(bbsim.OmciIndicationMessage)
 				o.handleOmciResponse(msg, client)
 			case bbsim.SendEapolFlow:
@@ -644,14 +642,21 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 	var responsePkt []byte
 	switch omciMsg.MessageType {
 	case omci.MibResetRequestType:
+		o.MibDataSync = 0
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"OnuId":        o.ID,
+			"SerialNumber": o.Sn(),
+		}).Debug("received-mib-reset-request-resetting-mds")
 		responsePkt, _ = omcilib.CreateMibResetResponse(omciMsg.TransactionID)
 	case omci.MibUploadRequestType:
 		responsePkt, _ = omcilib.CreateMibUploadResponse(omciMsg.TransactionID)
 	case omci.MibUploadNextRequestType:
-		responsePkt, _ = omcilib.CreateMibUploadNextResponse(omciPkt, omciMsg)
+		responsePkt, _ = omcilib.CreateMibUploadNextResponse(omciPkt, omciMsg, o.MibDataSync)
 	case omci.GetRequestType:
-		responsePkt, _ = omcilib.CreateGetResponse(omciPkt, omciMsg, o.SerialNumber)
+		responsePkt, _ = omcilib.CreateGetResponse(omciPkt, omciMsg, o.SerialNumber, o.MibDataSync)
 	case omci.SetRequestType:
+		o.MibDataSync++
 		responsePkt, _ = omcilib.CreateSetResponse(omciPkt, omciMsg)
 
 		msgObj, _ := omcilib.ParseSetRequest(omciPkt)
@@ -679,8 +684,10 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			}
 		}
 	case omci.CreateRequestType:
+		o.MibDataSync++
 		responsePkt, _ = omcilib.CreateCreateResponse(omciPkt, omciMsg)
 	case omci.DeleteRequestType:
+		o.MibDataSync++
 		responsePkt, _ = omcilib.CreateDeleteResponse(omciPkt, omciMsg)
 	case omci.RebootRequestType:
 

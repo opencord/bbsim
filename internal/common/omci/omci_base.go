@@ -18,6 +18,7 @@ package omci
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/google/gopacket"
@@ -72,4 +73,11 @@ func hexDecode(pkt []byte) []byte {
 		p[j] = u<<4 + l
 	}
 	return p
+}
+
+//HexEncode convert binary to hex
+func HexEncode(omciPkt []byte) ([]byte, error) {
+	dst := make([]byte, hex.EncodedLen(len(omciPkt)))
+	hex.Encode(dst, omciPkt)
+	return dst, nil
 }

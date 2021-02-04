@@ -50,7 +50,7 @@ func CreateDeleteResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, 
 	omciLogger.WithFields(log.Fields{
 		"EntityClass":    msgObj.EntityClass,
 		"EntityInstance": msgObj.EntityInstance,
-	}).Trace("recevied-omci-delete-request")
+	}).Trace("received-omci-delete-request")
 
 	response := &omci.DeleteResponse{
 		MeBasePacket: omci.MeBasePacket{
@@ -60,11 +60,11 @@ func CreateDeleteResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, 
 		Result: me.Success,
 	}
 
-	pkt, err := serialize(omci.DeleteResponseType, response, omciMsg.TransactionID)
+	pkt, err := Serialize(omci.DeleteResponseType, response, omciMsg.TransactionID)
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
 			"Err": err,
-		}).Error("cannot-serialize-DeleteResponse")
+		}).Error("cannot-Serialize-DeleteResponse")
 		return nil, err
 	}
 

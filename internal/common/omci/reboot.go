@@ -61,11 +61,11 @@ func CreateRebootResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, 
 		Result: me.Success,
 	}
 
-	pkt, err := serialize(omci.RebootResponseType, response, omciMsg.TransactionID)
+	pkt, err := Serialize(omci.RebootResponseType, response, omciMsg.TransactionID)
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
 			"Err": err,
-		}).Error("cannot-serialize-RebootResponse")
+		}).Error("cannot-Serialize-RebootResponse")
 		return nil, err
 	}
 

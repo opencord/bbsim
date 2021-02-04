@@ -55,33 +55,81 @@ func omciToGetResponse(t *testing.T, omciPkt *gopacket.Packet) *omci.GetResponse
 	return msgObj
 }
 
-func TestCreateOnu2gResponse(t *testing.T) {
-	response := createOnu2gResponse(40960, 1)
-	data, _ := serialize(omci.GetResponseType, response, 1)
+type args struct {
+	generatedPkt  *omci.GetResponse
+	transactionId uint16
+}
 
-	// emulate the openonu-go behavior:
-	// omci_cc.receiveMessage process the message (creates a gopacket and extracts the OMCI layer) and invokes a callback
-	// in the GetResponse case omci_cc.receiveOmciResponse
-	// then the OmciMessage (gopacket + OMIC layer) is is published on a channel
-	omciMsg, omciPkt := omciBytesToMsg(t, data)
+type want struct {
+	transactionId uint16
+	attributes    map[string]interface{}
+}
 
-	assert.Equal(t, omciMsg.MessageType, omci.GetResponseType)
+func TestGetResponse(t *testing.T) {
 
-	// that is read by myb_sync.processMibSyncMessages
-	// the myb_sync.handleOmciMessage is called and then
-	// myb_sync.handleOmciGetResponseMessage where we extract the GetResponse layer
-	getResponseLayer := omciToGetResponse(t, omciPkt)
+	// NOTE that we're not testing the SerialNumber attribute part of the ONU-G
+	// response here as it is a special case and it requires transformation.
+	// we specifically test that in TestCreateOnugResponse
+	sn := &openolt.SerialNumber{
+		VendorId:       []byte("BBSM"),
+		VendorSpecific: []byte{0, byte(1 % 256), byte(1), byte(1)},
+	}
 
-	assert.Equal(t, getResponseLayer.Result, me.Success)
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{"getOnu2gResponse",
+			args{createOnu2gResponse(57344, 10), 1},
+			want{1, map[string]interface{}{"OpticalNetworkUnitManagementAndControlChannelOmccVersion": uint8(180)}},
+		},
+		{"getOnugResponse",
+			args{createOnugResponse(40960, 10, sn), 1},
+			want{1, map[string]interface{}{}},
+		},
+		{"getOnuDataResponse",
+			args{createOnuDataResponse(32768, 10, 129), 2},
+			want{2, map[string]interface{}{"MibDataSync": uint8(129)}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			data, _ := Serialize(omci.GetResponseType, tt.args.generatedPkt, tt.args.transactionId)
+
+			// emulate the openonu-go behavior:
+			// omci_cc.receiveMessage process the message (creates a gopacket and extracts the OMCI layer) and invokes a callback
+			// in the GetResponse case omci_cc.receiveOmciResponse
+			// then the OmciMessage (gopacket + OMIC layer) is is published on a channel
+			omciMsg, omciPkt := omciBytesToMsg(t, data)
+
+			assert.Equal(t, omciMsg.MessageType, omci.GetResponseType)
+			assert.Equal(t, omciMsg.TransactionID, tt.want.transactionId)
+
+			// that is read by myb_sync.processMibSyncMessages
+			// the myb_sync.handleOmciMessage is called and then
+			// myb_sync.handleOmciGetResponseMessage where we extract the GetResponse layer
+			getResponseLayer := omciToGetResponse(t, omciPkt)
+
+			assert.Equal(t, getResponseLayer.Result, me.Success)
+
+			for k, v := range tt.want.attributes {
+				attr := getResponseLayer.Attributes[k]
+				assert.Equal(t, attr, v)
+			}
+		})
+	}
 }
 
 func TestCreateOnugResponse(t *testing.T) {
+
 	sn := &openolt.SerialNumber{
 		VendorId:       []byte("BBSM"),
 		VendorSpecific: []byte{0, byte(1 % 256), byte(1), byte(1)},
 	}
 	response := createOnugResponse(40960, 1, sn)
-	data, _ := serialize(omci.GetResponseType, response, 1)
+	data, _ := Serialize(omci.GetResponseType, response, 1)
 
 	omciMsg, omciPkt := omciBytesToMsg(t, data)
 
