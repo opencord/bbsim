@@ -43,7 +43,7 @@ func ParseGetRequest(omciPkt gopacket.Packet) (*omci.GetRequest, error) {
 	return msgObj, nil
 }
 
-func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, error) {
+func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, mds uint8) ([]byte, error) {
 
 	msgObj, err := ParseGetRequest(omciPkt)
 
@@ -55,7 +55,7 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, err
 		"EntityClass":    msgObj.EntityClass,
 		"EntityInstance": msgObj.EntityInstance,
 		"AttributeMask":  fmt.Sprintf("%x", msgObj.AttributeMask),
-	}).Trace("recevied-omci-get-request")
+	}).Trace("received-omci-get-request")
 
 	var response *omci.GetResponse
 	switch msgObj.EntityClass {
@@ -74,7 +74,7 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, err
 	case me.AniGClassID:
 		response = createAnigResponse(msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.OnuDataClassID:
-		response = createOnuDataResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+		response = createOnuDataResponse(msgObj.AttributeMask, msgObj.EntityInstance, mds)
 	default:
 		omciLogger.WithFields(log.Fields{
 			"EntityClass":    msgObj.EntityClass,
@@ -84,12 +84,12 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, err
 		return nil, nil
 	}
 
-	pkt, err := serialize(omci.GetResponseType, response, omciMsg.TransactionID)
+	pkt, err := Serialize(omci.GetResponseType, response, omciMsg.TransactionID)
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
 			"Err":  err,
 			"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
-		}).Error("cannot-serialize-Onu2gResponse")
+		}).Error("cannot-Serialize-Onu2gResponse")
 		return nil, err
 	}
 
@@ -307,12 +307,12 @@ func createAnigResponse(attributeMask uint16, entityID uint16) *omci.GetResponse
 	}
 }
 
-func createOnuDataResponse(attributeMask uint16, entityID uint16) *omci.GetResponse {
+func createOnuDataResponse(attributeMask uint16, entityID uint16, mds uint8) *omci.GetResponse {
 	managedEntity, meErr := me.NewOnuData(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
 			"ManagedEntityId": entityID,
-			"MibDataSync":     0,
+			"MibDataSync":     mds,
 		},
 	})
 
