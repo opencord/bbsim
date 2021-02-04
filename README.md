@@ -1,4 +1,4 @@
-# BroadBand Simular (BBSim)
+# BroadBand Simulator (BBSim)
 
 Build
 =====
