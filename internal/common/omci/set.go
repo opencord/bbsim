@@ -62,11 +62,11 @@ func CreateSetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, err
 		Result: me.Success,
 	}
 
-	pkt, err := serialize(omci.SetResponseType, response, omciMsg.TransactionID)
+	pkt, err := Serialize(omci.SetResponseType, response, omciMsg.TransactionID)
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
 			"Err": err,
-		}).Error("cannot-serialize-SetResponse")
+		}).Error("cannot-Serialize-SetResponse")
 		return nil, err
 	}
 

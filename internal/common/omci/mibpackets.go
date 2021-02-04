@@ -17,7 +17,6 @@
 package omci
 
 import (
-	"encoding/hex"
 	"errors"
 	"github.com/google/gopacket"
 	"github.com/opencord/omci-lib-go"
@@ -43,7 +42,7 @@ type ServiceStep struct {
 
 // NOTE this is basically the same as https://github.com/opencord/voltha-openonu-adapter-go/blob/master/internal/pkg/onuadaptercore/omci_cc.go#L545-L564
 // we should probably move it in "omci-lib-go"
-func serialize(msgType omci.MessageType, request gopacket.SerializableLayer, tid uint16) ([]byte, error) {
+func Serialize(msgType omci.MessageType, request gopacket.SerializableLayer, tid uint16) ([]byte, error) {
 	omciLayer := &omci.OMCI{
 		TransactionID: tid,
 		MessageType:   msgType,
@@ -59,12 +58,6 @@ func serialize(msgType omci.MessageType, request gopacket.SerializableLayer, tid
 	return buffer.Bytes(), nil
 }
 
-func hexEncode(omciPkt []byte) ([]byte, error) {
-	dst := make([]byte, hex.EncodedLen(len(omciPkt)))
-	hex.Encode(dst, omciPkt)
-	return dst, nil
-}
-
 func CreateMibResetRequest(tid uint16) ([]byte, error) {
 
 	request := &omci.MibResetRequest{
@@ -72,30 +65,29 @@ func CreateMibResetRequest(tid uint16) ([]byte, error) {
 			EntityClass: me.OnuDataClassID,
 		},
 	}
-	pkt, err := serialize(omci.MibResetRequestType, request, tid)
+	pkt, err := Serialize(omci.MibResetRequestType, request, tid)
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
 			"Err": err,
-		}).Fatalf("Cannot serialize MibResetRequest")
+		}).Fatalf("Cannot Serialize MibResetRequest")
 		return nil, err
 	}
-	return hexEncode(pkt)
+	return HexEncode(pkt)
 }
 
 func CreateMibResetResponse(tid uint16) ([]byte, error) {
 
-	// TODO reset MDX
 	request := &omci.MibResetResponse{
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass: me.OnuDataClassID,
 		},
 		Result: me.Success,
 	}
-	pkt, err := serialize(omci.MibResetResponseType, request, tid)
+	pkt, err := Serialize(omci.MibResetResponseType, request, tid)
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
 			"Err": err,
-		}).Error("Cannot serialize MibResetResponse")
+		}).Error("Cannot Serialize MibResetResponse")
 		return nil, err
 	}
 	return pkt, nil
@@ -108,14 +100,14 @@ func CreateMibUploadRequest(tid uint16) ([]byte, error) {
 			// Default Instance ID is 0
 		},
 	}
-	pkt, err := serialize(omci.MibUploadRequestType, request, tid)
+	pkt, err := Serialize(omci.MibUploadRequestType, request, tid)
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
 			"Err": err,
-		}).Fatalf("Cannot serialize MibUploadRequest")
+		}).Fatalf("Cannot Serialize MibUploadRequest")
 		return nil, err
 	}
-	return hexEncode(pkt)
+	return HexEncode(pkt)
 }
 
 func CreateMibUploadResponse(tid uint16) ([]byte, error) {
@@ -128,11 +120,11 @@ func CreateMibUploadResponse(tid uint16) ([]byte, error) {
 		},
 		NumberOfCommands: numberOfCommands,
 	}
-	pkt, err := serialize(omci.MibUploadResponseType, request, tid)
+	pkt, err := Serialize(omci.MibUploadResponseType, request, tid)
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
 			"Err": err,
-		}).Error("Cannot serialize MibUploadResponse")
+		}).Error("Cannot Serialize MibUploadResponse")
 		return nil, err
 	}
 	return pkt, nil
@@ -147,15 +139,15 @@ func CreateMibUploadNextRequest(tid uint16, seqNumber uint16) ([]byte, error) {
 		},
 		CommandSequenceNumber: seqNumber,
 	}
-	pkt, err := serialize(omci.MibUploadNextRequestType, request, tid)
+	pkt, err := Serialize(omci.MibUploadNextRequestType, request, tid)
 
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
 			"Err": err,
-		}).Fatalf("Cannot serialize MibUploadNextRequest")
+		}).Fatalf("Cannot Serialize MibUploadNextRequest")
 		return nil, err
 	}
-	return hexEncode(pkt)
+	return HexEncode(pkt)
 }
 
 func ParseMibUploadNextRequest(omciPkt gopacket.Packet) (*omci.MibUploadNextRequest, error) {
@@ -174,7 +166,7 @@ func ParseMibUploadNextRequest(omciPkt gopacket.Packet) (*omci.MibUploadNextRequ
 	return msgObj, nil
 }
 
-func CreateMibUploadNextResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, error) {
+func CreateMibUploadNextResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, mds uint8) ([]byte, error) {
 
 	msgObj, err := ParseMibUploadNextRequest(omciPkt)
 	if err != nil {
@@ -197,7 +189,7 @@ func CreateMibUploadNextResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([
 	case 0:
 		reportedMe, meErr = me.NewOnuData(me.ParamData{Attributes: me.AttributeValueMap{
 			"ManagedEntityId": me.OnuDataClassID,
-			"MibDataSync":     0,
+			"MibDataSync":     mds,
 		}})
 		if meErr.GetError() != nil {
 			omciLogger.Errorf("NewOnuData %v", meErr.Error())
@@ -443,12 +435,12 @@ func CreateMibUploadNextResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([
 		"reportedMe": reportedMe,
 	}).Trace("created-omci-mibUploadNext-response")
 
-	pkt, err := serialize(omci.MibUploadNextResponseType, response, omciMsg.TransactionID)
+	pkt, err := Serialize(omci.MibUploadNextResponseType, response, omciMsg.TransactionID)
 
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
 			"Err": err,
-		}).Fatalf("Cannot serialize MibUploadNextRequest")
+		}).Fatalf("Cannot Serialize MibUploadNextRequest")
 		return nil, err
 	}
 

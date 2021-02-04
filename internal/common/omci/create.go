@@ -53,7 +53,7 @@ func CreateCreateResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, 
 	omciLogger.WithFields(log.Fields{
 		"EntityClass":    msgObj.EntityClass,
 		"EntityInstance": msgObj.EntityInstance,
-	}).Trace("recevied-omci-create-request")
+	}).Trace("received-omci-create-request")
 
 	response := &omci.CreateResponse{
 		MeBasePacket: omci.MeBasePacket{
@@ -63,11 +63,11 @@ func CreateCreateResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, 
 		Result: me.Success,
 	}
 
-	pkt, err := serialize(omci.CreateResponseType, response, omciMsg.TransactionID)
+	pkt, err := Serialize(omci.CreateResponseType, response, omciMsg.TransactionID)
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
 			"Err": err,
-		}).Error("cannot-serialize-CreateResponse")
+		}).Error("cannot-Serialize-CreateResponse")
 		return nil, err
 	}
 
@@ -91,7 +91,7 @@ func CreateGalEnetRequest(tid uint16) ([]byte, error) {
 	if err != nil {
 		omciLogger.WithField("err", err).Fatalf("Can't generate GalEnetRequest")
 	}
-	return hexEncode(pkt)
+	return HexEncode(pkt)
 }
 
 func CreateEnableUniRequest(tid uint16, uniId uint16, enabled bool, isPtp bool) ([]byte, error) {
@@ -124,7 +124,7 @@ func CreateEnableUniRequest(tid uint16, uniId uint16, enabled bool, isPtp bool) 
 	if err != nil {
 		omciLogger.WithField("err", err).Fatalf("Can't generate EnableUniRequest")
 	}
-	return hexEncode(pkt)
+	return HexEncode(pkt)
 }
 
 func CreateGemPortRequest(tid uint16) ([]byte, error) {
@@ -148,5 +148,5 @@ func CreateGemPortRequest(tid uint16) ([]byte, error) {
 	if err != nil {
 		omciLogger.WithField("err", err).Fatalf("Can't generate GemPortRequest")
 	}
-	return hexEncode(pkt)
+	return HexEncode(pkt)
 }
