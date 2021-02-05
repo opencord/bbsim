@@ -1525,8 +1525,12 @@
           "format": "int32"
         },
         "flow_id": {
-          "type": "integer",
-          "format": "int64"
+          "type": "string",
+          "format": "uint64"
+        },
+        "symmetric_flow_id": {
+          "type": "string",
+          "format": "uint64"
         },
         "flow_type": {
           "type": "string"
@@ -1568,6 +1572,17 @@
         "tech_profile_id": {
           "type": "integer",
           "format": "int64"
+        },
+        "replicate_flow": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "pbit_to_gemport": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "format": "int64"
+          }
         }
       }
     },

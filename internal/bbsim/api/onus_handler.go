@@ -234,7 +234,7 @@ func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest
 		"OnuSn":        req.OnuReq.SerialNumber,
 		"subAction":    req.SubActionVal,
 		"GroupAddress": req.GroupAddress,
-	}).Infof("Received igmp request for ONU")
+	}).Info("Received igmp request for ONU")
 
 	olt := devices.GetOLT()
 	onu, err := olt.FindOnuBySn(req.OnuReq.SerialNumber)
@@ -242,7 +242,11 @@ func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest
 	if err != nil {
 		res.StatusCode = int32(codes.NotFound)
 		res.Message = err.Error()
-		fmt.Println("ONU not found for sending igmp packet.")
+		logger.WithFields(log.Fields{
+			"OnuSn":        req.OnuReq.SerialNumber,
+			"subAction":    req.SubActionVal,
+			"GroupAddress": req.GroupAddress,
+		}).Warn("ONU not found for sending igmp packet.")
 		return res, err
 	} else {
 		event := ""
@@ -286,12 +290,29 @@ func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest
 
 		if success {
 			res.StatusCode = int32(codes.OK)
-			res.Message = fmt.Sprintf("Authentication restarted on Services %s for ONU %s.",
-				fmt.Sprintf("%v", startedOn), onu.Sn())
+			if len(startedOn) > 0 {
+				res.Message = fmt.Sprintf("IGMP %s sent on Services %s for ONU %s.",
+					event, fmt.Sprintf("%v", startedOn), onu.Sn())
+			} else {
+				res.Message = "No service requires IGMP"
+			}
+			logger.WithFields(log.Fields{
+				"OnuSn":        req.OnuReq.SerialNumber,
+				"subAction":    req.SubActionVal,
+				"GroupAddress": req.GroupAddress,
+				"Message":      res.Message,
+			}).Info("Processed IGMP request for ONU")
 		} else {
 			res.StatusCode = int32(codes.FailedPrecondition)
 			res.Message = fmt.Sprintf("%v", errors)
+			logger.WithFields(log.Fields{
+				"OnuSn":        req.OnuReq.SerialNumber,
+				"subAction":    req.SubActionVal,
+				"GroupAddress": req.GroupAddress,
+				"Message":      res.Message,
+			}).Error("Error while processing IGMP request for ONU")
 		}
+
 	}
 
 	return res, nil
@@ -337,11 +358,24 @@ func (s BBSimServer) RestartEapol(ctx context.Context, req *bbsim.ONURequest) (*
 
 	if success {
 		res.StatusCode = int32(codes.OK)
-		res.Message = fmt.Sprintf("Authentication restarted on Services %s for ONU %s.",
-			fmt.Sprintf("%v", startedOn), onu.Sn())
+		if len(startedOn) > 0 {
+			res.Message = fmt.Sprintf("Authentication restarted on Services %s for ONU %s.",
+				fmt.Sprintf("%v", startedOn), onu.Sn())
+		} else {
+			res.Message = "No service requires EAPOL"
+		}
+
+		logger.WithFields(log.Fields{
+			"OnuSn":   req.SerialNumber,
+			"Message": res.Message,
+		}).Info("Processed EAPOL restart request for ONU")
 	} else {
 		res.StatusCode = int32(codes.FailedPrecondition)
 		res.Message = fmt.Sprintf("%v", errors)
+		logger.WithFields(log.Fields{
+			"OnuSn":   req.SerialNumber,
+			"Message": res.Message,
+		}).Error("Error while processing DHCP restart request for ONU")
 	}
 
 	return res, nil
@@ -388,11 +422,24 @@ func (s BBSimServer) RestartDhcp(ctx context.Context, req *bbsim.ONURequest) (*b
 
 	if success {
 		res.StatusCode = int32(codes.OK)
-		res.Message = fmt.Sprintf("DHCP restarted on Services %s for ONU %s.",
-			fmt.Sprintf("%v", startedOn), onu.Sn())
+		if len(startedOn) > 0 {
+			res.Message = fmt.Sprintf("DHCP restarted on Services %s for ONU %s.",
+				fmt.Sprintf("%v", startedOn), onu.Sn())
+
+		} else {
+			res.Message = "No service requires DHCP"
+		}
+		logger.WithFields(log.Fields{
+			"OnuSn":   req.SerialNumber,
+			"Message": res.Message,
+		}).Info("Processed DHCP restart request for ONU")
 	} else {
 		res.StatusCode = int32(codes.FailedPrecondition)
 		res.Message = fmt.Sprintf("%v", errors)
+		logger.WithFields(log.Fields{
+			"OnuSn":   req.SerialNumber,
+			"Message": res.Message,
+		}).Error("Error while processing DHCP restart request for ONU")
 	}
 
 	return res, nil
