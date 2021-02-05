@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a49e6ed5_289de2d6",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2021-02-05T09:57:40Z",
+      "side": 1,
+      "message": "Please keep in mind - once these MessageTypes are supported, o.MibDataSync has to be incremented for them too:\n\nomci.StartSoftwareDownloadResponseType,\nomci.EndSoftwareDownloadResponseType,\nomci.ActivateSoftwareResponseType,\nomci.CommitSoftwareResponseType,",
+      "range": {
+        "startLine": 623,
+        "startChar": 5,
+        "endLine": 623,
+        "endChar": 6
+      },
+      "revId": "d6c08b5203456ab70d4d173b1b9005181705eeca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
