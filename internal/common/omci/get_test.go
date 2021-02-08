@@ -17,9 +17,12 @@
 package omci
 
 import (
+	"encoding/hex"
+	"fmt"
 	"github.com/google/gopacket"
 	"github.com/opencord/omci-lib-go"
 	me "github.com/opencord/omci-lib-go/generated"
+	"github.com/opencord/voltha-protos/v4/go/openolt"
 	"gotest.tools/assert"
 	"testing"
 )
@@ -73,7 +76,11 @@ func TestCreateOnu2gResponse(t *testing.T) {
 }
 
 func TestCreateOnugResponse(t *testing.T) {
-	response := createOnugResponse(40960, 1)
+	sn := &openolt.SerialNumber{
+		VendorId:       []byte("BBSM"),
+		VendorSpecific: []byte{0, byte(1 % 256), byte(1), byte(1)},
+	}
+	response := createOnugResponse(40960, 1, sn)
 	data, _ := serialize(omci.GetResponseType, response, 1)
 
 	omciMsg, omciPkt := omciBytesToMsg(t, data)
@@ -83,4 +90,9 @@ func TestCreateOnugResponse(t *testing.T) {
 	getResponseLayer := omciToGetResponse(t, omciPkt)
 
 	assert.Equal(t, getResponseLayer.Result, me.Success)
+	snBytes := (getResponseLayer.Attributes["SerialNumber"]).([]byte)
+	snVendorPart := fmt.Sprintf("%s", snBytes[:4])
+	snNumberPart := hex.EncodeToString(snBytes[4:])
+	serialNumber := snVendorPart + snNumberPart
+	assert.Equal(t, serialNumber, "BBSM00010101")
 }

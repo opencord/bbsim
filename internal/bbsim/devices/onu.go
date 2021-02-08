@@ -650,7 +650,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 	case omci.MibUploadNextRequestType:
 		responsePkt, _ = omcilib.CreateMibUploadNextResponse(omciPkt, omciMsg)
 	case omci.GetRequestType:
-		responsePkt, _ = omcilib.CreateGetResponse(omciPkt, omciMsg)
+		responsePkt, _ = omcilib.CreateGetResponse(omciPkt, omciMsg, o.SerialNumber)
 	case omci.SetRequestType:
 		responsePkt, _ = omcilib.CreateSetResponse(omciPkt, omciMsg)
 
@@ -721,7 +721,6 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 				}).Error("send-TestResult-indication-failed")
 			}
 		}
-
 	default:
 		log.WithFields(log.Fields{
 			"omciMsgType":  omciMsg.MessageType,

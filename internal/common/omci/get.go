@@ -23,6 +23,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/opencord/omci-lib-go"
 	me "github.com/opencord/omci-lib-go/generated"
+	"github.com/opencord/voltha-protos/v4/go/openolt"
 	log "github.com/sirupsen/logrus"
 	"strconv"
 )
@@ -43,7 +44,7 @@ func ParseGetRequest(omciPkt gopacket.Packet) (*omci.GetRequest, error) {
 	return msgObj, nil
 }
 
-func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, error) {
+func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openolt.SerialNumber) ([]byte, error) {
 
 	msgObj, err := ParseGetRequest(omciPkt)
 
@@ -62,7 +63,7 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, err
 	case me.Onu2GClassID:
 		response = createOnu2gResponse(msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.OnuGClassID:
-		response = createOnugResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+		response = createOnugResponse(msgObj.AttributeMask, msgObj.EntityInstance, onuSn)
 	case me.SoftwareImageClassID:
 		response = createSoftwareImageResponse(msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.IpHostConfigDataClassID:
@@ -139,17 +140,15 @@ func createOnu2gResponse(attributeMask uint16, entityID uint16) *omci.GetRespons
 	}
 }
 
-func createOnugResponse(attributeMask uint16, entityID uint16) *omci.GetResponse {
-	return &omci.GetResponse{
-		MeBasePacket: omci.MeBasePacket{
-			EntityClass:    me.OnuGClassID,
-			EntityInstance: entityID,
-		},
+func createOnugResponse(attributeMask uint16, entityID uint16, onuSn *openolt.SerialNumber) *omci.GetResponse {
+
+	managedEntity, meErr := me.NewOnuG(me.ParamData{
+		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
 			"ManagedEntityId":         entityID,
 			"VendorId":                toOctets("BBSM", 4),
 			"Version":                 toOctets("v0.0.1", 14),
-			"SerialNumber":            toOctets("QkJTTQAKAAE=", 8),
+			"SerialNumber":            append(onuSn.VendorId, onuSn.VendorSpecific...),
 			"TrafficManagementOption": 0,
 			"Deprecated":              0,
 			"BatteryBackup":           0,
@@ -161,9 +160,33 @@ func createOnugResponse(attributeMask uint16, entityID uint16) *omci.GetResponse
 			"CredentialsStatus":       0,
 			"ExtendedTcLayerOptions":  0,
 		},
-		Result:        me.Success,
-		AttributeMask: attributeMask,
+	})
+
+	if meErr.GetError() != nil {
+		omciLogger.Errorf("NewOnu2G %v", meErr.Error())
+		return nil
 	}
+
+	return &omci.GetResponse{
+		MeBasePacket: omci.MeBasePacket{
+			EntityClass: me.OnuGClassID,
+		},
+		Attributes:    managedEntity.GetAttributeValueMap(),
+		AttributeMask: attributeMask,
+		Result:        me.Success,
+	}
+
+	//return &omci.GetResponse{
+	//	MeBasePacket: omci.MeBasePacket{
+	//		EntityClass:    me.OnuGClassID,
+	//		EntityInstance: entityID,
+	//	},
+	//	Attributes: me.AttributeValueMap{
+	//
+	//	},
+	//	Result:        me.Success,
+	//	AttributeMask: attributeMask,
+	//}
 }
 
 func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16) *omci.GetResponse {
