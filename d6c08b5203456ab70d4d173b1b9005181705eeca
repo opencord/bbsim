@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "8407c9d1_3138f34e",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 659,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-02-08T21:44:58Z",
+      "side": 1,
+      "message": "As of now BBSim doesn\u0027t do any operation with the attributes, so we can \"assume\" that the update always work. The only case in which we\u0027ll need to deal right now is if there is not attribute modification, but is that a valid case?\n\nMeaning, can we do a Set without changing anything?",
+      "parentUuid": "ac19d6b3_9090c4bf",
+      "revId": "d6c08b5203456ab70d4d173b1b9005181705eeca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1f6ecdfe_ed24ebc6",
         "filename": "internal/bbsim/devices/onu.go",
         "patchSetId": 1
