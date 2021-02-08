@@ -22,6 +22,57 @@
       "revId": "d6c08b5203456ab70d4d173b1b9005181705eeca",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac19d6b3_9090c4bf",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 659,
+      "author": {
+        "id": 1000617
+      },
+      "writtenOn": "2021-02-08T14:58:47Z",
+      "side": 1,
+      "message": "The increment of MDS occurs only if there is a modification to any of the attributes.  If the set operation fails or does not modify an attribute, then it should not be incremented.\n\nCheck of status code (0 or 9) and non-zero set-attribute-mask and if response code is 9 then see if any attribute was set successfully (does not show up in the two status-9 code attributes masks at end of response.",
+      "revId": "d6c08b5203456ab70d4d173b1b9005181705eeca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f6ecdfe_ed24ebc6",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 687,
+      "author": {
+        "id": 1000617
+      },
+      "writtenOn": "2021-02-08T14:58:47Z",
+      "side": 1,
+      "message": "Increment only if response status code is 0",
+      "revId": "d6c08b5203456ab70d4d173b1b9005181705eeca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f9b284d8_0fbbbe81",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 690,
+      "author": {
+        "id": 1000617
+      },
+      "writtenOn": "2021-02-08T14:58:47Z",
+      "side": 1,
+      "message": "Increment only if response status code is 0",
+      "revId": "d6c08b5203456ab70d4d173b1b9005181705eeca",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
