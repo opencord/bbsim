@@ -83,8 +83,8 @@ func CreateCreateResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, 
 
 func CreateGalEnetRequest(tid uint16) ([]byte, error) {
 	params := me.ParamData{
-		EntityID:   galEthernetEID,
-		Attributes: me.AttributeValueMap{"MaximumGemPayloadSize": maxGemPayloadSize},
+		EntityID:   1,
+		Attributes: me.AttributeValueMap{"MaximumGemPayloadSize": 48},
 	}
 	meDef, _ := me.NewGalEthernetProfile(params)
 	pkt, err := omci.GenFrame(meDef, omci.CreateRequestType, omci.TransactionID(tid))
@@ -129,7 +129,7 @@ func CreateEnableUniRequest(tid uint16, uniId uint16, enabled bool, isPtp bool) 
 
 func CreateGemPortRequest(tid uint16) ([]byte, error) {
 	params := me.ParamData{
-		EntityID: gemEID,
+		EntityID: 1,
 		Attributes: me.AttributeValueMap{
 			"PortId":                              1,
 			"TContPointer":                        1,
