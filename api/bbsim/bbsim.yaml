@@ -52,6 +52,13 @@ http:
   - selector: bbsim.BBSim.GetOnuTrafficSchedulers
     get: "/v1/olt/onus/{SerialNumber}/trafficschedulers"
 
+  - selector: bbsim.BBSim.RestartEapol
+    post: "/v1/olt/onus/{SerialNumber}/eapol"
+  - selector: bbsim.BBSim.RestartDhcp
+    post: "/v1/olt/onus/{SerialNumber}/dhcp"
+  - selector: bbsim.BBSim.ChangeIgmpState
+    post: "/v1/olt/onus/{OnuReq.SerialNumber}/igmp/{SubActionVal}/{GroupAddress}"
+
   - selector: bbsim.BBSim.SetOnuAlarmIndication
     post: "/v1/olt/onus/{SerialNumber}/alarms/{AlarmType}/{Status}"
   - selector: bbsim.BBSim.SetOltAlarmIndication

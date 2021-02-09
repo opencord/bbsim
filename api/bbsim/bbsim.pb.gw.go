@@ -427,6 +427,114 @@ func local_request_BBSim_PoweronONUsOnPON_0(ctx context.Context, marshaler runti
 
 }
 
+func request_BBSim_RestartEapol_0(ctx context.Context, marshaler runtime.Marshaler, client BBSimClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ONURequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["SerialNumber"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "SerialNumber")
+	}
+
+	protoReq.SerialNumber, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "SerialNumber", err)
+	}
+
+	msg, err := client.RestartEapol(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_BBSim_RestartEapol_0(ctx context.Context, marshaler runtime.Marshaler, server BBSimServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ONURequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["SerialNumber"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "SerialNumber")
+	}
+
+	protoReq.SerialNumber, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "SerialNumber", err)
+	}
+
+	msg, err := server.RestartEapol(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_BBSim_RestartDhcp_0(ctx context.Context, marshaler runtime.Marshaler, client BBSimClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ONURequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["SerialNumber"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "SerialNumber")
+	}
+
+	protoReq.SerialNumber, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "SerialNumber", err)
+	}
+
+	msg, err := client.RestartDhcp(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_BBSim_RestartDhcp_0(ctx context.Context, marshaler runtime.Marshaler, server BBSimServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ONURequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["SerialNumber"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "SerialNumber")
+	}
+
+	protoReq.SerialNumber, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "SerialNumber", err)
+	}
+
+	msg, err := server.RestartDhcp(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 var (
 	filter_BBSim_SetOnuAlarmIndication_0 = &utilities.DoubleArray{Encoding: map[string]int{"SerialNumber": 0, "AlarmType": 1, "Status": 2}, Base: []int{1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 1, 2, 3, 4}}
 )
@@ -721,6 +829,125 @@ func local_request_BBSim_GetFlows_1(ctx context.Context, marshaler runtime.Marsh
 	}
 
 	msg, err := server.GetFlows(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_BBSim_ChangeIgmpState_0 = &utilities.DoubleArray{Encoding: map[string]int{"OnuReq": 0, "SerialNumber": 1, "SubActionVal": 2, "GroupAddress": 3}, Base: []int{1, 1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 2, 1, 1, 3, 4, 5}}
+)
+
+func request_BBSim_ChangeIgmpState_0(ctx context.Context, marshaler runtime.Marshaler, client BBSimClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq IgmpRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		e   int32
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["OnuReq.SerialNumber"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "OnuReq.SerialNumber")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "OnuReq.SerialNumber", val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "OnuReq.SerialNumber", err)
+	}
+
+	val, ok = pathParams["SubActionVal"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "SubActionVal")
+	}
+
+	e, err = runtime.Enum(val, SubActionTypes_value)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "SubActionVal", err)
+	}
+
+	protoReq.SubActionVal = SubActionTypes(e)
+
+	val, ok = pathParams["GroupAddress"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "GroupAddress")
+	}
+
+	protoReq.GroupAddress, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "GroupAddress", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_BBSim_ChangeIgmpState_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ChangeIgmpState(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_BBSim_ChangeIgmpState_0(ctx context.Context, marshaler runtime.Marshaler, server BBSimServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq IgmpRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		e   int32
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["OnuReq.SerialNumber"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "OnuReq.SerialNumber")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "OnuReq.SerialNumber", val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "OnuReq.SerialNumber", err)
+	}
+
+	val, ok = pathParams["SubActionVal"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "SubActionVal")
+	}
+
+	e, err = runtime.Enum(val, SubActionTypes_value)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "SubActionVal", err)
+	}
+
+	protoReq.SubActionVal = SubActionTypes(e)
+
+	val, ok = pathParams["GroupAddress"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "GroupAddress")
+	}
+
+	protoReq.GroupAddress, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "GroupAddress", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_BBSim_ChangeIgmpState_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ChangeIgmpState(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1024,6 +1251,46 @@ func RegisterBBSimHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 
 	})
 
+	mux.Handle("POST", pattern_BBSim_RestartEapol_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_BBSim_RestartEapol_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BBSim_RestartEapol_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_BBSim_RestartDhcp_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_BBSim_RestartDhcp_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BBSim_RestartDhcp_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_BBSim_SetOnuAlarmIndication_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1101,6 +1368,26 @@ func RegisterBBSimHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 		}
 
 		forward_BBSim_GetFlows_1(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_BBSim_ChangeIgmpState_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_BBSim_ChangeIgmpState_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BBSim_ChangeIgmpState_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1405,6 +1692,46 @@ func RegisterBBSimHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 
 	})
 
+	mux.Handle("POST", pattern_BBSim_RestartEapol_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_BBSim_RestartEapol_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BBSim_RestartEapol_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_BBSim_RestartDhcp_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_BBSim_RestartDhcp_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BBSim_RestartDhcp_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_BBSim_SetOnuAlarmIndication_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1485,6 +1812,26 @@ func RegisterBBSimHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 
 	})
 
+	mux.Handle("POST", pattern_BBSim_ChangeIgmpState_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_BBSim_ChangeIgmpState_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BBSim_ChangeIgmpState_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_BBSim_GetOnuTrafficSchedulers_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1533,6 +1880,10 @@ var (
 
 	pattern_BBSim_PoweronONUsOnPON_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "olt", "port", "PonPortId", "onus"}, "", runtime.AssumeColonVerbOpt(true)))
 
+	pattern_BBSim_RestartEapol_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "olt", "onus", "SerialNumber", "eapol"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_BBSim_RestartDhcp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "olt", "onus", "SerialNumber", "dhcp"}, "", runtime.AssumeColonVerbOpt(true)))
+
 	pattern_BBSim_SetOnuAlarmIndication_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6}, []string{"v1", "olt", "onus", "SerialNumber", "alarms", "AlarmType", "Status"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_BBSim_SetOltAlarmIndication_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4, 2, 5, 2, 6, 1, 0, 4, 1, 5, 7}, []string{"v1", "olt", "ports", "InterfaceType", "InterfaceID", "alarms", "los", "Status"}, "", runtime.AssumeColonVerbOpt(true)))
@@ -1540,6 +1891,8 @@ var (
 	pattern_BBSim_GetFlows_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "olt", "onus", "SerialNumber", "flows"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_BBSim_GetFlows_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "olt", "flows"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_BBSim_ChangeIgmpState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6}, []string{"v1", "olt", "onus", "OnuReq.SerialNumber", "igmp", "SubActionVal", "GroupAddress"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_BBSim_GetOnuTrafficSchedulers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "olt", "onus", "SerialNumber", "trafficschedulers"}, "", runtime.AssumeColonVerbOpt(true)))
 )
@@ -1569,6 +1922,10 @@ var (
 
 	forward_BBSim_PoweronONUsOnPON_0 = runtime.ForwardResponseMessage
 
+	forward_BBSim_RestartEapol_0 = runtime.ForwardResponseMessage
+
+	forward_BBSim_RestartDhcp_0 = runtime.ForwardResponseMessage
+
 	forward_BBSim_SetOnuAlarmIndication_0 = runtime.ForwardResponseMessage
 
 	forward_BBSim_SetOltAlarmIndication_0 = runtime.ForwardResponseMessage
@@ -1576,6 +1933,8 @@ var (
 	forward_BBSim_GetFlows_0 = runtime.ForwardResponseMessage
 
 	forward_BBSim_GetFlows_1 = runtime.ForwardResponseMessage
+
+	forward_BBSim_ChangeIgmpState_0 = runtime.ForwardResponseMessage
 
 	forward_BBSim_GetOnuTrafficSchedulers_0 = runtime.ForwardResponseMessage
 )
