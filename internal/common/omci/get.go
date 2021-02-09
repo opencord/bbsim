@@ -108,7 +108,7 @@ func createOnu2gResponse(attributeMask uint16, entityID uint16) *omci.GetRespons
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
 			"ManagedEntityId": entityID,
-			"EquipmentId":     toOctets("BBSM", 20),
+			"EquipmentId":     toOctets("12345123451234512345", 20),
 			"OpticalNetworkUnitManagementAndControlChannelOmccVersion": 180,
 			"VendorProductCode":                           0,
 			"SecurityCapability":                          1,
@@ -198,7 +198,7 @@ func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16) *o
 		},
 		Attributes: me.AttributeValueMap{
 			"ManagedEntityId": 0,
-			"Version":         toOctets("v0.0.1", 14),
+			"Version":         toOctets("00000000000001", 14),
 			"IsCommitted":     1,
 			"IsActive":        1,
 			"IsValid":         1,
