@@ -204,86 +204,102 @@ func CreateMibUploadNextResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([
 		}
 
 	case 1:
-		reportedMe, meErr = me.NewCircuitPack(me.ParamData{Attributes: me.AttributeValueMap{
-			"ManagedEntityId": me.CircuitPackClassID,
-			"Type":            47,
-			"NumberOfPorts":   4,
-			"SerialNumber":    toOctets("BBSM-Circuit-Pack", 20),
-			"Version":         toOctets("v0.0.1", 20),
-		}})
+		reportedMe, meErr = me.NewCircuitPack(me.ParamData{
+			EntityID: 257, // first UNI
+			Attributes: me.AttributeValueMap{
+				"ManagedEntityId": me.CircuitPackClassID,
+				"Type":            47,
+				"NumberOfPorts":   4,
+				"SerialNumber":    toOctets("BBSM-Circuit-Pack", 20),
+				"Version":         toOctets("v0.0.1", 20),
+			}})
 		if meErr.GetError() != nil {
 			omciLogger.Errorf("NewCircuitPack %v", meErr.Error())
 		}
 	case 2:
-		reportedMe, meErr = me.NewCircuitPack(me.ParamData{Attributes: me.AttributeValueMap{
-			"ManagedEntityId":     me.CircuitPackClassID,
-			"VendorId":            "ONF",
-			"AdministrativeState": 0,
-			"OperationalState":    0,
-			"BridgedOrIpInd":      0,
-		}})
+		reportedMe, meErr = me.NewCircuitPack(me.ParamData{
+			EntityID: 257, // first UNI
+			Attributes: me.AttributeValueMap{
+				"ManagedEntityId":     me.CircuitPackClassID,
+				"VendorId":            "ONF",
+				"AdministrativeState": 0,
+				"OperationalState":    0,
+				"BridgedOrIpInd":      0,
+			}})
 		if meErr.GetError() != nil {
 			omciLogger.Errorf("NewCircuitPack %v", meErr.Error())
 		}
 	case 3:
-		reportedMe, meErr = me.NewCircuitPack(me.ParamData{Attributes: me.AttributeValueMap{
-			"ManagedEntityId":             me.CircuitPackClassID,
-			"EquipmentId":                 toOctets("BBSM-Circuit-Pack", 20),
-			"CardConfiguration":           0,
-			"TotalTContBufferNumber":      0,
-			"TotalPriorityQueueNumber":    8,
-			"TotalTrafficSchedulerNumber": 0,
-		}})
+		reportedMe, meErr = me.NewCircuitPack(me.ParamData{
+			EntityID: 257, // first UNI
+			Attributes: me.AttributeValueMap{
+				"ManagedEntityId":             me.CircuitPackClassID,
+				"EquipmentId":                 toOctets("BBSM-Circuit-Pack", 20),
+				"CardConfiguration":           0,
+				"TotalTContBufferNumber":      8,
+				"TotalPriorityQueueNumber":    8,
+				"TotalTrafficSchedulerNumber": 16,
+			}})
 		if meErr.GetError() != nil {
 			omciLogger.Errorf("NewCircuitPack %v", meErr.Error())
 		}
 	case 4:
-		reportedMe, meErr = me.NewCircuitPack(me.ParamData{Attributes: me.AttributeValueMap{
-			"ManagedEntityId":   me.CircuitPackClassID,
-			"PowerShedOverride": uint32(0),
-		}})
+		reportedMe, meErr = me.NewCircuitPack(me.ParamData{
+			EntityID: 257, // first UNI
+			Attributes: me.AttributeValueMap{
+				"ManagedEntityId":   me.CircuitPackClassID,
+				"PowerShedOverride": uint32(0),
+			}})
 		if meErr.GetError() != nil {
 			omciLogger.Errorf("NewCircuitPack %v", meErr.Error())
 		}
 	case 5:
-		reportedMe, meErr = me.NewCircuitPack(me.ParamData{Attributes: me.AttributeValueMap{
-			"ManagedEntityId": me.CircuitPackClassID,
-			"Type":            238,
-			"NumberOfPorts":   1,
-			"SerialNumber":    toOctets("BBSM-Circuit-Pack-2", 20),
-			"Version":         toOctets("v0.0.1", 20),
-		}})
+		reportedMe, meErr = me.NewCircuitPack(me.ParamData{
+			EntityID: 257, // first UNI
+			Attributes: me.AttributeValueMap{
+				"ManagedEntityId": me.CircuitPackClassID,
+				"Type":            238,
+				"NumberOfPorts":   1,
+				"SerialNumber":    toOctets("BBSM-Circuit-Pack-2", 20),
+				"Version":         toOctets("v0.0.1", 20),
+			}})
 		if meErr.GetError() != nil {
 			omciLogger.Errorf("NewCircuitPack %v", meErr.Error())
 		}
 	case 6:
-		reportedMe, meErr = me.NewCircuitPack(me.ParamData{Attributes: me.AttributeValueMap{
-			"ManagedEntityId":     me.CircuitPackClassID,
-			"VendorId":            "ONF",
-			"AdministrativeState": 0,
-			"OperationalState":    0,
-			"BridgedOrIpInd":      0,
-		}})
+		reportedMe, meErr = me.NewCircuitPack(me.ParamData{
+			EntityID: 257, // first UNI
+			Attributes: me.AttributeValueMap{
+				"ManagedEntityId":     me.CircuitPackClassID,
+				"VendorId":            "ONF",
+				"AdministrativeState": 0,
+				"OperationalState":    0,
+				"BridgedOrIpInd":      0,
+			}})
 		if meErr.GetError() != nil {
 			omciLogger.Errorf("NewCircuitPack %v", meErr.Error())
 		}
 	case 7:
-		reportedMe, meErr = me.NewCircuitPack(me.ParamData{Attributes: me.AttributeValueMap{
-			"ManagedEntityId":             me.CircuitPackClassID,
-			"EquipmentId":                 toOctets("BBSM-Circuit-Pack", 20),
-			"CardConfiguration":           0,
-			"TotalTContBufferNumber":      8,
-			"TotalPriorityQueueNumber":    40,
-			"TotalTrafficSchedulerNumber": 10,
-		}})
+		reportedMe, meErr = me.NewCircuitPack(me.ParamData{
+			EntityID: 257, // first UNI
+			Attributes: me.AttributeValueMap{
+				"ManagedEntityId":             me.CircuitPackClassID,
+				"EquipmentId":                 toOctets("BBSM-Circuit-Pack", 20),
+				"CardConfiguration":           0,
+				"TotalTContBufferNumber":      8,
+				"TotalPriorityQueueNumber":    40,
+				"TotalTrafficSchedulerNumber": 10,
+			}})
 		if meErr.GetError() != nil {
 			omciLogger.Errorf("NewCircuitPack %v", meErr.Error())
 		}
 	case 8:
-		reportedMe, meErr = me.NewCircuitPack(me.ParamData{Attributes: me.AttributeValueMap{
-			"ManagedEntityId":   me.CircuitPackClassID,
-			"PowerShedOverride": uint32(0),
-		}})
+		reportedMe, meErr = me.NewCircuitPack(me.ParamData{
+			EntityID: 257, // first UNI
+			Attributes: me.AttributeValueMap{
+				"ManagedEntityId":   me.CircuitPackClassID,
+				"PowerShedOverride": uint32(0),
+			}})
 		if meErr.GetError() != nil {
 			omciLogger.Errorf("NewCircuitPack %v", meErr.Error())
 		}
@@ -313,47 +329,60 @@ func CreateMibUploadNextResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([
 			omciLogger.Errorf("NewPhysicalPathTerminationPointEthernetUni %v", meErr.Error())
 		}
 	case 13, 14, 15, 16, 17, 18, 19, 20:
-		// TODO report different MeID (see omci-sim pcap filter "frame[22:2] == 01:06")
-		reportedMe, meErr = me.NewTCont(me.ParamData{Attributes: me.AttributeValueMap{
-			"ManagedEntityId": me.TContClassID,
-			"AllocId":         0,
-		}})
+		meInstance := 32756 + msgObj.CommandSequenceNumber
+		reportedMe, meErr = me.NewTCont(me.ParamData{
+			EntityID: meInstance,
+			Attributes: me.AttributeValueMap{
+				"ManagedEntityId": me.TContClassID,
+				"AllocId":         0,
+			},
+		})
 		if meErr.GetError() != nil {
 			omciLogger.Errorf("NewTCont %v", meErr.Error())
 		}
 	case 21:
-		reportedMe, meErr = me.NewAniG(me.ParamData{Attributes: me.AttributeValueMap{
-			"ManagedEntityId":             me.AniGClassID,
-			"SrIndication":                1,
-			"TotalTcontNumber":            8,
-			"GemBlockLength":              30,
-			"PiggybackDbaReporting":       0,
-			"Deprecated":                  0,
-			"SignalFailThreshold":         5,
-			"SignalDegradeThreshold":      9,
-			"Arc":                         0,
-			"ArcInterval":                 0,
-			"OpticalSignalLevel":          57428,
-			"LowerOpticalThreshold":       255,
-			"UpperOpticalThreshold":       255,
-			"OnuResponseTime":             0,
-			"TransmitOpticalLevel":        3171,
-			"LowerTransmitPowerThreshold": 129,
-			"UpperTransmitPowerThreshold": 129,
-		}})
+		reportedMe, meErr = me.NewAniG(me.ParamData{
+			EntityID: 32769, // same as the first T-CONT
+			Attributes: me.AttributeValueMap{
+				"ManagedEntityId":             32769,
+				"Arc":                         0,
+				"ArcInterval":                 0,
+				"Deprecated":                  0,
+				"GemBlockLength":              48,
+				"LowerOpticalThreshold":       255,
+				"LowerTransmitPowerThreshold": 129,
+				"OnuResponseTime":             0,
+				"OpticalSignalLevel":          57428,
+				"PiggybackDbaReporting":       0,
+				"SignalDegradeThreshold":      9,
+				"SignalFailThreshold":         5,
+				"SrIndication":                1,
+				"TotalTcontNumber":            8,
+				"TransmitOpticalLevel":        3171,
+				"UpperOpticalThreshold":       255,
+				"UpperTransmitPowerThreshold": 129,
+			},
+		})
 		if meErr.GetError() != nil {
 			omciLogger.Errorf("NewAniG %v", meErr.Error())
 		}
 	case 22, 23, 24, 25:
-		// TODO report different MeID (see omci-sim pcap filter "frame[22:2] == 01:08")
-		reportedMe, meErr = me.NewUniG(me.ParamData{Attributes: me.AttributeValueMap{
-			"ManagedEntityId":     me.UniGClassID,
-			"Deprecated":          0,
-			"AdministrativeState": 0,
-		}})
+		// NOTE we're reporting for different UNIs, the IDs are 257, 258, 259, 260
+		meInstance := 235 + msgObj.CommandSequenceNumber
+		reportedMe, meErr = me.NewUniG(me.ParamData{
+			EntityID: meInstance,
+			Attributes: me.AttributeValueMap{
+				"AdministrativeState":         0,
+				"Deprecated":                  0,
+				"ManagedEntityId":             meInstance,
+				"ManagementCapability":        0,
+				"NonOmciManagementIdentifier": 0,
+				"RelayAgentOptions":           0,
+			}})
 		if meErr.GetError() != nil {
 			omciLogger.Errorf("NewUniG %v", meErr.Error())
 		}
+	// Prior-Q with mask downstream
 	case 26, 30, 34, 38, 42, 46, 50, 54,
 		58, 62, 66, 70, 74, 78, 82, 86,
 		90, 94, 98, 102, 106, 110, 114, 118,
@@ -361,24 +390,27 @@ func CreateMibUploadNextResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([
 		154, 158, 162, 166, 170, 174, 178, 182,
 		186, 190, 194, 198, 202, 206, 210, 214,
 		218, 222, 226, 230, 234, 238, 242, 246,
-		250, 254, 258, 262, 266, 270, 274, 278:
-	case 27, 31, 35, 39, 43, 47, 51, 55,
+		250, 254, 258, 262, 266, 270, 274, 278,
+		// Prior-Q with attribute list downstream
+		27, 31, 35, 39, 43, 47, 51, 55,
 		59, 63, 67, 71, 75, 79, 83, 87,
 		91, 95, 99, 103, 107, 111, 115, 119,
 		123, 127, 131, 135, 139, 143, 147, 151,
 		155, 159, 163, 167, 171, 175, 179, 183,
 		187, 191, 195, 199, 203, 207, 211, 215,
 		219, 223, 227, 231, 235, 239, 243, 247,
-		251, 255, 259, 263, 267, 271, 275, 279:
-	case 28, 32, 36, 40, 44, 48, 52, 56,
+		251, 255, 259, 263, 267, 271, 275, 279,
+		// Prior-Q with mask upstream
+		28, 32, 36, 40, 44, 48, 52, 56,
 		60, 64, 68, 72, 76, 80, 84, 88,
 		92, 96, 100, 104, 108, 112, 116, 120,
 		124, 128, 132, 136, 140, 144, 148, 152,
 		156, 160, 164, 168, 172, 176, 180, 184,
 		188, 192, 196, 200, 204, 208, 212, 216,
 		220, 224, 228, 232, 236, 240, 244, 248,
-		252, 256, 260, 264, 268, 272, 276, 280:
-	case 29, 33, 37, 41, 45, 49, 53, 57,
+		252, 256, 260, 264, 268, 272, 276, 280,
+		// Prior-Q with attribute list upstream
+		29, 33, 37, 41, 45, 49, 53, 57,
 		61, 65, 69, 73, 77, 81, 85, 89,
 		93, 97, 101, 105, 109, 113, 117, 121,
 		125, 129, 133, 137, 141, 145, 149, 153,
@@ -386,28 +418,47 @@ func CreateMibUploadNextResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([
 		189, 193, 197, 201, 205, 209, 213, 217,
 		221, 225, 229, 233, 237, 241, 245, 249,
 		253, 257, 261, 265, 269, 273, 277, 281:
-		reportedMe, meErr = me.NewPriorityQueue(me.ParamData{Attributes: me.AttributeValueMap{
-			"ManagedEntityId":                                     me.PriorityQueueClassID,
-			"QueueConfigurationOption":                            0,
-			"MaximumQueueSize":                                    100,
-			"AllocatedQueueSize":                                  100,
-			"DiscardBlockCounterResetInterval":                    0,
-			"ThresholdValueForDiscardedBlocksDueToBufferOverflow": 0,
-			"RelatedPort":                                         80010000, // does this need to change?
-			"TrafficSchedulerPointer":                             8008,     // does this need to change?
-			"Weight":                                              1,
-			"BackPressureOperation":                               1,
-			"BackPressureTime":                                    0,
-			"BackPressureOccurQueueThreshold":                     0,
-			"BackPressureClearQueueThreshold":                     0,
-		}})
+
+		// very ugly way to define whether the priority queue is upstream or downstream
+		// (first 2 blocks are downstream, second two are upstream)
+		isDownstream := ((msgObj.CommandSequenceNumber-26)%4 == 0) || ((msgObj.CommandSequenceNumber-27)%4 == 0)
+		// meInstances are 1 to 64 for downstream,
+		// 32769 to 32832 for upstream
+		var meInstance uint16
+		if isDownstream {
+			meInstance = (msgObj.CommandSequenceNumber-26)/4 + 1
+		} else {
+			meInstance = (msgObj.CommandSequenceNumber-26)/4 + 32769
+		}
+		omciLogger.WithFields(log.Fields{
+			"CSN":        msgObj.CommandSequenceNumber,
+			"isDow":      isDownstream,
+			"meInstance": meInstance,
+		}).Warn("TEO")
+		reportedMe, meErr = me.NewPriorityQueue(me.ParamData{
+			EntityID: meInstance,
+			Attributes: me.AttributeValueMap{
+				"QueueConfigurationOption":                            0,
+				"MaximumQueueSize":                                    100,
+				"AllocatedQueueSize":                                  100,
+				"DiscardBlockCounterResetInterval":                    0,
+				"ThresholdValueForDiscardedBlocksDueToBufferOverflow": 0,
+				"RelatedPort":                                         uint32(meInstance), // is there a right or wrong value for the related port?
+				"TrafficSchedulerPointer":                             264,
+				"Weight":                                              1,
+				"BackPressureOperation":                               1,
+				"BackPressureTime":                                    0,
+				"BackPressureOccurQueueThreshold":                     0,
+				"BackPressureClearQueueThreshold":                     0,
+			},
+		})
 		if meErr.GetError() != nil {
 			omciLogger.Errorf("NewPriorityQueue %v", meErr.Error())
 		}
 	case 282, 283, 284, 285, 286, 287, 288, 289:
 		reportedMe, meErr = me.NewTrafficScheduler(me.ParamData{Attributes: me.AttributeValueMap{
 			"ManagedEntityId":         me.TrafficSchedulerClassID,
-			"TContPointer":            8008, // NOTE does this need to change?
+			"TContPointer":            32768, // NOTE does this need to change?
 			"TrafficSchedulerPointer": 0,
 			"Policy":                  02,
 			"PriorityWeight":          0,
@@ -417,12 +468,16 @@ func CreateMibUploadNextResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([
 		}
 	case 290:
 		reportedMe, meErr = me.NewOnu2G(me.ParamData{Attributes: me.AttributeValueMap{
-			"ManagedEntityId":             me.Onu2GClassID,
-			"TotalPriorityQueueNumber":    40,
-			"SecurityMode":                1,
-			"TotalTrafficSchedulerNumber": 8,
-			"TotalGemPortIdNumber":        0,
-			"Sysuptime":                   0,
+			"ManagedEntityId":                             me.Onu2GClassID,
+			"ConnectivityCapability":                      127,
+			"CurrentConnectivityMode":                     0,
+			"Deprecated":                                  1,
+			"PriorityQueueScaleFactor":                    1,
+			"QualityOfServiceQosConfigurationFlexibility": 63,
+			"Sysuptime":                                   0,
+			"TotalGemPortIdNumber":                        8,
+			"TotalPriorityQueueNumber":                    64,
+			"TotalTrafficSchedulerNumber":                 8,
 		}})
 		if meErr.GetError() != nil {
 			omciLogger.Errorf("NewOnu2G %v", meErr.Error())
