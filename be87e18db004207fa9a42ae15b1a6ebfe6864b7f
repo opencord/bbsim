@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d564ec5_e399d109",
+        "filename": "internal/common/omci/create.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-02-15T12:44:03Z",
+      "side": 1,
+      "message": "is this correct ? aren\u0027t we always reporting gem1 this way ?",
+      "revId": "be87e18db004207fa9a42ae15b1a6ebfe6864b7f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
