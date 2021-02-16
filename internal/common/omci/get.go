@@ -25,6 +25,7 @@ import (
 	me "github.com/opencord/omci-lib-go/generated"
 	"github.com/opencord/voltha-protos/v4/go/openolt"
 	log "github.com/sirupsen/logrus"
+	"math/rand"
 	"strconv"
 )
 
@@ -76,6 +77,12 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openo
 		response = createAnigResponse(msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.OnuDataClassID:
 		response = createOnuDataResponse(msgObj.AttributeMask, msgObj.EntityInstance, mds)
+	case me.EthernetFramePerformanceMonitoringHistoryDataUpstreamClassID:
+		response = createEthernetFramePerformanceMonitoringHistoryDataUpstreamResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+	case me.EthernetFramePerformanceMonitoringHistoryDataDownstreamClassID:
+		response = createEthernetFramePerformanceMonitoringHistoryDataDownstreamResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+	case me.EthernetPerformanceMonitoringHistoryDataClassID:
+		response = createEthernetPerformanceMonitoringHistoryDataResponse(msgObj.AttributeMask, msgObj.EntityInstance)
 	default:
 		omciLogger.WithFields(log.Fields{
 			"EntityClass":    msgObj.EntityClass,
@@ -291,38 +298,167 @@ func createPptpResponse(attributeMask uint16, entityID uint16) *omci.GetResponse
 	}
 }
 
-func createAnigResponse(attributeMask uint16, entityID uint16) *omci.GetResponse {
-	managedEntity, meErr := me.NewAniG(me.ParamData{
+func createEthernetFramePerformanceMonitoringHistoryDataUpstreamResponse(attributeMask uint16, entityID uint16) *omci.GetResponse {
+	fmt.Printf("createEthernetFramePerformanceMonitoringHistoryDataUpstreamResponse attribute mask = %v", attributeMask)
+	managedEntity, meErr := me.NewEthernetFramePerformanceMonitoringHistoryDataUpstream(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
-			"ManagedEntityId":             entityID,
-			"SrIndication":                0,
-			"TotalTcontNumber":            0,
-			"GemBlockLength":              0,
-			"PiggybackDbaReporting":       0,
-			"Deprecated":                  0,
-			"SignalFailThreshold":         0,
-			"SignalDegradeThreshold":      0,
-			"Arc":                         0,
-			"ArcInterval":                 0,
-			"OpticalSignalLevel":          0,
-			"LowerOpticalThreshold":       0,
-			"UpperOpticalThreshold":       0,
-			"OnuResponseTime":             0,
-			"TransmitOpticalLevel":        0,
-			"LowerTransmitPowerThreshold": 0,
-			"UpperTransmitPowerThreshold": 0,
+			"ManagedEntityId":         entityID,
+			"IntervalEndTime":         0, // This ideally should increment by 1 every collection interval, but staying 0 for simulation is Ok for now.
+			"ThresholdData12Id":       0,
+			"DropEvents":              rand.Intn(100),
+			"Octets":                  rand.Intn(100),
+			"Packets":                 rand.Intn(100),
+			"BroadcastPackets":        rand.Intn(100),
+			"MulticastPackets":        rand.Intn(100),
+			"CrcErroredPackets":       rand.Intn(100),
+			"UndersizePackets":        rand.Intn(100),
+			"OversizePackets":         rand.Intn(100),
+			"Packets64Octets":         rand.Intn(100),
+			"Packets65To127Octets":    rand.Intn(100),
+			"Packets128To255Octets":   rand.Intn(100),
+			"Packets256To511Octets":   rand.Intn(100),
+			"Packets512To1023Octets":  rand.Intn(100),
+			"Packets1024To1518Octets": rand.Intn(100),
 		},
 	})
 
 	if meErr.GetError() != nil {
-		omciLogger.Errorf("NewAniG %v", meErr.Error())
+		omciLogger.Errorf("NewEthernetFramePerformanceMonitoringHistoryDataUpstream %v", meErr.Error())
 		return nil
+	}
+
+	// L2 PM counters MEs exceed max allowed OMCI payload size.
+	// So the request/responses are always multipart.
+	// First identify the attributes that are not requested in the current GET request.
+	// Then filter out those attributes from the responses in the current GET response.
+	unwantedAttributeMask := ^attributeMask
+	var i uint16
+	for i = 1; i <= 16; i++ { // 1 and 16 because they are allowed valid min and max index keys in AttributeValueMap.
+		// We leave out 0 because that is ManagedEntity and that is a default IE in the map
+		if (1<<(16-i))&unwantedAttributeMask > 0 {
+			if err := managedEntity.DeleteAttributeByIndex(uint(i)); err != nil {
+				omciLogger.Errorf("error deleting attribute at index=%v, err=%v", i, err)
+			}
+		}
 	}
 
 	return &omci.GetResponse{
 		MeBasePacket: omci.MeBasePacket{
-			EntityClass: me.AniGClassID,
+			EntityClass:    me.EthernetFramePerformanceMonitoringHistoryDataUpstreamClassID,
+			EntityInstance: entityID,
+		},
+		Attributes:    managedEntity.GetAttributeValueMap(),
+		AttributeMask: attributeMask,
+		Result:        me.Success,
+	}
+}
+
+func createEthernetFramePerformanceMonitoringHistoryDataDownstreamResponse(attributeMask uint16, entityID uint16) *omci.GetResponse {
+	fmt.Printf("createEthernetFramePerformanceMonitoringHistoryDataDownstreamResponse attribute mask = %v", attributeMask)
+	managedEntity, meErr := me.NewEthernetFramePerformanceMonitoringHistoryDataDownstream(me.ParamData{
+		EntityID: entityID,
+		Attributes: me.AttributeValueMap{
+			"ManagedEntityId":         entityID,
+			"IntervalEndTime":         0, // This ideally should increment by 1 every collection interval, but staying 0 for simulation is Ok for now.
+			"ThresholdData12Id":       0,
+			"DropEvents":              rand.Intn(100),
+			"Octets":                  rand.Intn(100),
+			"Packets":                 rand.Intn(100),
+			"BroadcastPackets":        rand.Intn(100),
+			"MulticastPackets":        rand.Intn(100),
+			"CrcErroredPackets":       rand.Intn(100),
+			"UndersizePackets":        rand.Intn(100),
+			"OversizePackets":         rand.Intn(100),
+			"Packets64Octets":         rand.Intn(100),
+			"Packets65To127Octets":    rand.Intn(100),
+			"Packets128To255Octets":   rand.Intn(100),
+			"Packets256To511Octets":   rand.Intn(100),
+			"Packets512To1023Octets":  rand.Intn(100),
+			"Packets1024To1518Octets": rand.Intn(100),
+		},
+	})
+
+	if meErr.GetError() != nil {
+		omciLogger.Errorf("NewEthernetFramePerformanceMonitoringHistoryDataDownstream %v", meErr.Error())
+		return nil
+	}
+
+	// L2 PM counters MEs exceed max allowed OMCI payload size.
+	// So the request/responses are always multipart.
+	// First identify the attributes that are not requested in the current GET request.
+	// Then filter out those attributes from the responses in the current GET response.
+	unwantedAttributeMask := ^attributeMask
+	var i uint16
+	for i = 1; i <= 16; i++ { // 1 and 16 because they are allowed valid min and max index keys in AttributeValueMap.
+		// We leave out 0 because that is ManagedEntity and that is a default IE in the map
+		if (1<<(16-i))&unwantedAttributeMask > 0 {
+			if err := managedEntity.DeleteAttributeByIndex(uint(i)); err != nil {
+				omciLogger.Errorf("error deleting attribute at index=%v, err=%v", i, err)
+			}
+		}
+	}
+
+	return &omci.GetResponse{
+		MeBasePacket: omci.MeBasePacket{
+			EntityClass:    me.EthernetFramePerformanceMonitoringHistoryDataDownstreamClassID,
+			EntityInstance: entityID,
+		},
+		Attributes:    managedEntity.GetAttributeValueMap(),
+		AttributeMask: attributeMask,
+		Result:        me.Success,
+	}
+}
+
+func createEthernetPerformanceMonitoringHistoryDataResponse(attributeMask uint16, entityID uint16) *omci.GetResponse {
+	fmt.Printf("createEthernetPerformanceMonitoringHistoryDataResponse attribute mask = %v", attributeMask)
+	managedEntity, meErr := me.NewEthernetPerformanceMonitoringHistoryData(me.ParamData{
+		EntityID: entityID,
+		Attributes: me.AttributeValueMap{
+			"ManagedEntityId":                 entityID,
+			"IntervalEndTime":                 0, // This ideally should increment by 1 every collection interval, but staying 0 for simulation is Ok for now.
+			"ThresholdData12Id":               0,
+			"FcsErrors":                       rand.Intn(100),
+			"ExcessiveCollisionCounter":       rand.Intn(100),
+			"LateCollisionCounter":            rand.Intn(100),
+			"FramesTooLong":                   rand.Intn(100),
+			"BufferOverflowsOnReceive":        rand.Intn(100),
+			"BufferOverflowsOnTransmit":       rand.Intn(100),
+			"SingleCollisionFrameCounter":     rand.Intn(100),
+			"MultipleCollisionsFrameCounter":  rand.Intn(100),
+			"SqeCounter":                      rand.Intn(100),
+			"DeferredTransmissionCounter":     rand.Intn(100),
+			"InternalMacTransmitErrorCounter": rand.Intn(100),
+			"CarrierSenseErrorCounter":        rand.Intn(100),
+			"AlignmentErrorCounter":           rand.Intn(100),
+			"InternalMacReceiveErrorCounter":  rand.Intn(100),
+		},
+	})
+
+	if meErr.GetError() != nil {
+		omciLogger.Errorf("NewEthernetPerformanceMonitoringHistoryData %v", meErr.Error())
+		return nil
+	}
+
+	// L2 PM counters MEs exceed max allowed OMCI payload size.
+	// So the request/responses are always multipart.
+	// First identify the attributes that are not requested in the current GET request.
+	// Then filter out those attributes from the responses in the current GET response.
+	unwantedAttributeMask := ^attributeMask
+	var i uint16
+	for i = 1; i <= 16; i++ { // 1 and 16 because they are allowed valid min and max index keys in AttributeValueMap.
+		// We leave out 0 because that is ManagedEntity and that is a default IE in the map
+		if (1<<(16-i))&unwantedAttributeMask > 0 {
+			if err := managedEntity.DeleteAttributeByIndex(uint(i)); err != nil {
+				omciLogger.Errorf("error deleting attribute at index=%v, err=%v", i, err)
+			}
+		}
+	}
+
+	return &omci.GetResponse{
+		MeBasePacket: omci.MeBasePacket{
+			EntityClass:    me.EthernetPerformanceMonitoringHistoryDataClassID,
+			EntityInstance: entityID,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,
@@ -346,7 +482,48 @@ func createOnuDataResponse(attributeMask uint16, entityID uint16, mds uint8) *om
 
 	return &omci.GetResponse{
 		MeBasePacket: omci.MeBasePacket{
-			EntityClass: me.OnuDataClassID,
+			EntityClass:    me.OnuDataClassID,
+			EntityInstance: entityID,
+		},
+		Attributes:    managedEntity.GetAttributeValueMap(),
+		AttributeMask: attributeMask,
+		Result:        me.Success,
+	}
+}
+
+func createAnigResponse(attributeMask uint16, entityID uint16) *omci.GetResponse {
+	managedEntity, meErr := me.NewAniG(me.ParamData{
+		EntityID: entityID,
+		Attributes: me.AttributeValueMap{
+			"ManagedEntityId":             entityID,
+			"SrIndication":                0,
+			"TotalTcontNumber":            0,
+			"GemBlockLength":              0,
+			"PiggybackDbaReporting":       0,
+			"Deprecated":                  0,
+			"SignalFailThreshold":         0,
+			"SignalDegradeThreshold":      0,
+			"Arc":                         0,
+			"ArcInterval":                 0,
+			"OpticalSignalLevel":          rand.Intn(16000), // generate some random power level than defaulting to 0
+			"LowerOpticalThreshold":       0,
+			"UpperOpticalThreshold":       0,
+			"OnuResponseTime":             0,
+			"TransmitOpticalLevel":        rand.Intn(16000), // generate some random power level than defaulting to 0
+			"LowerTransmitPowerThreshold": 0,
+			"UpperTransmitPowerThreshold": 0,
+		},
+	})
+
+	if meErr.GetError() != nil {
+		omciLogger.Errorf("NewAniG %v", meErr.Error())
+		return nil
+	}
+
+	return &omci.GetResponse{
+		MeBasePacket: omci.MeBasePacket{
+			EntityClass:    me.AniGClassID,
+			EntityInstance: entityID,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,

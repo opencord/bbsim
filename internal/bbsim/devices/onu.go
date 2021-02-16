@@ -728,6 +728,9 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 				}).Error("send-TestResult-indication-failed")
 			}
 		}
+	case omci.SynchronizeTimeRequestType:
+		// MDS counter increment is not required for this message type
+		responsePkt, _ = omcilib.CreateSyncTimeResponse(omciPkt, omciMsg)
 	default:
 		log.WithFields(log.Fields{
 			"omciMsgType":  omciMsg.MessageType,
