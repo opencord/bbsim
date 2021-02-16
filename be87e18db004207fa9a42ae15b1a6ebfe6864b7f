@@ -16,6 +16,24 @@
       "revId": "be87e18db004207fa9a42ae15b1a6ebfe6864b7f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a823294_0785ec6e",
+        "filename": "internal/common/omci/create.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-02-16T19:30:06Z",
+      "side": 1,
+      "message": "This is only used by BBR, in that scenario we don\u0027t care about the data reported, just about the number of messages exchanged.\nThis will likely change once we implement https://jira.opencord.org/browse/VOL-3837",
+      "parentUuid": "4d564ec5_e399d109",
+      "revId": "be87e18db004207fa9a42ae15b1a6ebfe6864b7f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
