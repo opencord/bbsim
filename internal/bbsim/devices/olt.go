@@ -47,6 +47,17 @@ var oltLogger = log.WithFields(log.Fields{
 	"module": "OLT",
 })
 
+const (
+	onuIdStart     = 1
+	onuIdEnd       = 127
+	allocIdStart   = 1024
+	allocIdEnd     = 16383
+	gemportIdStart = 1024
+	gemportIdEnd   = 65535
+	flowIdStart    = 1
+	flowIdEnd      = 65535
+)
+
 type OltDevice struct {
 	sync.Mutex
 	oltServer *grpc.Server
@@ -79,6 +90,13 @@ type OltDevice struct {
 
 	OpenoltStream openolt.Openolt_EnableIndicationServer
 	enablePerf    bool
+
+	// Allocated Resources
+	// this data are to verify that the openolt adapter does not duplicate resources
+	AllocIDsLock   sync.RWMutex
+	AllocIDs       map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool // map[ponPortId]map[OnuId]map[PortNo]map[AllocIds]map[FlowId]bool
+	GemPortIDsLock sync.RWMutex
+	GemPortIDs     map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool // map[ponPortId]map[OnuId]map[PortNo]map[GemPortIDs]map[FlowId]bool
 }
 
 var olt OltDevice
@@ -101,17 +119,19 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		OperState: getOperStateFSM(func(e *fsm.Event) {
 			oltLogger.Debugf("Changing OLT OperState from %s to %s", e.Src, e.Dst)
 		}),
-		NumNni:              int(options.Olt.NniPorts),
-		NumPon:              int(options.Olt.PonPorts),
-		NumOnuPerPon:        int(options.Olt.OnusPonPort),
-		Pons:                []*PonPort{},
-		Nnis:                []*NniPort{},
-		Delay:               options.BBSim.Delay,
-		enablePerf:          options.BBSim.EnablePerf,
-		PublishEvents:       options.BBSim.Events,
-		PortStatsInterval:   options.Olt.PortStatsInterval,
-		dhcpServer:          dhcp.NewDHCPServer(),
+		NumNni:            int(options.Olt.NniPorts),
+		NumPon:            int(options.Olt.PonPorts),
+		NumOnuPerPon:      int(options.Olt.OnusPonPort),
+		Pons:              []*PonPort{},
+		Nnis:              []*NniPort{},
+		Delay:             options.BBSim.Delay,
+		enablePerf:        options.BBSim.EnablePerf,
+		PublishEvents:     options.BBSim.Events,
+		PortStatsInterval: options.Olt.PortStatsInterval,
+		dhcpServer:        dhcp.NewDHCPServer(),
 		PreviouslyConnected: false,
+		AllocIDs:          make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool),
+		GemPortIDs:        make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool),
 	}
 
 	if val, ok := ControlledActivationModes[options.BBSim.ControlledActivation]; ok {
@@ -138,6 +158,10 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 				oltLogger.Debugf("Changing OLT InternalState from %s to %s", e.Src, e.Dst)
 			},
 			"enter_initialized": func(e *fsm.Event) { olt.InitOlt() },
+			"enter_deleted": func(e *fsm.Event) {
+				// remove all the resource allocations
+				olt.clearAllResources()
+			},
 		},
 	)
 
@@ -158,6 +182,11 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 
 	// create PON ports
 	for i := 0; i < olt.NumPon; i++ {
+
+		// initialize the resource maps for every PON Ports
+		olt.AllocIDs[uint32(i)] = make(map[uint32]map[uint32]map[int32]map[uint64]bool)
+		olt.GemPortIDs[uint32(i)] = make(map[uint32]map[uint32]map[int32]map[uint64]bool)
+
 		p := CreatePonPort(&olt, uint32(i))
 
 		// create ONU devices
@@ -226,6 +255,8 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 
 func (o *OltDevice) InitOlt() {
 
+	// when we initialize the OLT make sure there are no reserved IDs
+
 	if o.oltServer == nil {
 		o.oltServer, _ = o.StartOltServer()
 	} else {
@@ -241,6 +272,12 @@ func (o *OltDevice) InitOlt() {
 		// the NNI may be in a bad state after a disable/reboot as we are not disabling it for
 		// in-band management
 		o.Nnis[0].OperState.SetState("down")
+	}
+
+	for ponId := range o.Pons {
+		// initialize the resource maps for every PON Ports
+		olt.AllocIDs[uint32(ponId)] = make(map[uint32]map[uint32]map[int32]map[uint64]bool)
+		olt.GemPortIDs[uint32(ponId)] = make(map[uint32]map[uint32]map[int32]map[uint64]bool)
 	}
 }
 
@@ -811,22 +848,20 @@ func (o *OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*ope
 	publishEvent("ONU-activate-indication-received", int32(onu.IntfId), int32(onu.OnuId), onuSnToString(onu.SerialNumber))
 
 	pon, _ := o.GetPonById(onu.IntfId)
+
+	// Initialize the resource maps for this ONU
+	olt.AllocIDs[onu.IntfId][onu.OnuId] = make(map[uint32]map[int32]map[uint64]bool)
+	olt.GemPortIDs[onu.IntfId][onu.OnuId] = make(map[uint32]map[int32]map[uint64]bool)
+
 	_onu, _ := pon.GetOnuBySn(onu.SerialNumber)
 	_onu.SetID(onu.OnuId)
 
-	if err := _onu.OperState.Event("enable"); err != nil {
-		oltLogger.WithFields(log.Fields{
-			"IntfId": _onu.PonPortID,
-			"OnuSn":  _onu.Sn(),
-			"OnuId":  _onu.ID,
-		}).Infof("Failed to transition ONU.OperState to enabled state: %s", err.Error())
-	}
 	if err := _onu.InternalState.Event("enable"); err != nil {
 		oltLogger.WithFields(log.Fields{
 			"IntfId": _onu.PonPortID,
 			"OnuSn":  _onu.Sn(),
 			"OnuId":  _onu.ID,
-		}).Infof("Failed to transition ONU to enabled state: %s", err.Error())
+		}).Errorf("Failed to transition ONU to enabled state: %s", err.Error())
 	}
 
 	// NOTE we need to immediately activate the ONU or the OMCI state machine won't start
@@ -834,7 +869,7 @@ func (o *OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*ope
 	return new(openolt.Empty), nil
 }
 
-func (o *OltDevice) DeactivateOnu(context.Context, *openolt.Onu) (*openolt.Empty, error) {
+func (o *OltDevice) DeactivateOnu(_ context.Context, onu *openolt.Onu) (*openolt.Empty, error) {
 	oltLogger.Error("DeactivateOnu not implemented")
 	return new(openolt.Empty), nil
 }
@@ -1045,6 +1080,21 @@ func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.E
 			}
 		}
 
+		// validate that the flow reference correct IDs (Alloc, Gem)
+		if err := o.validateFlow(flow); err != nil {
+			oltLogger.WithFields(log.Fields{
+				"OnuId":        flow.OnuId,
+				"IntfId":       flow.AccessIntfId,
+				"Flow":         flow,
+				"SerialNumber": onu.Sn(),
+				"err":          err,
+			}).Error("invalid-flow-for-onu")
+			return nil, err
+		}
+
+		o.storeGemPortId(flow)
+		o.storeAllocId(flow)
+
 		msg := types.Message{
 			Type: types.FlowAdd,
 			Data: types.OnuFlowUpdateMessage{
@@ -1063,9 +1113,21 @@ func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.E
 func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.Empty, error) {
 
 	oltLogger.WithFields(log.Fields{
-		"FlowId":   flow.FlowId,
-		"FlowType": flow.FlowType,
+		"AllocId":       flow.AllocId,
+		"Cookie":        flow.Cookie,
+		"FlowId":        flow.FlowId,
+		"FlowType":      flow.FlowType,
+		"GemportId":     flow.GemportId,
+		"IntfId":        flow.AccessIntfId,
+		"OnuId":         flow.OnuId,
+		"PortNo":        flow.PortNo,
+		"UniID":         flow.UniId,
+		"ReplicateFlow": flow.ReplicateFlow,
+		"PbitToGemport": flow.PbitToGemport,
 	}).Debug("OLT receives FlowRemove")
+
+	olt.freeGemPortId(flow)
+	olt.freeAllocId(flow)
 
 	if !o.enablePerf { // remove only if flow were stored
 		flowKey := FlowKey{
@@ -1157,25 +1219,62 @@ func (o *OltDevice) GetOnuByFlowId(flowId uint64) (*Onu, error) {
 
 func (o *OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.DeviceInfo, error) {
 
-	devinfo := new(openolt.DeviceInfo)
-	devinfo.Vendor = common.Config.Olt.Vendor
-	devinfo.Model = common.Config.Olt.Model
-	devinfo.HardwareVersion = common.Config.Olt.HardwareVersion
-	devinfo.FirmwareVersion = common.Config.Olt.FirmwareVersion
-	devinfo.Technology = common.Config.Olt.Technology
-	devinfo.PonPorts = uint32(o.NumPon)
-	devinfo.OnuIdStart = 1
-	devinfo.OnuIdEnd = 255
-	devinfo.AllocIdStart = 1024
-	devinfo.AllocIdEnd = 16383
-	devinfo.GemportIdStart = 1024
-	devinfo.GemportIdEnd = 65535
-	devinfo.FlowIdStart = 1
-	devinfo.FlowIdEnd = 16383
-	devinfo.DeviceSerialNumber = o.SerialNumber
-	devinfo.DeviceId = common.Config.Olt.DeviceId
-	devinfo.PreviouslyConnected = o.PreviouslyConnected
+	intfIDs := []uint32{}
+	for i := 0; i < o.NumPon; i++ {
+		intfIDs = append(intfIDs, uint32(i))
+	}
 
+	devinfo := &openolt.DeviceInfo{
+		Vendor:             common.Config.Olt.Vendor,
+		Model:              common.Config.Olt.Model,
+		HardwareVersion:    common.Config.Olt.HardwareVersion,
+		FirmwareVersion:    common.Config.Olt.FirmwareVersion,
+		Technology:         common.Config.Olt.Technology,
+		PonPorts:           uint32(o.NumPon),
+		OnuIdStart:         onuIdStart,
+		OnuIdEnd:           onuIdEnd,
+		AllocIdStart:       allocIdStart,
+		AllocIdEnd:         allocIdEnd,
+		GemportIdStart:     gemportIdStart,
+		GemportIdEnd:       gemportIdEnd,
+		FlowIdStart:        flowIdStart,
+		FlowIdEnd:          flowIdEnd,
+		DeviceSerialNumber: o.SerialNumber,
+		DeviceId:           common.Config.Olt.DeviceId,
+		PreviouslyConnected: o.PreviouslyConnected,
+		Ranges: []*openolt.DeviceInfo_DeviceResourceRanges{
+			{
+				IntfIds:    intfIDs,
+				Technology: common.Config.Olt.Technology,
+				Pools: []*openolt.DeviceInfo_DeviceResourceRanges_Pool{
+					{
+						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_ONU_ID,
+						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
+						Start:   onuIdStart,
+						End:     onuIdEnd,
+					},
+					{
+						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_ALLOC_ID,
+						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
+						Start:   allocIdStart,
+						End:     allocIdEnd,
+					},
+					{
+						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_GEMPORT_ID,
+						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
+						Start:   gemportIdStart,
+						End:     gemportIdEnd,
+					},
+					{
+						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_FLOW_ID,
+						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_SHARED_BY_ALL_INTF_ALL_TECH,
+						Start:   flowIdStart,
+						End:     flowIdEnd,
+					},
+				},
+			},
+		},
+	}
 	oltLogger.WithFields(log.Fields{
 		"Vendor":              devinfo.Vendor,
 		"Model":               devinfo.Model,
@@ -1474,4 +1573,180 @@ func (o *OltDevice) GetGemPortStatistics(ctx context.Context, in *openolt.OnuPac
 
 func (o *OltDevice) GetOnuStatistics(ctx context.Context, in *openolt.Onu) (*openolt.OnuStatistics, error) {
 	return &openolt.OnuStatistics{}, nil
+}
+
+func (o *OltDevice) storeAllocId(flow *openolt.Flow) {
+	o.AllocIDsLock.Lock()
+	defer o.AllocIDsLock.Unlock()
+
+	oltLogger.WithFields(log.Fields{
+		"IntfId":  flow.AccessIntfId,
+		"OnuId":   flow.OnuId,
+		"PortNo":  flow.PortNo,
+		"AllocId": flow.AllocId,
+	}).Trace("storing-alloc-id-via-flow")
+
+	if _, ok := o.AllocIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo]; !ok {
+		o.AllocIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo] = make(map[int32]map[uint64]bool)
+	}
+	if _, ok := o.AllocIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo][flow.AllocId]; !ok {
+		o.AllocIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo][flow.AllocId] = make(map[uint64]bool)
+	}
+	o.AllocIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo][flow.AllocId][flow.FlowId] = true
+}
+
+func (o *OltDevice) freeAllocId(flow *openolt.Flow) {
+	// if this is the last flow referencing the AllocId then remove it
+	o.AllocIDsLock.Lock()
+	defer o.AllocIDsLock.Unlock()
+
+	oltLogger.WithFields(log.Fields{
+		"IntfId":    flow.AccessIntfId,
+		"OnuId":     flow.OnuId,
+		"PortNo":    flow.PortNo,
+		"GemportId": flow.GemportId,
+	}).Trace("freeing-alloc-id-via-flow")
+
+	// NOTE look at the freeGemPortId implementation for comments and context
+	for ponId, ponValues := range o.AllocIDs {
+		for onuId, onuValues := range ponValues {
+			for uniId, uniValues := range onuValues {
+				for allocId, flows := range uniValues {
+					for flowId := range flows {
+						// if the flow matches, remove it from the map.
+						if flow.FlowId == flowId {
+							delete(o.AllocIDs[ponId][onuId][uniId][allocId], flow.FlowId)
+						}
+						// if that was the last flow for a particular allocId, remove the entire allocId
+						if len(o.AllocIDs[ponId][onuId][uniId][allocId]) == 0 {
+							delete(o.AllocIDs[ponId][onuId][uniId], allocId)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+func (o *OltDevice) storeGemPortId(flow *openolt.Flow) {
+	o.GemPortIDsLock.Lock()
+	defer o.GemPortIDsLock.Unlock()
+
+	oltLogger.WithFields(log.Fields{
+		"IntfId":    flow.AccessIntfId,
+		"OnuId":     flow.OnuId,
+		"PortNo":    flow.PortNo,
+		"GemportId": flow.GemportId,
+	}).Trace("storing-gem-port-id-via-flow")
+
+	if _, ok := o.GemPortIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo]; !ok {
+		o.GemPortIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo] = make(map[int32]map[uint64]bool)
+	}
+	if _, ok := o.GemPortIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo][flow.GemportId]; !ok {
+		o.GemPortIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo][flow.GemportId] = make(map[uint64]bool)
+	}
+	o.GemPortIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo][flow.GemportId][flow.FlowId] = true
+}
+
+func (o *OltDevice) freeGemPortId(flow *openolt.Flow) {
+	// if this is the last flow referencing the GemPort then remove it
+	o.GemPortIDsLock.Lock()
+	defer o.GemPortIDsLock.Unlock()
+
+	oltLogger.WithFields(log.Fields{
+		"IntfId":    flow.AccessIntfId,
+		"OnuId":     flow.OnuId,
+		"PortNo":    flow.PortNo,
+		"GemportId": flow.GemportId,
+	}).Trace("freeing-gem-port-id-via-flow")
+
+	// NOTE that this loop is not very performant, it would be better if the flow carries
+	// the same information that it carries during a FlowAdd. If so we can directly remove
+	// items from the map
+
+	//delete(o.GemPortIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo][flow.GemportId], flow.FlowId)
+	//if len(o.GemPortIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo][flow.GemportId]) == 0 {
+	//	delete(o.GemPortIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo], flow.GemportId)
+	//}
+
+	// NOTE this loop assumes that flow IDs are unique per device
+	for ponId, ponValues := range o.GemPortIDs {
+		for onuId, onuValues := range ponValues {
+			for uniId, uniValues := range onuValues {
+				for gemId, flows := range uniValues {
+					for flowId := range flows {
+						// if the flow matches, remove it from the map.
+						if flow.FlowId == flowId {
+							delete(o.GemPortIDs[ponId][onuId][uniId][gemId], flow.FlowId)
+						}
+						// if that was the last flow for a particular gem, remove the entire gem
+						if len(o.GemPortIDs[ponId][onuId][uniId][gemId]) == 0 {
+							delete(o.GemPortIDs[ponId][onuId][uniId], gemId)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+// validateFlow checks that:
+// - the AllocId is not used in any flow referencing other ONUs/UNIs on the same PON
+// - the GemPortId is not used in any flow referencing other ONUs/UNIs on the same PON
+func (o *OltDevice) validateFlow(flow *openolt.Flow) error {
+
+	// validate gemPort
+	o.GemPortIDsLock.RLock()
+	allocatedGems := o.GemPortIDs[uint32(flow.AccessIntfId)]
+	o.GemPortIDsLock.RUnlock()
+	for onuId, onu := range allocatedGems {
+		if onuId == uint32(flow.OnuId) {
+			continue
+		}
+		for uniId, uni := range onu {
+			for gem := range uni {
+				if gem == flow.GemportId {
+					return fmt.Errorf("gem-%d-already-in-use-on-uni-%d-onu-%d", gem, uniId, onuId)
+				}
+			}
+		}
+	}
+
+	o.AllocIDsLock.RLock()
+	allocatedAllocIds := o.AllocIDs[uint32(flow.AccessIntfId)]
+	o.AllocIDsLock.RUnlock()
+	for onuId, onu := range allocatedAllocIds {
+		if onuId == uint32(flow.OnuId) {
+			continue
+		}
+		for uniId, uni := range onu {
+			for allocId := range uni {
+				if allocId == flow.AllocId {
+					return fmt.Errorf("allocId-%d-already-in-use-on-uni-%d-onu-%d", allocId, uniId, onuId)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// clearAllResources is invoked up OLT Reboot to remove all the allocated
+// GemPorts, AllocId and ONU-IDs across the PONs
+func (o *OltDevice) clearAllResources() {
+
+	// remove the resources received via flows
+	o.GemPortIDsLock.Lock()
+	o.GemPortIDs = make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool)
+	o.GemPortIDsLock.Unlock()
+	o.AllocIDsLock.Lock()
+	o.AllocIDs = make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool)
+	o.AllocIDsLock.Unlock()
+
+	// remove the resources received via OMCI
+	for _, pon := range o.Pons {
+		pon.removeAllAllocIds()
+		pon.removeAllGemPorts()
+		pon.removeAllOnuIds()
+	}
 }
