@@ -37,7 +37,7 @@ func Test_Onu_StateMachine_disable(t *testing.T) {
 	assert.Equal(t, onu.InternalState.Current(), "enabled")
 
 	onu.PortNo = 16
-	onu.GemPortAdded = true
+	onu.GemPorts = []uint16{1024}
 	onu.Flows = []FlowKey{
 		{ID: 1, Direction: "upstream"},
 		{ID: 2, Direction: "downstream"},
@@ -46,7 +46,7 @@ func Test_Onu_StateMachine_disable(t *testing.T) {
 	_ = onu.InternalState.Event("disable")
 	assert.Equal(t, onu.InternalState.Current(), "disabled")
 
-	assert.Equal(t, onu.GemPortAdded, false)
+	assert.Equal(t, len(onu.GemPorts), 0)
 	assert.Equal(t, onu.PortNo, uint32(0))
 	assert.Equal(t, len(onu.Flows), 0)
 }
@@ -95,7 +95,6 @@ func Test_Onu_StateMachine_eapol_start(t *testing.T) {
 	assert.Equal(t, onu.InternalState.Current(), "enabled")
 
 	// succeed
-	onu.GemPortAdded = true
 	_ = onu.InternalState.Event("start_auth")
 	assert.Equal(t, onu.InternalState.Current(), "auth_started")
 }
@@ -103,8 +102,6 @@ func Test_Onu_StateMachine_eapol_start(t *testing.T) {
 func Test_Onu_StateMachine_eapol_states(t *testing.T) {
 	t.Skip("Needs to be moved in the Service struct")
 	onu := createTestOnu()
-
-	onu.GemPortAdded = true
 
 	onu.InternalState.SetState("auth_started")
 
@@ -168,8 +165,6 @@ func Test_Onu_StateMachine_dhcp_no_gem(t *testing.T) {
 	onu.InternalState.SetState("eap_response_success_received")
 	assert.Equal(t, onu.InternalState.Current(), "eap_response_success_received")
 
-	onu.GemPortAdded = false
-
 	err := onu.InternalState.Event("start_dhcp")
 	if err == nil {
 		t.Fail()
@@ -181,7 +176,6 @@ func Test_Onu_StateMachine_dhcp_no_gem(t *testing.T) {
 func Test_Onu_StateMachine_dhcp_start(t *testing.T) {
 	t.Skip("Needs to be moved in the Service struct")
 	onu := createTestOnu()
-	onu.GemPortAdded = true
 
 	onu.InternalState.SetState("eap_response_success_received")
 	assert.Equal(t, onu.InternalState.Current(), "eap_response_success_received")
@@ -194,8 +188,6 @@ func Test_Onu_StateMachine_dhcp_start(t *testing.T) {
 func Test_Onu_StateMachine_dhcp_states(t *testing.T) {
 	t.Skip("Needs to be moved in the Service struct")
 	onu := createTestOnu()
-
-	onu.GemPortAdded = true
 
 	onu.InternalState.SetState("dhcp_started")
 
