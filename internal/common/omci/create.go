@@ -42,7 +42,7 @@ func ParseCreateRequest(omciPkt gopacket.Packet) (*omci.CreateRequest, error) {
 	return msgObj, nil
 }
 
-func CreateCreateResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, error) {
+func CreateCreateResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, result me.Results) ([]byte, error) {
 
 	msgObj, err := ParseCreateRequest(omciPkt)
 
@@ -60,7 +60,7 @@ func CreateCreateResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, 
 			EntityClass:    msgObj.EntityClass,
 			EntityInstance: msgObj.EntityInstance,
 		},
-		Result: me.Success,
+		Result: result,
 	}
 
 	pkt, err := Serialize(omci.CreateResponseType, response, omciMsg.TransactionID)
@@ -77,76 +77,4 @@ func CreateCreateResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, 
 	}).Trace("omci-create-response")
 
 	return pkt, nil
-}
-
-// methods used by BBR to drive the OMCI state machine
-
-func CreateGalEnetRequest(tid uint16) ([]byte, error) {
-	params := me.ParamData{
-		EntityID:   1,
-		Attributes: me.AttributeValueMap{"MaximumGemPayloadSize": 48},
-	}
-	meDef, _ := me.NewGalEthernetProfile(params)
-	pkt, err := omci.GenFrame(meDef, omci.CreateRequestType, omci.TransactionID(tid))
-	if err != nil {
-		omciLogger.WithField("err", err).Fatalf("Can't generate GalEnetRequest")
-	}
-	return HexEncode(pkt)
-}
-
-func CreateEnableUniRequest(tid uint16, uniId uint16, enabled bool, isPtp bool) ([]byte, error) {
-
-	var _enabled uint8
-	if enabled {
-		_enabled = uint8(1)
-	} else {
-		_enabled = uint8(0)
-	}
-
-	data := me.ParamData{
-		EntityID: uniId,
-		Attributes: me.AttributeValueMap{
-			"AdministrativeState": _enabled,
-		},
-	}
-	var medef *me.ManagedEntity
-	var omciErr me.OmciErrors
-
-	if isPtp {
-		medef, omciErr = me.NewPhysicalPathTerminationPointEthernetUni(data)
-	} else {
-		medef, omciErr = me.NewVirtualEthernetInterfacePoint(data)
-	}
-	if omciErr != nil {
-		return nil, omciErr.GetError()
-	}
-	pkt, err := omci.GenFrame(medef, omci.SetRequestType, omci.TransactionID(tid))
-	if err != nil {
-		omciLogger.WithField("err", err).Fatalf("Can't generate EnableUniRequest")
-	}
-	return HexEncode(pkt)
-}
-
-func CreateGemPortRequest(tid uint16) ([]byte, error) {
-	params := me.ParamData{
-		EntityID: 1,
-		Attributes: me.AttributeValueMap{
-			"PortId":                              1,
-			"TContPointer":                        1,
-			"Direction":                           0,
-			"TrafficManagementPointerForUpstream": 0,
-			"TrafficDescriptorProfilePointerForUpstream": 0,
-			"UniCounter":                                   0,
-			"PriorityQueuePointerForDownStream":            0,
-			"EncryptionState":                              0,
-			"TrafficDescriptorProfilePointerForDownstream": 0,
-			"EncryptionKeyRing":                            0,
-		},
-	}
-	meDef, _ := me.NewGemPortNetworkCtp(params)
-	pkt, err := omci.GenFrame(meDef, omci.CreateRequestType, omci.TransactionID(tid))
-	if err != nil {
-		omciLogger.WithField("err", err).Fatalf("Can't generate GemPortRequest")
-	}
-	return HexEncode(pkt)
 }

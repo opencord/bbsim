@@ -30,7 +30,6 @@ import (
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
 	"github.com/opencord/cordctl/pkg/format"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -125,16 +124,6 @@ type ONUOptions struct {
 
 func RegisterONUCommands(parser *flags.Parser) {
 	_, _ = parser.AddCommand("onu", "ONU Commands", "Commands to query and manipulate ONU devices", &ONUOptions{})
-}
-
-func connect() (pb.BBSimClient, *grpc.ClientConn) {
-	conn, err := grpc.Dial(config.GlobalConfig.Server, grpc.WithInsecure())
-
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-		return nil, conn
-	}
-	return pb.NewBBSimClient(conn), conn
 }
 
 func getONUs() *pb.ONUs {
