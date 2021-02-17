@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/jessevdk/go-flags"
 	"github.com/olekukonko/tablewriter"
@@ -29,12 +30,13 @@ import (
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
 	"github.com/opencord/cordctl/pkg/format"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 )
 
 const (
-	DEFAULT_OLT_DEVICE_HEADER_FORMAT = "table{{ .ID }}\t{{ .SerialNumber }}\t{{ .OperState }}\t{{ .InternalState }}\t{{ .IP }}"
-	DEFAULT_PORT_HEADER_FORMAT       = "table{{ .ID }}\t{{ .OperState }}"
+	DEFAULT_OLT_DEVICE_HEADER_FORMAT    = "table{{ .ID }}\t{{ .SerialNumber }}\t{{ .OperState }}\t{{ .InternalState }}\t{{ .IP }}"
+	DEFAULT_OLT_RESOURCES_HEADER_FORMAT = "table{{ .Type }}\t{{ .PonPortId }}\t{{ .OnuId }}\t{{ .PortNo }}\t{{ .ResourceId }}\t{{ .FlowId }}"
+	DEFAULT_NNI_PORT_HEADER_FORMAT      = "table{{ .ID }}\t{{ .OperState }}\t{{ .InternalState }}\t{{ .PacketCount }}"
+	DEFAULT_PON_PORT_HEADER_FORMAT      = "table{{ .ID }}\t{{ .OperState }}\t{{ .InternalState }}\t{{ .PacketCount }}\t{{ .AllocatedOnuIds }}\t{{ .AllocatedGemPorts }}\t{{ .AllocatedAllocIds }}"
 )
 
 type OltGet struct{}
@@ -64,8 +66,16 @@ type OltPoweronAllOnus struct{}
 
 type OltShutdownAllOnus struct{}
 
+type oltResourcesType string
+type OltResources struct {
+	Args struct {
+		Type oltResourcesType
+	} `positional-args:"yes" required:"yes"`
+}
+
 type oltOptions struct {
 	Get             OltGet             `command:"get"`
+	GetResources    OltResources       `command:"resources"`
 	NNI             OltNNIs            `command:"nnis"`
 	PON             OltPONs            `command:"pons"`
 	Shutdown        OltShutdown        `command:"shutdown"`
@@ -85,19 +95,12 @@ func RegisterOltCommands(parser *flags.Parser) {
 }
 
 func getOLT() *pb.Olt {
-	conn, err := grpc.Dial(config.GlobalConfig.Server, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-		return nil
-	}
+	client, conn := connect()
 	defer conn.Close()
-	c := pb.NewBBSimClient(conn)
-
-	// Contact the server and print out its response.
 
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
-	olt, err := c.GetOlt(ctx, &pb.Empty{})
+	olt, err := client.GetOlt(ctx, &pb.Empty{})
 	if err != nil {
 		log.Fatalf("could not get OLT: %v", err)
 		return nil
@@ -120,12 +123,34 @@ func (o *OltGet) Execute(args []string) error {
 	return nil
 }
 
+func (o *OltResources) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	resourceType := pb.OltAllocatedResourceType_Type_value[string(o.Args.Type)]
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+	resources, err := client.GetOltAllocatedResources(ctx, &pb.OltAllocatedResourceType{Type: pb.OltAllocatedResourceType_Type(resourceType)})
+
+	if err != nil {
+		log.Fatalf("could not get OLT resources: %v", err)
+		return nil
+	}
+
+	tableFormat := format.Format(DEFAULT_OLT_RESOURCES_HEADER_FORMAT)
+	if err := tableFormat.Execute(os.Stdout, true, resources.Resources); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (o *OltNNIs) Execute(args []string) error {
 	olt := getOLT()
 
 	printOltHeader("NNI Ports for", olt)
 
-	tableFormat := format.Format(DEFAULT_PORT_HEADER_FORMAT)
+	tableFormat := format.Format(DEFAULT_NNI_PORT_HEADER_FORMAT)
 	_ = tableFormat.Execute(os.Stdout, true, olt.NNIPorts)
 
 	return nil
@@ -136,7 +161,7 @@ func (o *OltPONs) Execute(args []string) error {
 
 	printOltHeader("PON Ports for", olt)
 
-	tableFormat := format.Format(DEFAULT_PORT_HEADER_FORMAT)
+	tableFormat := format.Format(DEFAULT_PON_PORT_HEADER_FORMAT)
 	_ = tableFormat.Execute(os.Stdout, true, olt.PONPorts)
 
 	return nil
@@ -353,4 +378,14 @@ func (o *OltShutdownAllOnus) Execute(args []string) error {
 
 	fmt.Println(fmt.Sprintf("[Status: %d] %s", res.StatusCode, res.Message))
 	return nil
+}
+
+func (rt *oltResourcesType) Complete(match string) []flags.Completion {
+	list := make([]flags.Completion, 0)
+	for k := range pb.OltAllocatedResourceType_Type_value {
+		if strings.HasPrefix(k, strings.ToUpper(match)) && k != pb.OltAllocatedResourceType_UNKNOWN.String() {
+			list = append(list, flags.Completion{Item: k})
+		}
+	}
+	return list
 }

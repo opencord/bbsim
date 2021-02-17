@@ -137,15 +137,16 @@ func (s *mockClient) GetOnuStatistics(ctx context.Context, in *openolt.Onu, opts
 // this method creates a fake ONU used in the tests
 func createMockOnu(id uint32, ponPortId uint32) *Onu {
 	o := Onu{
-		ID:           id,
-		PonPortID:    ponPortId,
-		PortNo:       0,
-		GemPortAdded: true,
+		ID:        id,
+		PonPortID: ponPortId,
+		PortNo:    0,
 		PonPort: &PonPort{
-			Olt: &OltDevice{},
+			AllocatedGemPorts: make(map[uint16]*openolt.SerialNumber),
+			AllocatedAllocIds: make(map[uint16]*openolt.SerialNumber),
+			Olt:               &OltDevice{},
 		},
 	}
-	o.SerialNumber = o.NewSN(0, ponPortId, o.ID)
+	o.SerialNumber = NewSN(0, ponPortId, o.ID)
 	o.Channel = make(chan types.Message, 10)
 	return &o
 }
@@ -155,11 +156,10 @@ func createTestOnu() *Onu {
 	olt := OltDevice{
 		ID: 0,
 	}
-	pon := PonPort{
-		ID:  1,
-		Olt: &olt,
-	}
-	onu := CreateONU(&olt, &pon, 1, time.Duration(1*time.Millisecond), true)
+
+	pon := CreatePonPort(&olt, 1)
+
+	onu := CreateONU(&olt, pon, 1, time.Duration(1*time.Millisecond), true)
 	// NOTE we need this in order to create the OnuChannel
 	_ = onu.InternalState.Event(OnuTxInitialize)
 	onu.DiscoveryRetryDelay = 100 * time.Millisecond

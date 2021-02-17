@@ -38,7 +38,7 @@ func createMockDevices() (*devices.OltDevice, *devices.Onu) {
 
 	mac := net.HardwareAddr{0x2e, 0x60, 0x01, byte(1), byte(1), byte(0)}
 
-	onu.SerialNumber = onu.NewSN(0, onu.PonPortID, onu.ID)
+	onu.SerialNumber = devices.NewSN(0, onu.PonPortID, onu.ID)
 	onu.Services = []devices.ServiceIf{
 		&devices.Service{Name: "hsia", CTag: 923, STag: 900, NeedsEapol: true, NeedsDhcp: true, NeedsIgmp: true, HwAddress: mac, TechnologyProfileID: 64},
 	}

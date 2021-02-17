@@ -22,6 +22,18 @@ import "voltha_protos/tech_profile.proto";
 message PONPort {
     int32 ID = 1;
     string OperState = 2;
+    string InternalState = 3;
+    uint64 PacketCount = 4;
+    // ONU ID are reported by VOLTHA in the ActivateOnu call
+    repeated PonAllocatedResources AllocatedOnuIds = 5;
+    // these are the stored resource IDs as reported via OMCI
+    repeated PonAllocatedResources AllocatedGemPorts = 6;
+    repeated PonAllocatedResources AllocatedAllocIds = 7;
+}
+
+message PonAllocatedResources {
+    string SerialNumber = 1;
+    int32 Id = 2;
 }
 
 message NNIPort {
@@ -37,6 +49,28 @@ message Olt {
     string IP = 7;
     repeated NNIPort NNIPorts = 5;
     repeated PONPort PONPorts = 6;
+}
+
+message OltAllocatedResourceType {
+    enum Type {
+        UNKNOWN = 0;
+        ALLOC_ID = 1;
+        GEM_PORT = 2;
+    }
+    Type type = 1;
+}
+
+message OltAllocatedResource {
+    string Type = 1;
+    uint32 PonPortId = 2;
+    uint32 OnuId = 3;
+    uint32 PortNo = 4;
+    int32 ResourceId = 5;
+    uint64 FlowId = 6;
+}
+
+message OltAllocatedResources {
+    repeated OltAllocatedResource resources = 1;
 }
 
 message ONU {
@@ -199,6 +233,10 @@ service BBSim {
     // Get current status of OLT
     rpc GetOlt (Empty) returns (Olt) {
     }
+
+    rpc GetOltAllocatedResources (OltAllocatedResourceType) returns (OltAllocatedResources) {
+    }
+
     // Poweron OLT
     rpc PoweronOlt (Empty) returns (Response) {
     }

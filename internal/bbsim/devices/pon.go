@@ -19,6 +19,7 @@ package devices
 import (
 	"bytes"
 	"fmt"
+	"sync"
 
 	"github.com/looplab/fsm"
 	"github.com/opencord/voltha-protos/v4/go/openolt"
@@ -37,17 +38,30 @@ type PonPort struct {
 	// PON Attributes
 	OperState *fsm.FSM
 	Type      string
+
+	// Allocated resources
+	// Some resources (eg: OnuId, AllocId and GemPorts) have to be unique per PON port
+	// we are keeping a list so that we can throw an error in cases we receive duplicates
+	AllocatedGemPorts     map[uint16]*openolt.SerialNumber
+	allocatedGemPortsLock sync.RWMutex
+	AllocatedOnuIds       map[uint32]*openolt.SerialNumber
+	allocatedOnuIdsLock   sync.RWMutex
+	AllocatedAllocIds     map[uint16]*openolt.SerialNumber
+	allocatedAllocIdsLock sync.RWMutex
 }
 
 // CreatePonPort creates pon port object
 func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 
 	ponPort := PonPort{
-		NumOnu: olt.NumOnuPerPon,
-		ID:     id,
-		Type:   "pon",
-		Olt:    olt,
-		Onus:   []*Onu{},
+		NumOnu:            olt.NumOnuPerPon,
+		ID:                id,
+		Type:              "pon",
+		Olt:               olt,
+		Onus:              []*Onu{},
+		AllocatedGemPorts: make(map[uint16]*openolt.SerialNumber),
+		AllocatedOnuIds:   make(map[uint32]*openolt.SerialNumber),
+		AllocatedAllocIds: make(map[uint16]*openolt.SerialNumber),
 	}
 
 	ponPort.InternalState = fsm.NewFSM(
@@ -170,7 +184,7 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 	return &ponPort
 }
 
-func (p PonPort) GetOnuBySn(sn *openolt.SerialNumber) (*Onu, error) {
+func (p *PonPort) GetOnuBySn(sn *openolt.SerialNumber) (*Onu, error) {
 	for _, onu := range p.Onus {
 		if bytes.Equal(onu.SerialNumber.VendorSpecific, sn.VendorSpecific) {
 			return onu, nil
@@ -179,7 +193,7 @@ func (p PonPort) GetOnuBySn(sn *openolt.SerialNumber) (*Onu, error) {
 	return nil, fmt.Errorf("Cannot find Onu with serial number %d in PonPort %d", sn, p.ID)
 }
 
-func (p PonPort) GetOnuById(id uint32) (*Onu, error) {
+func (p *PonPort) GetOnuById(id uint32) (*Onu, error) {
 	for _, onu := range p.Onus {
 		if onu.ID == id {
 			return onu, nil
@@ -189,7 +203,7 @@ func (p PonPort) GetOnuById(id uint32) (*Onu, error) {
 }
 
 // GetNumOfActiveOnus returns number of active ONUs for PON port
-func (p PonPort) GetNumOfActiveOnus() uint32 {
+func (p *PonPort) GetNumOfActiveOnus() uint32 {
 	var count uint32 = 0
 	for _, onu := range p.Onus {
 		if onu.InternalState.Current() == OnuStateInitialized || onu.InternalState.Current() == OnuStateCreated || onu.InternalState.Current() == OnuStateDisabled {
@@ -198,4 +212,112 @@ func (p PonPort) GetNumOfActiveOnus() uint32 {
 		count++
 	}
 	return count
+}
+
+// storeOnuId adds the Id to the ONU Ids already allocated to this PON port
+func (p *PonPort) storeOnuId(onuId uint32, onuSn *openolt.SerialNumber) {
+	p.allocatedOnuIdsLock.Lock()
+	defer p.allocatedOnuIdsLock.Unlock()
+	p.AllocatedOnuIds[onuId] = onuSn
+}
+
+// removeOnuId removes the OnuId from the allocated resources
+func (p *PonPort) removeOnuId(onuId uint32) {
+	p.allocatedOnuIdsLock.Lock()
+	defer p.allocatedOnuIdsLock.Unlock()
+	delete(p.AllocatedOnuIds, onuId)
+}
+
+func (p *PonPort) removeAllOnuIds() {
+	p.allocatedOnuIdsLock.Lock()
+	defer p.allocatedOnuIdsLock.Unlock()
+	p.AllocatedOnuIds = make(map[uint32]*openolt.SerialNumber)
+}
+
+// isOnuIdAllocated returns whether this OnuId is already in use on this PON
+func (p *PonPort) isOnuIdAllocated(onuId uint32) (bool, *openolt.SerialNumber) {
+	p.allocatedOnuIdsLock.RLock()
+	defer p.allocatedOnuIdsLock.RUnlock()
+
+	if _, ok := p.AllocatedOnuIds[onuId]; ok {
+		return true, p.AllocatedOnuIds[onuId]
+	}
+	return false, nil
+}
+
+// storeGemPort adds the gemPortId to the gemports already allocated to this PON port
+func (p *PonPort) storeGemPort(gemPortId uint16, onuSn *openolt.SerialNumber) {
+	p.allocatedGemPortsLock.Lock()
+	defer p.allocatedGemPortsLock.Unlock()
+	p.AllocatedGemPorts[gemPortId] = onuSn
+}
+
+// removeGemPort removes the gemPortId from the allocated resources
+func (p *PonPort) removeGemPort(gemPortId uint16) {
+	p.allocatedGemPortsLock.Lock()
+	defer p.allocatedGemPortsLock.Unlock()
+	delete(p.AllocatedGemPorts, gemPortId)
+}
+
+func (p *PonPort) removeGemPortBySn(onuSn *openolt.SerialNumber) {
+	p.allocatedGemPortsLock.Lock()
+	defer p.allocatedGemPortsLock.Unlock()
+	for gemPort, sn := range p.AllocatedGemPorts {
+		if sn == onuSn {
+			delete(p.AllocatedGemPorts, gemPort)
+		}
+	}
+}
+
+func (p *PonPort) removeAllGemPorts() {
+	p.allocatedGemPortsLock.Lock()
+	defer p.allocatedGemPortsLock.Unlock()
+	p.AllocatedGemPorts = make(map[uint16]*openolt.SerialNumber)
+}
+
+// isGemPortAllocated returns whether this gemPort is already in use on this PON
+func (p *PonPort) isGemPortAllocated(gemPortId uint16) (bool, *openolt.SerialNumber) {
+	p.allocatedGemPortsLock.RLock()
+	defer p.allocatedGemPortsLock.RUnlock()
+
+	if _, ok := p.AllocatedGemPorts[gemPortId]; ok {
+		return true, p.AllocatedGemPorts[gemPortId]
+	}
+	return false, nil
+}
+
+// storeAllocId adds the Id to the ONU Ids already allocated to this PON port
+func (p *PonPort) storeAllocId(allocId uint16, onuSn *openolt.SerialNumber) {
+	p.allocatedAllocIdsLock.Lock()
+	defer p.allocatedAllocIdsLock.Unlock()
+	p.AllocatedAllocIds[allocId] = onuSn
+}
+
+// removeAllocId removes the AllocId from the allocated resources
+// this is done via SN as the AllocId is not remove but set to a default value
+func (p *PonPort) removeAllocId(onuSn *openolt.SerialNumber) {
+	p.allocatedAllocIdsLock.Lock()
+	defer p.allocatedAllocIdsLock.Unlock()
+	for allocId, sn := range p.AllocatedAllocIds {
+		if sn == onuSn {
+			delete(p.AllocatedAllocIds, allocId)
+		}
+	}
+}
+
+func (p *PonPort) removeAllAllocIds() {
+	p.allocatedAllocIdsLock.Lock()
+	defer p.allocatedAllocIdsLock.Unlock()
+	p.AllocatedAllocIds = make(map[uint16]*openolt.SerialNumber)
+}
+
+// isAllocIdAllocated returns whether this AllocId is already in use on this PON
+func (p *PonPort) isAllocIdAllocated(allocId uint16) (bool, *openolt.SerialNumber) {
+	p.allocatedAllocIdsLock.RLock()
+	defer p.allocatedAllocIdsLock.RUnlock()
+
+	if _, ok := p.AllocatedAllocIds[allocId]; ok {
+		return true, p.AllocatedAllocIds[allocId]
+	}
+	return false, nil
 }

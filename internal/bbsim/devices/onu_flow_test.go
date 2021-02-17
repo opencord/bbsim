@@ -100,8 +100,6 @@ func Test_HandleFlowRemoveFlowId_LastFlow(t *testing.T) {
 		fsm.Callbacks{},
 	)
 
-	onu.GemPortAdded = true
-
 	onu.FlowIds = []uint64{64}
 
 	flow := openolt.Flow{
@@ -115,7 +113,6 @@ func Test_HandleFlowRemoveFlowId_LastFlow(t *testing.T) {
 	}
 	onu.handleFlowRemove(msg)
 	assert.Equal(t, len(onu.FlowIds), 0)
-	assert.Equal(t, onu.GemPortAdded, false)
 }
 
 func TestOnu_HhandleEAPOLStart(t *testing.T) {
@@ -428,8 +425,6 @@ func Test_HandleFlowAddDhcpWithoutGem(t *testing.T) {
 	// NOTE that this feature is required as there is no guarantee that the gemport is the same
 	// one we received with the EAPOL flow
 	onu := createMockOnu(1, 1)
-
-	onu.GemPortAdded = false
 
 	onu.InternalState = fsm.NewFSM(
 		"enabled",

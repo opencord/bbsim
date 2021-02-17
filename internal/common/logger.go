@@ -21,6 +21,11 @@ import log "github.com/sirupsen/logrus"
 func SetLogLevel(logger *log.Logger, level string, caller bool) {
 
 	logger.SetReportCaller(caller)
+	Formatter := new(log.TextFormatter)
+	Formatter.TimestampFormat = "2006-01-02T15:04:05.999999999Z07:00"
+	Formatter.FullTimestamp = true
+	//Formatter.ForceColors = true
+	logger.SetFormatter(Formatter)
 
 	switch level {
 	case "trace":

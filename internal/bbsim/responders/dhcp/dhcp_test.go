@@ -18,7 +18,6 @@ package dhcp
 
 import (
 	"errors"
-	"fmt"
 	"net"
 	"testing"
 
@@ -67,10 +66,6 @@ func TestMacAddressToTxId(t *testing.T) {
 	xid1 := macAddressToTxId(mac1)
 	xid2 := macAddressToTxId(mac2)
 	xid3 := macAddressToTxId(mac3)
-
-	fmt.Println(xid1)
-	fmt.Println(xid2)
-	fmt.Println(xid3)
 
 	assert.NotEqual(t, xid1, xid2)
 	assert.NotEqual(t, xid1, xid3)

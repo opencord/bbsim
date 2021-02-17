@@ -19,6 +19,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"google.golang.org/grpc/status"
 	"strings"
 	"time"
 
@@ -67,9 +68,43 @@ func (s BBSimServer) GetOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Olt, 
 	}
 
 	for _, pon := range olt.Pons {
+
+		allocatedOnuIds := []*bbsim.PonAllocatedResources{}
+		allocatedAllocIds := []*bbsim.PonAllocatedResources{}
+		allocatedGemPorts := []*bbsim.PonAllocatedResources{}
+
+		for k, v := range pon.AllocatedOnuIds {
+			resource := &bbsim.PonAllocatedResources{
+				SerialNumber: common.OnuSnToString(v),
+				Id:           int32(k),
+			}
+			allocatedOnuIds = append(allocatedOnuIds, resource)
+		}
+
+		for k, v := range pon.AllocatedGemPorts {
+			resource := &bbsim.PonAllocatedResources{
+				SerialNumber: common.OnuSnToString(v),
+				Id:           int32(k),
+			}
+			allocatedGemPorts = append(allocatedGemPorts, resource)
+		}
+
+		for k, v := range pon.AllocatedAllocIds {
+			resource := &bbsim.PonAllocatedResources{
+				SerialNumber: common.OnuSnToString(v),
+				Id:           int32(k),
+			}
+			allocatedAllocIds = append(allocatedAllocIds, resource)
+		}
+
 		p := bbsim.PONPort{
-			ID:        int32(pon.ID),
-			OperState: pon.OperState.Current(),
+			ID:                int32(pon.ID),
+			OperState:         pon.OperState.Current(),
+			InternalState:     pon.InternalState.Current(),
+			PacketCount:       pon.PacketCount,
+			AllocatedOnuIds:   allocatedOnuIds,
+			AllocatedAllocIds: allocatedAllocIds,
+			AllocatedGemPorts: allocatedGemPorts,
 		}
 		pons = append(pons, &p)
 	}
@@ -89,6 +124,48 @@ func (s BBSimServer) GetOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Olt, 
 		PONPorts:      pons,
 	}
 	return &res, nil
+}
+
+// takes a nested map and return a proto
+func resourcesMapToresourcesProto(resourceType bbsim.OltAllocatedResourceType_Type, resources map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool) *bbsim.OltAllocatedResources {
+	proto := &bbsim.OltAllocatedResources{
+		Resources: []*bbsim.OltAllocatedResource{},
+	}
+	for ponId, ponValues := range resources {
+		for onuId, onuValues := range ponValues {
+			for uniId, uniValues := range onuValues {
+				for allocId, flows := range uniValues {
+					for flow := range flows {
+						resource := &bbsim.OltAllocatedResource{
+							Type:       resourceType.String(),
+							PonPortId:  ponId,
+							OnuId:      onuId,
+							PortNo:     uniId,
+							ResourceId: allocId,
+							FlowId:     flow,
+						}
+						proto.Resources = append(proto.Resources, resource)
+					}
+				}
+			}
+		}
+	}
+	return proto
+}
+
+func (s BBSimServer) GetOltAllocatedResources(ctx context.Context, req *bbsim.OltAllocatedResourceType) (*bbsim.OltAllocatedResources, error) {
+	o := devices.GetOLT()
+
+	switch req.Type {
+	case bbsim.OltAllocatedResourceType_UNKNOWN:
+		return nil, status.Errorf(codes.InvalidArgument, "resource-type-%s-is-invalid", req.Type)
+	case bbsim.OltAllocatedResourceType_ALLOC_ID:
+		return resourcesMapToresourcesProto(bbsim.OltAllocatedResourceType_ALLOC_ID, o.AllocIDs), nil
+	case bbsim.OltAllocatedResourceType_GEM_PORT:
+		return resourcesMapToresourcesProto(bbsim.OltAllocatedResourceType_GEM_PORT, o.GemPortIDs), nil
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "unkown-resource-type-%s", req.Type)
+	}
 }
 
 func (s BBSimServer) PoweronOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Response, error) {
