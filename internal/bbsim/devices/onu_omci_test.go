@@ -17,6 +17,7 @@
 package devices
 
 import (
+	"github.com/google/gopacket"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
 	"github.com/opencord/omci-lib-go"
@@ -27,7 +28,6 @@ import (
 )
 
 var mockAttr = me.AttributeValueMap{
-	"ManagedEntityId":                     12,
 	"PortId":                              0,
 	"TContPointer":                        0,
 	"Direction":                           0,
@@ -46,6 +46,7 @@ func makeOmciCreateRequest(t *testing.T) []byte {
 		},
 		Attributes: mockAttr,
 	}
+
 	omciPkt, err := omcilib.Serialize(omci.CreateRequestType, omciReq, 66)
 	if err != nil {
 		t.Fatal(err.Error())
@@ -119,6 +120,34 @@ func makeOmciMessage(t *testing.T, onu *Onu, pkt []byte) bbsim.OmciMessage {
 	}
 }
 
+func omciBytesToMsg(t *testing.T, data []byte) (*omci.OMCI, *gopacket.Packet) {
+	packet := gopacket.NewPacket(data, omci.LayerTypeOMCI, gopacket.NoCopy)
+	if packet == nil {
+		t.Fatal("could not decode rxMsg as OMCI")
+	}
+	omciLayer := packet.Layer(omci.LayerTypeOMCI)
+	if omciLayer == nil {
+		t.Fatal("could not decode omci layer")
+	}
+	omciMsg, ok := omciLayer.(*omci.OMCI)
+	if !ok {
+		t.Fatal("could not assign omci layer")
+	}
+	return omciMsg, &packet
+}
+
+func omciToCreateResponse(t *testing.T, omciPkt *gopacket.Packet) *omci.CreateResponse {
+	msgLayer := (*omciPkt).Layer(omci.LayerTypeCreateResponse)
+	if msgLayer == nil {
+		t.Fatal("omci Msg layer could not be detected for CreateResponse - handling of MibSyncChan stopped")
+	}
+	msgObj, msgOk := msgLayer.(*omci.CreateResponse)
+	if !msgOk {
+		t.Fatal("omci Msg layer could not be assigned for CreateResponse - handling of MibSyncChan stopped")
+	}
+	return msgObj
+}
+
 func Test_MibDataSyncIncrease(t *testing.T) {
 	onu := createMockOnu(1, 1)
 
@@ -173,4 +202,40 @@ func Test_MibDataSyncRotation(t *testing.T) {
 	// send a request that increases the MDS, but once we're at 255 we should go back to 0 (8bit)
 	onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciDeleteRequest(t)), stream)
 	assert.Equal(t, onu.MibDataSync, uint8(0))
+}
+
+func Test_GemPortValidation(t *testing.T) {
+
+	// setup
+	onu := createMockOnu(1, 1)
+
+	stream := &mockStream{
+		Calls: make(map[int]*openolt.Indication),
+	}
+
+	// create a gem port via OMCI (gemPortId 12)
+	onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciCreateRequest(t)), stream)
+
+	// the first time we created the gemPort
+	// the MDS should be incremented
+	assert.Equal(t, stream.CallCount, 1)
+	assert.Equal(t, onu.MibDataSync, uint8(1))
+
+	// and the OMCI response status should be me.Success
+	indication := stream.Calls[1].GetOmciInd()
+	_, omciPkt := omciBytesToMsg(t, indication.Pkt)
+	responseLayer := omciToCreateResponse(t, omciPkt)
+	assert.Equal(t, responseLayer.Result, me.Success)
+
+	// send a request to create the same gem port via OMCI (gemPortId 12)
+	onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciCreateRequest(t)), stream)
+
+	// this time the MDS should not be incremented
+	assert.Equal(t, stream.CallCount, 2)
+	assert.Equal(t, onu.MibDataSync, uint8(1))
+
+	// and the OMCI response status should be me.ProcessingError
+	_, omciPkt = omciBytesToMsg(t, stream.Calls[2].GetOmciInd().Pkt)
+	responseLayer = omciToCreateResponse(t, omciPkt)
+	assert.Equal(t, responseLayer.Result, me.ProcessingError)
 }
