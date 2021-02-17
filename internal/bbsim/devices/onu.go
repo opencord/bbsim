@@ -684,9 +684,37 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			}
 		}
 	case omci.CreateRequestType:
-		o.MibDataSync++
-		responsePkt, _ = omcilib.CreateCreateResponse(omciPkt, omciMsg)
+
+		// check for GemPortNetworkCtp and make sure there are no duplicates on the same PON
+		var used bool
+		var sn *openolt.SerialNumber
+		msgObj, err := omcilib.ParseCreateRequest(omciPkt)
+		if err == nil {
+			if msgObj.EntityClass == me.GemPortNetworkCtpClassID {
+				if used, sn = o.PonPort.isGemPortAllocated(msgObj.EntityInstance); used {
+					onuLogger.WithFields(log.Fields{
+						"IntfId":       o.PonPortID,
+						"SerialNumber": o.Sn(),
+					}).Errorf("gemport-already-allocated-to-onu-with-sn-%s", sn.String())
+				}
+
+				o.PonPort.storeGemPort(msgObj.EntityInstance, o.SerialNumber)
+			}
+
+		}
+
+		// if the gemPort is valid then increment the MDS and return a successful response
+		// otherwise fail the request
+		// for now the CreateRequeste for the gemPort is the only one that can fail, if we start supporting multiple
+		// validation this check will need to be rewritten
+		if !used {
+			o.MibDataSync++
+			responsePkt, _ = omcilib.CreateCreateResponse(omciPkt, omciMsg, me.Success)
+		} else {
+			responsePkt, _ = omcilib.CreateCreateResponse(omciPkt, omciMsg, me.ProcessingError)
+		}
 	case omci.DeleteRequestType:
+		// TODO if we're removing a GemPort remove it from the PON allocation
 		o.MibDataSync++
 		responsePkt, _ = omcilib.CreateDeleteResponse(omciPkt, omciMsg)
 	case omci.RebootRequestType:

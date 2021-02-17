@@ -19,6 +19,7 @@ package devices
 import (
 	"bytes"
 	"fmt"
+	"sync"
 
 	"github.com/looplab/fsm"
 	"github.com/opencord/voltha-protos/v4/go/openolt"
@@ -37,17 +38,24 @@ type PonPort struct {
 	// PON Attributes
 	OperState *fsm.FSM
 	Type      string
+
+	// Allocated resources
+	// Some resources (eg: OnuId, AllocId and GemPorts) have to be unique per PON port
+	// we are keeping a list so that we can throw an error in cases we receive duplicates
+	allocatedGemPorts     map[uint16]*openolt.SerialNumber
+	allocatedGemPortsLock sync.RWMutex
 }
 
 // CreatePonPort creates pon port object
 func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 
 	ponPort := PonPort{
-		NumOnu: olt.NumOnuPerPon,
-		ID:     id,
-		Type:   "pon",
-		Olt:    olt,
-		Onus:   []*Onu{},
+		NumOnu:            olt.NumOnuPerPon,
+		ID:                id,
+		Type:              "pon",
+		Olt:               olt,
+		Onus:              []*Onu{},
+		allocatedGemPorts: make(map[uint16]*openolt.SerialNumber),
 	}
 
 	ponPort.InternalState = fsm.NewFSM(
@@ -198,4 +206,29 @@ func (p PonPort) GetNumOfActiveOnus() uint32 {
 		count++
 	}
 	return count
+}
+
+// storeGemPort adds the gemPortId to the gemports already allocated to this PON port
+func (p *PonPort) storeGemPort(gemPortId uint16, onuSn *openolt.SerialNumber) {
+	p.allocatedGemPortsLock.Lock()
+	defer p.allocatedGemPortsLock.Unlock()
+	p.allocatedGemPorts[gemPortId] = onuSn
+}
+
+// removeGemPort removes the gemPortId from the allocated resouces
+func (p *PonPort) removeGemPort(gemPortId uint16) {
+	p.allocatedGemPortsLock.Lock()
+	defer p.allocatedGemPortsLock.Unlock()
+	delete(p.allocatedGemPorts, gemPortId)
+}
+
+// isGemPortAllocated returns wether this gemPort is already in use on this PON
+func (p *PonPort) isGemPortAllocated(gemPortId uint16) (bool, *openolt.SerialNumber) {
+	p.allocatedGemPortsLock.RLock()
+	defer p.allocatedGemPortsLock.RUnlock()
+
+	if _, ok := p.allocatedGemPorts[gemPortId]; ok {
+		return true, p.allocatedGemPorts[gemPortId]
+	}
+	return false, nil
 }

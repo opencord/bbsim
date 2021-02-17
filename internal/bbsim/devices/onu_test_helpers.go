@@ -134,7 +134,8 @@ func createMockOnu(id uint32, ponPortId uint32) *Onu {
 		PortNo:       0,
 		GemPortAdded: true,
 		PonPort: &PonPort{
-			Olt: &OltDevice{},
+			allocatedGemPorts: make(map[uint16]*openolt.SerialNumber),
+			Olt:               &OltDevice{},
 		},
 	}
 	o.SerialNumber = o.NewSN(0, ponPortId, o.ID)
