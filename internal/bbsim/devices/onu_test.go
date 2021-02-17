@@ -101,3 +101,17 @@ func Test_FindServiceByMacAddress(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, service.HwAddress.String(), mac.String())
 }
+
+func Test_freeGemPort(t *testing.T) {
+	onu := createTestOnu()
+
+	onu.GemPorts = []uint16{1024, 1025, 1026}
+	assert.Equal(t, len(onu.GemPorts), 3)
+
+	onu.freeGemPort(1024)
+	assert.Equal(t, len(onu.GemPorts), 2)
+
+	assert.Equal(t, onu.hasGemPort(1024), false)
+	assert.Equal(t, onu.hasGemPort(1025), true)
+	assert.Equal(t, onu.hasGemPort(1026), true)
+}

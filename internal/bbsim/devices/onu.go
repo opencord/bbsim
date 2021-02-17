@@ -25,6 +25,7 @@ import (
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	me "github.com/opencord/omci-lib-go/generated"
 	"strconv"
+	"sync"
 
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
@@ -69,7 +70,9 @@ type Onu struct {
 	// FIXME add support for multiple UNIs (each UNI has a different PortNo)
 	PortNo uint32
 	// deprecated (gemPort is on a Service basis)
-	GemPortAdded bool
+	GemPorts     []uint16
+	AllocIds     map[uint16]uint16 // map[tcontId]allocId
+	AllocIdsLock sync.RWMutex
 	Flows        []FlowKey
 	FlowIds      []uint64 // keep track of the flows we currently have in the ONU
 
@@ -105,7 +108,8 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 		hpTid:               0x8000,
 		seqNumber:           0,
 		DoneChannel:         make(chan bool, 1),
-		GemPortAdded:        false,
+		GemPorts:            []uint16{},
+		AllocIds:            make(map[uint16]uint16),
 		DiscoveryRetryDelay: 60 * time.Second, // this is used to send OnuDiscoveryIndications until an activate call is received
 		Flows:               []FlowKey{},
 		DiscoveryDelay:      delay,
@@ -168,6 +172,17 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 				o.Channel <- msg
 			},
 			"enter_enabled": func(event *fsm.Event) {
+
+				if used, sn := o.PonPort.isOnuIdAllocated(o.ID); used {
+					onuLogger.WithFields(log.Fields{
+						"IntfId":       o.PonPortID,
+						"OnuId":        o.ID,
+						"SerialNumber": o.Sn(),
+					}).Errorf("onuid-already-allocated-to-onu-with-sn-%s", common.OnuSnToString(sn))
+				} else {
+					o.PonPort.storeOnuId(o.ID, o.SerialNumber)
+				}
+
 				msg := bbsim.Message{
 					Type: bbsim.OnuIndication,
 					Data: bbsim.OnuIndicationMessage{
@@ -186,9 +201,12 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 			"enter_disabled": func(event *fsm.Event) {
 
 				// clean the ONU state
-				o.GemPortAdded = false
+				o.GemPorts = []uint16{}
+				o.AllocIds = make(map[uint16]uint16)
 				o.PortNo = 0
 				o.Flows = []FlowKey{}
+				o.PonPort.removeOnuId(o.ID)
+				o.ID = 0
 
 				// set the OperState to disabled
 				if err := o.OperState.Event("disable"); err != nil {
@@ -428,10 +446,8 @@ func (o *Onu) sendOnuDiscIndication(msg bbsim.OnuDiscIndicationMessage, stream o
 }
 
 func (o *Onu) sendOnuIndication(msg bbsim.OnuIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
-	// NOTE voltha returns an ID, but if we use that ID then it complains:
-	// expected_onu_id: 1, received_onu_id: 1024, event: ONU-id-mismatch, can happen if both voltha and the olt rebooted
-	// so we're using the internal ID that is 1
-	// o.ID = msg.OnuID
+	// NOTE the ONU ID is set by VOLTHA in the ActivateOnu call (via openolt.proto)
+	// and stored in the Onu struct via onu.SetID
 
 	indData := &openolt.Indication_OnuInd{OnuInd: &openolt.OnuIndication{
 		IntfId:       o.PonPortID,
@@ -446,11 +462,12 @@ func (o *Onu) sendOnuIndication(msg bbsim.OnuIndicationMessage, stream openolt.O
 		return
 	}
 	onuLogger.WithFields(log.Fields{
-		"IntfId":     o.PonPortID,
-		"OnuId":      o.ID,
-		"OperState":  msg.OperState.String(),
-		"AdminState": msg.OperState.String(),
-		"OnuSn":      o.Sn(),
+		"IntfId":      o.PonPortID,
+		"OnuId":       o.ID,
+		"VolthaOnuId": msg.OnuID,
+		"OperState":   msg.OperState.String(),
+		"AdminState":  msg.OperState.String(),
+		"OnuSn":       o.Sn(),
 	}).Debug("Sent Indication_OnuInd")
 
 }
@@ -647,7 +664,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			"IntfId":       o.PonPortID,
 			"OnuId":        o.ID,
 			"SerialNumber": o.Sn(),
-		}).Debug("received-mib-reset-request-resetting-mds")
+		}).Trace("received-mib-reset-request-resetting-mds")
 		responsePkt, _ = omcilib.CreateMibResetResponse(omciMsg.TransactionID)
 	case omci.MibUploadRequestType:
 		responsePkt, _ = omcilib.CreateMibUploadResponse(omciMsg.TransactionID)
@@ -656,9 +673,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 	case omci.GetRequestType:
 		responsePkt, _ = omcilib.CreateGetResponse(omciPkt, omciMsg, o.SerialNumber, o.MibDataSync)
 	case omci.SetRequestType:
-		o.MibDataSync++
-		responsePkt, _ = omcilib.CreateSetResponse(omciPkt, omciMsg)
-
+		success := true
 		msgObj, _ := omcilib.ParseSetRequest(omciPkt)
 		switch msgObj.EntityClass {
 		case me.PhysicalPathTerminationPointEthernetUniClassID:
@@ -682,11 +697,82 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 				}
 				o.Channel <- msg
 			}
+		case me.TContClassID:
+			allocId := msgObj.Attributes["AllocId"].(uint16)
+
+			// if the AllocId is 255 (0xFF) or 65535 (0xFFFF) it means we are removing it,
+			// otherwise we are adding it
+
+			// FIXME we have one allocId per TCONT,
+			// we need to index them by TCONT in order to remove them
+
+			if allocId == 255 || allocId == 65535 {
+				o.PonPort.removeAllocId(allocId)
+				o.freeAllocId(msgObj.EntityInstance)
+			} else {
+				if used, sn := o.PonPort.isAllocIdAllocated(allocId); used {
+					onuLogger.WithFields(log.Fields{
+						"IntfId":       o.PonPortID,
+						"OnuId":        o.ID,
+						"AllocId":      allocId,
+						"SerialNumber": o.Sn(),
+					}).Errorf("allocid-already-allocated-to-onu-with-sn-%s", common.OnuSnToString(sn))
+					success = false
+				} else {
+					o.PonPort.storeAllocId(allocId, o.SerialNumber)
+					o.storeAllocId(msgObj.EntityInstance, allocId)
+				}
+			}
+
+		}
+
+		if success {
+			o.MibDataSync++
+			responsePkt, _ = omcilib.CreateSetResponse(omciPkt, omciMsg, me.Success)
+		} else {
+			responsePkt, _ = omcilib.CreateSetResponse(omciPkt, omciMsg, me.AttributeFailure)
 		}
 	case omci.CreateRequestType:
-		o.MibDataSync++
-		responsePkt, _ = omcilib.CreateCreateResponse(omciPkt, omciMsg)
+
+		// check for GemPortNetworkCtp and make sure there are no duplicates on the same PON
+		var used bool
+		var sn *openolt.SerialNumber
+		msgObj, err := omcilib.ParseCreateRequest(omciPkt)
+		if err == nil {
+			if msgObj.EntityClass == me.GemPortNetworkCtpClassID {
+				onuLogger.Errorf("gem port %d", msgObj.EntityInstance)
+				if used, sn = o.PonPort.isGemPortAllocated(msgObj.EntityInstance); used {
+					onuLogger.WithFields(log.Fields{
+						"IntfId":       o.PonPortID,
+						"OnuId":        o.ID,
+						"GemPortId":    msgObj.EntityInstance,
+						"SerialNumber": o.Sn(),
+					}).Errorf("gemport-already-allocated-to-onu-with-sn-%s", common.OnuSnToString(sn))
+				} else {
+					o.PonPort.storeGemPort(msgObj.EntityInstance, o.SerialNumber)
+					o.GemPorts = append(o.GemPorts, msgObj.EntityInstance)
+				}
+			}
+		}
+
+		// if the gemPort is valid then increment the MDS and return a successful response
+		// otherwise fail the request
+		// for now the CreateRequeste for the gemPort is the only one that can fail, if we start supporting multiple
+		// validation this check will need to be rewritten
+		if !used {
+			o.MibDataSync++
+			responsePkt, _ = omcilib.CreateCreateResponse(omciPkt, omciMsg, me.Success)
+		} else {
+			responsePkt, _ = omcilib.CreateCreateResponse(omciPkt, omciMsg, me.ProcessingError)
+		}
 	case omci.DeleteRequestType:
+		msgObj, err := omcilib.ParseDeleteRequest(omciPkt)
+		if err == nil {
+			if msgObj.EntityClass == me.GemPortNetworkCtpClassID {
+				o.PonPort.removeGemPort(msgObj.EntityInstance)
+				o.freeGemPort(msgObj.EntityInstance)
+			}
+		}
 		o.MibDataSync++
 		responsePkt, _ = omcilib.CreateDeleteResponse(omciPkt, omciMsg)
 	case omci.RebootRequestType:
@@ -803,6 +889,7 @@ func (o *Onu) SetID(id uint32) {
 
 func (o *Onu) handleFlowAdd(msg bbsim.OnuFlowUpdateMessage) {
 	onuLogger.WithFields(log.Fields{
+		"AllocId":           msg.Flow.AllocId,
 		"Cookie":            msg.Flow.Cookie,
 		"DstPort":           msg.Flow.Classifier.DstPort,
 		"FlowId":            msg.Flow.FlowId,
@@ -889,7 +976,7 @@ func (o *Onu) handleFlowRemove(msg bbsim.OnuFlowUpdateMessage) {
 			"OnuId":        o.ID,
 			"SerialNumber": o.Sn(),
 		}).Info("Resetting GemPort")
-		o.GemPortAdded = false
+		o.GemPorts = []uint16{}
 
 		// check if ONU delete is performed and
 		// terminate the ONU's ProcessOnuMessages Go routine
@@ -897,6 +984,64 @@ func (o *Onu) handleFlowRemove(msg bbsim.OnuFlowUpdateMessage) {
 			close(o.Channel)
 		}
 	}
+}
+
+// hasGemPort returns true if the ONU was allocated a particular gemPort, false otherwise
+func (o *Onu) hasGemPort(gemId uint16) bool {
+	for _, item := range o.GemPorts {
+		if item == gemId {
+			return true
+		}
+	}
+	return false
+}
+
+// when a gemPort is removed we need to free it's resource
+func (o *Onu) freeGemPort(gemId uint16) {
+	for i, other := range o.GemPorts {
+		if other == gemId {
+			o.GemPorts = append(o.GemPorts[:i], o.GemPorts[i+1:]...)
+		}
+	}
+}
+
+// hasAllocId returns true if the ONU was allocated a particular allocId, false otherwise
+func (o *Onu) hasAllocId(allocId uint16) bool {
+	o.AllocIdsLock.RLock()
+	defer o.AllocIdsLock.RUnlock()
+
+	for _, x := range o.AllocIds {
+		if x == allocId {
+			return true
+		}
+	}
+	return false
+}
+
+func (o *Onu) storeAllocId(tcontId uint16, allocId uint16) {
+	o.AllocIdsLock.Lock()
+	defer o.AllocIdsLock.Unlock()
+	o.AllocIds[tcontId] = allocId
+}
+
+// when a allocId is removed we need to free it's resource
+func (o *Onu) freeAllocId(tcontId uint16) {
+	o.AllocIdsLock.Lock()
+	defer o.AllocIdsLock.Unlock()
+	delete(o.AllocIds, tcontId)
+}
+
+// before installing a flow we need to validate that the
+// AllocId and GemPorts that are set in the flow are assigned to this onu
+func (o *Onu) validateFlow(flow *openolt.Flow) error {
+	// TODO check att and DT flows
+	if !o.hasAllocId(uint16(flow.AllocId)) {
+		return fmt.Errorf("alloc-id-%d-invalid-for-onu-%s", flow.AllocId, o.Sn())
+	}
+	if !o.hasGemPort(uint16(flow.GemportId)) {
+		return fmt.Errorf("gemport-%d-invalid-for-onu-%s", flow.GemportId, o.Sn())
+	}
+	return nil
 }
 
 // BBR methods
@@ -1002,12 +1147,13 @@ func (o *Onu) handleOmciResponse(msg bbsim.OmciIndicationMessage, client openolt
 		// In the same way we can create a GemPort even without setting up UNIs/TConts/...
 		// but we need the GemPort to trigger the state change
 
-		if !o.GemPortAdded {
+		if len(o.GemPorts) == 0 {
 			// NOTE this sends a CreateRequestType and BBSim replies with a CreateResponseType
 			// thus we send this request only once
-			gemReq, _ := omcilib.CreateGemPortRequest(o.getNextTid(false))
+			gemId := uint16(1)
+			gemReq, _ := omcilib.CreateGemPortRequest(o.getNextTid(false), gemId)
 			sendOmciMsg(gemReq, o.PonPortID, o.ID, o.SerialNumber, "CreateGemPortRequest", client)
-			o.GemPortAdded = true
+			o.GemPorts = append(o.GemPorts, gemId)
 		} else {
 			if err := o.InternalState.Event("send_eapol_flow"); err != nil {
 				onuLogger.WithFields(log.Fields{

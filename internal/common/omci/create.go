@@ -42,7 +42,7 @@ func ParseCreateRequest(omciPkt gopacket.Packet) (*omci.CreateRequest, error) {
 	return msgObj, nil
 }
 
-func CreateCreateResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, error) {
+func CreateCreateResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, result me.Results) ([]byte, error) {
 
 	msgObj, err := ParseCreateRequest(omciPkt)
 
@@ -60,7 +60,7 @@ func CreateCreateResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, 
 			EntityClass:    msgObj.EntityClass,
 			EntityInstance: msgObj.EntityInstance,
 		},
-		Result: me.Success,
+		Result: result,
 	}
 
 	pkt, err := Serialize(omci.CreateResponseType, response, omciMsg.TransactionID)
@@ -127,11 +127,11 @@ func CreateEnableUniRequest(tid uint16, uniId uint16, enabled bool, isPtp bool) 
 	return HexEncode(pkt)
 }
 
-func CreateGemPortRequest(tid uint16) ([]byte, error) {
+func CreateGemPortRequest(tid uint16, gemPortId uint16) ([]byte, error) {
 	params := me.ParamData{
 		EntityID: 1,
 		Attributes: me.AttributeValueMap{
-			"PortId":                              1,
+			"PortId":                              gemPortId,
 			"TContPointer":                        1,
 			"Direction":                           0,
 			"TrafficManagementPointerForUpstream": 0,

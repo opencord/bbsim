@@ -100,7 +100,7 @@ func Test_HandleFlowRemoveFlowId_LastFlow(t *testing.T) {
 		fsm.Callbacks{},
 	)
 
-	onu.GemPortAdded = true
+	onu.GemPorts = []uint16{1024}
 
 	onu.FlowIds = []uint64{64}
 
@@ -115,7 +115,7 @@ func Test_HandleFlowRemoveFlowId_LastFlow(t *testing.T) {
 	}
 	onu.handleFlowRemove(msg)
 	assert.Equal(t, len(onu.FlowIds), 0)
-	assert.Equal(t, onu.GemPortAdded, false)
+	assert.Equal(t, len(onu.GemPorts), 0)
 }
 
 func TestOnu_HhandleEAPOLStart(t *testing.T) {
@@ -159,6 +159,44 @@ func TestOnu_HhandleEAPOLStart(t *testing.T) {
 	// check that we call HandleAuth on all the services
 	assert.Equal(t, hsia.HandleAuthCallCount, 1)
 	assert.Equal(t, voip.HandleAuthCallCount, 1)
+}
+
+func Test_validateFlow(t *testing.T) {
+
+	const validGem = 1024
+	const validAllocId = 1
+	const tcontId = 32769
+	const invalidGem = 1025
+	const invalidAllocId = 10
+
+	onu := createMockOnu(1, 1)
+
+	onu.GemPorts = []uint16{validGem}
+	onu.AllocIds = make(map[uint16]uint16)
+	onu.AllocIds[tcontId] = validAllocId
+
+	// check that a valid flow returns true
+	validFlow := &openolt.Flow{
+		AllocId:   validAllocId,
+		GemportId: validGem,
+	}
+	validFlowResponse := onu.validateFlow(validFlow)
+	assert.NilError(t, validFlowResponse)
+
+	// if either the AllocId or GemPortId are invalid, return false
+	invalidFlowAllocId := &openolt.Flow{
+		AllocId:   invalidAllocId,
+		GemportId: validAllocId,
+	}
+	invalidFlowAllocIdResponse := onu.validateFlow(invalidFlowAllocId)
+	assert.Error(t, invalidFlowAllocIdResponse, "alloc-id-10-invalid-for-onu-BBSM00000101")
+
+	invalidFlowGem := &openolt.Flow{
+		AllocId:   validAllocId,
+		GemportId: invalidGem,
+	}
+	invalidFlowGemResponse := onu.validateFlow(invalidFlowGem)
+	assert.Error(t, invalidFlowGemResponse, "gemport-1025-invalid-for-onu-BBSM00000101")
 }
 
 // TODO all the following tests needs to be moved in the Service model
@@ -428,8 +466,6 @@ func Test_HandleFlowAddDhcpWithoutGem(t *testing.T) {
 	// NOTE that this feature is required as there is no guarantee that the gemport is the same
 	// one we received with the EAPOL flow
 	onu := createMockOnu(1, 1)
-
-	onu.GemPortAdded = false
 
 	onu.InternalState = fsm.NewFSM(
 		"enabled",
