@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "59a9baa1_2022fc5f",
+        "filename": "VERSION",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-02-17T16:03:46Z",
+      "side": 1,
+      "message": "Do we need to release right away? There are few more feature coming in soon so if it can wait I\u0027d release all of them at the same time",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 5
+      },
+      "revId": "9a7634f28cc95f79c9868aa5865ac7125481b7f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
