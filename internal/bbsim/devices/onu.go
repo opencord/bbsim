@@ -168,6 +168,17 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 				o.Channel <- msg
 			},
 			"enter_enabled": func(event *fsm.Event) {
+
+				if used, sn := o.PonPort.isOnuIdAllocated(o.ID); used {
+					onuLogger.WithFields(log.Fields{
+						"IntfId":       o.PonPortID,
+						"OnuId":        o.ID,
+						"SerialNumber": o.Sn(),
+					}).Errorf("onuid-already-allocated-to-onu-with-sn-%s", common.OnuSnToString(sn))
+				} else {
+					o.PonPort.storeOnuId(o.ID, o.SerialNumber)
+				}
+
 				msg := bbsim.Message{
 					Type: bbsim.OnuIndication,
 					Data: bbsim.OnuIndicationMessage{
@@ -189,6 +200,8 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 				o.GemPortAdded = false
 				o.PortNo = 0
 				o.Flows = []FlowKey{}
+				o.PonPort.removeOnuId(o.ID)
+				o.ID = 0
 
 				// set the OperState to disabled
 				if err := o.OperState.Event("disable"); err != nil {
@@ -428,10 +441,8 @@ func (o *Onu) sendOnuDiscIndication(msg bbsim.OnuDiscIndicationMessage, stream o
 }
 
 func (o *Onu) sendOnuIndication(msg bbsim.OnuIndicationMessage, stream openolt.Openolt_EnableIndicationServer) {
-	// NOTE voltha returns an ID, but if we use that ID then it complains:
-	// expected_onu_id: 1, received_onu_id: 1024, event: ONU-id-mismatch, can happen if both voltha and the olt rebooted
-	// so we're using the internal ID that is 1
-	// o.ID = msg.OnuID
+	// NOTE the ONU ID is set by VOLTHA in the ActivateOnu call (via openolt.proto)
+	// and stored in the Onu struct via onu.SetID
 
 	indData := &openolt.Indication_OnuInd{OnuInd: &openolt.OnuIndication{
 		IntfId:       o.PonPortID,
@@ -446,11 +457,12 @@ func (o *Onu) sendOnuIndication(msg bbsim.OnuIndicationMessage, stream openolt.O
 		return
 	}
 	onuLogger.WithFields(log.Fields{
-		"IntfId":     o.PonPortID,
-		"OnuId":      o.ID,
-		"OperState":  msg.OperState.String(),
-		"AdminState": msg.OperState.String(),
-		"OnuSn":      o.Sn(),
+		"IntfId":      o.PonPortID,
+		"OnuId":       o.ID,
+		"VolthaOnuId": msg.OnuID,
+		"OperState":   msg.OperState.String(),
+		"AdminState":  msg.OperState.String(),
+		"OnuSn":       o.Sn(),
 	}).Debug("Sent Indication_OnuInd")
 
 }
@@ -647,7 +659,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			"IntfId":       o.PonPortID,
 			"OnuId":        o.ID,
 			"SerialNumber": o.Sn(),
-		}).Debug("received-mib-reset-request-resetting-mds")
+		}).Trace("received-mib-reset-request-resetting-mds")
 		responsePkt, _ = omcilib.CreateMibResetResponse(omciMsg.TransactionID)
 	case omci.MibUploadRequestType:
 		responsePkt, _ = omcilib.CreateMibUploadResponse(omciMsg.TransactionID)
@@ -656,9 +668,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 	case omci.GetRequestType:
 		responsePkt, _ = omcilib.CreateGetResponse(omciPkt, omciMsg, o.SerialNumber, o.MibDataSync)
 	case omci.SetRequestType:
-		o.MibDataSync++
-		responsePkt, _ = omcilib.CreateSetResponse(omciPkt, omciMsg)
-
+		success := true
 		msgObj, _ := omcilib.ParseSetRequest(omciPkt)
 		switch msgObj.EntityClass {
 		case me.PhysicalPathTerminationPointEthernetUniClassID:
@@ -682,11 +692,74 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 				}
 				o.Channel <- msg
 			}
+		case me.TContClassID:
+			allocId := msgObj.Attributes["AllocId"].(uint16)
+
+			// if the AllocId is 255 (0xFF) or 65535 (0xFFFF) it means we are removing it,
+			// otherwise we are adding it
+
+			if allocId == 255 || allocId == 65535 {
+				o.PonPort.removeAllocId(allocId)
+			} else {
+				if used, sn := o.PonPort.isAllocIdAllocated(allocId); used {
+					onuLogger.WithFields(log.Fields{
+						"IntfId":       o.PonPortID,
+						"OnuId":        o.ID,
+						"AllocId":      allocId,
+						"SerialNumber": o.Sn(),
+					}).Errorf("allocid-already-allocated-to-onu-with-sn-%s", common.OnuSnToString(sn))
+					success = false
+				} else {
+					o.PonPort.storeAllocId(allocId, o.SerialNumber)
+				}
+			}
+
+		}
+
+		if success {
+			o.MibDataSync++
+			responsePkt, _ = omcilib.CreateSetResponse(omciPkt, omciMsg, me.Success)
+		} else {
+			responsePkt, _ = omcilib.CreateSetResponse(omciPkt, omciMsg, me.AttributeFailure)
 		}
 	case omci.CreateRequestType:
-		o.MibDataSync++
-		responsePkt, _ = omcilib.CreateCreateResponse(omciPkt, omciMsg)
+
+		// check for GemPortNetworkCtp and make sure there are no duplicates on the same PON
+		var used bool
+		var sn *openolt.SerialNumber
+		msgObj, err := omcilib.ParseCreateRequest(omciPkt)
+		if err == nil {
+			if msgObj.EntityClass == me.GemPortNetworkCtpClassID {
+				if used, sn = o.PonPort.isGemPortAllocated(msgObj.EntityInstance); used {
+					onuLogger.WithFields(log.Fields{
+						"IntfId":       o.PonPortID,
+						"OnuId":        o.ID,
+						"GemPortId":    msgObj.EntityInstance,
+						"SerialNumber": o.Sn(),
+					}).Errorf("gemport-already-allocated-to-onu-with-sn-%s", common.OnuSnToString(sn))
+				} else {
+					o.PonPort.storeGemPort(msgObj.EntityInstance, o.SerialNumber)
+				}
+			}
+		}
+
+		// if the gemPort is valid then increment the MDS and return a successful response
+		// otherwise fail the request
+		// for now the CreateRequeste for the gemPort is the only one that can fail, if we start supporting multiple
+		// validation this check will need to be rewritten
+		if !used {
+			o.MibDataSync++
+			responsePkt, _ = omcilib.CreateCreateResponse(omciPkt, omciMsg, me.Success)
+		} else {
+			responsePkt, _ = omcilib.CreateCreateResponse(omciPkt, omciMsg, me.ProcessingError)
+		}
 	case omci.DeleteRequestType:
+		msgObj, err := omcilib.ParseDeleteRequest(omciPkt)
+		if err == nil {
+			if msgObj.EntityClass == me.GemPortNetworkCtpClassID {
+				o.PonPort.removeGemPort(msgObj.EntityInstance)
+			}
+		}
 		o.MibDataSync++
 		responsePkt, _ = omcilib.CreateDeleteResponse(omciPkt, omciMsg)
 	case omci.RebootRequestType:

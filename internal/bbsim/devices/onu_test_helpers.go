@@ -134,7 +134,8 @@ func createMockOnu(id uint32, ponPortId uint32) *Onu {
 		PortNo:       0,
 		GemPortAdded: true,
 		PonPort: &PonPort{
-			Olt: &OltDevice{},
+			allocatedGemPorts: make(map[uint16]*openolt.SerialNumber),
+			Olt:               &OltDevice{},
 		},
 	}
 	o.SerialNumber = o.NewSN(0, ponPortId, o.ID)
@@ -147,11 +148,10 @@ func createTestOnu() *Onu {
 	olt := OltDevice{
 		ID: 0,
 	}
-	pon := PonPort{
-		ID:  1,
-		Olt: &olt,
-	}
-	onu := CreateONU(&olt, &pon, 1, time.Duration(1*time.Millisecond), true)
+
+	pon := CreatePonPort(&olt, 1)
+
+	onu := CreateONU(&olt, pon, 1, time.Duration(1*time.Millisecond), true)
 	// NOTE we need this in order to create the OnuChannel
 	_ = onu.InternalState.Event("initialize")
 	onu.DiscoveryRetryDelay = 100 * time.Millisecond

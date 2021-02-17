@@ -40,7 +40,7 @@ func ParseSetRequest(omciPkt gopacket.Packet) (*omci.SetRequest, error) {
 	return msgObj, nil
 }
 
-func CreateSetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, error) {
+func CreateSetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, result me.Results) ([]byte, error) {
 
 	msgObj, err := ParseSetRequest(omciPkt)
 
@@ -59,7 +59,7 @@ func CreateSetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, err
 			EntityClass:    msgObj.EntityClass,
 			EntityInstance: msgObj.EntityInstance,
 		},
-		Result: me.Success,
+		Result: result,
 	}
 
 	pkt, err := Serialize(omci.SetResponseType, response, omciMsg.TransactionID)

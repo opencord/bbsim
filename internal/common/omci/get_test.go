@@ -55,12 +55,12 @@ func omciToGetResponse(t *testing.T, omciPkt *gopacket.Packet) *omci.GetResponse
 	return msgObj
 }
 
-type args struct {
+type getArgs struct {
 	generatedPkt  *omci.GetResponse
 	transactionId uint16
 }
 
-type want struct {
+type getWant struct {
 	transactionId uint16
 	attributes    map[string]interface{}
 }
@@ -77,20 +77,20 @@ func TestGetResponse(t *testing.T) {
 
 	tests := []struct {
 		name string
-		args args
-		want want
+		args getArgs
+		want getWant
 	}{
 		{"getOnu2gResponse",
-			args{createOnu2gResponse(57344, 10), 1},
-			want{1, map[string]interface{}{"OpticalNetworkUnitManagementAndControlChannelOmccVersion": uint8(180)}},
+			getArgs{createOnu2gResponse(57344, 10), 1},
+			getWant{1, map[string]interface{}{"OpticalNetworkUnitManagementAndControlChannelOmccVersion": uint8(180)}},
 		},
 		{"getOnugResponse",
-			args{createOnugResponse(40960, 10, sn), 1},
-			want{1, map[string]interface{}{}},
+			getArgs{createOnugResponse(40960, 10, sn), 1},
+			getWant{1, map[string]interface{}{}},
 		},
 		{"getOnuDataResponse",
-			args{createOnuDataResponse(32768, 10, 129), 2},
-			want{2, map[string]interface{}{"MibDataSync": uint8(129)}},
+			getArgs{createOnuDataResponse(32768, 10, 129), 2},
+			getWant{2, map[string]interface{}{"MibDataSync": uint8(129)}},
 		},
 	}
 	for _, tt := range tests {
