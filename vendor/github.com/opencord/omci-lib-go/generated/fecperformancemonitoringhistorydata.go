@@ -25,21 +25,21 @@ package generated
 
 import "github.com/deckarep/golang-set"
 
-// EnhancedFecPerformanceMonitoringHistoryDataClassID is the 16-bit ID for the OMCI
-// Managed entity Enhanced FEC performance monitoring history data
-const EnhancedFecPerformanceMonitoringHistoryDataClassID ClassID = ClassID(453)
+// FecPerformanceMonitoringHistoryDataClassID is the 16-bit ID for the OMCI
+// Managed entity FEC performance monitoring history data
+const FecPerformanceMonitoringHistoryDataClassID ClassID = ClassID(312)
 
-var enhancedfecperformancemonitoringhistorydataBME *ManagedEntityDefinition
+var fecperformancemonitoringhistorydataBME *ManagedEntityDefinition
 
-// EnhancedFecPerformanceMonitoringHistoryData (class ID #453)
-//	This ME collects PM data associated with PON downstream FEC counters for XGS-PON and subsequent
-//	ITU-T PON systems. Instances of this ME are created and deleted by the OLT.
+// FecPerformanceMonitoringHistoryData (class ID #312)
+//	This ME collects PM data associated with PON downstream forward error correction (FEC) counters.
+//	Instances of this ME are created and deleted by the OLT.
 //
 //	For a complete discussion of generic PM architecture, refer to clause I.4.
 //
 //	Relationships
-//		An instance of this ME is associated with an instance of the ANI-G ME or an instance of the TWDM
-//		channel ME.
+//		An instance of this ME is associated with an instance of the ANI-G ME or an instance of the time
+//		and wavelength division multiplexing (TWDM) channel ME.
 //
 //	Attributes
 //		Managed Entity Id
@@ -51,38 +51,39 @@ var enhancedfecperformancemonitoringhistorydataBME *ManagedEntityDefinition
 //			Interval end time: This attribute identifies the most recently finished 15-min interval. (R)
 //			(mandatory) (1-byte)
 //
-//		Threshold Data 64 Bit Id
-//			Threshold data 64-bit ID: This attribute points to an instance of the threshold data 64-bit ME
-//			that contains PM threshold values. (R,-W, setbycreate) (mandatory) (2-bytes)
+//		Threshold Data 1_2 Id
+//			Threshold data 1/2 ID: This attribute points to an instance of the threshold data 1 ME that
+//			contains PM threshold values. Since no threshold value attribute number exceeds 7, a threshold
+//			data 2 ME is optional. (R,-W, setbycreate) (mandatory) (2-bytes)
 //
 //		Corrected Bytes
 //			Corrected bytes: This attribute counts the number of bytes that were corrected by the FEC
-//			function. (R) (mandatory) (8-bytes)
+//			function. (R) (mandatory) (4-bytes)
 //
 //		Corrected Code Words
 //			Corrected code words: This attribute counts the code words that were corrected by the FEC
-//			function. (R) (mandatory) (8-bytes)
+//			function. (R) (mandatory) (4-bytes)
 //
 //		Uncorrectable Code Words
 //			Uncorrectable code words: This attribute counts errored code words that could not be corrected
-//			by the FEC function. (R) (mandatory) (8-bytes)
+//			by the FEC function. (R) (mandatory) (4-bytes)
 //
 //		Total Code Words
-//			Total code words: This attribute counts the total received code words. (R) (mandatory) (8-bytes)
+//			Total code words: This attribute counts the total received code words. (R) (mandatory) (4-bytes)
 //
 //		Fec Seconds
 //			FEC seconds:	This attribute counts seconds during which there was an FEC anomaly. (R)
 //			(mandatory) (2-bytes)
 //
-type EnhancedFecPerformanceMonitoringHistoryData struct {
+type FecPerformanceMonitoringHistoryData struct {
 	ManagedEntityDefinition
 	Attributes AttributeValueMap
 }
 
 func init() {
-	enhancedfecperformancemonitoringhistorydataBME = &ManagedEntityDefinition{
-		Name:    "EnhancedFecPerformanceMonitoringHistoryData",
-		ClassID: 453,
+	fecperformancemonitoringhistorydataBME = &ManagedEntityDefinition{
+		Name:    "FecPerformanceMonitoringHistoryData",
+		ClassID: 312,
 		MessageTypes: mapset.NewSetWith(
 			Create,
 			Delete,
@@ -94,11 +95,11 @@ func init() {
 		AttributeDefinitions: AttributeDefinitionMap{
 			0: Uint16Field("ManagedEntityId", PointerAttributeType, 0x0000, 0, mapset.NewSetWith(Read, SetByCreate), false, false, false, 0),
 			1: ByteField("IntervalEndTime", UnsignedIntegerAttributeType, 0x8000, 0, mapset.NewSetWith(Read), false, false, false, 1),
-			2: Uint16Field("ThresholdData64BitId", UnsignedIntegerAttributeType, 0x4000, 0, mapset.NewSetWith(Read, SetByCreate, Write), false, false, false, 2),
-			3: Uint64Field("CorrectedBytes", CounterAttributeType, 0x2000, 0, mapset.NewSetWith(Read), false, false, false, 3),
-			4: Uint64Field("CorrectedCodeWords", CounterAttributeType, 0x1000, 0, mapset.NewSetWith(Read), false, false, false, 4),
-			5: Uint64Field("UncorrectableCodeWords", CounterAttributeType, 0x0800, 0, mapset.NewSetWith(Read), false, false, false, 5),
-			6: Uint64Field("TotalCodeWords", CounterAttributeType, 0x0400, 0, mapset.NewSetWith(Read), false, false, false, 6),
+			2: Uint16Field("ThresholdData12Id", UnsignedIntegerAttributeType, 0x4000, 0, mapset.NewSetWith(Read, SetByCreate, Write), false, false, false, 2),
+			3: Uint32Field("CorrectedBytes", CounterAttributeType, 0x2000, 0, mapset.NewSetWith(Read), false, false, false, 3),
+			4: Uint32Field("CorrectedCodeWords", CounterAttributeType, 0x1000, 0, mapset.NewSetWith(Read), false, false, false, 4),
+			5: Uint32Field("UncorrectableCodeWords", CounterAttributeType, 0x0800, 0, mapset.NewSetWith(Read), false, false, false, 5),
+			6: Uint32Field("TotalCodeWords", CounterAttributeType, 0x0400, 0, mapset.NewSetWith(Read), false, false, false, 6),
 			7: Uint16Field("FecSeconds", CounterAttributeType, 0x0200, 0, mapset.NewSetWith(Read), false, false, false, 7),
 		},
 		Access:  CreatedByOlt,
@@ -112,9 +113,9 @@ func init() {
 	}
 }
 
-// NewEnhancedFecPerformanceMonitoringHistoryData (class ID 453) creates the basic
+// NewFecPerformanceMonitoringHistoryData (class ID 312) creates the basic
 // Managed Entity definition that is used to validate an ME of this type that
 // is received from or transmitted to the OMCC.
-func NewEnhancedFecPerformanceMonitoringHistoryData(params ...ParamData) (*ManagedEntity, OmciErrors) {
-	return NewManagedEntity(*enhancedfecperformancemonitoringhistorydataBME, params...)
+func NewFecPerformanceMonitoringHistoryData(params ...ParamData) (*ManagedEntity, OmciErrors) {
+	return NewManagedEntity(*fecperformancemonitoringhistorydataBME, params...)
 }

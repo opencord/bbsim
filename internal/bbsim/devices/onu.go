@@ -640,15 +640,17 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 	}).Trace("omci-message-decoded")
 
 	var responsePkt []byte
+	var errResp error
 	switch omciMsg.MessageType {
 	case omci.MibResetRequestType:
-		o.MibDataSync = 0
 		onuLogger.WithFields(log.Fields{
 			"IntfId":       o.PonPortID,
 			"OnuId":        o.ID,
 			"SerialNumber": o.Sn(),
 		}).Debug("received-mib-reset-request-resetting-mds")
-		responsePkt, _ = omcilib.CreateMibResetResponse(omciMsg.TransactionID)
+		if responsePkt, errResp = omcilib.CreateMibResetResponse(omciMsg.TransactionID); errResp == nil {
+			o.MibDataSync = 0
+		}
 	case omci.MibUploadRequestType:
 		responsePkt, _ = omcilib.CreateMibUploadResponse(omciMsg.TransactionID)
 	case omci.MibUploadNextRequestType:
@@ -656,8 +658,9 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 	case omci.GetRequestType:
 		responsePkt, _ = omcilib.CreateGetResponse(omciPkt, omciMsg, o.SerialNumber, o.MibDataSync)
 	case omci.SetRequestType:
-		o.MibDataSync++
-		responsePkt, _ = omcilib.CreateSetResponse(omciPkt, omciMsg)
+		if responsePkt, errResp = omcilib.CreateSetResponse(omciPkt, omciMsg); errResp == nil {
+			o.MibDataSync++
+		}
 
 		msgObj, _ := omcilib.ParseSetRequest(omciPkt)
 		switch msgObj.EntityClass {
@@ -684,11 +687,13 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			}
 		}
 	case omci.CreateRequestType:
-		o.MibDataSync++
-		responsePkt, _ = omcilib.CreateCreateResponse(omciPkt, omciMsg)
+		if responsePkt, errResp = omcilib.CreateCreateResponse(omciPkt, omciMsg); errResp == nil {
+			o.MibDataSync++
+		}
 	case omci.DeleteRequestType:
-		o.MibDataSync++
-		responsePkt, _ = omcilib.CreateDeleteResponse(omciPkt, omciMsg)
+		if responsePkt, errResp = omcilib.CreateDeleteResponse(omciPkt, omciMsg); errResp == nil {
+			o.MibDataSync++
+		}
 	case omci.RebootRequestType:
 
 		responsePkt, _ = omcilib.CreateRebootResponse(omciPkt, omciMsg)
