@@ -83,6 +83,10 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openo
 		response = createEthernetFramePerformanceMonitoringHistoryDataDownstreamResponse(msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.EthernetPerformanceMonitoringHistoryDataClassID:
 		response = createEthernetPerformanceMonitoringHistoryDataResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+	case me.FecPerformanceMonitoringHistoryDataClassID:
+		response = createFecPerformanceMonitoringHistoryDataResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+	case me.GemPortNetworkCtpPerformanceMonitoringHistoryDataClassID:
+		response = createGemPortNetworkCtpPerformanceMonitoringHistoryData(msgObj.AttributeMask, msgObj.EntityInstance)
 	default:
 		omciLogger.WithFields(log.Fields{
 			"EntityClass":    msgObj.EntityClass,
@@ -458,6 +462,88 @@ func createEthernetPerformanceMonitoringHistoryDataResponse(attributeMask uint16
 	return &omci.GetResponse{
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.EthernetPerformanceMonitoringHistoryDataClassID,
+			EntityInstance: entityID,
+		},
+		Attributes:    managedEntity.GetAttributeValueMap(),
+		AttributeMask: attributeMask,
+		Result:        me.Success,
+	}
+}
+
+func createFecPerformanceMonitoringHistoryDataResponse(attributeMask uint16, entityID uint16) *omci.GetResponse {
+	fmt.Printf("createFecPerformanceMonitoringHistoryDataResponse attribute mask = %v", attributeMask)
+	managedEntity, meErr := me.NewFecPerformanceMonitoringHistoryData(me.ParamData{
+		EntityID: entityID,
+		Attributes: me.AttributeValueMap{
+			"ManagedEntityId":        entityID,
+			"IntervalEndTime":        0, // This ideally should increment by 1 every collection interval, but staying 0 for simulation is Ok for now.
+			"ThresholdData12Id":      0,
+			"CorrectedBytes":         rand.Intn(100),
+			"CorrectedCodeWords":     rand.Intn(100),
+			"UncorrectableCodeWords": rand.Intn(100),
+			"TotalCodeWords":         rand.Intn(100),
+			"FecSeconds":             rand.Intn(100),
+		},
+	})
+
+	if meErr.GetError() != nil {
+		omciLogger.Errorf("NewFecPerformanceMonitoringHistoryData %v", meErr.Error())
+		return nil
+	}
+
+	// FEC History counter fits within single gem payload.
+	// No need of the logical we use in other Ethernet History counters or Gem Port History counters
+
+	return &omci.GetResponse{
+		MeBasePacket: omci.MeBasePacket{
+			EntityClass:    me.FecPerformanceMonitoringHistoryDataClassID,
+			EntityInstance: entityID,
+		},
+		Attributes:    managedEntity.GetAttributeValueMap(),
+		AttributeMask: attributeMask,
+		Result:        me.Success,
+	}
+}
+
+func createGemPortNetworkCtpPerformanceMonitoringHistoryData(attributeMask uint16, entityID uint16) *omci.GetResponse {
+	fmt.Printf("createGemPortNetworkCtpPerformanceMonitoringHistoryData attribute mask = %v", attributeMask)
+	managedEntity, meErr := me.NewGemPortNetworkCtpPerformanceMonitoringHistoryData(me.ParamData{
+		EntityID: entityID,
+		Attributes: me.AttributeValueMap{
+			"ManagedEntityId":         entityID,
+			"IntervalEndTime":         0, // This ideally should increment by 1 every collection interval, but staying 0 for simulation is Ok for now.
+			"ThresholdData12Id":       0,
+			"TransmittedGemFrames":    rand.Intn(100),
+			"ReceivedGemFrames":       rand.Intn(100),
+			"ReceivedPayloadBytes":    rand.Intn(100),
+			"TransmittedPayloadBytes": rand.Intn(100),
+			"EncryptionKeyErrors":     rand.Intn(100),
+		},
+	})
+
+	if meErr.GetError() != nil {
+		omciLogger.Errorf("NewGemPortNetworkCtpPerformanceMonitoringHistoryData %v", meErr.Error())
+		return nil
+	}
+
+	// L2 PM counters MEs exceed max allowed OMCI payload size.
+	// So the request/responses are always multipart.
+	// First identify the attributes that are not requested in the current GET request.
+	// Then filter out those attributes from the responses in the current GET response.
+	unwantedAttributeMask := ^attributeMask
+	var i uint16
+	for i = 1; i <= 7; i++ { // 1 and 7 because they are allowed valid min and max index keys in AttributeValueMap.
+		// We leave out 0 because that is ManagedEntity and that is a default IE in the map
+		if (1<<(7-i))&unwantedAttributeMask > 0 {
+			if err := managedEntity.DeleteAttributeByIndex(uint(i)); err != nil {
+				omciLogger.Errorf("error deleting attribute at index=%v, err=%v", i, err)
+			}
+		}
+	}
+
+	return &omci.GetResponse{
+		MeBasePacket: omci.MeBasePacket{
+			EntityClass:    me.GemPortNetworkCtpPerformanceMonitoringHistoryDataClassID,
 			EntityInstance: entityID,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
