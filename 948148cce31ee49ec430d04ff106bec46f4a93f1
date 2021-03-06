@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "425d7c88_e9d86d00",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-06T00:10:13Z",
+      "side": 1,
+      "message": "is this needed? if so can we use \"omciLogger.Debug\"?",
+      "range": {
+        "startLine": 474,
+        "startChar": 1,
+        "endLine": 474,
+        "endChar": 11
+      },
+      "revId": "948148cce31ee49ec430d04ff106bec46f4a93f1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4cfcc4d9_b262eccf",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-06T00:10:13Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 509,
+        "startChar": 1,
+        "endLine": 509,
+        "endChar": 11
+      },
+      "revId": "948148cce31ee49ec430d04ff106bec46f4a93f1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
