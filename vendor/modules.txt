@@ -72,7 +72,7 @@ github.com/mattn/go-runewidth
 github.com/olekukonko/tablewriter
 # github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4
 github.com/opencord/cordctl/pkg/format
-# github.com/opencord/device-management-interface v0.9.5
+# github.com/opencord/device-management-interface v0.11.0
 github.com/opencord/device-management-interface/go/dmi
 # github.com/opencord/omci-lib-go v0.15.4
 github.com/opencord/omci-lib-go
