@@ -46,7 +46,7 @@ func (dms *DmiAPIServer) UpdateEventsConfiguration(ctx context.Context, req *dmi
 			Status: dmi.Status_ERROR_STATUS,
 			//TODO reason must be INVALID_PARAMS, currently this is not available in Device Management interface (DMI),
 			// change below reason with type INVALID_PARAMS once DMI is updated
-			Reason: dmi.Reason_UNDEFINED_REASON,
+			Reason: dmi.EventsConfigurationResponse_UNDEFINED_REASON,
 		}, status.Errorf(codes.FailedPrecondition, "request is nil")
 	}
 
