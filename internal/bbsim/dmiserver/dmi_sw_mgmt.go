@@ -18,6 +18,8 @@ package dmiserver
 
 import (
 	"context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	dmi "github.com/opencord/device-management-interface/go/dmi"
 )
@@ -28,7 +30,7 @@ func (dms *DmiAPIServer) GetSoftwareVersion(ctx context.Context, req *dmi.Hardwa
 	logger.Debugf("GetSoftwareVersion invoked with for device %+v", req)
 	return &dmi.GetSoftwareVersionInformationResponse{
 		Status: dmi.Status_OK_STATUS,
-		Reason: dmi.Reason_UNDEFINED_REASON,
+		Reason: dmi.GetSoftwareVersionInformationResponse_UNDEFINED_REASON,
 		Info: &dmi.SoftwareVersionInformation{
 			ActiveVersions: []*dmi.ImageVersion{{
 				ImageName: "BBSIM-DUMMY-IMAGE-1",
@@ -92,4 +94,10 @@ func (dms *DmiAPIServer) RevertToStandbyImage(req *dmi.HardwareID, stream dmi.Na
 func (dms *DmiAPIServer) UpdateStartupConfiguration(*dmi.ConfigRequest, dmi.NativeSoftwareManagementService_UpdateStartupConfigurationServer) error {
 	logger.Debugf("UpdateStartupConfiguration invoked")
 	return nil
+}
+
+// GetStartupConfigurationInfo API is used to return the 'StartUp' config present on the device
+func (dms *DmiAPIServer) GetStartupConfigurationInfo(ctx context.Context, request *dmi.StartupConfigInfoRequest) (*dmi.StartupConfigInfoResponse, error) {
+	logger.Debugf("GetStartupConfigurationInfo invoked for device %s", request.DeviceUuid.String())
+	return nil, status.Errorf(codes.Unimplemented, "rpc GetStartupConfigurationInfo not implemented")
 }
