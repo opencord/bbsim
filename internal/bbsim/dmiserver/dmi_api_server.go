@@ -45,6 +45,8 @@ type DmiAPIServer struct {
 	metricChannel           chan interface{}
 	eventChannel            chan interface{}
 	kafkaEndpoint           string
+	loggingEndpoint         string
+	loggingProtocol         string
 	mPublisherCancelFunc    context.CancelFunc
 }
 

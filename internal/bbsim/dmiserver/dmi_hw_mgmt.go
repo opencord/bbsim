@@ -279,11 +279,11 @@ func createPowerSupplyComponent(psuIdx int) *dmi.Component {
 func (dms *DmiAPIServer) StopManagingDevice(ctx context.Context, req *dmi.StopManagingDeviceRequest) (*dmi.StopManagingDeviceResponse, error) {
 	logger.Debugf("StopManagingDevice API invoked")
 	if req == nil {
-		return &dmi.StopManagingDeviceResponse{Status: dmi.Status_ERROR_STATUS, Reason: dmi.Reason_UNKNOWN_DEVICE}, status.Errorf(codes.FailedPrecondition, "request is empty")
+		return &dmi.StopManagingDeviceResponse{Status: dmi.Status_ERROR_STATUS, Reason: dmi.StopManagingDeviceResponse_UNDEFINED_REASON}, status.Errorf(codes.FailedPrecondition, "request is empty")
 	}
 
 	if req.Name == "" {
-		return &dmi.StopManagingDeviceResponse{Status: dmi.Status_ERROR_STATUS, Reason: dmi.Reason_UNKNOWN_DEVICE},
+		return &dmi.StopManagingDeviceResponse{Status: dmi.Status_ERROR_STATUS, Reason: dmi.StopManagingDeviceResponse_UNKNOWN_DEVICE},
 			status.Errorf(codes.InvalidArgument, "'Name' can not be empty in the request")
 	}
 
@@ -329,7 +329,7 @@ func (dms *DmiAPIServer) GetPhysicalInventory(req *dmi.PhysicalInventoryRequest,
 		// Wrong uuid, return error
 		errResponse := &dmi.PhysicalInventoryResponse{
 			Status:    dmi.Status_ERROR_STATUS,
-			Reason:    dmi.Reason_UNKNOWN_DEVICE,
+			Reason:    dmi.PhysicalInventoryResponse_UNKNOWN_DEVICE,
 			Inventory: &dmi.Hardware{},
 		}
 
@@ -397,11 +397,11 @@ func findComponents(l []*dmi.Component, compType dmi.ComponentType, collector *[
 
 func sendGetHWComponentResponse(c *dmi.Component, stream dmi.NativeHWManagementService_GetHWComponentInfoServer) error {
 	apiStatus := dmi.Status_OK_STATUS
-	reason := dmi.Reason_UNDEFINED_REASON
+	reason := dmi.HWComponentInfoGetResponse_UNDEFINED_REASON
 
 	if c == nil {
 		apiStatus = dmi.Status_ERROR_STATUS
-		reason = dmi.Reason_UNKNOWN_DEVICE
+		reason = dmi.HWComponentInfoGetResponse_UNKNOWN_DEVICE
 	}
 
 	response := &dmi.HWComponentInfoGetResponse{
@@ -447,20 +447,65 @@ func (dms *DmiAPIServer) SetHWComponentInfo(context.Context, *dmi.HWComponentInf
 }
 
 //SetLoggingEndpoint sets the location to which logs need to be shipped
-func (dms *DmiAPIServer) SetLoggingEndpoint(context.Context, *dmi.SetLoggingEndpointRequest) (*dmi.SetRemoteEndpointResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "rpc SetLoggingEndpoint not implemented")
+func (dms *DmiAPIServer) SetLoggingEndpoint(_ context.Context, request *dmi.SetLoggingEndpointRequest) (*dmi.SetRemoteEndpointResponse, error) {
+	logger.Debugf("SetLoggingEndpoint called with request %+v", request)
+	errRetFunc := func(stat dmi.Status, reason dmi.SetRemoteEndpointResponse_Reason) (*dmi.SetRemoteEndpointResponse, error) {
+		return &dmi.SetRemoteEndpointResponse{
+			Status: stat,
+			Reason: reason,
+		}, status.Errorf(codes.InvalidArgument, "invalid request")
+	}
+
+	//check the validity of the request
+	if request == nil {
+		return errRetFunc(dmi.Status_ERROR_STATUS, dmi.SetRemoteEndpointResponse_UNKNOWN_DEVICE)
+	}
+	if request.LoggingEndpoint == "" {
+		return errRetFunc(dmi.Status_ERROR_STATUS, dmi.SetRemoteEndpointResponse_LOGGING_ENDPOINT_ERROR)
+	}
+	if request.LoggingProtocol == "" {
+		return errRetFunc(dmi.Status_ERROR_STATUS, dmi.SetRemoteEndpointResponse_LOGGING_ENDPOINT_PROTOCOL_ERROR)
+	}
+	if request.DeviceUuid == nil || request.DeviceUuid.Uuid != dms.uuid {
+		return errRetFunc(dmi.Status_ERROR_STATUS, dmi.SetRemoteEndpointResponse_UNKNOWN_DEVICE)
+	}
+
+	dms.loggingEndpoint = request.LoggingEndpoint
+	dms.loggingProtocol = request.LoggingProtocol
+
+	return &dmi.SetRemoteEndpointResponse{
+		Status: dmi.Status_OK_STATUS,
+	}, nil
 }
 
 //GetLoggingEndpoint gets the configured location to which the logs are being shipped
-func (dms *DmiAPIServer) GetLoggingEndpoint(context.Context, *dmi.HardwareID) (*dmi.GetLoggingEndpointResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "rpc GetLoggingEndpoint not implemented")
+func (dms *DmiAPIServer) GetLoggingEndpoint(_ context.Context, request *dmi.HardwareID) (*dmi.GetLoggingEndpointResponse, error) {
+	logger.Debugf("GetLoggingEndpoint called with request %+v", request)
+	if request == nil || request.Uuid == nil || request.Uuid.Uuid == "" {
+		return &dmi.GetLoggingEndpointResponse{
+			Status: dmi.Status_ERROR_STATUS,
+			Reason: dmi.GetLoggingEndpointResponse_UNKNOWN_DEVICE,
+		}, status.Errorf(codes.InvalidArgument, "invalid request")
+	}
+	if request.Uuid.Uuid != dms.uuid {
+		return &dmi.GetLoggingEndpointResponse{
+			Status: dmi.Status_ERROR_STATUS,
+			Reason: dmi.GetLoggingEndpointResponse_UNKNOWN_DEVICE,
+		}, nil
+	}
+
+	return &dmi.GetLoggingEndpointResponse{
+		Status:          dmi.Status_OK_STATUS,
+		LoggingEndpoint: dms.loggingEndpoint,
+		LoggingProtocol: dms.loggingProtocol,
+	}, nil
 }
 
 //SetMsgBusEndpoint sets the location of the Message Bus to which events and metrics are shipped
 func (dms *DmiAPIServer) SetMsgBusEndpoint(ctx context.Context, request *dmi.SetMsgBusEndpointRequest) (*dmi.SetRemoteEndpointResponse, error) {
 	logger.Debugf("SetMsgBusEndpoint() invoked with request: %+v and context: %v", request, ctx)
 	if request == nil || request.MsgbusEndpoint == "" {
-		return &dmi.SetRemoteEndpointResponse{Status: dmi.Status_ERROR_STATUS, Reason: dmi.Reason_KAFKA_ENDPOINT_ERROR},
+		return &dmi.SetRemoteEndpointResponse{Status: dmi.Status_ERROR_STATUS, Reason: dmi.SetRemoteEndpointResponse_MSGBUS_ENDPOINT_ERROR},
 			status.Errorf(codes.FailedPrecondition, "request is nil")
 	}
 	olt := devices.GetOLT()
@@ -482,10 +527,10 @@ func (dms *DmiAPIServer) SetMsgBusEndpoint(ctx context.Context, request *dmi.Set
 		go DMKafkaPublisher(nCtx, dms.eventChannel, "dm.events")
 	} else {
 		logger.Errorf("Failed to start metric kafka publisher: %v", err)
-		return &dmi.SetRemoteEndpointResponse{Status: dmi.Status_ERROR_STATUS, Reason: dmi.Reason_KAFKA_ENDPOINT_ERROR}, err
+		return &dmi.SetRemoteEndpointResponse{Status: dmi.Status_ERROR_STATUS, Reason: dmi.SetRemoteEndpointResponse_MSGBUS_ENDPOINT_ERROR}, err
 	}
 
-	return &dmi.SetRemoteEndpointResponse{Status: dmi.Status_OK_STATUS, Reason: dmi.Reason_UNDEFINED_REASON}, nil
+	return &dmi.SetRemoteEndpointResponse{Status: dmi.Status_OK_STATUS, Reason: dmi.SetRemoteEndpointResponse_UNDEFINED_REASON}, nil
 }
 
 //GetMsgBusEndpoint gets the configured location to which the events and metrics are being shipped
@@ -494,13 +539,13 @@ func (dms *DmiAPIServer) GetMsgBusEndpoint(context.Context, *empty.Empty) (*dmi.
 	if dms.kafkaEndpoint != "" {
 		return &dmi.GetMsgBusEndpointResponse{
 			Status:         dmi.Status_OK_STATUS,
-			Reason:         dmi.Reason_UNDEFINED_REASON,
+			Reason:         dmi.GetMsgBusEndpointResponse_UNDEFINED_REASON,
 			MsgbusEndpoint: dms.kafkaEndpoint,
 		}, nil
 	}
 	return &dmi.GetMsgBusEndpointResponse{
 		Status:         dmi.Status_ERROR_STATUS,
-		Reason:         dmi.Reason_KAFKA_ENDPOINT_ERROR,
+		Reason:         dmi.GetMsgBusEndpointResponse_INTERNAL_ERROR,
 		MsgbusEndpoint: "",
 	}, nil
 }
