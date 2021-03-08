@@ -251,8 +251,8 @@ func generateCPUUsageMetric(cpu *dmi.Component, apiSrv *DmiAPIServer) *dmi.Metri
 	met = *updateMetricIDAndMetaData(dmi.MetricNames_METRIC_CPU_USAGE_PERCENTAGE, cpu, apiSrv, &met)
 	met.Value = &dmi.ComponentSensorData{
 		Value:     generateRand(1, 20),
-		Type:      dmi.SensorValueType_SENSOR_VALUE_TYPE_OTHER,
-		Scale:     dmi.SensorValueScale_SENSOR_VALUE_SCALE_UNITS,
+		Type:      dmi.DataValueType_VALUE_TYPE_OTHER,
+		Scale:     dmi.ValueScale_VALUE_SCALE_UNITS,
 		Timestamp: ptypes.TimestampNow(),
 	}
 	return &met
@@ -263,8 +263,8 @@ func generateFanSpeedMetric(fan *dmi.Component, apiSrv *DmiAPIServer) *dmi.Metri
 	met = *updateMetricIDAndMetaData(dmi.MetricNames_METRIC_FAN_SPEED, fan, apiSrv, &met)
 	met.Value = &dmi.ComponentSensorData{
 		Value:     generateRand(3000, 4000),
-		Type:      dmi.SensorValueType_SENSOR_VALUE_TYPE_RPM,
-		Scale:     dmi.SensorValueScale_SENSOR_VALUE_SCALE_UNITS,
+		Type:      dmi.DataValueType_VALUE_TYPE_RPM,
+		Scale:     dmi.ValueScale_VALUE_SCALE_UNITS,
 		Timestamp: ptypes.TimestampNow(),
 	}
 	return &met
@@ -299,8 +299,8 @@ func generateRAMUsageMetric(ram *dmi.Component, apiSrv *DmiAPIServer) *dmi.Metri
 	met = *updateMetricIDAndMetaData(dmi.MetricNames_METRIC_RAM_USAGE_PERCENTAGE, ram, apiSrv, &met)
 	met.Value = &dmi.ComponentSensorData{
 		Value:     generateRand(1, 8),
-		Type:      dmi.SensorValueType_SENSOR_VALUE_TYPE_OTHER,
-		Scale:     dmi.SensorValueScale_SENSOR_VALUE_SCALE_GIGA,
+		Type:      dmi.DataValueType_VALUE_TYPE_OTHER,
+		Scale:     dmi.ValueScale_VALUE_SCALE_GIGA,
 		Timestamp: ptypes.TimestampNow(),
 	}
 	return &met
@@ -311,8 +311,8 @@ func generateDiskUsageMetric(disk *dmi.Component, apiSrv *DmiAPIServer) *dmi.Met
 	met = *updateMetricIDAndMetaData(dmi.MetricNames_METRIC_DISK_USAGE_PERCENTAGE, disk, apiSrv, &met)
 	met.Value = &dmi.ComponentSensorData{
 		Value:     generateRand(50, 500),
-		Type:      dmi.SensorValueType_SENSOR_VALUE_TYPE_OTHER,
-		Scale:     dmi.SensorValueScale_SENSOR_VALUE_SCALE_GIGA,
+		Type:      dmi.DataValueType_VALUE_TYPE_OTHER,
+		Scale:     dmi.ValueScale_VALUE_SCALE_GIGA,
 		Timestamp: ptypes.TimestampNow(),
 	}
 	return &met
@@ -323,8 +323,8 @@ func generateInnerSurroundingTempMetric(istemp *dmi.Component, apiSrv *DmiAPISer
 	met = *updateMetricIDAndMetaData(dmi.MetricNames_METRIC_INNER_SURROUNDING_TEMP, istemp, apiSrv, &met)
 	met.Value = &dmi.ComponentSensorData{
 		Value:     generateRand(30, 40),
-		Type:      dmi.SensorValueType_SENSOR_VALUE_TYPE_CELSIUS,
-		Scale:     dmi.SensorValueScale_SENSOR_VALUE_SCALE_UNITS,
+		Type:      dmi.DataValueType_VALUE_TYPE_CELSIUS,
+		Scale:     dmi.ValueScale_VALUE_SCALE_UNITS,
 		Timestamp: ptypes.TimestampNow(),
 	}
 	return &met
