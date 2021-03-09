@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "841035ed_a733878a",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-03-09T19:51:59Z",
+      "side": 1,
+      "message": "Note that openolt adapter cannot go beyond 127 ONUs per PON at the moment. Only 7 bits are allocated to ONU ID which is one of the input parameter to generate the UNI Port number. Check olt_platform.go (in openolt adapter).",
+      "revId": "4eaa20cae70e18a4b7c14f4e98883701c6731259",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36e5cde4_04831d7c",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-03-09T19:51:59Z",
+      "side": 1,
+      "message": "Note that these ranges are for xgs-pon technology.\n\nFor GPON, the ranges are a bit different. See below.\n\n#define ALLOC_ID_START 256\n#define ALLOC_ID_END 767\n\n#define GEM_PORT_ID_START 256\n#define GEM_PORT_ID_END 4095\n\nYou need not address it in this comment. But in future you can have an input option to BBSIM to work in gpon or xgs-pon mode. Based on that you can choose different ranges.\nApart from this I do not think anything else really matters (from BBSIM perspective) for GPON and XGS-PON technologies.",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 23
+      },
+      "revId": "4eaa20cae70e18a4b7c14f4e98883701c6731259",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ee9e5fe_56fc3941",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 1608,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-03-09T19:51:59Z",
+      "side": 1,
+      "message": "Did this have any noticeable impact on performance ?",
+      "range": {
+        "startLine": 1602,
+        "startChar": 0,
+        "endLine": 1608,
+        "endChar": 32
+      },
+      "revId": "4eaa20cae70e18a4b7c14f4e98883701c6731259",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16c39ae8_6ed5d28f",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 1670,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-03-09T19:51:59Z",
+      "side": 1,
+      "message": "Did this have any noticeable impact on performance ?",
+      "range": {
+        "startLine": 1665,
+        "startChar": 0,
+        "endLine": 1670,
+        "endChar": 32
+      },
+      "revId": "4eaa20cae70e18a4b7c14f4e98883701c6731259",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
