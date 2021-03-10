@@ -37,13 +37,17 @@ func (s BBSimServer) GetONUs(ctx context.Context, req *bbsim.Empty) (*bbsim.ONUs
 	for _, pon := range olt.Pons {
 		for _, o := range pon.Onus {
 			onu := bbsim.ONU{
-				ID:            int32(o.ID),
-				SerialNumber:  o.Sn(),
-				OperState:     o.OperState.Current(),
-				InternalState: o.InternalState.Current(),
-				PonPortID:     int32(o.PonPortID),
-				PortNo:        int32(o.PortNo),
-				Services:      convertBBsimServicesToProtoServices(o.Services),
+				ID:                            int32(o.ID),
+				SerialNumber:                  o.Sn(),
+				OperState:                     o.OperState.Current(),
+				InternalState:                 o.InternalState.Current(),
+				PonPortID:                     int32(o.PonPortID),
+				PortNo:                        int32(o.PortNo),
+				Services:                      convertBBsimServicesToProtoServices(o.Services),
+				ImageSoftwareReceivedSections: int32(o.ImageSoftwareReceivedSections),
+				ImageSoftwareExpectedSections: int32(o.ImageSoftwareExpectedSections),
+				ActiveImageEntityId:           int32(o.ActiveImageEntityId),
+				CommittedImageEntityId:        int32(o.CommittedImageEntityId),
 			}
 			onus.Items = append(onus.Items, &onu)
 		}

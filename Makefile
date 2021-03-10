@@ -77,7 +77,7 @@ sca:
 
 test: docs-lint test-unit test-bbr
 
-test-unit: clean local-omci-sim # @HELP Execute unit tests
+test-unit: clean local-omci-lib-go # @HELP Execute unit tests
 	@echo "Running unit tests..."
 	@mkdir -p ./tests/results
 	@${GO} test -mod=vendor -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee ./tests/results/go-test-results.out ;\
@@ -96,7 +96,7 @@ mod-update: # @HELP Download the dependencies to the vendor folder
 	${GO} mod tidy
 	${GO} mod vendor
 
-docker-build: local-omci-sim local-protos# @HELP Build the BBSim docker container (contains BBSimCtl too)
+docker-build: local-omci-lib-go local-protos# @HELP Build the BBSim docker container (contains BBSimCtl too)
 	docker build \
 	  -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} \
 	  -f build/package/Dockerfile .
@@ -180,10 +180,10 @@ help: # @HELP Print the command options
     '
 
 ## Local Development Helpers
-local-omci-sim:
-ifdef LOCAL_OMCI_SIM
-	mkdir -p vendor/github.com/opencord/omci-sim/
-	cp -r ${LOCAL_OMCI_SIM}/* vendor/github.com/opencord/omci-sim/
+local-omci-lib-go:
+ifdef LOCAL_OMCI_LIB_GO
+	mkdir -p vendor/github.com/opencord/omci-lib-go
+	cp -r ${LOCAL_OMCI_LIB_GO}/* vendor/github.com/opencord/omci-lib-go
 endif
 
 local-protos: ## Copies a local version of the voltha-protos dependency into the vendor directory
@@ -203,7 +203,7 @@ clean:
 	@rm -rf tools/bin
 	@rm -rf release/*
 
-build-bbr: local-omci-sim local-protos
+build-bbr: local-omci-lib-go local-protos
 	@go build -mod vendor \
 	  -ldflags "-w -X main.buildTime=$(shell date +%Y/%m/%d-%H:%M:%S) \
 	    -X main.commitHash=$(shell git log --pretty=format:%H -n 1) \

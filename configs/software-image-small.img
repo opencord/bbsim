@@ -1,0 +1,4 @@
+# This is a file to mimic an image software download via OMCI.
+# BBSim doesn't care about the size of the file, but we need to know the source so we can compare.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam a scelerisque nibh. Donec vitae imperdiet nulla, non hendrerit est. Pellentesque turpis leo, aliquam a libero vitae, malesuada eleifend velit. Quisque non ornare neque. Maecenas vulputate justo vitae vehicula porta. Proin pellentesque lacus non neque bibendum vehicula. Vestibulum sollicitudin, nisl quis semper hendrerit, dolor lacus dapibus dolor, ut volutpat enim augue at magna. Vestibulum neque urna, sagittis eget dui vel, pulvinar varius magna. Vestibulum condimentum iaculis urna ac congue. Proin fringilla id felis pellentesque rutrum. Phasellus eu sodales eros. Nullam laoreet blandit lacus. Nulla pellentesque euismod dolor tempus congue. Donec vel dui varius, maximus enim eget, molestie orci.
