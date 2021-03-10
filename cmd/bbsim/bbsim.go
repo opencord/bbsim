@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"github.com/opencord/bbsim/internal/bbsim/responders/webserver"
 	"net"
 	"net/http"
 	"os"
@@ -33,7 +34,6 @@ import (
 	"github.com/opencord/bbsim/internal/bbsim/api"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"github.com/opencord/bbsim/internal/bbsim/dmiserver"
-	"github.com/opencord/bbsim/internal/bbsim/responders/sadis"
 	"github.com/opencord/bbsim/internal/common"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -188,7 +188,7 @@ func main() {
 	log.Debugf("Started APIService")
 	if common.Config.BBSim.SadisServer {
 		wg.Add(1)
-		go sadis.StartRestServer(olt, &wg)
+		go webserver.StartRestServer(olt, &wg)
 	}
 
 	dms, dmserr := dmiserver.StartDmiAPIServer()
