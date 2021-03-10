@@ -201,6 +201,19 @@ func createOnugResponse(attributeMask uint16, entityID uint16, onuSn *openolt.Se
 }
 
 func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16) *omci.GetResponse {
+
+	omciLogger.WithFields(log.Fields{
+		"EntityInstance": entityInstance,
+	}).Info("received-get-software-image-request")
+
+	// Only one image can be active and committed
+	committed := 0
+	active := 0
+	if entityInstance == 0 {
+		committed = 1
+		active = 1
+	}
+
 	// NOTE that we need send the response for the correct ME Instance or the adapter won't process it
 	return &omci.GetResponse{
 		MeBasePacket: omci.MeBasePacket{
@@ -210,8 +223,8 @@ func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16) *o
 		Attributes: me.AttributeValueMap{
 			"ManagedEntityId": 0,
 			"Version":         toOctets("00000000000001", 14),
-			"IsCommitted":     1,
-			"IsActive":        1,
+			"IsCommitted":     committed,
+			"IsActive":        active,
 			"IsValid":         1,
 			"ProductCode":     toOctets("product-code", 25),
 			"ImageHash":       toOctets("broadband-sim", 16),

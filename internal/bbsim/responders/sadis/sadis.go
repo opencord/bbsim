@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
-	"sync"
 
 	"github.com/gorilla/mux"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
@@ -32,8 +31,8 @@ var sadisLogger = log.WithFields(log.Fields{
 	"module": "SADIS",
 })
 
-type sadisServer struct {
-	olt *devices.OltDevice
+type SadisServer struct {
+	Olt *devices.OltDevice
 }
 
 // bandwidthProfiles contains some dummy profiles
@@ -228,7 +227,7 @@ func getBWPEntries(version string) *BandwidthProfileEntries {
 	return bwp
 }
 
-func (s *sadisServer) ServeBaseConfig(w http.ResponseWriter, r *http.Request) {
+func (s *SadisServer) ServeBaseConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	vars := mux.Vars(r)
@@ -239,7 +238,7 @@ func (s *sadisServer) ServeBaseConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sadisConf := GetSadisConfig(s.olt, vars["version"])
+	sadisConf := GetSadisConfig(s.Olt, vars["version"])
 
 	sadisJSON, _ := json.Marshal(sadisConf)
 
@@ -247,17 +246,17 @@ func (s *sadisServer) ServeBaseConfig(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (s *sadisServer) ServeStaticConfig(w http.ResponseWriter, r *http.Request) {
+func (s *SadisServer) ServeStaticConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	vars := mux.Vars(r)
-	sadisConf := GetSadisConfig(s.olt, vars["version"])
+	sadisConf := GetSadisConfig(s.Olt, vars["version"])
 
 	sadisConf.Sadis.Integration.URL = ""
-	for i := range s.olt.Pons {
-		for _, onu := range s.olt.Pons[i].Onus {
+	for i := range s.Olt.Pons {
+		for _, onu := range s.Olt.Pons[i].Onus {
 			if vars["version"] == "v2" {
-				sonuV2, _ := GetOnuEntryV2(s.olt, onu, "1")
+				sonuV2, _ := GetOnuEntryV2(s.Olt, onu, "1")
 				sadisConf.Sadis.Entries = append(sadisConf.Sadis.Entries, sonuV2)
 			}
 		}
@@ -273,17 +272,17 @@ func (s *sadisServer) ServeStaticConfig(w http.ResponseWriter, r *http.Request) 
 
 }
 
-func (s *sadisServer) ServeEntry(w http.ResponseWriter, r *http.Request) {
+func (s *SadisServer) ServeEntry(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(r)
 
 	// check if the requested ID is for the OLT
-	if s.olt.SerialNumber == vars["ID"] {
+	if s.Olt.SerialNumber == vars["ID"] {
 		sadisLogger.WithFields(log.Fields{
-			"OltSn": s.olt.SerialNumber,
+			"OltSn": s.Olt.SerialNumber,
 		}).Debug("Received SADIS OLT request")
 
-		sadisConf, _ := GetOltEntry(s.olt)
+		sadisConf, _ := GetOltEntry(s.Olt)
 
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(sadisConf)
@@ -299,7 +298,7 @@ func (s *sadisServer) ServeEntry(w http.ResponseWriter, r *http.Request) {
 	}
 	sn, uni := i[0], i[len(i)-1]
 
-	onu, err := s.olt.FindOnuBySn(sn)
+	onu, err := s.Olt.FindOnuBySn(sn)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		_, _ = w.Write([]byte("{}"))
@@ -322,13 +321,13 @@ func (s *sadisServer) ServeEntry(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode("Sadis v1 is not supported anymore, please go back to an earlier BBSim version")
 	} else if vars["version"] == "v2" {
 		w.WriteHeader(http.StatusOK)
-		sadisConf, _ := GetOnuEntryV2(s.olt, onu, uni)
+		sadisConf, _ := GetOnuEntryV2(s.Olt, onu, uni)
 		_ = json.NewEncoder(w).Encode(sadisConf)
 	}
 
 }
 
-func (s *sadisServer) ServeBWPEntry(w http.ResponseWriter, r *http.Request) {
+func (s *SadisServer) ServeBWPEntry(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(r)
 	id := vars["ID"]
@@ -351,23 +350,4 @@ func (s *sadisServer) ServeBWPEntry(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNotFound)
 	_, _ = w.Write([]byte("{}"))
-}
-
-// StartRestServer starts REST server which returns a SADIS configuration for the currently simulated OLT
-func StartRestServer(olt *devices.OltDevice, wg *sync.WaitGroup) {
-	addr := common.Config.BBSim.SadisRestAddress
-	sadisLogger.Infof("SADIS server listening on %s", addr)
-	s := &sadisServer{
-		olt: olt,
-	}
-
-	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/{version}/cfg", s.ServeBaseConfig)
-	router.HandleFunc("/{version}/static", s.ServeStaticConfig)
-	router.HandleFunc("/{version}/subscribers/{ID}", s.ServeEntry)
-	router.HandleFunc("/{version}/bandwidthprofiles/{ID}", s.ServeBWPEntry)
-
-	log.Fatal(http.ListenAndServe(addr, router))
-
-	wg.Done()
 }

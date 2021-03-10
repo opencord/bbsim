@@ -33,8 +33,8 @@ import (
 )
 
 const (
-	DEFAULT_ONU_DEVICE_HEADER_FORMAT               = "table{{ .PonPortID }}\t{{ .ID }}\t{{ .PortNo }}\t{{ .SerialNumber }}\t{{ .OperState }}\t{{ .InternalState }}"
-	DEFAULT_ONU_DEVICE_HEADER_FORMAT_WITH_SERVICES = "table{{ .PonPortID }}\t{{ .ID }}\t{{ .PortNo }}\t{{ .SerialNumber }}\t{{ .OperState }}\t{{ .InternalState }}\t{{ .Services }}"
+	DEFAULT_ONU_DEVICE_HEADER_FORMAT               = "table{{ .PonPortID }}\t{{ .ID }}\t{{ .PortNo }}\t{{ .SerialNumber }}\t{{ .OperState }}\t{{ .InternalState }}\t{{ .ImageSoftwareExpectedSections }}\t{{ .ImageSoftwareReceivedSections }}"
+	DEFAULT_ONU_DEVICE_HEADER_FORMAT_WITH_SERVICES = "table{{ .PonPortID }}\t{{ .ID }}\t{{ .PortNo }}\t{{ .SerialNumber }}\t{{ .OperState }}\t{{ .InternalState }}\t{{ .ImageSoftwareExpectedSections }}\t{{ .ImageSoftwareReceivedSections }}\t{{ .Services }}"
 )
 
 type OnuSnString string
