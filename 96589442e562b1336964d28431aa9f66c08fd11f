@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82563ed2_74b1bfd5",
+        "filename": "docs/source/DMI_Server_README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2021-03-10T16:21:32Z",
+      "side": 1,
+      "message": "In the examples, instead of \"udp\" can you set the logging_protocol to \"syslog\"... same in line 346",
+      "revId": "96589442e562b1336964d28431aa9f66c08fd11f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94ce80ee_5c2bd333",
+        "filename": "docs/source/DMI_Server_README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2021-03-10T16:21:32Z",
+      "side": 1,
+      "message": "Can you also please give the examples for the 2 RPCs around the startup configuration?",
+      "revId": "96589442e562b1336964d28431aa9f66c08fd11f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5849f888_c0437f00",
+        "filename": "internal/bbsim/dmiserver/dmi_sw_mgmt.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2021-03-10T16:21:32Z",
+      "side": 1,
+      "message": "Instead of return an \"not implemented\" error, can we return the StartupConfigInfoRequest with hardcoded values?",
+      "revId": "96589442e562b1336964d28431aa9f66c08fd11f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
