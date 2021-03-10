@@ -29,7 +29,7 @@ import (
 // ParseOpenOltOmciPacket receive an OMCI packet in the openolt format and returns
 // an OMCI Layer as per omci-lib-go
 func ParseOpenOltOmciPacket(pkt []byte) (gopacket.Packet, *omci.OMCI, error) {
-	rxMsg := hexDecode(pkt)
+	rxMsg := HexDecode(pkt)
 
 	// NOTE this is may not be needed, VOLTHA sends the correct message
 	if len(rxMsg) >= 44 {
@@ -63,8 +63,8 @@ func ParseOpenOltOmciPacket(pkt []byte) (gopacket.Packet, *omci.OMCI, error) {
 	return packet, parsed, nil
 }
 
-// hexDecode converts the hex encoding to binary
-func hexDecode(pkt []byte) []byte {
+// HexDecode converts the hex encoding to binary
+func HexDecode(pkt []byte) []byte {
 	p := make([]byte, len(pkt)/2)
 	for i, j := 0, 0; i < len(pkt); i, j = i+2, j+1 {
 		// Go figure this ;)

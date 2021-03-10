@@ -48,6 +48,10 @@ message ONU {
     string HwAddress = 8;
     int32 PortNo = 9;
     repeated Service services = 10;
+    int32 ImageSoftwareExpectedSections = 11;
+    int32 ImageSoftwareReceivedSections = 12;
+    int32 ActiveImageEntityId = 13;
+    int32 CommittedImageEntityId = 14;
 }
 
 message Service {

@@ -65,11 +65,11 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 				if e.Src == "created" {
 					if olt.ControlledActivation == Default || olt.ControlledActivation == OnlyPON {
 						for _, onu := range ponPort.Onus {
-							if err := onu.InternalState.Event("initialize"); err != nil {
+							if err := onu.InternalState.Event(OnuTxInitialize); err != nil {
 								log.Errorf("Error initializing ONU: %v", err)
 								continue
 							}
-							if err := onu.InternalState.Event("discover"); err != nil {
+							if err := onu.InternalState.Event(OnuTxDiscover); err != nil {
 								log.Errorf("Error discover ONU: %v", err)
 							}
 						}
@@ -78,7 +78,7 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 					if ponPort.Olt.ControlledActivation == OnlyONU || ponPort.Olt.ControlledActivation == Both {
 						// if ONUs are manually activated then only initialize them
 						for _, onu := range ponPort.Onus {
-							if err := onu.InternalState.Event("initialize"); err != nil {
+							if err := onu.InternalState.Event(OnuTxInitialize); err != nil {
 								log.WithFields(log.Fields{
 									"Err":    err,
 									"OnuSn":  onu.Sn(),
@@ -89,16 +89,16 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 						}
 					} else {
 						for _, onu := range ponPort.Onus {
-							if onu.InternalState.Current() == "pon_disabled" {
-								if err := onu.InternalState.Event("enable"); err != nil {
+							if onu.InternalState.Current() == OnuStatePonDisabled {
+								if err := onu.InternalState.Event(OnuStateEnabled); err != nil {
 									log.WithFields(log.Fields{
 										"Err":    err,
 										"OnuSn":  onu.Sn(),
 										"IntfId": onu.PonPortID,
 									}).Error("Error enabling ONU")
 								}
-							} else if onu.InternalState.Current() == "disabled" {
-								if err := onu.InternalState.Event("initialize"); err != nil {
+							} else if onu.InternalState.Current() == OnuStateDisabled {
+								if err := onu.InternalState.Event(OnuTxInitialize); err != nil {
 									log.WithFields(log.Fields{
 										"Err":    err,
 										"OnuSn":  onu.Sn(),
@@ -106,15 +106,15 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 									}).Error("Error initializing ONU")
 									continue
 								}
-								if err := onu.InternalState.Event("discover"); err != nil {
+								if err := onu.InternalState.Event(OnuTxDiscover); err != nil {
 									log.WithFields(log.Fields{
 										"Err":    err,
 										"OnuSn":  onu.Sn(),
 										"IntfId": onu.PonPortID,
 									}).Error("Error discovering ONU")
 								}
-							} else if onu.InternalState.Current() == "initialized" {
-								if err := onu.InternalState.Event("discover"); err != nil {
+							} else if onu.InternalState.Current() == OnuStateInitialized {
+								if err := onu.InternalState.Event(OnuTxDiscover); err != nil {
 									log.WithFields(log.Fields{
 										"Err":    err,
 										"OnuSn":  onu.Sn(),
@@ -135,11 +135,11 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 			},
 			"enter_disabled": func(e *fsm.Event) {
 				for _, onu := range ponPort.Onus {
-					if onu.InternalState.Current() == "initialized" || onu.InternalState.Current() == "disabled" {
+					if onu.InternalState.Current() == OnuStateInitialized || onu.InternalState.Current() == OnuStateDisabled {
 						continue
 					}
-					if err := onu.InternalState.Event("pon_disabled"); err != nil {
-						oltLogger.Errorf("Failed to move ONU in pon_disabled states: %v", err)
+					if err := onu.InternalState.Event(OnuTxPonDisable); err != nil {
+						oltLogger.Errorf("Failed to move ONU in %s states: %v", OnuStatePonDisabled, err)
 					}
 				}
 			},
@@ -192,7 +192,7 @@ func (p PonPort) GetOnuById(id uint32) (*Onu, error) {
 func (p PonPort) GetNumOfActiveOnus() uint32 {
 	var count uint32 = 0
 	for _, onu := range p.Onus {
-		if onu.InternalState.Current() == "initialized" || onu.InternalState.Current() == "created" || onu.InternalState.Current() == "disabled" {
+		if onu.InternalState.Current() == OnuStateInitialized || onu.InternalState.Current() == OnuStateCreated || onu.InternalState.Current() == OnuStateDisabled {
 			continue
 		}
 		count++

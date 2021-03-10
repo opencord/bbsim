@@ -161,7 +161,7 @@ func createTestOnu() *Onu {
 	}
 	onu := CreateONU(&olt, &pon, 1, time.Duration(1*time.Millisecond), true)
 	// NOTE we need this in order to create the OnuChannel
-	_ = onu.InternalState.Event("initialize")
+	_ = onu.InternalState.Event(OnuTxInitialize)
 	onu.DiscoveryRetryDelay = 100 * time.Millisecond
 	return onu
 }

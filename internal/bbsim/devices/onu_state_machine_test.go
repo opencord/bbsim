@@ -28,13 +28,13 @@ func Test_Onu_StateMachine_enable(t *testing.T) {
 	_ = onu.InternalState.Event("discover")
 	assert.Equal(t, onu.InternalState.Current(), "discovered")
 	_ = onu.InternalState.Event("enable")
-	assert.Equal(t, onu.InternalState.Current(), "enabled")
+	assert.Equal(t, onu.InternalState.Current(), OnuStateEnabled)
 }
 
 func Test_Onu_StateMachine_disable(t *testing.T) {
 	onu := createTestOnu()
-	onu.InternalState.SetState("enabled")
-	assert.Equal(t, onu.InternalState.Current(), "enabled")
+	onu.InternalState.SetState(OnuStateEnabled)
+	assert.Equal(t, onu.InternalState.Current(), OnuStateEnabled)
 
 	onu.PortNo = 16
 	onu.GemPortAdded = true
@@ -43,8 +43,8 @@ func Test_Onu_StateMachine_disable(t *testing.T) {
 		{ID: 2, Direction: "downstream"},
 	}
 
-	_ = onu.InternalState.Event("disable")
-	assert.Equal(t, onu.InternalState.Current(), "disabled")
+	_ = onu.InternalState.Event(OnuTxDisable)
+	assert.Equal(t, onu.InternalState.Current(), OnuStateDisabled)
 
 	assert.Equal(t, onu.GemPortAdded, false)
 	assert.Equal(t, onu.PortNo, uint32(0))
@@ -58,15 +58,15 @@ func Test_Onu_StateMachine_eapol_no_flow(t *testing.T) {
 	t.Skip("Needs to be moved in the Service struct")
 	onu := createTestOnu()
 
-	onu.InternalState.SetState("enabled")
-	assert.Equal(t, onu.InternalState.Current(), "enabled")
+	onu.InternalState.SetState(OnuStateEnabled)
+	assert.Equal(t, onu.InternalState.Current(), OnuStateEnabled)
 
 	// fail as no EapolFlow has been received
 	err := onu.InternalState.Event("start_auth")
 	if err == nil {
 		t.Fatal("can't start EAPOL without EapolFlow")
 	}
-	assert.Equal(t, onu.InternalState.Current(), "enabled")
+	assert.Equal(t, onu.InternalState.Current(), OnuStateEnabled)
 	assert.Equal(t, err.Error(), "transition canceled with error: cannot-go-to-auth-started-as-eapol-flow-is-missing")
 }
 
@@ -74,15 +74,15 @@ func Test_Onu_StateMachine_eapol_no_gem(t *testing.T) {
 	t.Skip("Needs to be moved in the Service struct")
 	onu := createTestOnu()
 
-	onu.InternalState.SetState("enabled")
-	assert.Equal(t, onu.InternalState.Current(), "enabled")
+	onu.InternalState.SetState(OnuStateEnabled)
+	assert.Equal(t, onu.InternalState.Current(), OnuStateEnabled)
 
 	// fail has no GemPort has been set
 	err := onu.InternalState.Event("start_auth")
 	if err == nil {
 		t.Fatal("can't start EAPOL without GemPort")
 	}
-	assert.Equal(t, onu.InternalState.Current(), "enabled")
+	assert.Equal(t, onu.InternalState.Current(), OnuStateEnabled)
 	assert.Equal(t, err.Error(), "transition canceled with error: cannot-go-to-auth-started-as-gemport-is-missing")
 
 }
@@ -91,8 +91,8 @@ func Test_Onu_StateMachine_eapol_start(t *testing.T) {
 	t.Skip("Needs to be moved in the Service struct")
 	onu := createTestOnu()
 
-	onu.InternalState.SetState("enabled")
-	assert.Equal(t, onu.InternalState.Current(), "enabled")
+	onu.InternalState.SetState(OnuStateEnabled)
+	assert.Equal(t, onu.InternalState.Current(), OnuStateEnabled)
 
 	// succeed
 	onu.GemPortAdded = true
@@ -133,14 +133,14 @@ func Test_Onu_StateMachine_dhcp_no_auth(t *testing.T) {
 	t.Skip("Needs to be moved in the Service struct")
 	onu := createTestOnu()
 
-	onu.InternalState.SetState("enabled")
-	assert.Equal(t, onu.InternalState.Current(), "enabled")
+	onu.InternalState.SetState(OnuStateEnabled)
+	assert.Equal(t, onu.InternalState.Current(), OnuStateEnabled)
 
 	err := onu.InternalState.Event("start_dhcp")
 	if err == nil {
 		t.Fail()
 	}
-	assert.Equal(t, onu.InternalState.Current(), "enabled")
+	assert.Equal(t, onu.InternalState.Current(), OnuStateEnabled)
 	assert.Equal(t, err.Error(), "transition canceled with error: cannot-go-to-dhcp-started-as-authentication-is-required")
 }
 

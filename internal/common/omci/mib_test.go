@@ -60,7 +60,7 @@ type mibExpected struct {
 
 func createTestMibUploadNextArgs(t *testing.T, tid uint16, seqNumber uint16) mibArgs {
 	mibUploadNext, _ := CreateMibUploadNextRequest(tid, seqNumber)
-	mibUploadNext = hexDecode(mibUploadNext)
+	mibUploadNext = HexDecode(mibUploadNext)
 	mibUploadNextMsg, mibUploadNextPkt := omciBytesToMsg(t, mibUploadNext)
 
 	return mibArgs{

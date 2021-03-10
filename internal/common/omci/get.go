@@ -45,7 +45,7 @@ func ParseGetRequest(omciPkt gopacket.Packet) (*omci.GetRequest, error) {
 	return msgObj, nil
 }
 
-func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openolt.SerialNumber, mds uint8) ([]byte, error) {
+func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openolt.SerialNumber, mds uint8, activeImageEntityId uint16, committedImageEntityId uint16) ([]byte, error) {
 
 	msgObj, err := ParseGetRequest(omciPkt)
 
@@ -66,7 +66,7 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openo
 	case me.OnuGClassID:
 		response = createOnugResponse(msgObj.AttributeMask, msgObj.EntityInstance, onuSn)
 	case me.SoftwareImageClassID:
-		response = createSoftwareImageResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+		response = createSoftwareImageResponse(msgObj.AttributeMask, msgObj.EntityInstance, activeImageEntityId, committedImageEntityId)
 	case me.IpHostConfigDataClassID:
 		response = createIpHostResponse(msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.UniGClassID:
@@ -200,9 +200,24 @@ func createOnugResponse(attributeMask uint16, entityID uint16, onuSn *openolt.Se
 	//}
 }
 
-func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16) *omci.GetResponse {
+func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16, activeImageEntityId uint16, committedImageEntityId uint16) *omci.GetResponse {
+
+	omciLogger.WithFields(log.Fields{
+		"EntityInstance": entityInstance,
+	}).Info("received-get-software-image-request")
+
+	// Only one image can be active and committed
+	committed := 0
+	active := 0
+	if entityInstance == activeImageEntityId {
+		active = 1
+	}
+	if entityInstance == committedImageEntityId {
+		committed = 1
+	}
+
 	// NOTE that we need send the response for the correct ME Instance or the adapter won't process it
-	return &omci.GetResponse{
+	res := &omci.GetResponse{
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.SoftwareImageClassID,
 			EntityInstance: entityInstance,
@@ -210,8 +225,8 @@ func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16) *o
 		Attributes: me.AttributeValueMap{
 			"ManagedEntityId": 0,
 			"Version":         toOctets("00000000000001", 14),
-			"IsCommitted":     1,
-			"IsActive":        1,
+			"IsCommitted":     committed,
+			"IsActive":        active,
 			"IsValid":         1,
 			"ProductCode":     toOctets("product-code", 25),
 			"ImageHash":       toOctets("broadband-sim", 16),
@@ -219,6 +234,15 @@ func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16) *o
 		Result:        me.Success,
 		AttributeMask: attributeMask,
 	}
+
+	omciLogger.WithFields(log.Fields{
+		"omciMessage": res,
+		"entityId":    entityInstance,
+		"active":      active,
+		"committed":   committed,
+	}).Info("Reporting SoftwareImage")
+
+	return res
 }
 
 func createIpHostResponse(attributeMask uint16, entityInstance uint16) *omci.GetResponse {

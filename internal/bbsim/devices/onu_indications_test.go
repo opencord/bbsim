@@ -58,8 +58,8 @@ func Test_Onu_DiscoverIndication_send_on_discovery(t *testing.T) {
 	}
 	ctx, cancel := context.WithCancel(context.TODO())
 	go onu.ProcessOnuMessages(ctx, stream, nil)
-	onu.InternalState.SetState("initialized")
-	_ = onu.InternalState.Event("discover")
+	onu.InternalState.SetState(OnuTxInitialize)
+	_ = onu.InternalState.Event(OnuTxDiscover)
 
 	select {
 	default:
@@ -83,8 +83,8 @@ func Test_Onu_DiscoverIndication_retry_on_discovery(t *testing.T) {
 	}
 	ctx, cancel := context.WithCancel(context.TODO())
 	go onu.ProcessOnuMessages(ctx, stream, nil)
-	onu.InternalState.SetState("initialized")
-	_ = onu.InternalState.Event("discover")
+	onu.InternalState.SetState(OnuStateInitialized)
+	_ = onu.InternalState.Event(OnuTxDiscover)
 
 	select {
 	default:
@@ -106,8 +106,8 @@ func Test_Onu_DiscoverIndication_retry_on_discovery_stops(t *testing.T) {
 	}
 	ctx, cancel := context.WithCancel(context.TODO())
 	go onu.ProcessOnuMessages(ctx, stream, nil)
-	onu.InternalState.SetState("initialized")
-	_ = onu.InternalState.Event("discover")
+	onu.InternalState.SetState(OnuStateInitialized)
+	_ = onu.InternalState.Event(OnuTxDiscover)
 
 	go func() {
 		for calls := range stream.channel {

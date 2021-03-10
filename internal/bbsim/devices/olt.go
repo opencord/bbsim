@@ -47,6 +47,17 @@ var oltLogger = log.WithFields(log.Fields{
 	"module": "OLT",
 })
 
+const (
+	onuIdStart     = 1
+	onuIdEnd       = 127
+	allocIdStart   = 1024
+	allocIdEnd     = 16383
+	gemportIdStart = 1024
+	gemportIdEnd   = 65535
+	flowIdStart    = 1
+	flowIdEnd      = 65535
+)
+
 type OltDevice struct {
 	sync.Mutex
 	OltServer *grpc.Server
@@ -288,7 +299,7 @@ func (o *OltDevice) RestartOLT() error {
 			}
 
 			for _, onu := range pon.Onus {
-				_ = onu.InternalState.Event("disable")
+				_ = onu.InternalState.Event(OnuTxDisable)
 			}
 		}
 	} else {
@@ -297,7 +308,7 @@ func (o *OltDevice) RestartOLT() error {
 			// ONUs are not automatically disabled when a PON goes down
 			// as it's possible that it's an admin down and in that case the ONUs need to keep their state
 			for _, onu := range pon.Onus {
-				_ = onu.InternalState.Event("disable")
+				_ = onu.InternalState.Event(OnuTxDisable)
 			}
 		}
 	}
@@ -821,12 +832,12 @@ func (o *OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*ope
 			"OnuId":  _onu.ID,
 		}).Infof("Failed to transition ONU.OperState to enabled state: %s", err.Error())
 	}
-	if err := _onu.InternalState.Event("enable"); err != nil {
+	if err := _onu.InternalState.Event(OnuTxEnable); err != nil {
 		oltLogger.WithFields(log.Fields{
 			"IntfId": _onu.PonPortID,
 			"OnuSn":  _onu.Sn(),
 			"OnuId":  _onu.ID,
-		}).Infof("Failed to transition ONU to enabled state: %s", err.Error())
+		}).Infof("Failed to transition ONU to %s state: %s", OnuStateEnabled, err.Error())
 	}
 
 	// NOTE we need to immediately activate the ONU or the OMCI state machine won't start
@@ -862,12 +873,12 @@ func (o *OltDevice) DeleteOnu(_ context.Context, onu *openolt.Onu) (*openolt.Emp
 		}).Error("Can't find Onu")
 	}
 
-	if err := _onu.InternalState.Event("disable"); err != nil {
+	if err := _onu.InternalState.Event(OnuTxDisable); err != nil {
 		oltLogger.WithFields(log.Fields{
 			"IntfId": _onu.PonPortID,
 			"OnuSn":  _onu.Sn(),
 			"OnuId":  _onu.ID,
-		}).Infof("Failed to transition ONU to disabled state: %s", err.Error())
+		}).Infof("Failed to transition ONU to %s state: %s", OnuStateDisabled, err.Error())
 	}
 
 	// ONU Re-Discovery
@@ -1084,14 +1095,23 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 
 		// if its ONU flow remove it from ONU also
 		if storedFlow.AccessIntfId != -1 {
-			pon := o.Pons[uint32(storedFlow.AccessIntfId)]
+			pon, err := o.GetPonById(uint32(storedFlow.AccessIntfId))
+			if err != nil {
+				oltLogger.WithFields(log.Fields{
+					"OnuId":  storedFlow.OnuId,
+					"IntfId": storedFlow.AccessIntfId,
+					"PONs":   olt.Pons,
+					"err":    err,
+				}).Error("PON-port-not-found")
+				return new(openolt.Empty), nil
+			}
 			onu, err := pon.GetOnuById(uint32(storedFlow.OnuId))
 			if err != nil {
 				oltLogger.WithFields(log.Fields{
 					"OnuId":  storedFlow.OnuId,
 					"IntfId": storedFlow.AccessIntfId,
 					"err":    err,
-				}).Error("ONU not found")
+				}).Error("ONU-not-found")
 				return new(openolt.Empty), nil
 			}
 			onu.DeleteFlow(flowKey)
@@ -1157,24 +1177,67 @@ func (o *OltDevice) GetOnuByFlowId(flowId uint64) (*Onu, error) {
 
 func (o *OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.DeviceInfo, error) {
 
-	devinfo := new(openolt.DeviceInfo)
-	devinfo.Vendor = common.Config.Olt.Vendor
-	devinfo.Model = common.Config.Olt.Model
-	devinfo.HardwareVersion = common.Config.Olt.HardwareVersion
-	devinfo.FirmwareVersion = common.Config.Olt.FirmwareVersion
-	devinfo.Technology = common.Config.Olt.Technology
-	devinfo.PonPorts = uint32(o.NumPon)
-	devinfo.OnuIdStart = 1
-	devinfo.OnuIdEnd = 255
-	devinfo.AllocIdStart = 1024
-	devinfo.AllocIdEnd = 16383
-	devinfo.GemportIdStart = 1024
-	devinfo.GemportIdEnd = 65535
-	devinfo.FlowIdStart = 1
-	devinfo.FlowIdEnd = 16383
-	devinfo.DeviceSerialNumber = o.SerialNumber
-	devinfo.DeviceId = common.Config.Olt.DeviceId
-	devinfo.PreviouslyConnected = o.PreviouslyConnected
+	oltLogger.WithFields(log.Fields{
+		"oltId":    o.ID,
+		"PonPorts": o.NumPon,
+	}).Info("OLT receives GetDeviceInfo call from VOLTHA")
+
+	intfIDs := []uint32{}
+	for i := 0; i < o.NumPon; i++ {
+		intfIDs = append(intfIDs, uint32(i))
+	}
+
+	devinfo := &openolt.DeviceInfo{
+		Vendor:              common.Config.Olt.Vendor,
+		Model:               common.Config.Olt.Model,
+		HardwareVersion:     common.Config.Olt.HardwareVersion,
+		FirmwareVersion:     common.Config.Olt.FirmwareVersion,
+		Technology:          common.Config.Olt.Technology,
+		PonPorts:            uint32(o.NumPon),
+		OnuIdStart:          onuIdStart,
+		OnuIdEnd:            onuIdEnd,
+		AllocIdStart:        allocIdStart,
+		AllocIdEnd:          allocIdEnd,
+		GemportIdStart:      gemportIdStart,
+		GemportIdEnd:        gemportIdEnd,
+		FlowIdStart:         flowIdStart,
+		FlowIdEnd:           flowIdEnd,
+		DeviceSerialNumber:  o.SerialNumber,
+		DeviceId:            common.Config.Olt.DeviceId,
+		PreviouslyConnected: o.PreviouslyConnected,
+		Ranges: []*openolt.DeviceInfo_DeviceResourceRanges{
+			{
+				IntfIds:    intfIDs,
+				Technology: common.Config.Olt.Technology,
+				Pools: []*openolt.DeviceInfo_DeviceResourceRanges_Pool{
+					{
+						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_ONU_ID,
+						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
+						Start:   onuIdStart,
+						End:     onuIdEnd,
+					},
+					{
+						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_ALLOC_ID,
+						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
+						Start:   allocIdStart,
+						End:     allocIdEnd,
+					},
+					{
+						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_GEMPORT_ID,
+						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
+						Start:   gemportIdStart,
+						End:     gemportIdEnd,
+					},
+					{
+						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_FLOW_ID,
+						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_SHARED_BY_ALL_INTF_ALL_TECH,
+						Start:   flowIdStart,
+						End:     flowIdEnd,
+					},
+				},
+			},
+		},
+	}
 
 	oltLogger.WithFields(log.Fields{
 		"Vendor":              devinfo.Vendor,

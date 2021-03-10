@@ -74,7 +74,7 @@ github.com/olekukonko/tablewriter
 github.com/opencord/cordctl/pkg/format
 # github.com/opencord/device-management-interface v0.11.0
 github.com/opencord/device-management-interface/go/dmi
-# github.com/opencord/omci-lib-go v0.15.4
+# github.com/opencord/omci-lib-go v0.16.1
 github.com/opencord/omci-lib-go
 github.com/opencord/omci-lib-go/generated
 # github.com/opencord/voltha-protos/v4 v4.0.15
