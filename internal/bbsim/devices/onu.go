@@ -46,6 +46,20 @@ var onuLogger = log.WithFields(log.Fields{
 	"module": "ONU",
 })
 
+const (
+	// ONU transitions
+	OnuTxEnable                = "enable"
+	OnuTxStartImageDownload    = "start_image_download"
+	OnuTxProgressImageDownload = "progress_image_download"
+	OnuTxCompleteImageDownload = "complete_image_download"
+
+	// ONU States
+	OnuStateEnabled                 = "enabled"
+	OnuStateImageDownloadStarted    = "image_download_started"
+	OnuStateImageDownloadInProgress = "image_download_in_progress"
+	OnuStateImageDownloadComplete   = "image_download_completed"
+)
+
 type FlowKey struct {
 	ID        uint64
 	Direction string
@@ -123,11 +137,15 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 			// DEVICE Lifecycle
 			{Name: "initialize", Src: []string{"created", "disabled", "pon_disabled"}, Dst: "initialized"},
 			{Name: "discover", Src: []string{"initialized"}, Dst: "discovered"},
-			{Name: "enable", Src: []string{"discovered", "pon_disabled"}, Dst: "enabled"},
+			{Name: OnuTxEnable, Src: []string{"discovered", "pon_disabled"}, Dst: OnuStateEnabled},
 			// NOTE should disabled state be different for oper_disabled (emulating an error) and admin_disabled (received a disabled call via VOLTHA)?
-			{Name: "disable", Src: []string{"enabled", "pon_disabled"}, Dst: "disabled"},
+			{Name: "disable", Src: []string{OnuStateEnabled, "pon_disabled"}, Dst: "disabled"},
 			// ONU state when PON port is disabled but ONU is power ON(more states should be added in src?)
-			{Name: "pon_disabled", Src: []string{"enabled"}, Dst: "pon_disabled"},
+			{Name: "pon_disabled", Src: []string{OnuStateEnabled}, Dst: "pon_disabled"},
+			// Software Image Download related states
+			{Name: OnuTxStartImageDownload, Src: []string{OnuStateEnabled, OnuStateImageDownloadComplete}, Dst: OnuStateImageDownloadStarted},
+			{Name: OnuTxProgressImageDownload, Src: []string{OnuStateImageDownloadStarted}, Dst: OnuStateImageDownloadInProgress},
+			{Name: OnuTxCompleteImageDownload, Src: []string{OnuStateImageDownloadInProgress}, Dst: OnuStateImageDownloadComplete},
 			// BBR States
 			// TODO add start OMCI state
 			{Name: "send_eapol_flow", Src: []string{"initialized"}, Dst: "eapol_flow_sent"},
@@ -141,7 +159,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 				// create new channel for ProcessOnuMessages Go routine
 				o.Channel = make(chan bbsim.Message, 2048)
 
-				if err := o.OperState.Event("enable"); err != nil {
+				if err := o.OperState.Event(OnuTxEnable); err != nil {
 					onuLogger.WithFields(log.Fields{
 						"OnuId":  o.ID,
 						"IntfId": o.PonPortID,
@@ -554,7 +572,7 @@ func (o *Onu) HandlePowerOnONU() error {
 	// in case of first time o poweron o will be moved to enable on
 	// receiving ActivateOnu request from openolt adapter
 	if intitalState == "disabled" {
-		if err := o.InternalState.Event("enable"); err != nil {
+		if err := o.InternalState.Event(OnuTxEnable); err != nil {
 			onuLogger.WithFields(log.Fields{
 				"OnuId":  o.ID,
 				"IntfId": o.PonPortID,
@@ -634,7 +652,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 		log.WithFields(log.Fields{
 			"IntfId":       o.PonPortID,
 			"SerialNumber": o.Sn(),
-			"omciPacket":   msg.OmciMsg.Pkt,
+			"omciPacket":   omcilib.HexDecode(msg.OmciMsg.Pkt),
 		}).Error("cannot-parse-OMCI-packet")
 	}
 
@@ -829,8 +847,78 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 	case omci.SynchronizeTimeRequestType:
 		// MDS counter increment is not required for this message type
 		responsePkt, _ = omcilib.CreateSyncTimeResponse(omciPkt, omciMsg)
+	case omci.StartSoftwareDownloadRequestType:
+		// TODO compare that the image size is the same as the expected one
+		if responsePkt, errResp = omcilib.CreateStartSoftwareDownloadResponse(omciPkt, omciMsg); errResp == nil {
+			o.MibDataSync++
+			if err := o.InternalState.Event(OnuTxStartImageDownload); err != nil {
+				onuLogger.WithFields(log.Fields{
+					"OnuId":  o.ID,
+					"IntfId": o.PonPortID,
+					"OnuSn":  o.Sn(),
+					"Err":    err.Error(),
+				}).Errorf("cannot-change-onu-internal-state-to-%s", OnuStateImageDownloadStarted)
+			}
+		} else {
+			onuLogger.WithFields(log.Fields{
+				"OmciMsgType":  omciMsg.MessageType,
+				"TransCorrId":  omciMsg.TransactionID,
+				"Err":          err.Error(),
+				"IntfId":       o.PonPortID,
+				"SerialNumber": o.Sn(),
+			}).Error("error-while-processing-start-software-download-request")
+		}
+	case omci.DownloadSectionRequestType:
+		responsePkt, err = omcilib.CreateDownloadSectionResponse(omciPkt, omciMsg)
+		if err != nil {
+			onuLogger.WithFields(log.Fields{
+				"OmciMsgType":  omciMsg.MessageType,
+				"TransCorrId":  omciMsg.TransactionID,
+				"Err":          err.Error(),
+				"IntfId":       o.PonPortID,
+				"SerialNumber": o.Sn(),
+			}).Error("error-while-processing-create-download-section-response")
+			return
+		}
+		if o.InternalState.Current() != OnuStateImageDownloadInProgress {
+			if err := o.InternalState.Event(OnuTxProgressImageDownload); err != nil {
+				onuLogger.WithFields(log.Fields{
+					"OnuId":  o.ID,
+					"IntfId": o.PonPortID,
+					"OnuSn":  o.Sn(),
+					"Err":    err.Error(),
+				}).Errorf("cannot-change-onu-internal-state-to-%s", OnuStateImageDownloadInProgress)
+			}
+		}
+	case omci.EndSoftwareDownloadRequestType:
+
+		// TODO in the startSoftwareDownload we get the image size and the window size
+		// calculate how many DownloadSection we should receive and validate that we got
+		// them when we receive this message
+
+		if responsePkt, errResp = omcilib.CreateEndSoftwareDownloadResponse(omciPkt, omciMsg); errResp == nil {
+			o.MibDataSync++
+			if err := o.InternalState.Event(OnuTxCompleteImageDownload); err != nil {
+				onuLogger.WithFields(log.Fields{
+					"OnuId":  o.ID,
+					"IntfId": o.PonPortID,
+					"OnuSn":  o.Sn(),
+					"Err":    err.Error(),
+				}).Errorf("cannot-change-onu-internal-state-to-%s", OnuStateImageDownloadComplete)
+			}
+		} else {
+			onuLogger.WithFields(log.Fields{
+				"OmciMsgType":  omciMsg.MessageType,
+				"TransCorrId":  omciMsg.TransactionID,
+				"Err":          err.Error(),
+				"IntfId":       o.PonPortID,
+				"SerialNumber": o.Sn(),
+			}).Error("error-while-processing-end-software-download-request")
+		}
 	default:
-		log.WithFields(log.Fields{
+		onuLogger.WithFields(log.Fields{
+			"omciBytes":    hex.EncodeToString(omciPkt.Data()),
+			"omciPkt":      omciPkt,
 			"omciMsgType":  omciMsg.MessageType,
 			"transCorrId":  omciMsg.TransactionID,
 			"IntfId":       o.PonPortID,
