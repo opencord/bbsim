@@ -36,6 +36,23 @@
     },
     {
       "key": {
+        "uuid": "0fd8f57f_a97d9b62",
+        "filename": "go.mod",
+        "patchSetId": 4
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2021-03-10T16:22:48Z",
+      "side": 1,
+      "message": "We might as well upgrade to the latest... we are working on 0.11.0 and if that gets merged first then we would want to set that as the version here.",
+      "revId": "96589442e562b1336964d28431aa9f66c08fd11f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5849f888_c0437f00",
         "filename": "internal/bbsim/dmiserver/dmi_sw_mgmt.go",
         "patchSetId": 4
