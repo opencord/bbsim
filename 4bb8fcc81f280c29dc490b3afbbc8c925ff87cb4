@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "366fd564_aea4f939",
+        "filename": "VERSION",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-03-12T08:02:06Z",
+      "side": 1,
+      "message": "this is un-necessary. either you remove the -dev and release 1.5.1 or just leave to 1.5.1-dev",
+      "revId": "4bb8fcc81f280c29dc490b3afbbc8c925ff87cb4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
