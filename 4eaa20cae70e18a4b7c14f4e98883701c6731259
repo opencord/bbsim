@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "16a74e6d_e3cd4a72",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-12T22:18:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "841035ed_a733878a",
+      "revId": "4eaa20cae70e18a4b7c14f4e98883701c6731259",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36e5cde4_04831d7c",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 10
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "83f35160_8eb6df3b",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-12T22:18:52Z",
+      "side": 1,
+      "message": "I created https://jira.opencord.org/browse/VOL-3905 to address this in the future",
+      "parentUuid": "36e5cde4_04831d7c",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 23
+      },
+      "revId": "4eaa20cae70e18a4b7c14f4e98883701c6731259",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6ee9e5fe_56fc3941",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 10
@@ -53,6 +95,30 @@
       "writtenOn": "2021-03-09T19:51:59Z",
       "side": 1,
       "message": "Did this have any noticeable impact on performance ?",
+      "range": {
+        "startLine": 1602,
+        "startChar": 0,
+        "endLine": 1608,
+        "endChar": 32
+      },
+      "revId": "4eaa20cae70e18a4b7c14f4e98883701c6731259",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e66ca890_bed13031",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 1608,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-12T22:18:52Z",
+      "side": 1,
+      "message": "Nothing visible. The issues found on scale were because of a different reason (addressed in patchset 11)",
+      "parentUuid": "6ee9e5fe_56fc3941",
       "range": {
         "startLine": 1602,
         "startChar": 0,
