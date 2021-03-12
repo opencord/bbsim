@@ -126,6 +126,14 @@ func (s *mockClient) GetLogicalOnuDistance(ctx context.Context, in *openolt.Onu,
 	return nil, errors.New("unimplemented-in-mock-client")
 }
 
+func (s *mockClient) GetGemPortStatistics(ctx context.Context, in *openolt.OnuPacket, opts ...grpc.CallOption) (*openolt.GemPortStatistics, error) {
+	return nil, errors.New("unimplemented-in-mock-client")
+}
+
+func (s *mockClient) GetOnuStatistics(ctx context.Context, in *openolt.Onu, opts ...grpc.CallOption) (*openolt.OnuStatistics, error) {
+	return nil, errors.New("unimplemented-in-mock-client")
+}
+
 // this method creates a fake ONU used in the tests
 func createMockOnu(id uint32, ponPortId uint32) *Onu {
 	o := Onu{
