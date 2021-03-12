@@ -17,7 +17,7 @@ require (
 	github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4
 	github.com/opencord/device-management-interface v0.9.5
 	github.com/opencord/omci-lib-go v0.15.4
-	github.com/opencord/voltha-protos/v4 v4.0.2
+	github.com/opencord/voltha-protos/v4 v4.0.15
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.5.1

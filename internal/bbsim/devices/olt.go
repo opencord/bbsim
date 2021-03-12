@@ -66,6 +66,7 @@ type OltDevice struct {
 	EventChannel         chan common.Event
 	PublishEvents        bool
 	PortStatsInterval    int
+	PreviouslyConnected  bool
 
 	Pons []*PonPort
 	Nnis []*NniPort
@@ -100,16 +101,17 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		OperState: getOperStateFSM(func(e *fsm.Event) {
 			oltLogger.Debugf("Changing OLT OperState from %s to %s", e.Src, e.Dst)
 		}),
-		NumNni:            int(options.Olt.NniPorts),
-		NumPon:            int(options.Olt.PonPorts),
-		NumOnuPerPon:      int(options.Olt.OnusPonPort),
-		Pons:              []*PonPort{},
-		Nnis:              []*NniPort{},
-		Delay:             options.BBSim.Delay,
-		enablePerf:        options.BBSim.EnablePerf,
-		PublishEvents:     options.BBSim.Events,
-		PortStatsInterval: options.Olt.PortStatsInterval,
-		dhcpServer:        dhcp.NewDHCPServer(),
+		NumNni:              int(options.Olt.NniPorts),
+		NumPon:              int(options.Olt.PonPorts),
+		NumOnuPerPon:        int(options.Olt.OnusPonPort),
+		Pons:                []*PonPort{},
+		Nnis:                []*NniPort{},
+		Delay:               options.BBSim.Delay,
+		enablePerf:          options.BBSim.EnablePerf,
+		PublishEvents:       options.BBSim.Events,
+		PortStatsInterval:   options.Olt.PortStatsInterval,
+		dhcpServer:          dhcp.NewDHCPServer(),
+		PreviouslyConnected: false,
 	}
 
 	if val, ok := ControlledActivationModes[options.BBSim.ControlledActivation]; ok {
@@ -243,6 +245,8 @@ func (o *OltDevice) InitOlt() {
 }
 
 func (o *OltDevice) RestartOLT() error {
+
+	o.PreviouslyConnected = false
 
 	softReboot := false
 	rebootDelay := common.Config.Olt.OltRebootDelay
@@ -1153,10 +1157,6 @@ func (o *OltDevice) GetOnuByFlowId(flowId uint64) (*Onu, error) {
 
 func (o *OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.DeviceInfo, error) {
 
-	oltLogger.WithFields(log.Fields{
-		"oltId":    o.ID,
-		"PonPorts": o.NumPon,
-	}).Info("OLT receives GetDeviceInfo call from VOLTHA")
 	devinfo := new(openolt.DeviceInfo)
 	devinfo.Vendor = common.Config.Olt.Vendor
 	devinfo.Model = common.Config.Olt.Model
@@ -1174,6 +1174,30 @@ func (o *OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.Dev
 	devinfo.FlowIdEnd = 16383
 	devinfo.DeviceSerialNumber = o.SerialNumber
 	devinfo.DeviceId = common.Config.Olt.DeviceId
+	devinfo.PreviouslyConnected = o.PreviouslyConnected
+
+	oltLogger.WithFields(log.Fields{
+		"Vendor":              devinfo.Vendor,
+		"Model":               devinfo.Model,
+		"HardwareVersion":     devinfo.HardwareVersion,
+		"FirmwareVersion":     devinfo.FirmwareVersion,
+		"Technology":          devinfo.Technology,
+		"PonPorts":            devinfo.PonPorts,
+		"OnuIdStart":          devinfo.OnuIdStart,
+		"OnuIdEnd":            devinfo.OnuIdEnd,
+		"AllocIdStart":        devinfo.AllocIdStart,
+		"AllocIdEnd":          devinfo.AllocIdEnd,
+		"GemportIdStart":      devinfo.GemportIdStart,
+		"GemportIdEnd":        devinfo.GemportIdEnd,
+		"FlowIdStart":         devinfo.FlowIdStart,
+		"FlowIdEnd":           devinfo.FlowIdEnd,
+		"DeviceSerialNumber":  devinfo.DeviceSerialNumber,
+		"DeviceId":            devinfo.DeviceId,
+		"PreviouslyConnected": devinfo.PreviouslyConnected,
+	}).Info("OLT receives GetDeviceInfo call from VOLTHA")
+
+	// once we connect, set the flag
+	o.PreviouslyConnected = true
 
 	return devinfo, nil
 }
@@ -1442,4 +1466,12 @@ func (o *OltDevice) GetLogicalOnuDistanceZero(ctx context.Context, in *openolt.O
 
 func (o *OltDevice) GetLogicalOnuDistance(ctx context.Context, in *openolt.Onu) (*openolt.OnuLogicalDistance, error) {
 	return &openolt.OnuLogicalDistance{}, nil
+}
+
+func (o *OltDevice) GetGemPortStatistics(ctx context.Context, in *openolt.OnuPacket) (*openolt.GemPortStatistics, error) {
+	return &openolt.GemPortStatistics{}, nil
+}
+
+func (o *OltDevice) GetOnuStatistics(ctx context.Context, in *openolt.Onu) (*openolt.OnuStatistics, error) {
+	return &openolt.OnuStatistics{}, nil
 }
