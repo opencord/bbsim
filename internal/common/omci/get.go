@@ -256,7 +256,8 @@ func createUnigResponse(attributeMask uint16, entityID uint16) *omci.GetResponse
 
 	return &omci.GetResponse{
 		MeBasePacket: omci.MeBasePacket{
-			EntityClass: me.UniGClassID,
+			EntityClass:    me.UniGClassID,
+			EntityInstance: entityID,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,
@@ -294,7 +295,8 @@ func createPptpResponse(attributeMask uint16, entityID uint16) *omci.GetResponse
 
 	return &omci.GetResponse{
 		MeBasePacket: omci.MeBasePacket{
-			EntityClass: me.PhysicalPathTerminationPointEthernetUniClassID,
+			EntityClass:    me.PhysicalPathTerminationPointEthernetUniClassID,
+			EntityInstance: entityID,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,
