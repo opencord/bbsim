@@ -22,6 +22,8 @@ import (
 	"fmt"
 	pb "github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
+	"sync"
+
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
@@ -124,6 +126,8 @@ type Onu struct {
 
 	DoneChannel       chan bool // this channel is used to signal once the onu is complete (when the struct is used by BBR)
 	TrafficSchedulers *tech_profile.TrafficSchedulers
+	onuAlarmsInfoLock sync.RWMutex
+	onuAlarmsInfo     map[omcilib.OnuAlarmInfoMapKey]omcilib.OnuAlarmInfo
 }
 
 func (o *Onu) Sn() string {
@@ -158,7 +162,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 			"ID": o.ID,
 		}).Debugf("Changing ONU OperState from %s to %s", e.Src, e.Dst)
 	})
-
+	o.onuAlarmsInfo = make(map[omcilib.OnuAlarmInfoMapKey]omcilib.OnuAlarmInfo)
 	// NOTE this state machine is used to activate the OMCI, EAPOL and DHCP clients
 	o.InternalState = fsm.NewFSM(
 		OnuStateCreated,
@@ -258,7 +262,6 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 						"OnuSn":  o.Sn(),
 					}).Errorf("Cannot change ONU OperState to down: %s", err.Error())
 				}
-
 				// send the OnuIndication DOWN event
 				msg := bbsim.Message{
 					Type: bbsim.OnuIndication,
@@ -279,6 +282,9 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 				for _, s := range o.Services {
 					s.Disable()
 				}
+				o.onuAlarmsInfoLock.Lock()
+				o.onuAlarmsInfo = make(map[omcilib.OnuAlarmInfoMapKey]omcilib.OnuAlarmInfo) //Basically reset everything on onu disable
+				o.onuAlarmsInfoLock.Unlock()
 			},
 			// BBR states
 			"enter_eapol_flow_sent": func(e *fsm.Event) {
@@ -353,23 +359,40 @@ loop:
 				o.handleOmciRequest(msg, stream)
 			case bbsim.UniStatusAlarm:
 				msg, _ := message.Data.(bbsim.UniStatusAlarmMessage)
-				pkt := omcilib.CreateUniStatusAlarm(msg.AdminState, msg.EntityID)
-				if err := o.sendOmciIndication(pkt, 0, stream); err != nil {
+				onuAlarmMapKey := omcilib.OnuAlarmInfoMapKey{
+					MeInstance: msg.EntityID,
+					MeClassID:  me.PhysicalPathTerminationPointEthernetUniClassID,
+				}
+				seqNo := o.IncrementAlarmSequenceNumber(onuAlarmMapKey)
+				o.onuAlarmsInfoLock.Lock()
+				var alarmInfo = o.onuAlarmsInfo[onuAlarmMapKey]
+				pkt, alarmBitMap := omcilib.CreateUniStatusAlarm(msg.RaiseOMCIAlarm, msg.EntityID, seqNo)
+				if pkt != nil { //pkt will be nil if we are unable to create the alarm
+					if err := o.sendOmciIndication(pkt, 0, stream); err != nil {
+						onuLogger.WithFields(log.Fields{
+							"IntfId":       o.PonPortID,
+							"SerialNumber": o.Sn(),
+							"omciPacket":   pkt,
+							"adminState":   msg.AdminState,
+							"entityID":     msg.EntityID,
+						}).Errorf("failed-to-send-UNI-Link-Alarm: %v", err)
+						alarmInfo.SequenceNo--
+					}
 					onuLogger.WithFields(log.Fields{
 						"IntfId":       o.PonPortID,
 						"SerialNumber": o.Sn(),
 						"omciPacket":   pkt,
 						"adminState":   msg.AdminState,
 						"entityID":     msg.EntityID,
-					}).Errorf("failed-to-send-UNI-Link-Alarm: %v", err)
+					}).Trace("UNI-Link-alarm-sent")
+					if alarmBitMap == [28]byte{0} {
+						delete(o.onuAlarmsInfo, onuAlarmMapKey)
+					} else {
+						alarmInfo.AlarmBitMap = alarmBitMap
+						o.onuAlarmsInfo[onuAlarmMapKey] = alarmInfo
+					}
 				}
-				onuLogger.WithFields(log.Fields{
-					"IntfId":       o.PonPortID,
-					"SerialNumber": o.Sn(),
-					"omciPacket":   pkt,
-					"adminState":   msg.AdminState,
-					"entityID":     msg.EntityID,
-				}).Trace("UNI-Link-alarm-sent")
+				o.onuAlarmsInfoLock.Unlock()
 			case bbsim.FlowAdd:
 				msg, _ := message.Data.(bbsim.OnuFlowUpdateMessage)
 				o.handleFlowAdd(msg)
@@ -450,13 +473,9 @@ loop:
 }
 
 func NewSN(oltid int, intfid uint32, onuid uint32) *openolt.SerialNumber {
-
 	sn := new(openolt.SerialNumber)
-
-	//sn = new(openolt.SerialNumber)
 	sn.VendorId = []byte("BBSM")
 	sn.VendorSpecific = []byte{0, byte(oltid % 256), byte(intfid), byte(onuid)}
-
 	return sn
 }
 
@@ -546,7 +565,7 @@ func (o *Onu) HandleShutdownONU() error {
 
 		return err
 	}
-
+	o.SendOMCIAlarmNotificationMsg(true, losReq.AlarmType)
 	// TODO if it's the last ONU on the PON, then send a PON LOS
 
 	if err := o.InternalState.Event(OnuTxDisable); err != nil {
@@ -591,6 +610,7 @@ func (o *Onu) HandlePowerOnONU() error {
 		}).Errorf("Cannot send LOS: %s", err.Error())
 		return err
 	}
+	o.SendOMCIAlarmNotificationMsg(false, losReq.AlarmType)
 
 	// Send a ONU Discovery indication
 	if err := o.InternalState.Event(OnuTxDiscover); err != nil {
@@ -630,6 +650,11 @@ func (o *Onu) SetAlarm(alarmType string, status string) error {
 	if err != nil {
 		return err
 	}
+	raiseAlarm := false
+	if alarmReq.Status == "on" {
+		raiseAlarm = true
+	}
+	o.SendOMCIAlarmNotificationMsg(raiseAlarm, alarmReq.AlarmType)
 	return nil
 }
 
@@ -730,13 +755,18 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 				// omci/mibpackets.go where the PhysicalPathTerminationPointEthernetUni
 				// are reported during the MIB Upload sequence
 				adminState := msgObj.Attributes["AdministrativeState"].(uint8)
+				raiseOMCIAlarm := false
+				if adminState == 1 {
+					raiseOMCIAlarm = true
+				}
 				msg := bbsim.Message{
 					Type: bbsim.UniStatusAlarm,
 					Data: bbsim.UniStatusAlarmMessage{
-						OnuSN:      o.SerialNumber,
-						OnuID:      o.ID,
-						AdminState: adminState,
-						EntityID:   msgObj.EntityInstance,
+						OnuSN:          o.SerialNumber,
+						OnuID:          o.ID,
+						AdminState:     adminState,
+						EntityID:       msgObj.EntityInstance,
+						RaiseOMCIAlarm: raiseOMCIAlarm,
 					},
 				}
 				o.Channel <- msg
@@ -1055,6 +1085,20 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 				"ActiveImageEntityId":    o.ActiveImageEntityId,
 				"CommittedImageEntityId": o.CommittedImageEntityId,
 			}).Info("onu-software-image-committed")
+		}
+	case omci.GetAllAlarmsRequestType:
+		// Reset the alarm sequence number on receiving get all alarms request.
+		o.onuAlarmsInfoLock.Lock()
+		for key, alarmInfo := range o.onuAlarmsInfo {
+			// reset the alarm sequence no
+			alarmInfo.SequenceNo = 0
+			o.onuAlarmsInfo[key] = alarmInfo
+		}
+		o.onuAlarmsInfoLock.Unlock()
+		responsePkt, _ = omcilib.CreateGetAllAlarmsResponse(omciMsg.TransactionID, o.onuAlarmsInfo)
+	case omci.GetAllAlarmsNextRequestType:
+		if responsePkt, errResp = omcilib.CreateGetAllAlarmsNextResponse(omciPkt, omciMsg, o.onuAlarmsInfo); errResp != nil {
+			responsePkt = nil //Do not send any response for error case
 		}
 	default:
 		onuLogger.WithFields(log.Fields{
@@ -1526,4 +1570,41 @@ func (onu *Onu) findServiceByMacAddress(macAddress net.HardwareAddr) (*Service, 
 		}
 	}
 	return nil, fmt.Errorf("cannot-find-service-with-mac-address-%s", macAddress.String())
+}
+
+func (o *Onu) SendOMCIAlarmNotificationMsg(raiseOMCIAlarm bool, alarmType string) {
+	switch alarmType {
+	case "ONU_ALARM_LOS":
+		msg := bbsim.Message{
+			Type: bbsim.UniStatusAlarm,
+			Data: bbsim.UniStatusAlarmMessage{
+				OnuSN:          o.SerialNumber,
+				OnuID:          o.ID,
+				EntityID:       257,
+				RaiseOMCIAlarm: raiseOMCIAlarm,
+			},
+		}
+		o.Channel <- msg
+	}
+
+}
+
+func (o *Onu) IncrementAlarmSequenceNumber(key omcilib.OnuAlarmInfoMapKey) uint8 {
+	o.onuAlarmsInfoLock.Lock()
+	defer o.onuAlarmsInfoLock.Unlock()
+	if alarmInfo, ok := o.onuAlarmsInfo[key]; ok {
+		if alarmInfo.SequenceNo == 255 {
+			alarmInfo.SequenceNo = 1
+		} else {
+			alarmInfo.SequenceNo++
+		}
+		o.onuAlarmsInfo[key] = alarmInfo
+		return alarmInfo.SequenceNo
+	} else {
+		// This is the first time alarm notification message is being sent
+		o.onuAlarmsInfo[key] = omcilib.OnuAlarmInfo{
+			SequenceNo: 1,
+		}
+		return 1
+	}
 }
