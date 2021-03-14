@@ -117,10 +117,11 @@ type OmciMessage struct {
 }
 
 type UniStatusAlarmMessage struct {
-	OnuSN      *openolt.SerialNumber
-	OnuID      uint32
-	AdminState uint8
-	EntityID   uint16
+	OnuSN          *openolt.SerialNumber
+	OnuID          uint32
+	AdminState     uint8
+	EntityID       uint16
+	RaiseOMCIAlarm bool
 }
 
 // these are OMCI messages going from the OLT to VOLTHA
