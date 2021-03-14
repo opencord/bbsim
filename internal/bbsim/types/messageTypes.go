@@ -121,6 +121,7 @@ type UniStatusAlarmMessage struct {
 	OnuID      uint32
 	AdminState uint8
 	EntityID   uint16
+	RaiseOMCIAlarm bool
 }
 
 // these are OMCI messages going from the OLT to VOLTHA
