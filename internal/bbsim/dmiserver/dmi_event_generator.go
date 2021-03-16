@@ -212,7 +212,7 @@ func thresholdEventGenerationFunc(eventID dmi.EventIds, cType dmi.ComponentType)
 }
 
 // CreateEvent creates and the passed event if it's valid and sends it to the msg bus
-func (das *DmiAPIServer) CreateEvent(ctx context.Context, evt *bbsim.DmiEvent) (*bbsim.DmiCreateEventResponse, error) {
+func (dms *DmiAPIServer) CreateEvent(ctx context.Context, evt *bbsim.DmiEvent) (*bbsim.DmiCreateEventResponse, error) {
 	retFunc := func(code codes.Code, msg string) (*bbsim.DmiCreateEventResponse, error) {
 		res := &bbsim.DmiCreateEventResponse{}
 		res.StatusCode = int32(code)

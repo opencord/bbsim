@@ -328,6 +328,42 @@ $ grpcurl -plaintext -d '{"device_uuid": {"uuid":"5295a1d5-a121-372e-b8dc-6f7eda
   "status": "OK_STATUS"
 }
 ```
+
+### SetLoggingEndpoint API
+``` sh
+$ grpcurl -plaintext -d '{"device_uuid": {"uuid": "5295a1d5-a121-372e-b8dc-6f7eda83f0ba"}, "logging_endpoint": "127.0.0.1:543", "logging_protocol":"syslog"}' 172.17.0.2:50075 dmi.NativeHWManagementService/SetLoggingEndpoint
+{
+  "status": "OK_STATUS"
+}
+```
+
+### GetLoggingEndpoint API
+``` sh
+$ grpcurl -plaintext -d '{"uuid": {"uuid": "5295a1d5-a121-372e-b8dc-6f7eda83f0ba"}}' 172.17.0.2:50075 dmi.NativeHWManagementService/GetLoggingEndpoint
+{
+  "status": "OK_STATUS",
+  "loggingEndpoint": "127.0.0.1:543",
+  "loggingProtocol": "syslog"
+}
+```
+
+### UpdateStartupConfiguration
+``` sh
+$ grpcurl -plaintext -d '{"device_uuid": {"uuid": "5295a1d5-a121-372e-b8dc-6f7eda83f0ba"}}' 172.17.0.2:50075 dmi.NativeSoftwareManagementService/UpdateStartupConfiguration
+{
+  "status": "OK_STATUS"
+}
+```
+
+### GetStartupConfigurationInfo
+``` sh
+$ grpcurl -plaintext -d '{"device_uuid": {"uuid": "5295a1d5-a121-372e-b8dc-6f7eda83f0ba"}}' 172.17.0.2:50075 dmi.NativeSoftwareManagementService/GetStartupConfigurationInfo
+{
+  "status": "OK_STATUS",
+  "version": "BBSIM-STARTUP-CONFIG-DUMMY-VERSION"
+}
+```
+
 ## Generate DMI Events
 Access bbsimctl
 +++++++++++++++

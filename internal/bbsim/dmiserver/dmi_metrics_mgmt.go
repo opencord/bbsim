@@ -48,7 +48,7 @@ func (dms *DmiAPIServer) UpdateMetricsConfiguration(ctx context.Context, req *dm
 			Status: dmi.Status_ERROR_STATUS,
 			//TODO reason must be INVALID_PARAMS, currently this is available in Device Management interface (DMI),
 			// change below reason with type INVALID_PARAMS once DMI is updated
-			Reason: dmi.Reason_UNDEFINED_REASON,
+			Reason: dmi.MetricsConfigurationResponse_INVALID_METRIC,
 		}, status.Errorf(codes.FailedPrecondition, "request is nil")
 	}
 
@@ -81,7 +81,7 @@ func (dms *DmiAPIServer) GetMetric(ctx context.Context, req *dmi.GetMetricReques
 			Status: dmi.Status_ERROR_STATUS,
 			//TODO reason must be INVALID_PARAMS, currently this is not available in Device Management interface (DMI),
 			// change below reason with type INVALID_PARAMS once DMI is updated
-			Reason: dmi.Reason_UNDEFINED_REASON,
+			Reason: dmi.GetMetricResponse_INVALID_METRIC,
 			Metric: &dmi.Metric{},
 		}, status.Errorf(codes.FailedPrecondition, "request is nil")
 	}
@@ -89,7 +89,7 @@ func (dms *DmiAPIServer) GetMetric(ctx context.Context, req *dmi.GetMetricReques
 	if dms.root == nil {
 		return &dmi.GetMetricResponse{
 			Status: dmi.Status_ERROR_STATUS,
-			Reason: dmi.Reason_INTERNAL_ERROR,
+			Reason: dmi.GetMetricResponse_INTERNAL_ERROR,
 			Metric: &dmi.Metric{},
 		}, status.Errorf(codes.FailedPrecondition, "Device is not managed, please start managing device to get the metric")
 	}
@@ -97,7 +97,7 @@ func (dms *DmiAPIServer) GetMetric(ctx context.Context, req *dmi.GetMetricReques
 	metric := getMetric(comp, req.GetMetricId())
 	return &dmi.GetMetricResponse{
 		Status: dmi.Status_OK_STATUS,
-		Reason: dmi.Reason_UNDEFINED_REASON,
+		Reason: dmi.GetMetricResponse_UNDEFINED_REASON,
 		Metric: metric,
 	}, nil
 }
