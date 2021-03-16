@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64d28b10_e3752344",
+        "filename": "Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-16T01:05:06Z",
+      "side": 1,
+      "message": "this can be moved back to 4m, the issue has been solved in Jenkins",
+      "range": {
+        "startLine": 74,
+        "startChar": 34,
+        "endLine": 74,
+        "endChar": 36
+      },
+      "revId": "0d2afe0b8306527bc4aed208d9e0ac36abf452f2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
