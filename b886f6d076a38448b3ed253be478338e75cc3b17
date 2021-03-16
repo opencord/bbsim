@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6a5e5968_351eb440",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-16T17:03:11Z",
+      "side": 1,
+      "message": "everything that sends something on the stream goes through the ONU channel so we don\u0027t have to store the gGRPC stream in the struct. That is done on purpose for 2 reasons:\n- avoid duplicating the stream for each ONU\n- we control via a context the only place in which we use the stream (ProcessOnuMessages) in order to avoid sending messages on a closed stream",
+      "range": {
+        "startLine": 125,
+        "startChar": 1,
+        "endLine": 125,
+        "endChar": 32
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c76f0dde_3792e126",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-16T17:03:11Z",
+      "side": 1,
+      "message": "The reset is generally done in the \"enter_disabled\" callback",
+      "range": {
+        "startLine": 174,
+        "startChar": 4,
+        "endLine": 178,
+        "endChar": 5
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40917316_9bd718b7",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-16T17:03:11Z",
+      "side": 1,
+      "message": "This is the only place where UniStatusAlarmMessage is used, if we need a boolean we can change the UniStatusAlarmMessage format so we don\u0027t need this conversion.",
+      "range": {
+        "startLine": 305,
+        "startChar": 4,
+        "endLine": 307,
+        "endChar": 5
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ac082b9_9e4907ce",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-16T17:03:11Z",
+      "side": 1,
+      "message": "this method could return the SequenceNumber, in that way we don\u0027t need to read it from a map below.",
+      "range": {
+        "startLine": 312,
+        "startChar": 6,
+        "endLine": 312,
+        "endChar": 34
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "22e96838_aec6d47f",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-16T17:03:11Z",
+      "side": 1,
+      "message": "we\u0027re not treating error in the \"CreateUniStatusAlarm\" but returning an array of 0s.\nGiven the check below that means we are removing alarms from \"onuAlarmsInfo\" if an error occurs, not only if the alarm is canceled.",
+      "range": {
+        "startLine": 315,
+        "startChar": 4,
+        "endLine": 315,
+        "endChar": 89
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e443ffc_827a855f",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1244,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-16T17:03:11Z",
+      "side": 1,
+      "message": "same comment as before, if \"IncrementAlarmSequenceNumber\" returns the SeqNo we save a read from the map.",
+      "range": {
+        "startLine": 1242,
+        "startChar": 2,
+        "endLine": 1244,
+        "endChar": 31
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85f20bd4_f95c81f4",
+        "filename": "internal/common/omci/alarms.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-16T17:03:11Z",
+      "side": 1,
+      "message": "why not to store the entire AlarmNotificationMsg instead of the bytes?",
+      "range": {
+        "startLine": 29,
+        "startChar": 13,
+        "endLine": 29,
+        "endChar": 21
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bfd6dbd2_ae1e3442",
+        "filename": "internal/common/omci/alarms.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-16T17:03:11Z",
+      "side": 1,
+      "message": "if it\u0027s an error we should return an error, not \"[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]\"",
+      "range": {
+        "startLine": 52,
+        "startChar": 15,
+        "endLine": 52,
+        "endChar": 25
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "101d9bdb_7fc0fa98",
+        "filename": "internal/common/omci/alarms.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-16T17:03:11Z",
+      "side": 1,
+      "message": "get-all-alarms-next",
+      "range": {
+        "startLine": 131,
+        "startChar": 25,
+        "endLine": 131,
+        "endChar": 38
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd9668a1_ecad6f5f",
+        "filename": "internal/common/omci/alarms.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-16T17:03:11Z",
+      "side": 1,
+      "message": "what happens if the alarm is not in the map?",
+      "range": {
+        "startLine": 147,
+        "startChar": 2,
+        "endLine": 149,
+        "endChar": 3
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
