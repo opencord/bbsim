@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b00a9253_e589f4b5",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 17
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-16T23:58:03Z",
+      "side": 1,
+      "message": "We should not reset the ONU ID",
+      "range": {
+        "startLine": 202,
+        "startChar": 4,
+        "endLine": 202,
+        "endChar": 12
+      },
+      "revId": "2d16e245aeb2848471867342f470a4d6b92e40d3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
