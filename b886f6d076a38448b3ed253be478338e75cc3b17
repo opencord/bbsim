@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "757ba1a5_d0c8b7db",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-03-17T13:03:13Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6a5e5968_351eb440",
+      "range": {
+        "startLine": 125,
+        "startChar": 1,
+        "endLine": 125,
+        "endChar": 32
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c76f0dde_3792e126",
         "filename": "internal/bbsim/devices/onu.go",
         "patchSetId": 2
@@ -45,6 +69,30 @@
       "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fece665e_ff2dcee2",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-03-17T13:03:13Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c76f0dde_3792e126",
+      "range": {
+        "startLine": 174,
+        "startChar": 4,
+        "endLine": 178,
+        "endChar": 5
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "197454cb_e01d04f6",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-03-17T13:03:13Z",
+      "side": 1,
+      "message": "yes but since the unistatusalarmmessage contains admin state we can identify based on that whether we need to raise or clear the alarm. Earlier also the createunistatusalarm function was deciding this based on the admin state only.",
+      "parentUuid": "40917316_9bd718b7",
+      "range": {
+        "startLine": 305,
+        "startChar": 4,
+        "endLine": 307,
+        "endChar": 5
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8ac082b9_9e4907ce",
         "filename": "internal/bbsim/devices/onu.go",
         "patchSetId": 2
@@ -91,6 +163,30 @@
       "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a4d64965_74a5d38f",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-03-17T13:03:13Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8ac082b9_9e4907ce",
+      "range": {
+        "startLine": 312,
+        "startChar": 6,
+        "endLine": 312,
+        "endChar": 34
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "6856a544_e2cd5e2a",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-03-17T13:03:13Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "22e96838_aec6d47f",
+      "range": {
+        "startLine": 315,
+        "startChar": 4,
+        "endLine": 315,
+        "endChar": 89
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4e443ffc_827a855f",
         "filename": "internal/bbsim/devices/onu.go",
         "patchSetId": 2
@@ -137,6 +257,30 @@
       "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ebec9c59_a418cb45",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1244,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-03-17T13:03:13Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4e443ffc_827a855f",
+      "range": {
+        "startLine": 1242,
+        "startChar": 2,
+        "endLine": 1244,
+        "endChar": 31
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "7c95d0df_d476571b",
+        "filename": "internal/common/omci/alarms.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-03-17T13:03:13Z",
+      "side": 1,
+      "message": "If we store the entire message, again we will have to extract the bitmap from it. We just want what is the bitmap and sequnce no for a me Instance.",
+      "parentUuid": "85f20bd4_f95c81f4",
+      "range": {
+        "startLine": 29,
+        "startChar": 13,
+        "endLine": 29,
+        "endChar": 21
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bfd6dbd2_ae1e3442",
         "filename": "internal/common/omci/alarms.go",
         "patchSetId": 2
@@ -183,6 +351,30 @@
       "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "085db3d5_0a7127b1",
+        "filename": "internal/common/omci/alarms.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-03-17T13:03:13Z",
+      "side": 1,
+      "message": "Will check pkt \u003d\u003d nil for error.",
+      "parentUuid": "bfd6dbd2_ae1e3442",
+      "range": {
+        "startLine": 52,
+        "startChar": 15,
+        "endLine": 52,
+        "endChar": 25
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -209,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "8e5cc8ba_aa57f1e5",
+        "filename": "internal/common/omci/alarms.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-03-17T13:03:13Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "101d9bdb_7fc0fa98",
+      "range": {
+        "startLine": 131,
+        "startChar": 25,
+        "endLine": 131,
+        "endChar": 38
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fd9668a1_ecad6f5f",
         "filename": "internal/common/omci/alarms.go",
         "patchSetId": 2
@@ -220,6 +436,30 @@
       "writtenOn": "2021-03-16T17:03:11Z",
       "side": 1,
       "message": "what happens if the alarm is not in the map?",
+      "range": {
+        "startLine": 147,
+        "startChar": 2,
+        "endLine": 149,
+        "endChar": 3
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd813934_dfe750d3",
+        "filename": "internal/common/omci/alarms.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-03-17T13:03:13Z",
+      "side": 1,
+      "message": "ideally it should not happen. But we can safeguard by either not replying to this request. I am not sure how to handle invalid request received, I mean there is no field to reply failure. so what can be done?",
+      "parentUuid": "fd9668a1_ecad6f5f",
       "range": {
         "startLine": 147,
         "startChar": 2,
