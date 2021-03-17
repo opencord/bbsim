@@ -20,13 +20,14 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
-	"github.com/opencord/bbsim/internal/bbsim/types"
-	"github.com/opencord/voltha-protos/v4/go/ext/config"
 	"net"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
+	"github.com/opencord/bbsim/internal/bbsim/types"
+	"github.com/opencord/voltha-protos/v4/go/ext/config"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -1171,7 +1172,7 @@ func (o *OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.Dev
 	devinfo.GemportIdStart = 1024
 	devinfo.GemportIdEnd = 65535
 	devinfo.FlowIdStart = 1
-	devinfo.FlowIdEnd = 16383
+	devinfo.FlowIdEnd = 32767
 	devinfo.DeviceSerialNumber = o.SerialNumber
 	devinfo.DeviceId = common.Config.Olt.DeviceId
 	devinfo.PreviouslyConnected = o.PreviouslyConnected
@@ -1195,6 +1196,43 @@ func (o *OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.Dev
 		"DeviceId":            devinfo.DeviceId,
 		"PreviouslyConnected": devinfo.PreviouslyConnected,
 	}).Info("OLT receives GetDeviceInfo call from VOLTHA")
+
+	var ranges openolt.DeviceInfo_DeviceResourceRanges
+	ranges.Technology = devinfo.GetTechnology()
+
+	var index uint32
+	for index = 0; index < devinfo.PonPorts; index++ {
+		ranges.IntfIds = append(ranges.IntfIds, index)
+	}
+	var onuPool openolt.DeviceInfo_DeviceResourceRanges_Pool
+	onuPool.Type = openolt.DeviceInfo_DeviceResourceRanges_Pool_ONU_ID
+	onuPool.Start = devinfo.OnuIdStart
+	onuPool.End = devinfo.OnuIdEnd
+	onuPool.Sharing = openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF
+	ranges.Pools = append(ranges.Pools, &onuPool)
+
+	var allocPool openolt.DeviceInfo_DeviceResourceRanges_Pool
+	allocPool.Type = openolt.DeviceInfo_DeviceResourceRanges_Pool_ALLOC_ID
+	allocPool.Start = devinfo.AllocIdStart
+	allocPool.End = devinfo.AllocIdEnd
+	allocPool.Sharing = openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF
+	ranges.Pools = append(ranges.Pools, &allocPool)
+
+	var gemPool openolt.DeviceInfo_DeviceResourceRanges_Pool
+	gemPool.Type = openolt.DeviceInfo_DeviceResourceRanges_Pool_GEMPORT_ID
+	gemPool.Start = devinfo.GemportIdStart
+	gemPool.End = devinfo.GemportIdEnd
+	gemPool.Sharing = openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF
+	ranges.Pools = append(ranges.Pools, &gemPool)
+
+	var flowPool openolt.DeviceInfo_DeviceResourceRanges_Pool
+	flowPool.Type = openolt.DeviceInfo_DeviceResourceRanges_Pool_FLOW_ID
+	flowPool.Start = devinfo.FlowIdStart
+	flowPool.End = devinfo.FlowIdEnd
+	flowPool.Sharing = openolt.DeviceInfo_DeviceResourceRanges_Pool_SHARED_BY_ALL_INTF_ALL_TECH
+	ranges.Pools = append(ranges.Pools, &flowPool)
+	// Add to device info
+	devinfo.Ranges = append(devinfo.Ranges, &ranges)
 
 	// once we connect, set the flag
 	o.PreviouslyConnected = true
