@@ -469,6 +469,30 @@
       "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6d48a237_dac3a4d6",
+        "filename": "internal/common/omci/alarms.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-17T22:24:43Z",
+      "side": 1,
+      "message": "we should return an error so the calling code can return and avoid sending an empty packet",
+      "parentUuid": "fd813934_dfe750d3",
+      "range": {
+        "startLine": 147,
+        "startChar": 2,
+        "endLine": 149,
+        "endChar": 3
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
