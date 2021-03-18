@@ -49,7 +49,7 @@ var oltLogger = log.WithFields(log.Fields{
 
 type OltDevice struct {
 	sync.Mutex
-	oltServer *grpc.Server
+	OltServer *grpc.Server
 
 	// BBSIM Internals
 	ID                   int
@@ -226,8 +226,8 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 
 func (o *OltDevice) InitOlt() {
 
-	if o.oltServer == nil {
-		o.oltServer, _ = o.StartOltServer()
+	if o.OltServer == nil {
+		o.OltServer, _ = o.StartOltServer()
 	} else {
 		oltLogger.Fatal("OLT server already running.")
 	}
@@ -355,12 +355,12 @@ func (o *OltDevice) StartOltServer() (*grpc.Server, error) {
 
 // StopOltServer stops the OpenOLT grpc server
 func (o *OltDevice) StopOltServer() {
-	if o.oltServer != nil {
+	if o.OltServer != nil {
 		oltLogger.WithFields(log.Fields{
 			"oltId": o.SerialNumber,
 		}).Warnf("Stopping OLT gRPC server")
-		o.oltServer.Stop()
-		o.oltServer = nil
+		o.OltServer.Stop()
+		o.OltServer = nil
 	}
 }
 

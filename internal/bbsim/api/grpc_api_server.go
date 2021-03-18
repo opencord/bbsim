@@ -149,10 +149,15 @@ func (s BBSimServer) StartgRPCServer(ctx context.Context, req *bbsim.Empty) (*bb
 
 	logger.Infof("Received request to start Openolt gRPC Server")
 
-	_, err := o.StartOltServer()
+	if o.OltServer != nil {
+		return nil, fmt.Errorf("Openolt gRPC server already running.")
+	}
+
+	oltGrpcServer, err := o.StartOltServer()
 	if err != nil {
 		return nil, err
 	}
+	o.OltServer = oltGrpcServer
 
 	return res, nil
 }
@@ -168,12 +173,13 @@ func (s BBSimServer) RestartgRPCServer(ctx context.Context, req *bbsim.Timeout) 
 
 	go func() {
 		time.Sleep(time.Duration(req.Delay) * time.Second)
-		_, err := o.StartOltServer()
+		oltGrpcServer, err := o.StartOltServer()
 		if err != nil {
 			logger.WithFields(log.Fields{
 				"err": err,
 			}).Error("Cannot restart Openolt gRPC server")
 		}
+		o.OltServer = oltGrpcServer
 		logger.Infof("Openolt gRPC Server restarted after %v seconds", req.Delay)
 	}()
 
