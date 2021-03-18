@@ -493,6 +493,30 @@
       "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65feb366_bcbea776",
+        "filename": "internal/common/omci/alarms.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-03-18T12:03:15Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6d48a237_dac3a4d6",
+      "range": {
+        "startLine": 147,
+        "startChar": 2,
+        "endLine": 149,
+        "endChar": 3
+      },
+      "revId": "b886f6d076a38448b3ed253be478338e75cc3b17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }

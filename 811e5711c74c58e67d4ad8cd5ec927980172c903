@@ -22,6 +22,30 @@
       "revId": "811e5711c74c58e67d4ad8cd5ec927980172c903",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0970445_1429ca57",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-03-18T12:03:15Z",
+      "side": 1,
+      "message": "yes there can be a slight window where in onu is sending alarm notification messages as well as get requests for getallalarms and getallalarmsnextrequest. It would be better to add a lock.",
+      "parentUuid": "3d28d6e9_568dd518",
+      "range": {
+        "startLine": 306,
+        "startChar": 4,
+        "endLine": 306,
+        "endChar": 51
+      },
+      "revId": "811e5711c74c58e67d4ad8cd5ec927980172c903",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
