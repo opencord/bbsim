@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dad58319_8dfac23e",
+        "filename": "internal/bbsim/api/grpc_api_server.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-03-18T10:56:51Z",
+      "side": 1,
+      "message": "you can avoid the else clause, you are already returning in the if when the erro is present.",
+      "revId": "b6bd0f935c64cff69bbe20fe2c27ed88799b1e68",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8060769_f96a5fdf",
+        "filename": "internal/bbsim/api/grpc_api_server.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-03-18T10:56:51Z",
+      "side": 1,
+      "message": "this should return the error, then sae comment on the else clause.",
+      "revId": "b6bd0f935c64cff69bbe20fe2c27ed88799b1e68",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
