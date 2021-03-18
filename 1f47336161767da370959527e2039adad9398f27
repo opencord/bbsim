@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "769cb5cf_21bbb447",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-18T20:17:15Z",
+      "side": 1,
+      "message": "why the parenthesis?",
+      "range": {
+        "startLine": 225,
+        "startChar": 4,
+        "endLine": 225,
+        "endChar": 21
+      },
+      "revId": "1f47336161767da370959527e2039adad9398f27",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
