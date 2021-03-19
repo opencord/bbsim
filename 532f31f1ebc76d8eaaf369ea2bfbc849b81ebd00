@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c3d120c_1a29aa2b",
+        "filename": "VERSION",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-03-19T08:23:41Z",
+      "side": 1,
+      "message": "this must be 1.5.3-dev",
+      "revId": "532f31f1ebc76d8eaaf369ea2bfbc849b81ebd00",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
