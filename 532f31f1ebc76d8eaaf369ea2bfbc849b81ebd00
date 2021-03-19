@@ -34,6 +34,24 @@
       "revId": "532f31f1ebc76d8eaaf369ea2bfbc849b81ebd00",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cf531af_3402859a",
+        "filename": "VERSION",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-03-19T09:24:41Z",
+      "side": 1,
+      "message": "my bad, I looked against a patchset and not the base, 1.5.2-dev is correct, please revert, sorry again.",
+      "parentUuid": "30cfe077_8a308086",
+      "revId": "532f31f1ebc76d8eaaf369ea2bfbc849b81ebd00",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
