@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7b445a75_06ce3f1b",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1345,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-19T23:17:21Z",
+      "side": 1,
+      "message": "yep, good catch, let\u0027s return an error to the adapter",
+      "parentUuid": "a630e565_98ee5686",
+      "revId": "ee8f94a1eabd5eab7972534680f87c4ed0dc57a0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "145ca58f_1e750c3c",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 1
@@ -33,6 +51,24 @@
       "revId": "ee8f94a1eabd5eab7972534680f87c4ed0dc57a0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "870a965f_92520cdb",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1347,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-03-19T23:17:21Z",
+      "side": 1,
+      "message": "BBSim shuts down the channel on \"disable\" and OMCI is only checked but not used to configure the device, so it should be fine.",
+      "parentUuid": "145ca58f_1e750c3c",
+      "revId": "ee8f94a1eabd5eab7972534680f87c4ed0dc57a0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
