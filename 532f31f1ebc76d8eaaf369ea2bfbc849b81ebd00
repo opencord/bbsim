@@ -16,6 +16,24 @@
       "revId": "532f31f1ebc76d8eaaf369ea2bfbc849b81ebd00",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30cfe077_8a308086",
+        "filename": "VERSION",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000741
+      },
+      "writtenOn": "2021-03-19T09:02:31Z",
+      "side": 1,
+      "message": "1.5.2 has not yet released. So, 1.5.2-dev is correct. Later once 1.5.2 gets released then change to 1.5.3-dev is valid. Let me know if my understanding needs correction.",
+      "parentUuid": "4c3d120c_1a29aa2b",
+      "revId": "532f31f1ebc76d8eaaf369ea2bfbc849b81ebd00",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
