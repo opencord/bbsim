@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9edd17c_7814c694",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 781,
+      "author": {
+        "id": 1000741
+      },
+      "writtenOn": "2021-03-19T14:05:36Z",
+      "side": 1,
+      "message": "Also, o.ImageSoftwareReceivedSections should be set/reset to zero here. \nElse, on each subsequent run below error will be generated: \n\ntime\u003d\"2021-03-19T12:25:18Z\" level\u003derror msg\u003donu-did-not-receive-all-image-sections ExpectedSections\u003d1022 IntfId\u003d0 OnuId\u003d1 OnuSn\u003dBBSM000a0001 ReceivedSections\u003d2044 module\u003dONU \n\ntime\u003d\"2021-03-19T13:21:31Z\" level\u003derror msg\u003donu-did-not-receive-all-image-sections ExpectedSections\u003d1022 IntfId\u003d0 OnuId\u003d1 OnuSn\u003dBBSM000a0001 ReceivedSections\u003d3066 module\u003dONU",
+      "revId": "0cdfadbcd042dd0d2d349e4fe775b99f60e88633",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
