@@ -660,7 +660,7 @@ func (o *Onu) SetAlarm(alarmType string, status string) error {
 
 func (o *Onu) publishOmciEvent(msg bbsim.OmciMessage) {
 	if olt.PublishEvents {
-		_, omciMsg, err := omcilib.ParseOpenOltOmciPacket(msg.OmciMsg.Pkt)
+		_, omciMsg, err := omcilib.ParseOpenOltOmciPacket(msg.OmciPkt.Data())
 		if err != nil {
 			log.Errorf("error in getting msgType %v", err)
 			return
@@ -679,7 +679,7 @@ func (o *Onu) publishOmciEvent(msg bbsim.OmciMessage) {
 
 // Create a TestResponse packet and send it
 func (o *Onu) sendTestResult(msg bbsim.OmciMessage, stream openolt.Openolt_EnableIndicationServer) error {
-	resp, err := omcilib.BuildTestResult(msg.OmciMsg.Pkt)
+	resp, err := omcilib.BuildTestResult(msg.OmciPkt.Data())
 	if err != nil {
 		return err
 	}
@@ -706,44 +706,35 @@ func (o *Onu) sendTestResult(msg bbsim.OmciMessage, stream openolt.Openolt_Enabl
 // and generate the appropriate response to it
 func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_EnableIndicationServer) {
 
-	omciPkt, omciMsg, err := omcilib.ParseOpenOltOmciPacket(msg.OmciMsg.Pkt)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"IntfId":       o.PonPortID,
-			"SerialNumber": o.Sn(),
-			"omciPacket":   omcilib.HexDecode(msg.OmciMsg.Pkt),
-		}).Error("cannot-parse-OMCI-packet")
-	}
-
 	onuLogger.WithFields(log.Fields{
-		"omciMsgType":  omciMsg.MessageType,
-		"transCorrId":  strconv.FormatInt(int64(omciMsg.TransactionID), 16),
-		"DeviceIdent":  omciMsg.DeviceIdentifier,
+		"omciMsgType":  msg.OmciMsg.MessageType,
+		"transCorrId":  strconv.FormatInt(int64(msg.OmciMsg.TransactionID), 16),
+		"DeviceIdent":  msg.OmciMsg.DeviceIdentifier,
 		"IntfId":       o.PonPortID,
 		"SerialNumber": o.Sn(),
 	}).Trace("omci-message-decoded")
 
 	var responsePkt []byte
 	var errResp error
-	switch omciMsg.MessageType {
+	switch msg.OmciMsg.MessageType {
 	case omci.MibResetRequestType:
 		onuLogger.WithFields(log.Fields{
 			"IntfId":       o.PonPortID,
 			"OnuId":        o.ID,
 			"SerialNumber": o.Sn(),
 		}).Debug("received-mib-reset-request-resetting-mds")
-		if responsePkt, errResp = omcilib.CreateMibResetResponse(omciMsg.TransactionID); errResp == nil {
+		if responsePkt, errResp = omcilib.CreateMibResetResponse(msg.OmciMsg.TransactionID); errResp == nil {
 			o.MibDataSync = 0
 		}
 	case omci.MibUploadRequestType:
-		responsePkt, _ = omcilib.CreateMibUploadResponse(omciMsg.TransactionID)
+		responsePkt, _ = omcilib.CreateMibUploadResponse(msg.OmciMsg.TransactionID)
 	case omci.MibUploadNextRequestType:
-		responsePkt, _ = omcilib.CreateMibUploadNextResponse(omciPkt, omciMsg, o.MibDataSync)
+		responsePkt, _ = omcilib.CreateMibUploadNextResponse(msg.OmciPkt, msg.OmciMsg, o.MibDataSync)
 	case omci.GetRequestType:
-		responsePkt, _ = omcilib.CreateGetResponse(omciPkt, omciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId, o.CommittedImageEntityId)
+		responsePkt, _ = omcilib.CreateGetResponse(msg.OmciPkt, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId, o.CommittedImageEntityId)
 	case omci.SetRequestType:
 		success := true
-		msgObj, _ := omcilib.ParseSetRequest(omciPkt)
+		msgObj, _ := omcilib.ParseSetRequest(msg.OmciPkt)
 		switch msgObj.EntityClass {
 		case me.PhysicalPathTerminationPointEthernetUniClassID:
 			// if we're Setting a PPTP state
@@ -809,17 +800,17 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 		}
 
 		if success {
-			if responsePkt, errResp = omcilib.CreateSetResponse(omciPkt, omciMsg, me.Success); errResp == nil {
+			if responsePkt, errResp = omcilib.CreateSetResponse(msg.OmciPkt, msg.OmciMsg, me.Success); errResp == nil {
 				o.MibDataSync++
 			}
 		} else {
-			responsePkt, _ = omcilib.CreateSetResponse(omciPkt, omciMsg, me.AttributeFailure)
+			responsePkt, _ = omcilib.CreateSetResponse(msg.OmciPkt, msg.OmciMsg, me.AttributeFailure)
 		}
 	case omci.CreateRequestType:
 		// check for GemPortNetworkCtp and make sure there are no duplicates on the same PON
 		var used bool
 		var sn *openolt.SerialNumber
-		msgObj, err := omcilib.ParseCreateRequest(omciPkt)
+		msgObj, err := omcilib.ParseCreateRequest(msg.OmciPkt)
 		if err == nil {
 			if msgObj.EntityClass == me.GemPortNetworkCtpClassID {
 				if used, sn = o.PonPort.isGemPortAllocated(msgObj.EntityInstance); used {
@@ -846,14 +837,14 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 		// for now the CreateRequeste for the gemPort is the only one that can fail, if we start supporting multiple
 		// validation this check will need to be rewritten
 		if !used {
-			if responsePkt, errResp = omcilib.CreateCreateResponse(omciPkt, omciMsg, me.Success); errResp == nil {
+			if responsePkt, errResp = omcilib.CreateCreateResponse(msg.OmciPkt, msg.OmciMsg, me.Success); errResp == nil {
 				o.MibDataSync++
 			}
 		} else {
-			responsePkt, _ = omcilib.CreateCreateResponse(omciPkt, omciMsg, me.ProcessingError)
+			responsePkt, _ = omcilib.CreateCreateResponse(msg.OmciPkt, msg.OmciMsg, me.ProcessingError)
 		}
 	case omci.DeleteRequestType:
-		msgObj, err := omcilib.ParseDeleteRequest(omciPkt)
+		msgObj, err := omcilib.ParseDeleteRequest(msg.OmciPkt)
 		if err == nil {
 			if msgObj.EntityClass == me.GemPortNetworkCtpClassID {
 				onuLogger.WithFields(log.Fields{
@@ -866,12 +857,12 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			}
 		}
 
-		if responsePkt, errResp = omcilib.CreateDeleteResponse(omciPkt, omciMsg); errResp == nil {
+		if responsePkt, errResp = omcilib.CreateDeleteResponse(msg.OmciPkt, msg.OmciMsg); errResp == nil {
 			o.MibDataSync++
 		}
 	case omci.RebootRequestType:
 
-		responsePkt, _ = omcilib.CreateRebootResponse(omciPkt, omciMsg)
+		responsePkt, _ = omcilib.CreateRebootResponse(msg.OmciPkt, msg.OmciMsg)
 
 		// powercycle the ONU
 		// we run this in a separate goroutine so that
@@ -893,14 +884,14 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 		//     second packet, TestResult, reports the result of running the self-test
 		// TestResult can come some time after a TestResponse
 		//     TODO: Implement some delay between the TestResponse and the TestResult
-		isTest, err := omcilib.IsTestRequest(msg.OmciMsg.Pkt)
+		isTest, err := omcilib.IsTestRequest(msg.OmciPkt.Data())
 		if (err == nil) && (isTest) {
 			if sendErr := o.sendTestResult(msg, stream); sendErr != nil {
 				onuLogger.WithFields(log.Fields{
 					"IntfId":       o.PonPortID,
 					"OnuId":        o.ID,
 					"SerialNumber": o.Sn(),
-					"omciPacket":   msg.OmciMsg.Pkt,
+					"omciPacket":   msg.OmciPkt.Data(),
 					"msg":          msg,
 					"err":          sendErr,
 				}).Error("send-TestResult-indication-failed")
@@ -908,14 +899,14 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 		}
 	case omci.SynchronizeTimeRequestType:
 		// MDS counter increment is not required for this message type
-		responsePkt, _ = omcilib.CreateSyncTimeResponse(omciPkt, omciMsg)
+		responsePkt, _ = omcilib.CreateSyncTimeResponse(msg.OmciPkt, msg.OmciMsg)
 	case omci.StartSoftwareDownloadRequestType:
 
 		o.ImageSoftwareReceivedSections = 0
 
-		o.ImageSoftwareExpectedSections = omcilib.ComputeDownloadSectionsCount(omciPkt)
+		o.ImageSoftwareExpectedSections = omcilib.ComputeDownloadSectionsCount(msg.OmciPkt)
 
-		if responsePkt, errResp = omcilib.CreateStartSoftwareDownloadResponse(omciPkt, omciMsg); errResp == nil {
+		if responsePkt, errResp = omcilib.CreateStartSoftwareDownloadResponse(msg.OmciPkt, msg.OmciMsg); errResp == nil {
 			o.MibDataSync++
 			if err := o.InternalState.Event(OnuTxStartImageDownload); err != nil {
 				onuLogger.WithFields(log.Fields{
@@ -927,18 +918,18 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			}
 		} else {
 			onuLogger.WithFields(log.Fields{
-				"OmciMsgType":  omciMsg.MessageType,
-				"TransCorrId":  omciMsg.TransactionID,
-				"Err":          err.Error(),
+				"OmciMsgType":  msg.OmciMsg.MessageType,
+				"TransCorrId":  msg.OmciMsg.TransactionID,
+				"Err":          errResp.Error(),
 				"IntfId":       o.PonPortID,
 				"SerialNumber": o.Sn(),
 			}).Error("error-while-processing-start-software-download-request")
 		}
 	case omci.DownloadSectionRequestType:
-		if msgObj, err := omcilib.ParseDownloadSectionRequest(omciPkt); err == nil {
+		if msgObj, err := omcilib.ParseDownloadSectionRequest(msg.OmciPkt); err == nil {
 			onuLogger.WithFields(log.Fields{
-				"OmciMsgType":    omciMsg.MessageType,
-				"TransCorrId":    omciMsg.TransactionID,
+				"OmciMsgType":    msg.OmciMsg.MessageType,
+				"TransCorrId":    msg.OmciMsg.TransactionID,
 				"EntityInstance": msgObj.EntityInstance,
 				"SectionNumber":  msgObj.SectionNumber,
 				"SectionData":    msgObj.SectionData,
@@ -957,12 +948,12 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 		}
 	case omci.DownloadSectionRequestWithResponseType:
 		// NOTE we only need to respond if an ACK is requested
-		responsePkt, err = omcilib.CreateDownloadSectionResponse(omciPkt, omciMsg)
-		if err != nil {
+		responsePkt, errResp = omcilib.CreateDownloadSectionResponse(msg.OmciPkt, msg.OmciMsg)
+		if errResp != nil {
 			onuLogger.WithFields(log.Fields{
-				"OmciMsgType":  omciMsg.MessageType,
-				"TransCorrId":  omciMsg.TransactionID,
-				"Err":          err.Error(),
+				"OmciMsgType":  msg.OmciMsg.MessageType,
+				"TransCorrId":  msg.OmciMsg.TransactionID,
+				"Err":          errResp.Error(),
 				"IntfId":       o.PonPortID,
 				"SerialNumber": o.Sn(),
 			}).Error("error-while-processing-create-download-section-response")
@@ -988,7 +979,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 		}
 
 		if success {
-			if responsePkt, errResp = omcilib.CreateEndSoftwareDownloadResponse(omciPkt, omciMsg, me.Success); errResp == nil {
+			if responsePkt, errResp = omcilib.CreateEndSoftwareDownloadResponse(msg.OmciPkt, msg.OmciMsg, me.Success); errResp == nil {
 				o.MibDataSync++
 				if err := o.InternalState.Event(OnuTxCompleteImageDownload); err != nil {
 					onuLogger.WithFields(log.Fields{
@@ -1000,15 +991,15 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 				}
 			} else {
 				onuLogger.WithFields(log.Fields{
-					"OmciMsgType":  omciMsg.MessageType,
-					"TransCorrId":  omciMsg.TransactionID,
-					"Err":          err.Error(),
+					"OmciMsgType":  msg.OmciMsg.MessageType,
+					"TransCorrId":  msg.OmciMsg.TransactionID,
+					"Err":          errResp.Error(),
 					"IntfId":       o.PonPortID,
 					"SerialNumber": o.Sn(),
 				}).Error("error-while-processing-end-software-download-request")
 			}
 		} else {
-			if responsePkt, errResp = omcilib.CreateEndSoftwareDownloadResponse(omciPkt, omciMsg, me.ProcessingError); errResp == nil {
+			if responsePkt, errResp = omcilib.CreateEndSoftwareDownloadResponse(msg.OmciPkt, msg.OmciMsg, me.ProcessingError); errResp == nil {
 				if err := o.InternalState.Event(OnuTxFailImageDownload); err != nil {
 					onuLogger.WithFields(log.Fields{
 						"OnuId":  o.ID,
@@ -1021,7 +1012,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 		}
 
 	case omci.ActivateSoftwareRequestType:
-		if responsePkt, errResp = omcilib.CreateActivateSoftwareResponse(omciPkt, omciMsg); errResp == nil {
+		if responsePkt, errResp = omcilib.CreateActivateSoftwareResponse(msg.OmciPkt, msg.OmciMsg); errResp == nil {
 			o.MibDataSync++
 			if err := o.InternalState.Event(OnuTxActivateImage); err != nil {
 				onuLogger.WithFields(log.Fields{
@@ -1031,7 +1022,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 					"Err":    err.Error(),
 				}).Errorf("cannot-change-onu-internal-state-to-%s", OnuStateImageActivated)
 			}
-			if msgObj, err := omcilib.ParseActivateSoftwareRequest(omciPkt); err == nil {
+			if msgObj, err := omcilib.ParseActivateSoftwareRequest(msg.OmciPkt); err == nil {
 				o.ActiveImageEntityId = msgObj.EntityInstance
 			} else {
 				onuLogger.Errorf("something-went-wrong-while-activating: %s", err)
@@ -1060,9 +1051,9 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			}()
 		}
 	case omci.CommitSoftwareRequestType:
-		if responsePkt, errResp = omcilib.CreateCommitSoftwareResponse(omciPkt, omciMsg); errResp == nil {
+		if responsePkt, errResp = omcilib.CreateCommitSoftwareResponse(msg.OmciPkt, msg.OmciMsg); errResp == nil {
 			o.MibDataSync++
-			if msgObj, err := omcilib.ParseCommitSoftwareRequest(omciPkt); err == nil {
+			if msgObj, err := omcilib.ParseCommitSoftwareRequest(msg.OmciPkt); err == nil {
 				// TODO validate that the image to commit is:
 				// - active
 				// - not already committed
@@ -1095,30 +1086,30 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			o.onuAlarmsInfo[key] = alarmInfo
 		}
 		o.onuAlarmsInfoLock.Unlock()
-		responsePkt, _ = omcilib.CreateGetAllAlarmsResponse(omciMsg.TransactionID, o.onuAlarmsInfo)
+		responsePkt, _ = omcilib.CreateGetAllAlarmsResponse(msg.OmciMsg.TransactionID, o.onuAlarmsInfo)
 	case omci.GetAllAlarmsNextRequestType:
-		if responsePkt, errResp = omcilib.CreateGetAllAlarmsNextResponse(omciPkt, omciMsg, o.onuAlarmsInfo); errResp != nil {
+		if responsePkt, errResp = omcilib.CreateGetAllAlarmsNextResponse(msg.OmciPkt, msg.OmciMsg, o.onuAlarmsInfo); errResp != nil {
 			responsePkt = nil //Do not send any response for error case
 		}
 	default:
 		onuLogger.WithFields(log.Fields{
-			"omciBytes":    hex.EncodeToString(omciPkt.Data()),
-			"omciPkt":      omciPkt,
-			"omciMsgType":  omciMsg.MessageType,
-			"transCorrId":  omciMsg.TransactionID,
+			"omciBytes":    hex.EncodeToString(msg.OmciPkt.Data()),
+			"omciPkt":      msg.OmciPkt,
+			"omciMsgType":  msg.OmciMsg.MessageType,
+			"transCorrId":  msg.OmciMsg.TransactionID,
 			"IntfId":       o.PonPortID,
 			"SerialNumber": o.Sn(),
 		}).Warnf("OMCI-message-not-supported")
 	}
 
 	if responsePkt != nil {
-		if err := o.sendOmciIndication(responsePkt, omciMsg.TransactionID, stream); err != nil {
+		if err := o.sendOmciIndication(responsePkt, msg.OmciMsg.TransactionID, stream); err != nil {
 			onuLogger.WithFields(log.Fields{
-				"IntfId":       o.PonPortID,
-				"SerialNumber": o.Sn(),
-				"omciPacket":   responsePkt,
-				"omciMsgType":  omciMsg.MessageType,
-				"transCorrId":  omciMsg.TransactionID,
+				"IntfId":          o.PonPortID,
+				"SerialNumber":    o.Sn(),
+				"omciPacket":      responsePkt,
+				"msg.OmciMsgType": msg.OmciMsg.MessageType,
+				"transCorrId":     msg.OmciMsg.TransactionID,
 			}).Errorf("failed-to-send-omci-message: %v", err)
 		}
 	}

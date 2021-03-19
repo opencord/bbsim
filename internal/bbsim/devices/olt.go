@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/types"
+	omcilib "github.com/opencord/bbsim/internal/common/omci"
 	"github.com/opencord/voltha-protos/v4/go/ext/config"
 	"net"
 	"strconv"
@@ -1335,15 +1336,37 @@ func (o *OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (
 		"OnuId":  onu.ID,
 		"OnuSn":  onu.Sn(),
 	}).Tracef("Received OmciMsgOut")
-	msg := types.Message{
-		Type: types.OMCI,
-		Data: types.OmciMessage{
-			OnuSN:   onu.SerialNumber,
-			OnuID:   onu.ID,
-			OmciMsg: omci_msg,
-		},
+	omciPkt, omciMsg, err := omcilib.ParseOpenOltOmciPacket(omci_msg.Pkt)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IntfId":       onu.PonPortID,
+			"SerialNumber": onu.Sn(),
+			"omciPacket":   omcilib.HexDecode(omci_msg.Pkt),
+			"err":          err.Error(),
+		}).Error("cannot-parse-OMCI-packet")
+		return nil, fmt.Errorf("olt-received-malformed-omci-packet")
 	}
-	onu.Channel <- msg
+	if onu.InternalState.Current() == OnuStateDisabled {
+		// if the ONU is disabled just drop the message
+		log.WithFields(log.Fields{
+			"IntfId":       onu.PonPortID,
+			"SerialNumber": onu.Sn(),
+			"omciBytes":    hex.EncodeToString(omciPkt.Data()),
+			"omciPkt":      omciPkt,
+			"omciMsgType":  omciMsg.MessageType,
+		}).Warn("dropping-omci-message")
+	} else {
+		msg := types.Message{
+			Type: types.OMCI,
+			Data: types.OmciMessage{
+				OnuSN:   onu.SerialNumber,
+				OnuID:   onu.ID,
+				OmciMsg: omciMsg,
+				OmciPkt: omciPkt,
+			},
+		}
+		onu.Channel <- msg
+	}
 	return new(openolt.Empty), nil
 }
 

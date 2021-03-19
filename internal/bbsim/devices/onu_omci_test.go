@@ -109,14 +109,15 @@ func makeOmciMibResetRequest(t *testing.T) []byte {
 }
 
 func makeOmciMessage(t *testing.T, onu *Onu, pkt []byte) bbsim.OmciMessage {
+	omciPkt, omciMsg, err := omcilib.ParseOpenOltOmciPacket(pkt)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
 	return bbsim.OmciMessage{
-		OnuSN: onu.SerialNumber,
-		OnuID: onu.ID,
-		OmciMsg: &openolt.OmciMsg{
-			IntfId: onu.PonPortID,
-			OnuId:  onu.ID,
-			Pkt:    pkt,
-		},
+		OnuSN:   onu.SerialNumber,
+		OnuID:   onu.ID,
+		OmciPkt: omciPkt,
+		OmciMsg: omciMsg,
 	}
 }
 
