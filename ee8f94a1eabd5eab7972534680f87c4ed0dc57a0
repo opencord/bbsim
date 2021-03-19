@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a630e565_98ee5686",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1345,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-03-19T23:14:07Z",
+      "side": 1,
+      "message": "Don\u0027t we need to return here?",
+      "revId": "ee8f94a1eabd5eab7972534680f87c4ed0dc57a0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "145ca58f_1e750c3c",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1347,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-03-19T23:14:07Z",
+      "side": 1,
+      "message": "Not sure of the internal details of the BBSIM. But generally speaking, when ONU is disabled, it still accepts OMCI message. The OMCI channel is actually available.",
+      "revId": "ee8f94a1eabd5eab7972534680f87c4ed0dc57a0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
