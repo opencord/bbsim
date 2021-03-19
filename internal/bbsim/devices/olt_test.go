@@ -17,7 +17,10 @@
 package devices
 
 import (
+	"context"
+	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/types"
+	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/bbsim/internal/common"
 	"net"
 	"testing"
@@ -54,6 +57,17 @@ func createMockOlt(numPon int, numOnu int, services []ServiceIf) *OltDevice {
 				ID:        onuId,
 				PonPort:   &pon,
 				PonPortID: pon.ID,
+				InternalState: fsm.NewFSM(
+					OnuStateCreated,
+					// this is fake state machine, we don't care about transition in the OLT
+					// unit tests, we'll use SetState to emulate cases
+					fsm.Events{
+						{Name: OnuTxEnable, Src: []string{}, Dst: OnuStateEnabled},
+						{Name: OnuTxDisable, Src: []string{}, Dst: OnuStateDisabled},
+					},
+					fsm.Callbacks{},
+				),
+				Channel: make(chan bbsim.Message, 2048),
 			}
 
 			for k, s := range services {
@@ -444,4 +458,55 @@ func Test_Olt_validateFlow(t *testing.T) {
 	}
 	err = olt.validateFlow(invalidAllocDifferentPonFlow)
 	assert.NilError(t, err)
+}
+
+func Test_Olt_OmciMsgOut(t *testing.T) {
+	numPon := 4
+	numOnu := 4
+
+	olt := createMockOlt(numPon, numOnu, []ServiceIf{})
+
+	// a malformed packet should return an error
+	msg := &openolt.OmciMsg{
+		IntfId: 1,
+		OnuId:  1,
+		Pkt:    []byte{},
+	}
+	ctx := context.TODO()
+	_, err := olt.OmciMsgOut(ctx, msg)
+	assert.Error(t, err, "olt-received-malformed-omci-packet")
+
+	// a correct packet for a non exiting ONU should throw an error
+	msg = &openolt.OmciMsg{
+		IntfId: 10,
+		OnuId:  25,
+		Pkt:    makeOmciSetRequest(t),
+	}
+	_, err = olt.OmciMsgOut(ctx, msg)
+	assert.Error(t, err, "Cannot find PonPort with id 10 in OLT 0")
+
+	// a correct packet for a disabled ONU should be dropped
+	// note that an error is not returned, this is valid in BBsim
+	const (
+		ponId = 1
+		onuId = 1
+	)
+	pon, _ := olt.GetPonById(ponId)
+	onu, _ := pon.GetOnuById(onuId)
+	onu.InternalState.SetState(OnuStateDisabled)
+	msg = &openolt.OmciMsg{
+		IntfId: ponId,
+		OnuId:  onuId,
+		Pkt:    makeOmciSetRequest(t),
+	}
+	_, err = olt.OmciMsgOut(ctx, msg)
+	assert.NilError(t, err)
+	assert.Equal(t, len(onu.Channel), 0) // check that no messages have been sent
+
+	// test that the ONU receives a valid packet
+	onu.InternalState.SetState(OnuStateEnabled)
+	_, err = olt.OmciMsgOut(ctx, msg)
+	assert.NilError(t, err)
+	assert.Equal(t, len(onu.Channel), 1) // check that one message have been sent
+
 }

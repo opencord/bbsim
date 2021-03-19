@@ -19,6 +19,7 @@ package types
 import (
 	"github.com/google/gopacket"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
+	"github.com/opencord/omci-lib-go"
 	"github.com/opencord/voltha-protos/v4/go/openolt"
 	"net"
 )
@@ -113,7 +114,8 @@ type OnuIndicationMessage struct {
 type OmciMessage struct {
 	OnuSN   *openolt.SerialNumber
 	OnuID   uint32
-	OmciMsg *openolt.OmciMsg
+	OmciMsg *omci.OMCI
+	OmciPkt gopacket.Packet
 }
 
 type UniStatusAlarmMessage struct {
