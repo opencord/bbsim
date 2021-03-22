@@ -17,6 +17,8 @@
 package devices
 
 import (
+	omcilib "github.com/opencord/bbsim/internal/common/omci"
+	me "github.com/opencord/omci-lib-go/generated"
 	"testing"
 
 	"gotest.tools/assert"
@@ -41,12 +43,24 @@ func Test_Onu_StateMachine_disable(t *testing.T) {
 		{ID: 1, Direction: "upstream"},
 		{ID: 2, Direction: "downstream"},
 	}
+	key := omcilib.OnuAlarmInfoMapKey{
+		MeInstance: 257,
+		MeClassID:  me.PhysicalPathTerminationPointEthernetUniClassID,
+	}
+	onu.onuAlarmsInfo[key] = omcilib.OnuAlarmInfo{SequenceNo: 1, AlarmBitMap: [28]byte{}}
+	onu.PonPort.storeOnuId(onu.ID, onu.SerialNumber)
+	onu.PonPort.storeAllocId(1, onu.SerialNumber)
+	onu.PonPort.storeGemPort(1, onu.SerialNumber)
 
 	_ = onu.InternalState.Event(OnuTxDisable)
 	assert.Equal(t, onu.InternalState.Current(), OnuStateDisabled)
 
 	assert.Equal(t, onu.PortNo, uint32(0))
+	assert.Equal(t, len(onu.onuAlarmsInfo), 0)
 	assert.Equal(t, len(onu.Flows), 0)
+	assert.Equal(t, len(onu.PonPort.AllocatedOnuIds), 0)
+	assert.Equal(t, len(onu.PonPort.AllocatedAllocIds), 0)
+	assert.Equal(t, len(onu.PonPort.AllocatedGemPorts), 0)
 }
 
 // check that I can go to auth_started only if

@@ -191,7 +191,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 			"enter_state": func(e *fsm.Event) {
 				o.logStateChange(e.Src, e.Dst)
 			},
-			"enter_initialized": func(e *fsm.Event) {
+			fmt.Sprintf("enter_%s", OnuStateInitialized): func(e *fsm.Event) {
 				// create new channel for ProcessOnuMessages Go routine
 				o.Channel = make(chan bbsim.Message, 2048)
 
@@ -208,7 +208,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 					go o.ProcessOnuMessages(olt.enableContext, olt.OpenoltStream, nil)
 				}
 			},
-			"enter_discovered": func(e *fsm.Event) {
+			fmt.Sprintf("enter_%s", OnuStateDiscovered): func(e *fsm.Event) {
 				msg := bbsim.Message{
 					Type: bbsim.OnuDiscIndication,
 					Data: bbsim.OnuDiscIndicationMessage{
@@ -217,14 +217,14 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 				}
 				o.Channel <- msg
 			},
-			"enter_enabled": func(event *fsm.Event) {
+			fmt.Sprintf("enter_%s", OnuStateEnabled): func(event *fsm.Event) {
 
 				if used, sn := o.PonPort.isOnuIdAllocated(o.ID); used {
 					onuLogger.WithFields(log.Fields{
 						"IntfId":       o.PonPortID,
 						"OnuId":        o.ID,
 						"SerialNumber": o.Sn(),
-					}).Errorf("received-omci-with-sn-%s", common.OnuSnToString(sn))
+					}).Errorf("onu-id-duplicated-with-%s", common.OnuSnToString(sn))
 					return
 				} else {
 					o.PonPort.storeOnuId(o.ID, o.SerialNumber)
@@ -245,14 +245,9 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 					s.Initialize(o.PonPort.Olt.OpenoltStream)
 				}
 			},
-			"enter_disabled": func(event *fsm.Event) {
+			fmt.Sprintf("enter_%s", OnuStateDisabled): func(event *fsm.Event) {
 
-				// clean the ONU state
-				o.PortNo = 0
-				o.Flows = []FlowKey{}
-				o.PonPort.removeOnuId(o.ID)
-				o.PonPort.removeAllocId(o.SerialNumber)
-				o.PonPort.removeGemPortBySn(o.SerialNumber)
+				o.cleanupOnuState()
 
 				// set the OperState to disabled
 				if err := o.OperState.Event("disable"); err != nil {
@@ -282,18 +277,19 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 				for _, s := range o.Services {
 					s.Disable()
 				}
-				o.onuAlarmsInfoLock.Lock()
-				o.onuAlarmsInfo = make(map[omcilib.OnuAlarmInfoMapKey]omcilib.OnuAlarmInfo) //Basically reset everything on onu disable
-				o.onuAlarmsInfoLock.Unlock()
+
+			},
+			fmt.Sprintf("enter_%s", OnuStatePonDisabled): func(event *fsm.Event) {
+				o.cleanupOnuState()
 			},
 			// BBR states
-			"enter_eapol_flow_sent": func(e *fsm.Event) {
+			fmt.Sprintf("enter_%s", BbrOnuStateEapolFlowSent): func(e *fsm.Event) {
 				msg := bbsim.Message{
 					Type: bbsim.SendEapolFlow,
 				}
 				o.Channel <- msg
 			},
-			"enter_dhcp_flow_sent": func(e *fsm.Event) {
+			fmt.Sprintf("enter_%s", BbrOnuStateDhcpFlowSent): func(e *fsm.Event) {
 				msg := bbsim.Message{
 					Type: bbsim.SendDhcpFlow,
 				}
@@ -311,6 +307,20 @@ func (o *Onu) logStateChange(src string, dst string) {
 		"IntfId": o.PonPortID,
 		"OnuSn":  o.Sn(),
 	}).Debugf("Changing ONU InternalState from %s to %s", src, dst)
+}
+
+// cleanupOnuState this method is to clean the local state when the ONU is disabled
+func (o *Onu) cleanupOnuState() {
+	// clean the ONU state
+	o.PortNo = 0
+	o.Flows = []FlowKey{}
+	o.PonPort.removeOnuId(o.ID)
+	o.PonPort.removeAllocId(o.SerialNumber)
+	o.PonPort.removeGemPortBySn(o.SerialNumber)
+
+	o.onuAlarmsInfoLock.Lock()
+	o.onuAlarmsInfo = make(map[omcilib.OnuAlarmInfoMapKey]omcilib.OnuAlarmInfo) //Basically reset everything on onu disable
+	o.onuAlarmsInfoLock.Unlock()
 }
 
 // ProcessOnuMessages starts indication channel for each ONU
