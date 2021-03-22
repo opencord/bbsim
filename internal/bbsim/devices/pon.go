@@ -26,6 +26,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var ponLogger = log.WithFields(log.Fields{
+	"module": "PON",
+})
+
 type PonPort struct {
 	// BBSIM Internals
 	ID            uint32
@@ -72,7 +76,7 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 		},
 		fsm.Callbacks{
 			"enter_enabled": func(e *fsm.Event) {
-				oltLogger.WithFields(log.Fields{
+				ponLogger.WithFields(log.Fields{
 					"ID": ponPort.ID,
 				}).Debugf("Changing PON Port InternalState from %s to %s", e.Src, e.Dst)
 
@@ -80,11 +84,11 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 					if olt.ControlledActivation == Default || olt.ControlledActivation == OnlyPON {
 						for _, onu := range ponPort.Onus {
 							if err := onu.InternalState.Event(OnuTxInitialize); err != nil {
-								log.Errorf("Error initializing ONU: %v", err)
+								ponLogger.Errorf("Error initializing ONU: %v", err)
 								continue
 							}
 							if err := onu.InternalState.Event(OnuTxDiscover); err != nil {
-								log.Errorf("Error discover ONU: %v", err)
+								ponLogger.Errorf("Error discover ONU: %v", err)
 							}
 						}
 					}
@@ -93,7 +97,7 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 						// if ONUs are manually activated then only initialize them
 						for _, onu := range ponPort.Onus {
 							if err := onu.InternalState.Event(OnuTxInitialize); err != nil {
-								log.WithFields(log.Fields{
+								ponLogger.WithFields(log.Fields{
 									"Err":    err,
 									"OnuSn":  onu.Sn(),
 									"IntfId": onu.PonPortID,
@@ -104,8 +108,8 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 					} else {
 						for _, onu := range ponPort.Onus {
 							if onu.InternalState.Current() == OnuStatePonDisabled {
-								if err := onu.InternalState.Event(OnuStateEnabled); err != nil {
-									log.WithFields(log.Fields{
+								if err := onu.InternalState.Event(OnuTxEnable); err != nil {
+									ponLogger.WithFields(log.Fields{
 										"Err":    err,
 										"OnuSn":  onu.Sn(),
 										"IntfId": onu.PonPortID,
@@ -113,7 +117,7 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 								}
 							} else if onu.InternalState.Current() == OnuStateDisabled {
 								if err := onu.InternalState.Event(OnuTxInitialize); err != nil {
-									log.WithFields(log.Fields{
+									ponLogger.WithFields(log.Fields{
 										"Err":    err,
 										"OnuSn":  onu.Sn(),
 										"IntfId": onu.PonPortID,
@@ -121,7 +125,7 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 									continue
 								}
 								if err := onu.InternalState.Event(OnuTxDiscover); err != nil {
-									log.WithFields(log.Fields{
+									ponLogger.WithFields(log.Fields{
 										"Err":    err,
 										"OnuSn":  onu.Sn(),
 										"IntfId": onu.PonPortID,
@@ -129,7 +133,7 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 								}
 							} else if onu.InternalState.Current() == OnuStateInitialized {
 								if err := onu.InternalState.Event(OnuTxDiscover); err != nil {
-									log.WithFields(log.Fields{
+									ponLogger.WithFields(log.Fields{
 										"Err":    err,
 										"OnuSn":  onu.Sn(),
 										"IntfId": onu.PonPortID,
@@ -137,7 +141,7 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 								}
 							} else {
 								// this is to loudly report unexpected states in order to address them
-								log.WithFields(log.Fields{
+								ponLogger.WithFields(log.Fields{
 									"OnuSn":         onu.Sn(),
 									"IntfId":        onu.PonPortID,
 									"InternalState": onu.InternalState.Current(),
@@ -153,7 +157,7 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 						continue
 					}
 					if err := onu.InternalState.Event(OnuTxPonDisable); err != nil {
-						oltLogger.Errorf("Failed to move ONU in %s states: %v", OnuStatePonDisabled, err)
+						ponLogger.Errorf("Failed to move ONU in %s states: %v", OnuStatePonDisabled, err)
 					}
 				}
 			},
@@ -168,13 +172,13 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 		},
 		fsm.Callbacks{
 			"enter_up": func(e *fsm.Event) {
-				oltLogger.WithFields(log.Fields{
+				ponLogger.WithFields(log.Fields{
 					"ID": ponPort.ID,
 				}).Debugf("Changing PON Port OperState from %s to %s", e.Src, e.Dst)
 				olt.sendPonIndication(ponPort.ID)
 			},
 			"enter_down": func(e *fsm.Event) {
-				oltLogger.WithFields(log.Fields{
+				ponLogger.WithFields(log.Fields{
 					"ID": ponPort.ID,
 				}).Debugf("Changing PON Port OperState from %s to %s", e.Src, e.Dst)
 				olt.sendPonIndication(ponPort.ID)
