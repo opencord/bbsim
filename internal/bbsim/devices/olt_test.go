@@ -18,15 +18,16 @@ package devices
 
 import (
 	"context"
+	"fmt"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/types"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/bbsim/internal/common"
+	"github.com/stretchr/testify/assert"
 	"net"
 	"testing"
 
 	"github.com/opencord/voltha-protos/v4/go/openolt"
-	"gotest.tools/assert"
 )
 
 func createMockOlt(numPon int, numOnu int, services []ServiceIf) *OltDevice {
@@ -191,7 +192,7 @@ func Test_Olt_FindOnuByMacAddress_Success(t *testing.T) {
 	mac := net.HardwareAddr{0x2e, 0x60, byte(olt.ID), byte(3), byte(6), byte(1)}
 	s, err := olt.FindServiceByMacAddress(mac)
 
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 
 	service := s.(*Service)
 
@@ -278,7 +279,7 @@ func Test_Olt_storeGemPortId(t *testing.T) {
 		GemportId:    gem1,
 	}
 
-	olt.storeGemPortId(flow1)
+	olt.storeGemPortIdByFlow(flow1)
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni]), 1)       // we have 1 gem port
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni][gem1]), 1) // and one flow referencing it
 
@@ -291,7 +292,7 @@ func Test_Olt_storeGemPortId(t *testing.T) {
 		GemportId:    gem1,
 	}
 
-	olt.storeGemPortId(flow2)
+	olt.storeGemPortIdByFlow(flow2)
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni]), 1)       // we have 1 gem port
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni][gem1]), 2) // and two flows referencing it
 
@@ -304,10 +305,44 @@ func Test_Olt_storeGemPortId(t *testing.T) {
 		GemportId:    1025,
 	}
 
-	olt.storeGemPortId(flow3)
+	olt.storeGemPortIdByFlow(flow3)
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni]), 2)       // we have 2 gem ports
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni][gem1]), 2) // two flows referencing the first one
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni][gem2]), 1) // and one flow referencing the second one
+}
+
+func Test_Olt_storeGemPortIdReplicatedFlow(t *testing.T) {
+	const (
+		pon  = 1
+		onu  = 1
+		uni  = 16
+		gem1 = 1024
+		gem2 = 1025
+	)
+
+	numPon := 2
+	numOnu := 2
+
+	olt := createMockOlt(numPon, numOnu, []ServiceIf{})
+
+	// add a flow that needs replication
+	pbitToGemPortMap := make(map[uint32]uint32)
+	pbitToGemPortMap[0] = gem1
+	pbitToGemPortMap[1] = gem2
+	flow1 := &openolt.Flow{
+		AccessIntfId:  pon,
+		OnuId:         onu,
+		PortNo:        uni,
+		FlowId:        1,
+		GemportId:     0,
+		ReplicateFlow: true,
+		PbitToGemport: pbitToGemPortMap,
+	}
+
+	olt.storeGemPortIdByFlow(flow1)
+	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni]), 2)       // we have 2 gem ports in the flow
+	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni][gem1]), 1) // and one flow referencing them
+	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni][gem2]), 1) // and one flow referencing them
 }
 
 func Test_Olt_freeGemPortId(t *testing.T) {
@@ -369,6 +404,38 @@ func Test_Olt_freeGemPortId(t *testing.T) {
 	assert.Equal(t, gem2exists, true)
 }
 
+func Test_Olt_freeGemPortIdReplicatedflow(t *testing.T) {
+	const (
+		pon   = 1
+		onu   = 1
+		uni   = 16
+		gem1  = 1024
+		gem2  = 1025
+		flow1 = 1
+	)
+
+	numPon := 2
+	numOnu := 2
+
+	olt := createMockOlt(numPon, numOnu, []ServiceIf{})
+
+	olt.GemPortIDs[pon][onu][uni] = make(map[int32]map[uint64]bool)
+	olt.GemPortIDs[pon][onu][uni][gem1] = make(map[uint64]bool)
+	olt.GemPortIDs[pon][onu][uni][gem1][flow1] = true
+	olt.GemPortIDs[pon][onu][uni][gem2] = make(map[uint64]bool)
+	olt.GemPortIDs[pon][onu][uni][gem2][flow1] = true
+
+	// this flow was a replicated flow, remove all the gems that are referenced by that flow
+	flowMultiGem := &openolt.Flow{
+		FlowId: flow1,
+	}
+
+	olt.freeGemPortId(flowMultiGem)
+
+	// this flow removes all the gems, so no UNI should be left
+	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni]), 0)
+}
+
 func Test_Olt_validateFlow(t *testing.T) {
 
 	const (
@@ -412,7 +479,7 @@ func Test_Olt_validateFlow(t *testing.T) {
 	}
 
 	err := olt.validateFlow(validGemFlow)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 
 	// a GemPortID can NOT be referenced across different ONUs on the same PON
 	invalidGemFlow := &openolt.Flow{
@@ -430,7 +497,7 @@ func Test_Olt_validateFlow(t *testing.T) {
 		GemportId:    usedGemIdPon0,
 	}
 	err = olt.validateFlow(invalidGemDifferentPonFlow)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 
 	// an allocId can be referenced across multiple flows on the same ONU
 	validAllocFlow := &openolt.Flow{
@@ -439,7 +506,7 @@ func Test_Olt_validateFlow(t *testing.T) {
 		AllocId:      usedAllocIdPon0,
 	}
 	err = olt.validateFlow(validAllocFlow)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 
 	// an allocId can NOT be referenced across different ONUs on the same PON
 	invalidAllocFlow := &openolt.Flow{
@@ -457,7 +524,65 @@ func Test_Olt_validateFlow(t *testing.T) {
 		AllocId:      usedAllocIdPon0,
 	}
 	err = olt.validateFlow(invalidAllocDifferentPonFlow)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
+}
+
+func Test_Olt_validateReplicatedFlow(t *testing.T) {
+
+	const (
+		pon0            = 0
+		onu0            = 0
+		onu1            = 1
+		uniPort         = 0
+		usedGemId1      = 1024
+		usedGemId2      = 1025
+		usedAllocIdPon0 = 1
+		flowId          = 1
+	)
+
+	numPon := 1
+	numOnu := 1
+
+	olt := createMockOlt(numPon, numOnu, []ServiceIf{})
+
+	// both the gemports referenced in this flow are already allocated
+	olt.GemPortIDs[pon0][onu0][uniPort] = make(map[int32]map[uint64]bool)
+	olt.GemPortIDs[pon0][onu0][uniPort][usedGemId1] = make(map[uint64]bool)
+	olt.GemPortIDs[pon0][onu0][uniPort][usedGemId1][flowId] = true
+	olt.GemPortIDs[pon0][onu0][uniPort][usedGemId2] = make(map[uint64]bool)
+	olt.GemPortIDs[pon0][onu0][uniPort][usedGemId2][flowId] = true
+
+	olt.AllocIDs[pon0][onu0][uniPort] = make(map[int32]map[uint64]bool)
+	olt.AllocIDs[pon0][onu0][uniPort][usedAllocIdPon0] = make(map[uint64]bool)
+	olt.AllocIDs[pon0][onu0][uniPort][usedAllocIdPon0][flowId] = true
+
+	pbitToGemPortMap := make(map[uint32]uint32)
+	pbitToGemPortMap[0] = usedGemId1
+	pbitToGemPortMap[1] = usedGemId2
+
+	// this flow should fail vlidation as the gems are already allocated to Onu0
+	invalidGemFlow := &openolt.Flow{
+		AccessIntfId:  pon0,
+		OnuId:         onu1,
+		PortNo:        uniPort,
+		GemportId:     0,
+		ReplicateFlow: true,
+		PbitToGemport: pbitToGemPortMap,
+	}
+
+	err := olt.validateFlow(invalidGemFlow)
+	assert.NotNil(t, err)
+
+	// PbitToGemport is a map, so any of the two gemPorts can fail first and determine the error message
+	foundError := false
+	switch err.Error() {
+	case fmt.Sprintf("gem-%d-already-in-use-on-uni-%d-onu-%d-replicated-flow-%d", usedGemId2, uniPort, onu0, invalidGemFlow.FlowId):
+		foundError = true
+	case fmt.Sprintf("gem-%d-already-in-use-on-uni-%d-onu-%d-replicated-flow-%d", usedGemId1, uniPort, onu0, invalidGemFlow.FlowId):
+		foundError = true
+
+	}
+	assert.True(t, foundError)
 }
 
 func Test_Olt_OmciMsgOut(t *testing.T) {
@@ -500,13 +625,13 @@ func Test_Olt_OmciMsgOut(t *testing.T) {
 		Pkt:    makeOmciSetRequest(t),
 	}
 	_, err = olt.OmciMsgOut(ctx, msg)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, len(onu.Channel), 0) // check that no messages have been sent
 
 	// test that the ONU receives a valid packet
 	onu.InternalState.SetState(OnuStateEnabled)
 	_, err = olt.OmciMsgOut(ctx, msg)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, len(onu.Channel), 1) // check that one message have been sent
 
 }

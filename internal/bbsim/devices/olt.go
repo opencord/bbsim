@@ -1091,7 +1091,7 @@ func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.E
 			return nil, err
 		}
 
-		o.storeGemPortId(flow)
+		o.storeGemPortIdByFlow(flow)
 		o.storeAllocId(flow)
 
 		msg := types.Message{
@@ -1659,7 +1659,17 @@ func (o *OltDevice) freeAllocId(flow *openolt.Flow) {
 	}
 }
 
-func (o *OltDevice) storeGemPortId(flow *openolt.Flow) {
+func (o *OltDevice) storeGemPortId(ponId uint32, onuId uint32, portNo uint32, gemId int32, flowId uint64) {
+	if _, ok := o.GemPortIDs[ponId][onuId][portNo]; !ok {
+		o.GemPortIDs[ponId][onuId][portNo] = make(map[int32]map[uint64]bool)
+	}
+	if _, ok := o.GemPortIDs[ponId][onuId][portNo][gemId]; !ok {
+		o.GemPortIDs[ponId][onuId][portNo][gemId] = make(map[uint64]bool)
+	}
+	o.GemPortIDs[ponId][onuId][portNo][gemId][flowId] = true
+}
+
+func (o *OltDevice) storeGemPortIdByFlow(flow *openolt.Flow) {
 	o.GemPortIDsLock.Lock()
 	defer o.GemPortIDsLock.Unlock()
 
@@ -1670,13 +1680,14 @@ func (o *OltDevice) storeGemPortId(flow *openolt.Flow) {
 		"GemportId": flow.GemportId,
 	}).Trace("storing-gem-port-id-via-flow")
 
-	if _, ok := o.GemPortIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo]; !ok {
-		o.GemPortIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo] = make(map[int32]map[uint64]bool)
+	if flow.ReplicateFlow {
+		for _, gem := range flow.PbitToGemport {
+			o.storeGemPortId(uint32(flow.AccessIntfId), uint32(flow.OnuId), flow.PortNo, int32(gem), flow.FlowId)
+		}
+	} else {
+		o.storeGemPortId(uint32(flow.AccessIntfId), uint32(flow.OnuId), flow.PortNo, flow.GemportId, flow.FlowId)
 	}
-	if _, ok := o.GemPortIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo][flow.GemportId]; !ok {
-		o.GemPortIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo][flow.GemportId] = make(map[uint64]bool)
-	}
-	o.GemPortIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo][flow.GemportId][flow.FlowId] = true
+
 }
 
 func (o *OltDevice) freeGemPortId(flow *openolt.Flow) {
@@ -1736,8 +1747,16 @@ func (o *OltDevice) validateFlow(flow *openolt.Flow) error {
 		}
 		for uniId, uni := range onu {
 			for gem := range uni {
-				if gem == flow.GemportId {
-					return fmt.Errorf("gem-%d-already-in-use-on-uni-%d-onu-%d", gem, uniId, onuId)
+				if flow.ReplicateFlow {
+					for _, flowGem := range flow.PbitToGemport {
+						if gem == int32(flowGem) {
+							return fmt.Errorf("gem-%d-already-in-use-on-uni-%d-onu-%d-replicated-flow-%d", gem, uniId, onuId, flow.FlowId)
+						}
+					}
+				} else {
+					if gem == flow.GemportId {
+						return fmt.Errorf("gem-%d-already-in-use-on-uni-%d-onu-%d-flow-%d", gem, uniId, onuId, flow.FlowId)
+					}
 				}
 			}
 		}
@@ -1753,7 +1772,7 @@ func (o *OltDevice) validateFlow(flow *openolt.Flow) error {
 		for uniId, uni := range onu {
 			for allocId := range uni {
 				if allocId == flow.AllocId {
-					return fmt.Errorf("allocId-%d-already-in-use-on-uni-%d-onu-%d", allocId, uniId, onuId)
+					return fmt.Errorf("allocId-%d-already-in-use-on-uni-%d-onu-%d-flow-%d", allocId, uniId, onuId, flow.FlowId)
 				}
 			}
 		}
