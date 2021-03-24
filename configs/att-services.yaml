@@ -10,4 +10,4 @@ services:
   s_tag_allocation: shared
   needs_eapol: true
   needs_dhcp: true
-  tp_id: 64
+  tp_id: 65
