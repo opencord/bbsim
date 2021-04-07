@@ -204,7 +204,7 @@ func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16, ac
 
 	omciLogger.WithFields(log.Fields{
 		"EntityInstance": entityInstance,
-	}).Info("received-get-software-image-request")
+	}).Trace("received-get-software-image-request")
 
 	// Only one image can be active and committed
 	committed := 0
@@ -240,7 +240,7 @@ func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16, ac
 		"entityId":    entityInstance,
 		"active":      active,
 		"committed":   committed,
-	}).Info("Reporting SoftwareImage")
+	}).Trace("Reporting SoftwareImage")
 
 	return res
 }

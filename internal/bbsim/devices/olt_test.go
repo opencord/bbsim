@@ -23,11 +23,11 @@ import (
 	"github.com/opencord/bbsim/internal/bbsim/types"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/bbsim/internal/common"
+	"github.com/opencord/voltha-protos/v4/go/openolt"
 	"github.com/stretchr/testify/assert"
 	"net"
+	"sync"
 	"testing"
-
-	"github.com/opencord/voltha-protos/v4/go/openolt"
 )
 
 func createMockOlt(numPon int, numOnu int, services []ServiceIf) *OltDevice {
@@ -434,6 +434,57 @@ func Test_Olt_freeGemPortIdReplicatedflow(t *testing.T) {
 
 	// this flow removes all the gems, so no UNI should be left
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni]), 0)
+}
+
+// testing that we can validate flows while we are adding them
+func Benchmark_validateAndAddFlows(b *testing.B) {
+	const (
+		pon   = 0
+		start = 0
+		end   = 512
+	)
+
+	for r := 0; r < b.N; r++ {
+		olt := createMockOlt(1, 512, []ServiceIf{})
+
+		wg := sync.WaitGroup{}
+
+		// concurrently adding 1K gems
+		for i := start; i < end; i++ {
+			wg.Add(1)
+			flow := &openolt.Flow{
+				AccessIntfId: pon,
+				OnuId:        int32(i),
+				PortNo:       uint32(i),
+				GemportId:    int32(i),
+				FlowId:       uint64(i),
+			}
+			go func(wg *sync.WaitGroup) {
+				olt.storeGemPortIdByFlow(flow)
+				olt.storeAllocId(flow)
+				wg.Done()
+			}(&wg)
+		}
+
+		// at the same time validate flows
+		for i := start; i < end; i++ {
+			wg.Add(1)
+			flow := &openolt.Flow{
+				AccessIntfId: pon,
+				OnuId:        int32(i),
+				PortNo:       uint32(i),
+				GemportId:    1,
+				FlowId:       uint64(i),
+			}
+			go func(wg *sync.WaitGroup) {
+				_ = olt.validateFlow(flow)
+				wg.Done()
+			}(&wg)
+		}
+
+		wg.Wait()
+		// NOTE this tests only fails if there is concurrent access to the map
+	}
 }
 
 func Test_Olt_validateFlow(t *testing.T) {
