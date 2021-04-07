@@ -1610,11 +1610,22 @@ func (o *OltDevice) storeAllocId(flow *openolt.Flow) {
 	o.AllocIDsLock.Lock()
 	defer o.AllocIDsLock.Unlock()
 
+	if _, ok := o.AllocIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)]; !ok {
+		oltLogger.WithFields(log.Fields{
+			"IntfId":    flow.AccessIntfId,
+			"OnuId":     flow.OnuId,
+			"PortNo":    flow.PortNo,
+			"GemportId": flow.GemportId,
+			"FlowId":    flow.FlowId,
+		}).Error("trying-to-store-alloc-id-for-unknown-onu")
+	}
+
 	oltLogger.WithFields(log.Fields{
-		"IntfId":  flow.AccessIntfId,
-		"OnuId":   flow.OnuId,
-		"PortNo":  flow.PortNo,
-		"AllocId": flow.AllocId,
+		"IntfId":    flow.AccessIntfId,
+		"OnuId":     flow.OnuId,
+		"PortNo":    flow.PortNo,
+		"GemportId": flow.GemportId,
+		"FlowId":    flow.FlowId,
 	}).Trace("storing-alloc-id-via-flow")
 
 	if _, ok := o.AllocIDs[uint32(flow.AccessIntfId)][uint32(flow.OnuId)][flow.PortNo]; !ok {
@@ -1660,6 +1671,27 @@ func (o *OltDevice) freeAllocId(flow *openolt.Flow) {
 }
 
 func (o *OltDevice) storeGemPortId(ponId uint32, onuId uint32, portNo uint32, gemId int32, flowId uint64) {
+	o.GemPortIDsLock.Lock()
+	defer o.GemPortIDsLock.Unlock()
+
+	if _, ok := o.GemPortIDs[ponId][onuId]; !ok {
+		oltLogger.WithFields(log.Fields{
+			"IntfId":    ponId,
+			"OnuId":     onuId,
+			"PortNo":    portNo,
+			"GemportId": gemId,
+			"FlowId":    flowId,
+		}).Error("trying-to-store-gemport-for-unknown-onu")
+	}
+
+	oltLogger.WithFields(log.Fields{
+		"IntfId":    ponId,
+		"OnuId":     onuId,
+		"PortNo":    portNo,
+		"GemportId": gemId,
+		"FlowId":    flowId,
+	}).Trace("storing-alloc-id-via-flow")
+
 	if _, ok := o.GemPortIDs[ponId][onuId][portNo]; !ok {
 		o.GemPortIDs[ponId][onuId][portNo] = make(map[int32]map[uint64]bool)
 	}
@@ -1670,14 +1702,14 @@ func (o *OltDevice) storeGemPortId(ponId uint32, onuId uint32, portNo uint32, ge
 }
 
 func (o *OltDevice) storeGemPortIdByFlow(flow *openolt.Flow) {
-	o.GemPortIDsLock.Lock()
-	defer o.GemPortIDsLock.Unlock()
-
 	oltLogger.WithFields(log.Fields{
-		"IntfId":    flow.AccessIntfId,
-		"OnuId":     flow.OnuId,
-		"PortNo":    flow.PortNo,
-		"GemportId": flow.GemportId,
+		"IntfId":        flow.AccessIntfId,
+		"OnuId":         flow.OnuId,
+		"PortNo":        flow.PortNo,
+		"GemportId":     flow.GemportId,
+		"FlowId":        flow.FlowId,
+		"ReplicateFlow": flow.ReplicateFlow,
+		"PbitToGemport": flow.PbitToGemport,
 	}).Trace("storing-gem-port-id-via-flow")
 
 	if flow.ReplicateFlow {
@@ -1687,7 +1719,6 @@ func (o *OltDevice) storeGemPortIdByFlow(flow *openolt.Flow) {
 	} else {
 		o.storeGemPortId(uint32(flow.AccessIntfId), uint32(flow.OnuId), flow.PortNo, flow.GemportId, flow.FlowId)
 	}
-
 }
 
 func (o *OltDevice) freeGemPortId(flow *openolt.Flow) {
@@ -1736,12 +1767,10 @@ func (o *OltDevice) freeGemPortId(flow *openolt.Flow) {
 // - the AllocId is not used in any flow referencing other ONUs/UNIs on the same PON
 // - the GemPortId is not used in any flow referencing other ONUs/UNIs on the same PON
 func (o *OltDevice) validateFlow(flow *openolt.Flow) error {
-
 	// validate gemPort
 	o.GemPortIDsLock.RLock()
-	allocatedGems := o.GemPortIDs[uint32(flow.AccessIntfId)]
-	o.GemPortIDsLock.RUnlock()
-	for onuId, onu := range allocatedGems {
+	defer o.GemPortIDsLock.RUnlock()
+	for onuId, onu := range o.GemPortIDs[uint32(flow.AccessIntfId)] {
 		if onuId == uint32(flow.OnuId) {
 			continue
 		}
@@ -1763,9 +1792,8 @@ func (o *OltDevice) validateFlow(flow *openolt.Flow) error {
 	}
 
 	o.AllocIDsLock.RLock()
-	allocatedAllocIds := o.AllocIDs[uint32(flow.AccessIntfId)]
-	o.AllocIDsLock.RUnlock()
-	for onuId, onu := range allocatedAllocIds {
+	defer o.AllocIDsLock.RUnlock()
+	for onuId, onu := range o.AllocIDs[uint32(flow.AccessIntfId)] {
 		if onuId == uint32(flow.OnuId) {
 			continue
 		}
