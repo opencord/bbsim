@@ -823,21 +823,24 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 		msgObj, err := omcilib.ParseCreateRequest(msg.OmciPkt)
 		if err == nil {
 			if msgObj.EntityClass == me.GemPortNetworkCtpClassID {
-				if used, sn = o.PonPort.isGemPortAllocated(msgObj.EntityInstance); used {
-					onuLogger.WithFields(log.Fields{
-						"IntfId":       o.PonPortID,
-						"OnuId":        o.ID,
-						"GemPortId":    msgObj.EntityInstance,
-						"SerialNumber": o.Sn(),
-					}).Errorf("gemport-already-allocated-to-onu-with-sn-%s", common.OnuSnToString(sn))
-				} else {
-					onuLogger.WithFields(log.Fields{
-						"IntfId":       o.PonPortID,
-						"OnuId":        o.ID,
-						"GemPortId":    msgObj.EntityInstance,
-						"SerialNumber": o.Sn(),
-					}).Trace("storing-gem-port-id-via-omci")
-					o.PonPort.storeGemPort(msgObj.EntityInstance, o.SerialNumber)
+				// GemPort 4069 is reserved for multicast and shared across ONUs
+				if msgObj.EntityInstance != 4069 {
+					if used, sn = o.PonPort.isGemPortAllocated(msgObj.EntityInstance); used {
+						onuLogger.WithFields(log.Fields{
+							"IntfId":       o.PonPortID,
+							"OnuId":        o.ID,
+							"GemPortId":    msgObj.EntityInstance,
+							"SerialNumber": o.Sn(),
+						}).Errorf("gemport-already-allocated-to-onu-with-sn-%s", common.OnuSnToString(sn))
+					} else {
+						onuLogger.WithFields(log.Fields{
+							"IntfId":       o.PonPortID,
+							"OnuId":        o.ID,
+							"GemPortId":    msgObj.EntityInstance,
+							"SerialNumber": o.Sn(),
+						}).Trace("storing-gem-port-id-via-omci")
+						o.PonPort.storeGemPort(msgObj.EntityInstance, o.SerialNumber)
+					}
 				}
 			}
 		}
