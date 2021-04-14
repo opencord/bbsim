@@ -413,7 +413,7 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) {
 	// new ones
 	o.Lock()
 	if o.enableContext != nil && o.enableContextCancel != nil {
-		oltLogger.Info("This is an OLT reboot")
+		oltLogger.Info("This is an OLT reboot or a reconcile")
 		o.enableContextCancel()
 		rebootFlag = true
 	}
@@ -725,8 +725,11 @@ loop:
 			oltLogger.Debug("OLT Indication processing canceled via context")
 			break loop
 		case message, ok := <-ch:
-			if !ok || ctx.Err() != nil {
-				oltLogger.Debug("OLT Indication processing canceled via closed channel")
+			if !ok {
+				if ctx.Err() != nil {
+					oltLogger.WithField("err", ctx.Err()).Error("OLT EnableContext error")
+				}
+				oltLogger.Warn("OLT Indication processing canceled via closed channel")
 				break loop
 			}
 
