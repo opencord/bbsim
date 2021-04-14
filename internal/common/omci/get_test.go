@@ -92,11 +92,18 @@ func TestGetResponse(t *testing.T) {
 			getArgs{createOnuDataResponse(32768, 10, 129), 2},
 			getWant{2, map[string]interface{}{"MibDataSync": uint8(129)}},
 		},
+		{"getGemPortNetworkCtpPerformanceMonitoringHistoryDataResponse",
+			getArgs{createGemPortNetworkCtpPerformanceMonitoringHistoryData(32768, 10), 2},
+			getWant{2, map[string]interface{}{"ManagedEntityId": uint16(10)}},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			data, _ := Serialize(omci.GetResponseType, tt.args.generatedPkt, tt.args.transactionId)
+			data, err := Serialize(omci.GetResponseType, tt.args.generatedPkt, tt.args.transactionId)
+			if err != nil {
+				t.Fatal("cannot-serial-omci-packet", err)
+			}
 
 			// emulate the openonu-go behavior:
 			// omci_cc.receiveMessage process the message (creates a gopacket and extracts the OMCI layer) and invokes a callback
