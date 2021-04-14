@@ -46,8 +46,9 @@ func (s *mockService) HandlePackets() {
 	s.HandlePacketsCallCount = s.HandlePacketsCallCount + 1
 }
 
-func (s *mockService) Initialize(stream types.Stream) {}
-func (s *mockService) Disable()                       {}
+func (s *mockService) Initialize(stream types.Stream)   {}
+func (s *mockService) UpdateStream(stream types.Stream) {}
+func (s *mockService) Disable()                         {}
 
 func createTestService(needsEapol bool, needsDchp bool) (*Service, error) {
 

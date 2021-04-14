@@ -45,6 +45,7 @@ type ServiceIf interface {
 	HandleDhcp(pbit uint8, cTag int) // Sends the DHCPDiscover packet
 
 	Initialize(stream bbsimTypes.Stream)
+	UpdateStream(stream bbsimTypes.Stream)
 	Disable()
 }
 
@@ -115,7 +116,7 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 					serviceLogger.Fatal("initialize invoke with wrong arguments")
 				}
 
-				service.Stream = stream
+				service.UpdateStream(stream)
 
 				service.PacketCh = make(chan bbsimTypes.OnuPacketMessage)
 				service.Channel = make(chan bbsimTypes.Message)
@@ -288,6 +289,10 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 	)
 
 	return &service, nil
+}
+
+func (s *Service) UpdateStream(stream bbsimTypes.Stream) {
+	s.Stream = stream
 }
 
 // HandleAuth is used to start EAPOL for a particular Service when the corresponding flow is received

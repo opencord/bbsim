@@ -48,6 +48,18 @@ type OltMock struct {
 	CompletedOnus int // Number of ONUs that have received a DHCPAck
 }
 
+type MockStream struct {
+	grpc.ServerStream
+}
+
+func (*MockStream) Send(ind *openolt.Indication) error {
+	return nil
+}
+
+func (*MockStream) Context() context.Context {
+	return context.Background()
+}
+
 // trigger an enable call and start the same listeners on the gRPC stream that VOLTHA would create
 // this method is blocking
 func (o *OltMock) Start() {
@@ -211,7 +223,11 @@ func (o *OltMock) handleOnuIndication(client openolt.OpenoltClient, onuInd *open
 	}
 
 	ctx, cancel := context.WithCancel(context.TODO())
-	go onu.ProcessOnuMessages(ctx, nil, client)
+	// NOTE we need to create a fake stream for ProcessOnuMessages
+	// as it listen on the context to cancel the loop
+	// In the BBR case it's not used for anything else
+	mockStream := MockStream{}
+	go onu.ProcessOnuMessages(ctx, &mockStream, client)
 
 	go func() {
 

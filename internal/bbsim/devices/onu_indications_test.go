@@ -47,6 +47,10 @@ func (s *mockStream) Send(ind *openolt.Indication) error {
 	return nil
 }
 
+func (s *mockStream) Context() context.Context {
+	return context.Background()
+}
+
 // test that we're sending a Discovery indication to VOLTHA
 func Test_Onu_DiscoverIndication_send_on_discovery(t *testing.T) {
 	onu := createTestOnu()

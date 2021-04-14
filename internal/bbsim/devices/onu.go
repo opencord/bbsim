@@ -329,6 +329,7 @@ func (o *Onu) ProcessOnuMessages(ctx context.Context, stream openolt.Openolt_Ena
 		"onuID":   o.ID,
 		"onuSN":   o.Sn(),
 		"ponPort": o.PonPortID,
+		"stream":  stream,
 	}).Debug("Starting ONU Indication Channel")
 
 loop:
@@ -338,14 +339,20 @@ loop:
 			onuLogger.WithFields(log.Fields{
 				"onuID": o.ID,
 				"onuSN": o.Sn(),
-			}).Tracef("ONU message handling canceled via context")
+			}).Debug("ONU message handling canceled via context")
+			break loop
+		case <-stream.Context().Done():
+			onuLogger.WithFields(log.Fields{
+				"onuID": o.ID,
+				"onuSN": o.Sn(),
+			}).Debug("ONU message handling canceled via stream context")
 			break loop
 		case message, ok := <-o.Channel:
 			if !ok || ctx.Err() != nil {
 				onuLogger.WithFields(log.Fields{
 					"onuID": o.ID,
 					"onuSN": o.Sn(),
-				}).Tracef("ONU message handling canceled via channel close")
+				}).Debug("ONU message handling canceled via channel close")
 				break loop
 			}
 			onuLogger.WithFields(log.Fields{
@@ -477,8 +484,9 @@ loop:
 		}
 	}
 	onuLogger.WithFields(log.Fields{
-		"onuID": o.ID,
-		"onuSN": o.Sn(),
+		"onuID":  o.ID,
+		"onuSN":  o.Sn(),
+		"stream": stream,
 	}).Debug("Stopped handling ONU Indication Channel")
 }
 
