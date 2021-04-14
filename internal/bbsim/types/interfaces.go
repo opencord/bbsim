@@ -18,9 +18,11 @@ package types
 
 import (
 	"github.com/opencord/voltha-protos/v4/go/openolt"
+	"google.golang.org/grpc"
 )
 
 // represent a gRPC stream
 type Stream interface {
 	Send(*openolt.Indication) error
+	grpc.ServerStream
 }
