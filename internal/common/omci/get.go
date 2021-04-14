@@ -101,7 +101,7 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openo
 		omciLogger.WithFields(log.Fields{
 			"Err":  err,
 			"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
-		}).Error("cannot-Serialize-Onu2gResponse")
+		}).Error("cannot-Serialize-GetResponse")
 		return nil, err
 	}
 
@@ -357,21 +357,6 @@ func createEthernetFramePerformanceMonitoringHistoryDataUpstreamResponse(attribu
 		return nil
 	}
 
-	// L2 PM counters MEs exceed max allowed OMCI payload size.
-	// So the request/responses are always multipart.
-	// First identify the attributes that are not requested in the current GET request.
-	// Then filter out those attributes from the responses in the current GET response.
-	unwantedAttributeMask := ^attributeMask
-	var i uint16
-	for i = 1; i <= 16; i++ { // 1 and 16 because they are allowed valid min and max index keys in AttributeValueMap.
-		// We leave out 0 because that is ManagedEntity and that is a default IE in the map
-		if (1<<(16-i))&unwantedAttributeMask > 0 {
-			if err := managedEntity.DeleteAttributeByIndex(uint(i)); err != nil {
-				omciLogger.Errorf("error deleting attribute at index=%v, err=%v", i, err)
-			}
-		}
-	}
-
 	return &omci.GetResponse{
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.EthernetFramePerformanceMonitoringHistoryDataUpstreamClassID,
@@ -412,21 +397,6 @@ func createEthernetFramePerformanceMonitoringHistoryDataDownstreamResponse(attri
 		return nil
 	}
 
-	// L2 PM counters MEs exceed max allowed OMCI payload size.
-	// So the request/responses are always multipart.
-	// First identify the attributes that are not requested in the current GET request.
-	// Then filter out those attributes from the responses in the current GET response.
-	unwantedAttributeMask := ^attributeMask
-	var i uint16
-	for i = 1; i <= 16; i++ { // 1 and 16 because they are allowed valid min and max index keys in AttributeValueMap.
-		// We leave out 0 because that is ManagedEntity and that is a default IE in the map
-		if (1<<(16-i))&unwantedAttributeMask > 0 {
-			if err := managedEntity.DeleteAttributeByIndex(uint(i)); err != nil {
-				omciLogger.Errorf("error deleting attribute at index=%v, err=%v", i, err)
-			}
-		}
-	}
-
 	return &omci.GetResponse{
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.EthernetFramePerformanceMonitoringHistoryDataDownstreamClassID,
@@ -465,21 +435,6 @@ func createEthernetPerformanceMonitoringHistoryDataResponse(attributeMask uint16
 	if meErr.GetError() != nil {
 		omciLogger.Errorf("NewEthernetPerformanceMonitoringHistoryData %v", meErr.Error())
 		return nil
-	}
-
-	// L2 PM counters MEs exceed max allowed OMCI payload size.
-	// So the request/responses are always multipart.
-	// First identify the attributes that are not requested in the current GET request.
-	// Then filter out those attributes from the responses in the current GET response.
-	unwantedAttributeMask := ^attributeMask
-	var i uint16
-	for i = 1; i <= 16; i++ { // 1 and 16 because they are allowed valid min and max index keys in AttributeValueMap.
-		// We leave out 0 because that is ManagedEntity and that is a default IE in the map
-		if (1<<(16-i))&unwantedAttributeMask > 0 {
-			if err := managedEntity.DeleteAttributeByIndex(uint(i)); err != nil {
-				omciLogger.Errorf("error deleting attribute at index=%v, err=%v", i, err)
-			}
-		}
 	}
 
 	return &omci.GetResponse{
@@ -545,21 +500,6 @@ func createGemPortNetworkCtpPerformanceMonitoringHistoryData(attributeMask uint1
 	if meErr.GetError() != nil {
 		omciLogger.Errorf("NewGemPortNetworkCtpPerformanceMonitoringHistoryData %v", meErr.Error())
 		return nil
-	}
-
-	// L2 PM counters MEs exceed max allowed OMCI payload size.
-	// So the request/responses are always multipart.
-	// First identify the attributes that are not requested in the current GET request.
-	// Then filter out those attributes from the responses in the current GET response.
-	unwantedAttributeMask := ^attributeMask
-	var i uint16
-	for i = 1; i <= 7; i++ { // 1 and 7 because they are allowed valid min and max index keys in AttributeValueMap.
-		// We leave out 0 because that is ManagedEntity and that is a default IE in the map
-		if (1<<(7-i))&unwantedAttributeMask > 0 {
-			if err := managedEntity.DeleteAttributeByIndex(uint(i)); err != nil {
-				omciLogger.Errorf("error deleting attribute at index=%v, err=%v", i, err)
-			}
-		}
 	}
 
 	return &omci.GetResponse{
