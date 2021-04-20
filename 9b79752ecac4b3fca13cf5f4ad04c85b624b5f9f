@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9e2745c6_8c10541a",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-04-20T15:19:53Z",
+      "side": 1,
+      "message": "No that is not the timeout for the reboot, that is specified here https://github.com/opencord/bbsim/blob/master/internal/common/options.go#L87\n\nThis timeout is because the ContextCancel needs time to propagate, it\u0027s not an elegant \"solution\" but I couldn\u0027t find any way around it",
+      "parentUuid": "b6c7e8b4_944f8a8d",
+      "revId": "9b79752ecac4b3fca13cf5f4ad04c85b624b5f9f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f933784e_6cb19267",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2021-04-20T12:48:08Z",
       "side": 1,
       "message": "Adding this go routine (periodicPortStats) to the waiting group implies that it needs to be completed for wg.Wait(() to be triggered. It seems that \"periodicPortStats\" is meant to send periodic stats, hence, not really \"done\".   Is the wg.Add(1) relevant?  Or I could be suffering from post-PTO disorder 😊",
+      "revId": "9b79752ecac4b3fca13cf5f4ad04c85b624b5f9f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f49bae8c_4865f945",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-04-20T15:19:53Z",
+      "side": 1,
+      "message": "Good point, we need to cancel that loops, let me address that",
+      "parentUuid": "f933784e_6cb19267",
       "revId": "9b79752ecac4b3fca13cf5f4ad04c85b624b5f9f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
