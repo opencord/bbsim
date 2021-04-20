@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6c7e8b4_944f8a8d",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-04-20T07:22:29Z",
+      "side": 1,
+      "message": "to mimic a real scenario I\u0027d increase this to at least 30 seconds, but up for debate.",
+      "revId": "9b79752ecac4b3fca13cf5f4ad04c85b624b5f9f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
