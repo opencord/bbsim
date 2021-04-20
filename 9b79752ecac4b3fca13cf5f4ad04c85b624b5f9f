@@ -69,6 +69,24 @@
       "revId": "9b79752ecac4b3fca13cf5f4ad04c85b624b5f9f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "93d329af_79b712cd",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-04-20T15:22:34Z",
+      "side": 1,
+      "message": "Actually, I\u0027m sorry the periodicPortStats loop is stopped when enableContextCancel is called, thus the wg.Done is called",
+      "parentUuid": "f49bae8c_4865f945",
+      "revId": "9b79752ecac4b3fca13cf5f4ad04c85b624b5f9f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
