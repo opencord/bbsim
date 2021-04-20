@@ -16,6 +16,23 @@
       "revId": "9b79752ecac4b3fca13cf5f4ad04c85b624b5f9f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f933784e_6cb19267",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1000056
+      },
+      "writtenOn": "2021-04-20T12:48:08Z",
+      "side": 1,
+      "message": "Adding this go routine (periodicPortStats) to the waiting group implies that it needs to be completed for wg.Wait(() to be triggered. It seems that \"periodicPortStats\" is meant to send periodic stats, hence, not really \"done\".   Is the wg.Add(1) relevant?  Or I could be suffering from post-PTO disorder 😊",
+      "revId": "9b79752ecac4b3fca13cf5f4ad04c85b624b5f9f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
