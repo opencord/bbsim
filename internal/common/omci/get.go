@@ -45,7 +45,7 @@ func ParseGetRequest(omciPkt gopacket.Packet) (*omci.GetRequest, error) {
 	return msgObj, nil
 }
 
-func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openolt.SerialNumber, mds uint8, activeImageEntityId uint16, committedImageEntityId uint16) ([]byte, error) {
+func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openolt.SerialNumber, mds uint8, activeImageEntityId uint16, committedImageEntityId uint16, onuDown bool) ([]byte, error) {
 
 	msgObj, err := ParseGetRequest(omciPkt)
 
@@ -70,9 +70,9 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openo
 	case me.IpHostConfigDataClassID:
 		response = createIpHostResponse(msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.UniGClassID:
-		response = createUnigResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+		response = createUnigResponse(msgObj.AttributeMask, msgObj.EntityInstance, onuDown)
 	case me.PhysicalPathTerminationPointEthernetUniClassID:
-		response = createPptpResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+		response = createPptpResponse(msgObj.AttributeMask, msgObj.EntityInstance, onuDown)
 	case me.AniGClassID:
 		response = createAnigResponse(msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.OnuDataClassID:
@@ -260,13 +260,18 @@ func createIpHostResponse(attributeMask uint16, entityInstance uint16) *omci.Get
 	}
 }
 
-func createUnigResponse(attributeMask uint16, entityID uint16) *omci.GetResponse {
+func createUnigResponse(attributeMask uint16, entityID uint16, onuDown bool) *omci.GetResponse {
+	// Valid values for uni_admin_state are 0 (unlocks) and 1 (locks)
+	omciAdminState := 1
+	if !onuDown {
+		omciAdminState = 0
+	}
 	managedEntity, meErr := me.NewUniG(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
 			"ManagedEntityId":             entityID,
 			"Deprecated":                  0,
-			"AdministrativeState":         0,
+			"AdministrativeState":         omciAdminState,
 			"ManagementCapability":        0,
 			"NonOmciManagementIdentifier": 1,
 			"RelayAgentOptions":           1,
@@ -289,7 +294,14 @@ func createUnigResponse(attributeMask uint16, entityID uint16) *omci.GetResponse
 	}
 }
 
-func createPptpResponse(attributeMask uint16, entityID uint16) *omci.GetResponse {
+func createPptpResponse(attributeMask uint16, entityID uint16, onuDown bool) *omci.GetResponse {
+	// Valid values for oper_state are 0 (enabled) and 1 (disabled)
+	// Valid values for uni_admin_state are 0 (unlocks) and 1 (locks)
+	onuAdminState := 1
+	if !onuDown {
+		onuAdminState = 0
+	}
+	onuOperState := onuAdminState // For now make the assumption that oper state reflects the admin state
 	managedEntity, meErr := me.NewPhysicalPathTerminationPointEthernetUni(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
@@ -298,8 +310,8 @@ func createPptpResponse(attributeMask uint16, entityID uint16) *omci.GetResponse
 			"SensedType":                    0,
 			"AutoDetectionConfiguration":    0,
 			"EthernetLoopbackConfiguration": 0,
-			"AdministrativeState":           0,
-			"OperationalState":              0,
+			"AdministrativeState":           onuAdminState,
+			"OperationalState":              onuOperState,
 			"ConfigurationInd":              0,
 			"MaxFrameSize":                  0,
 			"DteOrDceInd":                   0,
