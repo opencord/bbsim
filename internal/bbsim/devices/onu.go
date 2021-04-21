@@ -749,7 +749,8 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 	case omci.MibUploadNextRequestType:
 		responsePkt, _ = omcilib.CreateMibUploadNextResponse(msg.OmciPkt, msg.OmciMsg, o.MibDataSync)
 	case omci.GetRequestType:
-		responsePkt, _ = omcilib.CreateGetResponse(msg.OmciPkt, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId, o.CommittedImageEntityId)
+		onuDown := o.OperState.Current() == "down"
+		responsePkt, _ = omcilib.CreateGetResponse(msg.OmciPkt, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId, o.CommittedImageEntityId, onuDown)
 	case omci.SetRequestType:
 		success := true
 		msgObj, _ := omcilib.ParseSetRequest(msg.OmciPkt)
@@ -767,6 +768,23 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 				raiseOMCIAlarm := false
 				if adminState == 1 {
 					raiseOMCIAlarm = true
+					// set the OperState to disabled
+					if err := o.OperState.Event(OnuTxDisable); err != nil {
+						onuLogger.WithFields(log.Fields{
+							"OnuId":  o.ID,
+							"IntfId": o.PonPortID,
+							"OnuSn":  o.Sn(),
+						}).Errorf("Cannot change ONU OperState to down: %s", err.Error())
+					}
+				} else {
+					// set the OperState to enabled
+					if err := o.OperState.Event(OnuTxEnable); err != nil {
+						onuLogger.WithFields(log.Fields{
+							"OnuId":  o.ID,
+							"IntfId": o.PonPortID,
+							"OnuSn":  o.Sn(),
+						}).Errorf("Cannot change ONU OperState to up: %s", err.Error())
+					}
 				}
 				msg := bbsim.Message{
 					Type: bbsim.UniStatusAlarm,
