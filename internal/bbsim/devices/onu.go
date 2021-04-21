@@ -749,7 +749,8 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 	case omci.MibUploadNextRequestType:
 		responsePkt, _ = omcilib.CreateMibUploadNextResponse(msg.OmciPkt, msg.OmciMsg, o.MibDataSync)
 	case omci.GetRequestType:
-		responsePkt, _ = omcilib.CreateGetResponse(msg.OmciPkt, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId, o.CommittedImageEntityId)
+		onuDown := o.OperState.Current() == OnuStateDisabled
+		responsePkt, _ = omcilib.CreateGetResponse(msg.OmciPkt, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId, o.CommittedImageEntityId, onuDown)
 	case omci.SetRequestType:
 		success := true
 		msgObj, _ := omcilib.ParseSetRequest(msg.OmciPkt)
