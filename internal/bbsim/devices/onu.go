@@ -740,9 +740,13 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			"IntfId":       o.PonPortID,
 			"OnuId":        o.ID,
 			"SerialNumber": o.Sn(),
-		}).Debug("received-mib-reset-request-resetting-mds")
+		}).Debug("received-mib-reset-request")
 		if responsePkt, errResp = omcilib.CreateMibResetResponse(msg.OmciMsg.TransactionID); errResp == nil {
 			o.MibDataSync = 0
+
+			// if the MIB reset is successful then remove all the stored AllocIds and GemPorts
+			o.PonPort.removeAllocId(o.SerialNumber)
+			o.PonPort.removeGemPortBySn(o.SerialNumber)
 		}
 	case omci.MibUploadRequestType:
 		responsePkt, _ = omcilib.CreateMibUploadResponse(msg.OmciMsg.TransactionID)
