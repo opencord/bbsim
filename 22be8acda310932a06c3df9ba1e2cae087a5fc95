@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e49ccc60_ee60782c",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 745,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2021-04-27T15:40:30Z",
+      "side": 1,
+      "message": "Actually this should be ok so. OmciMsgCounter is initialized with 0 at line 165. I.e. in the first monitoring cycle input runs from 0 to 9, output from 1 to 10. For all following cycles input starts with OmciMsgCounter equal 10 and output will be set to 1. This is the same starting condition as in the first loop, where we started with input 0 which was incremented to output value 1. If we would initialize OmciMsgCounter with 10 at line 165, each loop would be the same.",
+      "parentUuid": "b1072aac_1a0c6e0f",
+      "revId": "22be8acda310932a06c3df9ba1e2cae087a5fc95",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3ad1d034_27245c25",
         "filename": "internal/bbsim/devices/onu.go",
         "patchSetId": 1
