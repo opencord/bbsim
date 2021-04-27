@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b1072aac_1a0c6e0f",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 745,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-04-27T12:14:04Z",
+      "side": 1,
+      "message": "either you have \u003c\u003d equals here or you start from 0 at line 748, otherwise you are actually counting 9 messages, not 10",
+      "revId": "22be8acda310932a06c3df9ba1e2cae087a5fc95",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ad1d034_27245c25",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-04-27T12:14:04Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "22be8acda310932a06c3df9ba1e2cae087a5fc95",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
