@@ -53,6 +53,9 @@ the list via ``./bbsim --help``
             IP address:port (default ":50071")
       -services string
             Service Configuration file path (default "configs/att-services.yaml")
+      -omci_response_rate int
+            Amount of OMCI messages to respond to - ranges from 0 (drop all messages)
+            to 10 (respond to all messages) so that if it's set to 9 we don't respond to every 10th message.
 
 
 

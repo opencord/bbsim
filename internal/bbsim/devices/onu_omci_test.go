@@ -17,6 +17,8 @@
 package devices
 
 import (
+	"testing"
+
 	"github.com/google/gopacket"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
@@ -24,7 +26,6 @@ import (
 	me "github.com/opencord/omci-lib-go/generated"
 	"github.com/opencord/voltha-protos/v4/go/openolt"
 	"gotest.tools/assert"
-	"testing"
 )
 
 var mockAttr = me.AttributeValueMap{
@@ -239,4 +240,22 @@ func Test_GemPortValidation(t *testing.T) {
 	_, omciPkt = omciBytesToMsg(t, stream.Calls[2].GetOmciInd().Pkt)
 	responseLayer = omciToCreateResponse(t, omciPkt)
 	assert.Equal(t, responseLayer.Result, me.ProcessingError)
+}
+
+func Test_OmciResponseRate(t *testing.T) {
+
+	onu := createMockOnu(1, 1)
+
+	for onu.OmciResponseRate = 0; onu.OmciResponseRate <= maxOmciMsgCounter; onu.OmciResponseRate++ {
+		//t.Logf("onu.OmciResponseRate: %d", onu.OmciResponseRate)
+		stream := &mockStream{
+			Calls: make(map[int]*openolt.Indication),
+		}
+		//send ten OMCI requests and check if number of responses is only equal to onu.OmciResponseRate
+		for i := 0; i < 10; i++ {
+			onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciSetRequest(t)), stream)
+			//t.Logf("stream.CallCount: %d", stream.CallCount)
+		}
+		assert.Equal(t, stream.CallCount, int(onu.OmciResponseRate))
+	}
 }

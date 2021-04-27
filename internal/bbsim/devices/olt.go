@@ -20,14 +20,15 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
-	"github.com/opencord/bbsim/internal/bbsim/types"
-	omcilib "github.com/opencord/bbsim/internal/common/omci"
-	"github.com/opencord/voltha-protos/v4/go/ext/config"
 	"net"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
+	"github.com/opencord/bbsim/internal/bbsim/types"
+	omcilib "github.com/opencord/bbsim/internal/common/omci"
+	"github.com/opencord/voltha-protos/v4/go/ext/config"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -94,10 +95,11 @@ type OltDevice struct {
 
 	// Allocated Resources
 	// this data are to verify that the openolt adapter does not duplicate resources
-	AllocIDsLock   sync.RWMutex
-	AllocIDs       map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool // map[ponPortId]map[OnuId]map[PortNo]map[AllocIds]map[FlowId]bool
-	GemPortIDsLock sync.RWMutex
-	GemPortIDs     map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool // map[ponPortId]map[OnuId]map[PortNo]map[GemPortIDs]map[FlowId]bool
+	AllocIDsLock     sync.RWMutex
+	AllocIDs         map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool // map[ponPortId]map[OnuId]map[PortNo]map[AllocIds]map[FlowId]bool
+	GemPortIDsLock   sync.RWMutex
+	GemPortIDs       map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool // map[ponPortId]map[OnuId]map[PortNo]map[GemPortIDs]map[FlowId]bool
+	OmciResponseRate uint8
 }
 
 var olt OltDevice
@@ -133,6 +135,7 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		PreviouslyConnected: false,
 		AllocIDs:            make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool),
 		GemPortIDs:          make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool),
+		OmciResponseRate:    options.Olt.OmciResponseRate,
 	}
 
 	if val, ok := ControlledActivationModes[options.BBSim.ControlledActivation]; ok {

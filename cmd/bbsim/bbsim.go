@@ -18,7 +18,6 @@ package main
 
 import (
 	"context"
-	"github.com/opencord/bbsim/internal/bbsim/responders/webserver"
 	"net"
 	"net/http"
 	"os"
@@ -26,6 +25,8 @@ import (
 	"runtime/pprof"
 	"sync"
 	"syscall"
+
+	"github.com/opencord/bbsim/internal/bbsim/responders/webserver"
 
 	"github.com/Shopify/sarama"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -158,6 +159,7 @@ func main() {
 		"DhcpRetry":            common.Config.BBSim.DhcpRetry,
 		"AuthRetry":            common.Config.BBSim.AuthRetry,
 		"OltRebootDelay":       common.Config.Olt.OltRebootDelay,
+		"OmciResponseRate":     common.Config.Olt.OmciResponseRate,
 	}).Info("BroadBand Simulator is on")
 
 	// control channels, they are only closed when the goroutine needs to be terminated
