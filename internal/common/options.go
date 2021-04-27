@@ -86,6 +86,7 @@ type OltConfig struct {
 	ID                 int    `yaml:"id"`
 	OltRebootDelay     int    `yaml:"reboot_delay"`
 	PortStatsInterval  int    `yaml:"port_stats_interval"`
+	OmciResponseRate   uint8  `yaml:"omci_response_rate"`
 }
 
 type BBSimConfig struct {
@@ -223,6 +224,7 @@ func readCliParams() *GlobalConfig {
 	pon := flag.Int("pon", int(conf.Olt.PonPorts), "Number of PON ports per OLT device to be emulated")
 	onu := flag.Int("onu", int(conf.Olt.OnusPonPort), "Number of ONU devices per PON port to be emulated")
 	oltRebootDelay := flag.Int("oltRebootDelay", conf.Olt.OltRebootDelay, "Time that BBSim should before restarting after a reboot")
+	omci_response_rate := flag.Int("omci_response_rate", int(conf.Olt.OmciResponseRate), "Amount of OMCI messages to respond to")
 
 	openolt_address := flag.String("openolt_address", conf.BBSim.OpenOltAddress, "IP address:port")
 	api_address := flag.String("api_address", conf.BBSim.ApiAddress, "IP address:port")
@@ -251,6 +253,7 @@ func readCliParams() *GlobalConfig {
 	conf.Olt.PonPorts = uint32(*pon)
 	conf.Olt.OnusPonPort = uint32(*onu)
 	conf.Olt.OltRebootDelay = *oltRebootDelay
+	conf.Olt.OmciResponseRate = uint8(*omci_response_rate)
 	conf.BBSim.ConfigFile = *configFile
 	conf.BBSim.ServiceConfigFile = *servicesFile
 	conf.BBSim.CpuProfile = profileCpu
@@ -315,6 +318,7 @@ func getDefaultOps() *GlobalConfig {
 			ID:                 0,
 			OltRebootDelay:     60,
 			PortStatsInterval:  20,
+			OmciResponseRate:   10,
 		},
 		BBRConfig{
 			LogLevel:  "debug",
