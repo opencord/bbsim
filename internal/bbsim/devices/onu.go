@@ -20,18 +20,20 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"sync"
+
 	pb "github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
-	"sync"
+
+	"net"
+	"strconv"
+	"time"
 
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	me "github.com/opencord/omci-lib-go/generated"
-	"net"
-	"strconv"
-	"time"
 
 	"github.com/google/gopacket/layers"
 	"github.com/jpillora/backoff"
@@ -47,6 +49,10 @@ import (
 var onuLogger = log.WithFields(log.Fields{
 	"module": "ONU",
 })
+
+const (
+	maxOmciMsgCounter = 10
+)
 
 const (
 	// ONU transitions
@@ -118,6 +124,8 @@ type Onu struct {
 	ImageSoftwareReceivedSections int
 	ActiveImageEntityId           uint16
 	CommittedImageEntityId        uint16
+	OmciResponseRate              uint8
+	OmciMsgCounter                uint8
 
 	// OMCI params (Used in BBR)
 	tid       uint16
@@ -153,6 +161,8 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 		ImageSoftwareReceivedSections: 0,
 		ActiveImageEntityId:           0, // when we start the SoftwareImage with ID 0 is active and committed
 		CommittedImageEntityId:        0,
+		OmciResponseRate:              olt.OmciResponseRate,
+		OmciMsgCounter:                0,
 	}
 	o.SerialNumber = NewSN(olt.ID, pon.ID, id)
 	// NOTE this state machine is used to track the operational
@@ -732,6 +742,19 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 		"SerialNumber": o.Sn(),
 	}).Trace("omci-message-decoded")
 
+	if o.OmciMsgCounter < maxOmciMsgCounter {
+		o.OmciMsgCounter++
+	} else {
+		o.OmciMsgCounter = 1
+	}
+	if o.OmciMsgCounter > o.OmciResponseRate {
+		onuLogger.WithFields(log.Fields{
+			"OmciMsgCounter":   o.OmciMsgCounter,
+			"OmciResponseRate": o.OmciResponseRate,
+			"omciMsgType":      msg.OmciMsg.MessageType,
+		}).Debug("skip-omci-msg-response")
+		return
+	}
 	var responsePkt []byte
 	var errResp error
 	switch msg.OmciMsg.MessageType {
