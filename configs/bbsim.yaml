@@ -40,7 +40,8 @@ olt:
   # firmware_version: ""
   # device_id: 0a:0a:0a:0a:0a:<id>
   port_stats_interval: 20 # in seconds
-
+  # omci_response_rate: 10
+  
 # BBR settings
 bbr:
   log: bbr.log
