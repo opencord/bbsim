@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a3adf6c9_6db2de52",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2021-04-28T09:02:16Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "cbc50bc5_abb2c2c3",
+      "range": {
+        "startLine": 138,
+        "startChar": 23,
+        "endLine": 138,
+        "endChar": 28
+      },
+      "revId": "fc1b928987f5ae06b6f6b8bdc463d21a39ede1ab",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f6d924dd_d5341ce7",
         "filename": "internal/bbsim/devices/onu.go",
         "patchSetId": 2
