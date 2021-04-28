@@ -93,6 +93,30 @@
       "revId": "fc1b928987f5ae06b6f6b8bdc463d21a39ede1ab",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3aaeea5f_87db598c",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 745,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2021-04-28T09:04:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "58e54135_48a93396",
+      "range": {
+        "startLine": 745,
+        "startChar": 23,
+        "endLine": 745,
+        "endChar": 40
+      },
+      "revId": "fc1b928987f5ae06b6f6b8bdc463d21a39ede1ab",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
