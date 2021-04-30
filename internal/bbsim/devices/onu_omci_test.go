@@ -18,6 +18,7 @@ package devices
 
 import (
 	"testing"
+	"time"
 
 	"github.com/google/gopacket"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
@@ -280,6 +281,7 @@ func Test_MibDataSyncReset(t *testing.T) {
 	// check that MDS has reset to 0
 	assert.Equal(t, onu.MibDataSync, uint8(0))
 
+	time.Sleep(5 * time.Second)
 	// check that GemPort and AllocId have been removed
 	assert.Equal(t, len(onu.PonPort.AllocatedGemPorts), 0)
 	assert.Equal(t, len(onu.PonPort.AllocatedAllocIds), 0)
