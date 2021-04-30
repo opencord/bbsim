@@ -383,7 +383,7 @@ loop:
 			case bbsim.OMCI:
 				// these are OMCI messages received by the ONU
 				msg, _ := message.Data.(bbsim.OmciMessage)
-				o.handleOmciRequest(msg, stream)
+				_ = o.handleOmciRequest(msg, stream)
 			case bbsim.UniStatusAlarm:
 				msg, _ := message.Data.(bbsim.UniStatusAlarmMessage)
 				onuAlarmMapKey := omcilib.OnuAlarmInfoMapKey{
@@ -732,7 +732,7 @@ func (o *Onu) sendTestResult(msg bbsim.OmciMessage, stream openolt.Openolt_Enabl
 
 // handleOmciRequest is responsible to parse the OMCI packets received from the openolt adapter
 // and generate the appropriate response to it
-func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_EnableIndicationServer) {
+func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_EnableIndicationServer) error {
 
 	onuLogger.WithFields(log.Fields{
 		"omciMsgType":  msg.OmciMsg.MessageType,
@@ -752,8 +752,8 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			"OmciMsgCounter":   o.OmciMsgCounter,
 			"OmciResponseRate": o.OmciResponseRate,
 			"omciMsgType":      msg.OmciMsg.MessageType,
-		}).Debug("skip-omci-msg-response")
-		return
+		}).Debug("skipping-omci-msg-response")
+		return fmt.Errorf("skipping-omci-msg-response-because-of-response-rate-%d", o.OmciResponseRate)
 	}
 	var responsePkt []byte
 	var errResp error
@@ -1023,7 +1023,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 				"IntfId":       o.PonPortID,
 				"SerialNumber": o.Sn(),
 			}).Error("error-while-processing-create-download-section-response")
-			return
+			return fmt.Errorf("error-while-processing-create-download-section-response: %s", errResp.Error())
 		}
 		o.ImageSoftwareReceivedSections++
 
@@ -1181,6 +1181,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 	}
 
 	o.publishOmciEvent(msg)
+	return nil
 }
 
 // sendOmciIndication takes an OMCI packet and sends it up to VOLTHA

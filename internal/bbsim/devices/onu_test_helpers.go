@@ -157,7 +157,8 @@ func createMockOnu(id uint32, ponPortId uint32) *Onu {
 // this method creates a real ONU to be used in the tests
 func createTestOnu() *Onu {
 	olt := OltDevice{
-		ID: 0,
+		ID:               0,
+		OmciResponseRate: 10,
 	}
 
 	pon := CreatePonPort(&olt, 1)

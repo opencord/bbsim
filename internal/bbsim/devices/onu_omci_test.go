@@ -17,8 +17,6 @@
 package devices
 
 import (
-	"testing"
-
 	"github.com/google/gopacket"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
@@ -26,6 +24,7 @@ import (
 	me "github.com/opencord/omci-lib-go/generated"
 	"github.com/opencord/voltha-protos/v4/go/openolt"
 	"gotest.tools/assert"
+	"testing"
 )
 
 var mockAttr = me.AttributeValueMap{
@@ -230,34 +229,41 @@ func Test_MibDataSyncIncrease(t *testing.T) {
 	}
 
 	// send a Create and check that MDS has been increased
-	onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciCreateRequest(t)), stream)
+	err := onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciCreateRequest(t)), stream)
+	assert.NilError(t, err)
 	assert.Equal(t, onu.MibDataSync, uint8(1))
 
 	// send a Set and check that MDS has been increased
-	onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciSetRequest(t)), stream)
+	err = onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciSetRequest(t)), stream)
+	assert.NilError(t, err)
 	assert.Equal(t, onu.MibDataSync, uint8(2))
 
 	// send a Delete and check that MDS has been increased
-	onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciDeleteRequest(t)), stream)
+	err = onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciDeleteRequest(t)), stream)
+	assert.NilError(t, err)
 	assert.Equal(t, onu.MibDataSync, uint8(3))
 
 	// Start software download
 	onu.InternalState.SetState(OnuStateEnabled)
-	onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciStartSoftwareDownloadRequest(t)), stream)
+	err = onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciStartSoftwareDownloadRequest(t)), stream)
+	assert.NilError(t, err)
 	assert.Equal(t, onu.MibDataSync, uint8(4))
 
 	// End software download
 	onu.ImageSoftwareReceivedSections = 1 // we fake that we have received the one download section we expect
 	onu.InternalState.SetState(OnuStateImageDownloadInProgress)
-	onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciEndSoftwareDownloadRequest(t)), stream)
+	err = onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciEndSoftwareDownloadRequest(t)), stream)
+	assert.NilError(t, err)
 	assert.Equal(t, onu.MibDataSync, uint8(5))
 
 	// Activate software
-	onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciActivateSoftwareRequest(t)), stream)
+	err = onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciActivateSoftwareRequest(t)), stream)
+	assert.NilError(t, err)
 	assert.Equal(t, onu.MibDataSync, uint8(6))
 
 	// Commit software
-	onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciCommitSoftwareRequest(t)), stream)
+	err = onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciCommitSoftwareRequest(t)), stream)
+	assert.NilError(t, err)
 	assert.Equal(t, onu.MibDataSync, uint8(7))
 }
 
@@ -275,7 +281,8 @@ func Test_MibDataSyncReset(t *testing.T) {
 	onu.PonPort.storeAllocId(1024, onu.SerialNumber)
 
 	// send a MibReset
-	onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciMibResetRequest(t)), stream)
+	err := onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciMibResetRequest(t)), stream)
+	assert.NilError(t, err)
 
 	// check that MDS has reset to 0
 	assert.Equal(t, onu.MibDataSync, uint8(0))
@@ -295,7 +302,8 @@ func Test_MibDataSyncRotation(t *testing.T) {
 	}
 
 	// send a request that increases the MDS, but once we're at 255 we should go back to 0 (8bit)
-	onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciDeleteRequest(t)), stream)
+	err := onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciDeleteRequest(t)), stream)
+	assert.NilError(t, err)
 	assert.Equal(t, onu.MibDataSync, uint8(0))
 }
 
@@ -309,7 +317,8 @@ func Test_GemPortValidation(t *testing.T) {
 	}
 
 	// create a gem port via OMCI (gemPortId 12)
-	onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciCreateRequest(t)), stream)
+	err := onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciCreateRequest(t)), stream)
+	assert.NilError(t, err)
 
 	// the first time we created the gemPort
 	// the MDS should be incremented
@@ -323,7 +332,8 @@ func Test_GemPortValidation(t *testing.T) {
 	assert.Equal(t, responseLayer.Result, me.Success)
 
 	// send a request to create the same gem port via OMCI (gemPortId 12)
-	onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciCreateRequest(t)), stream)
+	err = onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciCreateRequest(t)), stream)
+	assert.NilError(t, err)
 
 	// this time the MDS should not be incremented
 	assert.Equal(t, stream.CallCount, 2)
@@ -340,14 +350,13 @@ func Test_OmciResponseRate(t *testing.T) {
 	onu := createMockOnu(1, 1)
 
 	for onu.OmciResponseRate = 0; onu.OmciResponseRate <= maxOmciMsgCounter; onu.OmciResponseRate++ {
-		//t.Logf("onu.OmciResponseRate: %d", onu.OmciResponseRate)
 		stream := &mockStream{
 			Calls: make(map[int]*openolt.Indication),
 		}
 		//send ten OMCI requests and check if number of responses is only equal to onu.OmciResponseRate
 		for i := 0; i < 10; i++ {
-			onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciSetRequest(t)), stream)
-			//t.Logf("stream.CallCount: %d", stream.CallCount)
+			// we are not checking the error as we're expecting them (some messages should be skipped)
+			_ = onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciSetRequest(t)), stream)
 		}
 		assert.Equal(t, stream.CallCount, int(onu.OmciResponseRate))
 	}

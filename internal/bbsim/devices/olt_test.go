@@ -32,9 +32,10 @@ import (
 
 func createMockOlt(numPon int, numOnu int, services []ServiceIf) *OltDevice {
 	olt := &OltDevice{
-		ID:         0,
-		AllocIDs:   make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool),
-		GemPortIDs: make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool),
+		ID:               0,
+		AllocIDs:         make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool),
+		GemPortIDs:       make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool),
+		OmciResponseRate: 10,
 	}
 
 	for i := 0; i < numPon; i++ {
