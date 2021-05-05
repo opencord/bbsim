@@ -70,10 +70,14 @@ const (
 	GetCurrentDataResponseType             = MessageType(byte(me.GetCurrentData) | me.AK)
 	SetTableRequestType                    = MessageType(byte(me.SetTable) | me.AR)
 	SetTableResponseType                   = MessageType(byte(me.SetTable) | me.AK)
+
 	// Autonomous ONU messages
 	AlarmNotificationType    = MessageType(byte(me.AlarmNotification))
 	AttributeValueChangeType = MessageType(byte(me.AttributeValueChange))
 	TestResultType           = MessageType(byte(me.TestResult))
+
+	// Support mapping of extended format types (use MSB reserved bit)
+	ExtendedTypeDecodeOffset = MessageType(byte(0x80))
 )
 
 func (mt MessageType) String() string {
@@ -125,7 +129,7 @@ func (mt MessageType) String() string {
 		return "Start Software Download Request"
 	case StartSoftwareDownloadResponseType:
 		return "Start Software Download Response"
-	case DownloadSectionRequestType:
+	case DownloadSectionRequestType, DownloadSectionRequestWithResponseType:
 		return "Download Section Request"
 	case DownloadSectionResponseType:
 		return "Download Section Response"
@@ -649,13 +653,28 @@ func (omci *GetRequest) DecodeFromBytes(data []byte, p gopacket.PacketBuilder) e
 	if !me.SupportsMsgType(meDefinition, me.Get) {
 		return me.NewProcessingError("managed entity does not support Get Message-Type")
 	}
-	omci.AttributeMask = binary.BigEndian.Uint16(data[4:6])
+	if omci.Extended {
+		if len(data) < 8 {
+			p.SetTruncated()
+			return errors.New("frame too small")
+		}
+		omci.AttributeMask = binary.BigEndian.Uint16(data[6:])
+	} else {
+		omci.AttributeMask = binary.BigEndian.Uint16(data[4:])
+	}
 	return nil
 }
 
 func decodeGetRequest(data []byte, p gopacket.PacketBuilder) error {
 	omci := &GetRequest{}
 	omci.MsgLayerType = LayerTypeGetRequest
+	return decodingLayerDecoder(omci, data, p)
+}
+
+func decodeGetRequestExtended(data []byte, p gopacket.PacketBuilder) error {
+	omci := &GetRequest{}
+	omci.MsgLayerType = LayerTypeGetRequest
+	omci.Extended = true
 	return decodingLayerDecoder(omci, data, p)
 }
 
@@ -675,11 +694,22 @@ func (omci *GetRequest) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.Se
 	if !me.SupportsMsgType(meDefinition, me.Get) {
 		return me.NewProcessingError("managed entity does not support Get Message-Type")
 	}
-	bytes, err := b.AppendBytes(2)
+	maskOffset := 0
+	if omci.Extended {
+		maskOffset = 2
+	}
+	bytes, err := b.AppendBytes(2 + maskOffset)
 	if err != nil {
 		return err
 	}
-	binary.BigEndian.PutUint16(bytes, omci.AttributeMask)
+	if omci.Extended {
+		binary.BigEndian.PutUint16(bytes, uint16(2))
+	}
+	binary.BigEndian.PutUint16(bytes[maskOffset:], omci.AttributeMask)
+	return nil
+}
+
+func (omci *GetRequest) SerializeToExtended(b gopacket.SerializeBuffer, opts gopacket.SerializeOptions) error {
 	return nil
 }
 
@@ -716,32 +746,55 @@ func (omci *GetResponse) DecodeFromBytes(data []byte, p gopacket.PacketBuilder) 
 	if !me.SupportsMsgType(meDefinition, me.Get) {
 		return me.NewProcessingError("managed entity does not support Get Message-Type")
 	}
-	omci.Result = me.Results(data[4])
-	omci.AttributeMask = binary.BigEndian.Uint16(data[5:7])
+	if omci.Extended {
+		if len(data) < 13 {
+			p.SetTruncated()
+			return errors.New("frame too small")
+		}
+		omci.Result = me.Results(data[6])
+		omci.AttributeMask = binary.BigEndian.Uint16(data[7:])
 
+		// If Attribute failed or Unknown, decode optional attribute mask
+		if omci.Result == me.AttributeFailure {
+			omci.UnsupportedAttributeMask = binary.BigEndian.Uint16(data[9:])
+			omci.FailedAttributeMask = binary.BigEndian.Uint16(data[11:])
+		}
+	} else {
+		omci.Result = me.Results(data[4])
+		omci.AttributeMask = binary.BigEndian.Uint16(data[5:])
+
+		// If Attribute failed or Unknown, decode optional attribute mask
+		if omci.Result == me.AttributeFailure {
+			omci.UnsupportedAttributeMask = binary.BigEndian.Uint16(data[32:34])
+			omci.FailedAttributeMask = binary.BigEndian.Uint16(data[34:36])
+		}
+	}
 	// Attribute decode. Note that the ITU-T G.988 specification states that the
 	//                   Unsupported and Failed attribute masks are always present
 	//                   but only valid if the status code== 9.  However some XGS
 	//                   ONUs (T&W and Alpha, perhaps more) will use these last 4
 	//                   octets for data if the status code == 0.  So accommodate
 	//                   this behaviour in favor of greater interoperability.
+	firstOctet := 7
 	lastOctet := 36
+	if omci.Extended {
+		firstOctet = 13
+		lastOctet = len(data)
+	}
 
 	switch omci.Result {
 	case me.ProcessingError, me.NotSupported, me.UnknownEntity, me.UnknownInstance, me.DeviceBusy:
 		return nil // Done (do not try and decode attributes)
 
 	case me.AttributeFailure:
-		lastOctet = 32
+		if !omci.Extended {
+			lastOctet = 32
+		}
 	}
-	omci.Attributes, err = meDefinition.DecodeAttributes(omci.AttributeMask, data[7:lastOctet], p, byte(GetResponseType))
+	omci.Attributes, err = meDefinition.DecodeAttributes(omci.AttributeMask,
+		data[firstOctet:lastOctet], p, byte(GetResponseType))
 	if err != nil {
 		return err
-	}
-	// If Attribute failed or Unknown, decode optional attribute mask
-	if omci.Result == me.AttributeFailure {
-		omci.UnsupportedAttributeMask = binary.BigEndian.Uint16(data[32:34])
-		omci.FailedAttributeMask = binary.BigEndian.Uint16(data[34:36])
 	}
 	// Validate all attributes support read
 	for attrName := range omci.Attributes {
@@ -767,6 +820,13 @@ func decodeGetResponse(data []byte, p gopacket.PacketBuilder) error {
 	return decodingLayerDecoder(omci, data, p)
 }
 
+func decodeGetResponseExtended(data []byte, p gopacket.PacketBuilder) error {
+	omci := &GetResponse{}
+	omci.MsgLayerType = LayerTypeGetResponse
+	omci.Extended = true
+	return decodingLayerDecoder(omci, data, p)
+}
+
 // SerializeTo provides serialization of an Get Response message
 func (omci *GetResponse) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOptions) error {
 	// Basic (common) OMCI Header is 8 octets, 10
@@ -783,16 +843,27 @@ func (omci *GetResponse) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.S
 	if !me.SupportsMsgType(meDefinition, me.Get) {
 		return me.NewProcessingError("managed entity does not support the Get Message-Type")
 	}
-	bytes, err := b.AppendBytes(3)
+	resultOffset := 0
+	attributeErrExtra := 0
+
+	if omci.Extended {
+		resultOffset = 2
+		attributeErrExtra = 4 // Attribute mask + attribute error masks
+	}
+	// Space for result + mask (both types) + (len & error masks if extended)
+	buffer, err := b.AppendBytes(3 + resultOffset + attributeErrExtra)
 	if err != nil {
 		return err
 	}
-	bytes[0] = byte(omci.Result)
-	binary.BigEndian.PutUint16(bytes[1:3], omci.AttributeMask)
+	// Save result and initial mask. Other header fields updated after
+	// attribute copy
+	buffer[resultOffset] = byte(omci.Result)
+	binary.BigEndian.PutUint16(buffer[resultOffset+1:], omci.AttributeMask)
 
 	// Validate all attributes support read
 	for attrName := range omci.Attributes {
-		attr, err := me.GetAttributeDefinitionByName(meDefinition.GetAttributeDefinitions(), attrName)
+		var attr *me.AttributeDefinition
+		attr, err = me.GetAttributeDefinitionByName(meDefinition.GetAttributeDefinitions(), attrName)
 		if err != nil {
 			return err
 		}
@@ -804,52 +875,77 @@ func (omci *GetResponse) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.S
 	// Attribute serialization
 	switch omci.Result {
 	default:
+		if omci.Extended {
+			// Minimum length is 7 for extended an need to write error masks
+			binary.BigEndian.PutUint16(buffer, uint16(7))
+			binary.BigEndian.PutUint32(buffer[resultOffset+3:], 0)
+		}
 		break
 
 	case me.Success, me.AttributeFailure:
 		// TODO: Baseline only supported at this time)
-		available := MaxBaselineLength - 11 - 4 - 8
-
+		var available int
+		if omci.Extended {
+			available = MaxExtendedLength - 18 - 4 // Less: header, mic
+		} else {
+			available = MaxBaselineLength - 11 - 4 - 8 // Less: header, failed attributes, length, mic
+		}
 		// Serialize to temporary buffer if we may need to reset values due to
 		// recoverable truncation errors
-		origBuffer := b
-		b := gopacket.NewSerializeBuffer()
+		attributeBuffer := gopacket.NewSerializeBuffer()
+		var failedMask uint16
+		err, failedMask = meDefinition.SerializeAttributes(omci.Attributes, omci.AttributeMask,
+			attributeBuffer, byte(GetResponseType), available, opts.FixLengths)
 
-		err, failedMask := meDefinition.SerializeAttributes(omci.Attributes, omci.AttributeMask, b, byte(GetResponseType),
-			available, opts.FixLengths)
-
-		if err == nil && failedMask != 0 && opts.FixLengths {
+		if err != nil {
+			return err
+		}
+		if failedMask != 0 {
 			// Not all attributes would fit
 			omci.FailedAttributeMask |= failedMask
 			omci.AttributeMask &= ^failedMask
 			omci.Result = me.AttributeFailure
 
 			// Adjust already recorded values
-			bytes[0] = byte(omci.Result)
-			binary.BigEndian.PutUint16(bytes[1:3], omci.AttributeMask)
-		} else if err != nil {
-			return err
+			buffer[resultOffset] = byte(omci.Result)
+			binary.BigEndian.PutUint16(buffer[resultOffset+1:], omci.AttributeMask)
+		}
+		if omci.Extended {
+			// Set length and any failure masks
+			binary.BigEndian.PutUint16(buffer, uint16(len(attributeBuffer.Bytes())+7))
+
+			if omci.Result == me.AttributeFailure {
+				binary.BigEndian.PutUint16(buffer[resultOffset+3:], omci.UnsupportedAttributeMask)
+				binary.BigEndian.PutUint16(buffer[resultOffset+5:], omci.FailedAttributeMask)
+			} else {
+				binary.BigEndian.PutUint32(buffer[resultOffset+3:], 0)
+			}
 		}
 		// Copy over attributes to the original serialization buffer
-		newSpace, err := origBuffer.AppendBytes(len(b.Bytes()))
+		var newSpace []byte
+
+		newSpace, err = b.AppendBytes(len(attributeBuffer.Bytes()))
 		if err != nil {
 			return err
 		}
-		copy(newSpace, b.Bytes())
-		b = origBuffer
+		copy(newSpace, attributeBuffer.Bytes())
 
-		// Calculate space left. Max  - msgType header - OMCI trailer - spacedUsedSoFar
-		bytesLeft := MaxBaselineLength - 4 - 8 - len(b.Bytes())
+		if !omci.Extended {
+			// Calculate space left. Max  - msgType header - OMCI trailer - spacedUsedSoFar
+			bytesLeft := MaxBaselineLength - 4 - 8 - len(b.Bytes())
 
-		remainingBytes, err := b.AppendBytes(bytesLeft + 4)
-		if err != nil {
-			return me.NewMessageTruncatedError(err.Error())
-		}
-		copy(remainingBytes, lotsOfZeros[:])
+			var remainingBytes []byte
+			remainingBytes, err = b.AppendBytes(bytesLeft + 4)
 
-		if omci.Result == me.AttributeFailure {
-			binary.BigEndian.PutUint16(remainingBytes[bytesLeft-4:bytesLeft-2], omci.UnsupportedAttributeMask)
-			binary.BigEndian.PutUint16(remainingBytes[bytesLeft-2:bytesLeft], omci.FailedAttributeMask)
+			if err != nil {
+				return me.NewMessageTruncatedError(err.Error())
+			}
+			copy(remainingBytes, lotsOfZeros[:])
+
+			if omci.Result == me.AttributeFailure {
+				binary.BigEndian.PutUint16(remainingBytes[bytesLeft-4:bytesLeft-2], omci.UnsupportedAttributeMask)
+				binary.BigEndian.PutUint16(remainingBytes[bytesLeft-2:bytesLeft], omci.FailedAttributeMask)
+			}
 		}
 	}
 	return nil
@@ -1534,7 +1630,7 @@ func (omci *MibResetResponse) DecodeFromBytes(data []byte, p gopacket.PacketBuil
 	}
 	omci.Result = me.Results(data[4])
 	if omci.Result > me.DeviceBusy {
-		msg := fmt.Sprintf("invalid results code: %v, must be 0..8", omci.Result)
+		msg := fmt.Sprintf("invalid results code: %v, must be 0..6", omci.Result)
 		return errors.New(msg)
 	}
 	return nil
@@ -1842,30 +1938,54 @@ func (omci *AttributeValueChangeMsg) SerializeTo(b gopacket.SerializeBuffer, opt
 	return err
 }
 
-/////////////////////////////////////////////////////////////////////////////
-// TestRequest:		TODO: Not yet implemented
+func decodeTestRequest(data []byte, p gopacket.PacketBuilder) error {
+	// Peek at Managed Entity Type
+	if len(data) < 8 {
+		p.SetTruncated()
+		return errors.New("frame too small")
+	}
+	classID := binary.BigEndian.Uint16(data)
+
+	// Is it a Managed Entity class we support customized decode of?
+	switch me.ClassID(classID) {
+	default:
+		omci := &TestRequest{}
+		omci.MsgLayerType = LayerTypeTestResult
+		return decodingLayerDecoder(omci, data, p)
+
+	case me.AniGClassID, me.ReAniGClassID, me.PhysicalPathTerminationPointReUniClassID,
+		me.ReUpstreamAmplifierClassID, me.ReDownstreamAmplifierClassID:
+		omci := &OpticalLineSupervisionTestRequest{}
+		omci.MsgLayerType = LayerTypeTestResult
+		return decodingLayerDecoder(omci, data, p)
+	}
+}
+
+// TestRequest message
 type TestRequest struct {
 	MeBasePacket
+	Payload []byte
 }
 
 func (omci *TestRequest) String() string {
-	return fmt.Sprintf("%v", omci.MeBasePacket.String())
+	return fmt.Sprintf("%v, Request: %v octets", omci.MeBasePacket.String(), len(omci.Payload))
+}
+
+func (omci *TestRequest) TestRequest() []byte {
+	return omci.Payload
 }
 
 // DecodeFromBytes decodes the given bytes of a Test Request into this layer
 func (omci *TestRequest) DecodeFromBytes(data []byte, p gopacket.PacketBuilder) error {
 	// Common ClassID/EntityID decode in msgBase
-	err := omci.MeBasePacket.DecodeFromBytes(data, p, 4+5)
+	err := omci.MeBasePacket.DecodeFromBytes(data, p, 4)
 	if err != nil {
 		return err
 	}
-	return errors.New("need to implement") // TODO: Fix me) // return nil
-}
 
-func decodeTestRequest(data []byte, p gopacket.PacketBuilder) error {
-	omci := &TestRequest{}
-	omci.MsgLayerType = LayerTypeTestRequest
-	return decodingLayerDecoder(omci, data, p)
+	omci.Payload = make([]byte, MaxTestRequestLength)
+	copy(omci.Payload, omci.MeBasePacket.Payload)
+	return nil
 }
 
 // SerializeTo provides serialization of an Test Request message
@@ -1875,17 +1995,81 @@ func (omci *TestRequest) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.S
 	if err != nil {
 		return err
 	}
-	return errors.New("need to implement") // TODO: Fix me) // omci.cachedME.SerializeTo(mask, b)
+	if omci.Payload == nil {
+		return errors.New("Test Results payload is missing")
+	}
+
+	if len(omci.Payload) > MaxTestRequestLength {
+		msg := fmt.Sprintf("Invalid Test Request payload size. Received %v bytes, expected %v",
+			len(omci.Payload), MaxTestRequestLength)
+		return errors.New(msg)
+	}
+	bytes, err := b.AppendBytes(len(omci.Payload))
+	if err != nil {
+		return err
+	}
+
+	copy(bytes, omci.Payload)
+	return nil
 }
 
-/////////////////////////////////////////////////////////////////////////////
-// TestResponse:		TODO: Not yet implemented
+type OpticalLineSupervisionTestRequest struct {
+	MeBasePacket
+	SelectTest               uint8  // Bitfield
+	GeneralPurposeBuffer     uint16 // Pointer to General Purpose Buffer ME
+	VendorSpecificParameters uint16 // Pointer to Octet String ME
+}
+
+func (omci *OpticalLineSupervisionTestRequest) String() string {
+	return fmt.Sprintf("Optical Line Supervision Test Result: SelectTest: %#x, Buffer: %#x, Params: %#x",
+		omci.SelectTest, omci.GeneralPurposeBuffer, omci.VendorSpecificParameters)
+}
+
+func (omci *OpticalLineSupervisionTestRequest) TestRequest() []byte {
+	return omci.Payload
+}
+
+// DecodeFromBytes decodes the given bytes of a Test Result Notification into this layer
+func (omci *OpticalLineSupervisionTestRequest) DecodeFromBytes(data []byte, p gopacket.PacketBuilder) error {
+	// Common ClassID/EntityID decode in msgBase
+	err := omci.MeBasePacket.DecodeFromBytes(data, p, 4+5)
+	if err != nil {
+		return err
+	}
+
+	omci.SelectTest = data[4]
+	omci.GeneralPurposeBuffer = binary.BigEndian.Uint16(data[5:])
+	omci.VendorSpecificParameters = binary.BigEndian.Uint16(data[7:])
+	return nil
+}
+
+// SerializeTo provides serialization of an Test Result notification message
+func (omci *OpticalLineSupervisionTestRequest) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOptions) error {
+	// Basic (common) OMCI Header is 8 octets, 10
+	err := omci.MeBasePacket.SerializeTo(b)
+	if err != nil {
+		return err
+	}
+
+	bytes, err := b.AppendBytes(8)
+	if err != nil {
+		return err
+	}
+
+	bytes[0] = omci.SelectTest
+	binary.BigEndian.PutUint16(bytes[1:], omci.GeneralPurposeBuffer)
+	binary.BigEndian.PutUint16(bytes[3:], omci.VendorSpecificParameters)
+	return nil
+}
+
+// TestResponse message
 type TestResponse struct {
 	MeBasePacket
+	Result me.Results
 }
 
 func (omci *TestResponse) String() string {
-	return fmt.Sprintf("%v", omci.MeBasePacket.String())
+	return fmt.Sprintf("%v, Results: %d (%v)", omci.MeBasePacket.String(), omci.Result, omci.Result)
 }
 
 // DecodeFromBytes decodes the given bytes of a Test Response into this layer
@@ -1895,7 +2079,18 @@ func (omci *TestResponse) DecodeFromBytes(data []byte, p gopacket.PacketBuilder)
 	if err != nil {
 		return err
 	}
-	return errors.New("need to implement") // TODO: Fix me) // return nil
+	meDefinition, omciErr := me.LoadManagedEntityDefinition(omci.EntityClass,
+		me.ParamData{EntityID: omci.EntityInstance})
+	if omciErr.StatusCode() != me.Success {
+		return omciErr.GetError()
+	}
+
+	// ME needs to support Test requests
+	if !me.SupportsMsgType(meDefinition, me.Test) {
+		return me.NewProcessingError("managed entity does not support Test Message-Type")
+	}
+	omci.Result = me.Results(data[4])
+	return nil
 }
 
 func decodeTestResponse(data []byte, p gopacket.PacketBuilder) error {
@@ -1911,7 +2106,26 @@ func (omci *TestResponse) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.
 	if err != nil {
 		return err
 	}
-	return errors.New("need to implement") // TODO: Fix me) // omci.cachedME.SerializeTo(mask, b)
+	entity, omciErr := me.LoadManagedEntityDefinition(omci.EntityClass,
+		me.ParamData{EntityID: omci.EntityInstance})
+	if omciErr.StatusCode() != me.Success {
+		return omciErr.GetError()
+	}
+	// ME needs to support Set
+	if !me.SupportsMsgType(entity, me.Test) {
+		return me.NewProcessingError("managed entity does not support the Test Message-Type")
+	}
+	bytes, err := b.AppendBytes(1)
+	if err != nil {
+		return err
+	}
+	bytes[0] = byte(omci.Result)
+
+	if omci.Result > me.DeviceBusy {
+		msg := fmt.Sprintf("invalid results code: %v, must be 0..6", omci.Result)
+		return errors.New(msg)
+	}
+	return nil
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2932,7 +3146,7 @@ func (omci *SynchronizeTimeResponse) DecodeFromBytes(data []byte, p gopacket.Pac
 	}
 	omci.Result = me.Results(data[4])
 	if omci.Result > me.DeviceBusy {
-		msg := fmt.Sprintf("invalid results code: %v, must be 0..8", omci.Result)
+		msg := fmt.Sprintf("invalid results code: %v, must be 0..6", omci.Result)
 		return errors.New(msg)
 	}
 	omci.SuccessResults = data[5]
@@ -3316,40 +3530,204 @@ func (omci *GetNextResponse) SerializeTo(b gopacket.SerializeBuffer, opts gopack
 	return nil
 }
 
-/////////////////////////////////////////////////////////////////////////////
-//
-type TestResultMsg struct {
-	MeBasePacket
+func decodeTestResult(data []byte, p gopacket.PacketBuilder) error {
+	// Peek at Managed Entity Type
+	if len(data) < 8 {
+		p.SetTruncated()
+		return errors.New("frame too small")
+	}
+	classID := binary.BigEndian.Uint16(data)
+
+	// Is it a Managed Entity class we support customized decode of?
+	switch me.ClassID(classID) {
+	default:
+		omci := &TestResultNotification{}
+		omci.MsgLayerType = LayerTypeTestResult
+		return decodingLayerDecoder(omci, data, p)
+
+	case me.AniGClassID, me.ReAniGClassID, me.PhysicalPathTerminationPointReUniClassID,
+		me.ReUpstreamAmplifierClassID, me.ReDownstreamAmplifierClassID:
+		omci := &OpticalLineSupervisionTestResult{}
+		omci.MsgLayerType = LayerTypeTestResult
+		return decodingLayerDecoder(omci, data, p)
+	}
 }
 
-func (omci *TestResultMsg) String() string {
-	return fmt.Sprintf("%v", omci.MeBasePacket.String())
+type TestResultNotification struct {
+	MeBasePacket
+	Payload []byte
+}
+
+func (omci *TestResultNotification) TestResults() []byte {
+	return omci.Payload
+}
+
+func (omci *TestResultNotification) String() string {
+	return fmt.Sprintf("%v, Payload: %v octets", omci.MeBasePacket.String(), len(omci.Payload))
 }
 
 // DecodeFromBytes decodes the given bytes of a Test Result Notification into this layer
-func (omci *TestResultMsg) DecodeFromBytes(data []byte, p gopacket.PacketBuilder) error {
+func (omci *TestResultNotification) DecodeFromBytes(data []byte, p gopacket.PacketBuilder) error {
 	// Common ClassID/EntityID decode in msgBase
 	err := omci.MeBasePacket.DecodeFromBytes(data, p, 4)
 	if err != nil {
 		return err
 	}
-	return errors.New("need to implement") // TODO: Fix me) // return nil
-}
 
-func decodeTestResult(data []byte, p gopacket.PacketBuilder) error {
-	omci := &TestResultMsg{}
-	omci.MsgLayerType = LayerTypeTestResult
-	return decodingLayerDecoder(omci, data, p)
+	meDefinition, omciErr := me.LoadManagedEntityDefinition(omci.EntityClass,
+		me.ParamData{EntityID: omci.EntityInstance})
+	if omciErr.StatusCode() != me.Success {
+		return omciErr.GetError()
+	}
+
+	// ME needs to support Test requests
+	if !me.SupportsMsgType(meDefinition, me.Test) {
+		return me.NewProcessingError("managed entity does not support Test Message-Type")
+	}
+	omci.Payload = make([]byte, MaxTestResultsLength)
+	copy(omci.Payload, omci.MeBasePacket.Payload)
+	return nil
 }
 
 // SerializeTo provides serialization of an Test Result notification message
-func (omci *TestResultMsg) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOptions) error {
+func (omci *TestResultNotification) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOptions) error {
+	// Basic (common) OMCI Header is 8 octets
+	err := omci.MeBasePacket.SerializeTo(b)
+	if err != nil {
+		return err
+	}
+
+	meDefinition, omciErr := me.LoadManagedEntityDefinition(omci.EntityClass,
+		me.ParamData{EntityID: omci.EntityInstance})
+	if omciErr.StatusCode() != me.Success {
+		return omciErr.GetError()
+	}
+
+	// ME needs to support Test requests
+	if !me.SupportsMsgType(meDefinition, me.Test) {
+		return me.NewProcessingError("managed entity does not support Test Message-Type")
+	}
+	if omci.Payload == nil {
+		return errors.New("Test Results payload is missing")
+	}
+	if len(omci.Payload) > MaxTestResultsLength {
+		msg := fmt.Sprintf("Invalid Test Results payload size. Received %v bytes, expected %v",
+			len(omci.Payload), MaxTestResultsLength)
+		return errors.New(msg)
+	}
+	bytes, err := b.AppendBytes(len(omci.Payload))
+	if err != nil {
+		return err
+	}
+
+	copy(bytes, omci.Payload)
+	return nil
+}
+
+// OpticalLineSupervisionTestResult provides a Optical Specific test results
+// message decode for the associated Managed Entities
+type OpticalLineSupervisionTestResult struct {
+	MeBasePacket
+	PowerFeedVoltageType     uint8  // Type = 1
+	PowerFeedVoltage         uint16 // value
+	ReceivedOpticalPowerType uint8  // Type = 3
+	ReceivedOpticalPower     uint16 // value
+	MeanOpticalLaunchType    uint8  // Type = 5
+	MeanOpticalLaunch        uint16 // value
+	LaserBiasCurrentType     uint8  // Type = 9
+	LaserBiasCurrent         uint16 // value
+	TemperatureType          uint8  // Type = 12
+	Temperature              uint16 // value
+
+	GeneralPurposeBuffer uint16 // Pointer to General Purpose Buffer ME
+}
+
+func (omci *OpticalLineSupervisionTestResult) String() string {
+	return fmt.Sprintf("Optical Line Supervision Test Result")
+}
+
+func (omci *OpticalLineSupervisionTestResult) TestResults() []byte {
+	return omci.MeBasePacket.Payload
+}
+
+// DecodeFromBytes decodes the given bytes of a Test Result Notification into this layer
+func (omci *OpticalLineSupervisionTestResult) DecodeFromBytes(data []byte, p gopacket.PacketBuilder) error {
+	// Common ClassID/EntityID decode in msgBase
+	err := omci.MeBasePacket.DecodeFromBytes(data, p, 4+17)
+	if err != nil {
+		return err
+	}
+
+	meDefinition, omciErr := me.LoadManagedEntityDefinition(omci.EntityClass,
+		me.ParamData{EntityID: omci.EntityInstance})
+	if omciErr.StatusCode() != me.Success {
+		return omciErr.GetError()
+	}
+
+	// ME needs to support Test requests
+	if !me.SupportsMsgType(meDefinition, me.Test) {
+		return me.NewProcessingError("managed entity does not support Test Message-Type")
+	}
+	// Note: Unsupported tests will have a type = 0 and the value should be zero
+	//       as well, but that constraint is not enforced at this time.
+	// Type = 1
+	omci.PowerFeedVoltageType = data[4]
+	omci.PowerFeedVoltage = binary.BigEndian.Uint16(data[5:])
+
+	// Type = 3
+	omci.ReceivedOpticalPowerType = data[7]
+	omci.ReceivedOpticalPower = binary.BigEndian.Uint16(data[8:])
+
+	// Type = 5
+	omci.MeanOpticalLaunchType = data[10]
+	omci.MeanOpticalLaunch = binary.BigEndian.Uint16(data[11:])
+
+	// Type = 9
+	omci.LaserBiasCurrentType = data[13]
+	omci.LaserBiasCurrent = binary.BigEndian.Uint16(data[14:])
+
+	// Type = 12
+	omci.TemperatureType = data[16]
+	omci.Temperature = binary.BigEndian.Uint16(data[17:])
+
+	omci.GeneralPurposeBuffer = binary.BigEndian.Uint16(data[19:])
+	return nil
+}
+
+// SerializeTo provides serialization of an Test Result notification message
+func (omci *OpticalLineSupervisionTestResult) SerializeTo(b gopacket.SerializeBuffer, opts gopacket.SerializeOptions) error {
 	// Basic (common) OMCI Header is 8 octets, 10
 	err := omci.MeBasePacket.SerializeTo(b)
 	if err != nil {
 		return err
 	}
-	return errors.New("need to implement") // TODO: Fix me) // omci.cachedME.SerializeTo(mask, b)
+	meDefinition, omciErr := me.LoadManagedEntityDefinition(omci.EntityClass,
+		me.ParamData{EntityID: omci.EntityInstance})
+	if omciErr.StatusCode() != me.Success {
+		return omciErr.GetError()
+	}
+
+	// ME needs to support Test requests
+	if !me.SupportsMsgType(meDefinition, me.Test) {
+		return me.NewProcessingError("managed entity does not support Test Message-Type")
+	}
+	bytes, err := b.AppendBytes(17)
+	if err != nil {
+		return err
+	}
+
+	bytes[0] = omci.PowerFeedVoltageType
+	binary.BigEndian.PutUint16(bytes[1:], omci.PowerFeedVoltage)
+	bytes[3] = omci.ReceivedOpticalPowerType
+	binary.BigEndian.PutUint16(bytes[4:], omci.ReceivedOpticalPower)
+	bytes[6] = omci.MeanOpticalLaunchType
+	binary.BigEndian.PutUint16(bytes[7:], omci.MeanOpticalLaunch)
+	bytes[9] = omci.LaserBiasCurrentType
+	binary.BigEndian.PutUint16(bytes[10:], omci.LaserBiasCurrent)
+	bytes[12] = omci.TemperatureType
+	binary.BigEndian.PutUint16(bytes[13:], omci.Temperature)
+	binary.BigEndian.PutUint16(bytes[15:], omci.GeneralPurposeBuffer)
+	return nil
 }
 
 /////////////////////////////////////////////////////////////////////////////
