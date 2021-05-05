@@ -18,18 +18,22 @@ package omci
 
 import (
 	"errors"
+	"fmt"
 	"github.com/google/gopacket"
 	"github.com/opencord/omci-lib-go"
+	me "github.com/opencord/omci-lib-go/generated"
+	log "github.com/sirupsen/logrus"
+	"math/rand"
 )
 
-func ParseTestRequest(omciPkt gopacket.Packet) (*omci.TestRequest, error) {
-	msgLayer := omciPkt.Layer(omci.LayerTypeGetRequest)
+func ParseOpticalLineSupervisionRequest(omciPkt gopacket.Packet) (*omci.OpticalLineSupervisionTestRequest, error) {
+	msgLayer := omciPkt.Layer(omci.LayerTypeTestRequest)
 	if msgLayer == nil {
 		err := "omci Msg layer could not be detected for LayerTypeTestRequest"
 		omciLogger.Error(err)
 		return nil, errors.New(err)
 	}
-	msgObj, msgOk := msgLayer.(*omci.TestRequest)
+	msgObj, msgOk := msgLayer.(*omci.OpticalLineSupervisionTestRequest)
 	if !msgOk {
 		err := "omci Msg layer could not be assigned for LayerTypeTestRequest"
 		omciLogger.Error(err)
@@ -38,58 +42,71 @@ func ParseTestRequest(omciPkt gopacket.Packet) (*omci.TestRequest, error) {
 	return msgObj, nil
 }
 
-// Return true if msg is an Omci Test Request
-func IsTestRequest(payload []byte) (bool, error) {
-	_, omciMsg, err := ParseOpenOltOmciPacket(payload)
+func CreateTestResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, error, me.ClassID, uint16, me.Results) {
+	// TODO: currently supports only OpticalLineSupervisionRequest
+	optSupReq, err := ParseOpticalLineSupervisionRequest(omciPkt)
+
 	if err != nil {
-		return false, err
+		return nil, err, 0, 0, me.ParameterError
 	}
 
-	return omciMsg.MessageType == omci.TestRequestType, nil
+	omciLogger.WithFields(log.Fields{
+		"EntityClass":    optSupReq.EntityClass,
+		"EntityInstance": optSupReq.EntityInstance,
+	}).Trace("received-test-request")
+
+	omciResult := me.Success
+	response := &omci.TestResponse{
+		MeBasePacket: omci.MeBasePacket{
+			EntityClass:    optSupReq.EntityClass,
+			EntityInstance: optSupReq.EntityInstance,
+		},
+		Result: omciResult,
+	}
+
+	pkt, err := Serialize(omci.TestResponseType, response, omciMsg.TransactionID)
+	if err != nil {
+		omciLogger.WithFields(log.Fields{
+			"Err": err,
+		}).Error("cannot-Serialize-test-response")
+		return nil, err, 0, 0, me.ParameterError
+	}
+
+	return pkt, nil, optSupReq.EntityClass, optSupReq.EntityInstance, omciResult
+
 }
 
-func BuildTestResult(payload []byte) ([]byte, error) {
-
-	omciPkt, omciMsg, err := ParseOpenOltOmciPacket(payload)
-
-	//transactionId, deviceId, _, class, instance, _, err := omcisim.ParsePkt(payload)
-
-	if err != nil {
-		return []byte{}, err
+func CreateTestResult(classID me.ClassID, instID uint16, tid uint16) ([]byte, error) {
+	var result gopacket.SerializableLayer
+	switch classID {
+	case me.AniGClassID:
+		result = &omci.OpticalLineSupervisionTestResult{
+			MeBasePacket: omci.MeBasePacket{
+				EntityClass:    classID,
+				EntityInstance: instID,
+			},
+			PowerFeedVoltageType:     uint8(1),
+			PowerFeedVoltage:         uint16(163),
+			ReceivedOpticalPowerType: uint8(3),
+			ReceivedOpticalPower:     uint16(rand.Intn(65000)),
+			MeanOpticalLaunchType:    uint8(5),
+			MeanOpticalLaunch:        uint16(rand.Intn(3000)),
+			LaserBiasCurrentType:     uint8(9),
+			LaserBiasCurrent:         uint16(rand.Intn(10000)),
+			TemperatureType:          uint8(12),
+			Temperature:              uint16(rand.Intn(20000)),
+			GeneralPurposeBuffer:     uint16(0),
+		}
+	default:
+		return nil, fmt.Errorf("unsupported-class-id-for-test-result--class-id-%v", classID)
 	}
 
-	testRequest, err := ParseTestRequest(omciPkt)
+	pkt, err := Serialize(omci.TestResultType, result, tid)
 	if err != nil {
-		return []byte{}, err
+		omciLogger.WithFields(log.Fields{
+			"Err": err,
+		}).Error("cannot-Serialize-test-result")
+		return nil, err
 	}
-
-	// TODO create a TestResponse using omci-lib-go
-	resp := make([]byte, 48)
-	resp[0] = byte(omciMsg.TransactionID >> 8)
-	resp[1] = byte(omciMsg.TransactionID & 0xFF)
-	resp[2] = 27 // Upper nibble 0x0 is fixed (0000), Lower nibbles defines msg type (TestResult=27)
-	resp[3] = byte(omciMsg.DeviceIdentifier)
-	resp[4] = byte(omciMsg.MessageType)
-	resp[5] = byte(omciMsg.MessageType & 0xFF)
-	resp[6] = byte(testRequest.EntityInstance >> 8)
-	resp[7] = byte(testRequest.EntityInstance & 0xFF)
-	// Each of these is a 1-byte code
-	// follow by a 2-byte (high, low) value
-	resp[8] = 1 // power feed voltage
-	resp[9] = 0
-	resp[10] = 123 // 123 mV, 20 mv res --> 6mv
-	resp[11] = 3   // received optical power
-	resp[12] = 1
-	resp[13] = 200 // 456 decibel-microwatts, 0.002 dB res --> 0.912 db-mw
-	resp[14] = 5   // mean optical launch power
-	resp[15] = 3
-	resp[16] = 21 // 789 uA, 0.002 dB res --> 1.578 db-mw
-	resp[17] = 9  // laser bias current
-	resp[18] = 3
-	resp[19] = 244 // 1012 uA, 2uA res --> 505 ua
-	resp[20] = 12  // temperature
-	resp[21] = 38
-	resp[22] = 148 // 9876 deg C, 1/256 resolution --> 38.57 Deg C
-
-	return resp, nil
+	return pkt, nil
 }

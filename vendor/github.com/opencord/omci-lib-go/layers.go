@@ -19,13 +19,14 @@ package omci
 
 import (
 	"errors"
-	me "github.com/opencord/omci-lib-go/generated"
 	"github.com/google/gopacket"
+	me "github.com/opencord/omci-lib-go/generated"
 )
 
 var nextLayerMapping map[MessageType]gopacket.LayerType
 
 var (
+	// Baseline Message Types
 	LayerTypeCreateRequest                gopacket.LayerType
 	LayerTypeDeleteRequest                gopacket.LayerType
 	LayerTypeSetRequest                   gopacket.LayerType
@@ -47,8 +48,14 @@ var (
 	LayerTypeGetNextRequest               gopacket.LayerType
 	LayerTypeGetCurrentDataRequest        gopacket.LayerType
 	LayerTypeSetTableRequest              gopacket.LayerType
+
+	// Extended Message Types
+	LayerTypeGetRequestExtended                 gopacket.LayerType
+	LayerTypeDownloadSectionRequestExtended     gopacket.LayerType
+	LayerTypeDownloadSectionLastRequestExtended gopacket.LayerType
 )
 var (
+	// Baseline Message Types
 	LayerTypeCreateResponse                gopacket.LayerType
 	LayerTypeDeleteResponse                gopacket.LayerType
 	LayerTypeSetResponse                   gopacket.LayerType
@@ -72,6 +79,10 @@ var (
 	LayerTypeTestResult                    gopacket.LayerType
 	LayerTypeGetCurrentDataResponse        gopacket.LayerType
 	LayerTypeSetTableResponse              gopacket.LayerType
+
+	// Extended Message Types
+	LayerTypeGetResponseExtended             gopacket.LayerType
+	LayerTypeDownloadSectionResponseExtended gopacket.LayerType
 )
 
 func mkReqLayer(mt me.MsgType, mts string, decode gopacket.DecodeFunc) gopacket.LayerType {
@@ -139,6 +150,14 @@ func init() {
 	LayerTypeGetCurrentDataResponse = mkRespLayer(me.GetCurrentData, "GetCurrentDataResponse", gopacket.DecodeFunc(decodeGetCurrentDataResponse))
 	LayerTypeSetTableResponse = mkRespLayer(me.SetTable, "SetTableResponse", gopacket.DecodeFunc(decodeSetTableResponse))
 
+	// Extended message set support
+
+	LayerTypeGetRequestExtended = mkReqLayer(me.Get|me.ExtendedOffset, "GetRequest-Ext", gopacket.DecodeFunc(decodeGetRequestExtended))
+	LayerTypeGetResponseExtended = mkRespLayer(me.Get|me.ExtendedOffset, "GetResponse-Ext", gopacket.DecodeFunc(decodeGetResponseExtended))
+	LayerTypeDownloadSectionRequestExtended = mkLayer(me.DownloadSection|me.ExtendedOffset, "DownloadSectionRequest-Ext", gopacket.DecodeFunc(decodeDownloadSectionRequestExtended))
+	LayerTypeDownloadSectionLastRequestExtended = mkReqLayer(me.DownloadSection|me.ExtendedOffset, "DownloadLastSectionRequest-Ext", gopacket.DecodeFunc(decodeDownloadSectionRequestExtended))
+	LayerTypeDownloadSectionResponseExtended = mkRespLayer(me.DownloadSection|me.ExtendedOffset, "DownloadSectionResponse-Ext", gopacket.DecodeFunc(decodeDownloadSectionResponseExtended))
+
 	// Map message_type and action to layer
 	nextLayerMapping = make(map[MessageType]gopacket.LayerType)
 
@@ -188,12 +207,24 @@ func init() {
 	nextLayerMapping[AttributeValueChangeType] = LayerTypeAttributeValueChange
 	nextLayerMapping[AlarmNotificationType] = LayerTypeAlarmNotification
 	nextLayerMapping[TestResultType] = LayerTypeTestResult
+
+	// Extended message support
+	nextLayerMapping[GetRequestType+ExtendedTypeDecodeOffset] = LayerTypeGetRequestExtended
+	nextLayerMapping[GetResponseType+ExtendedTypeDecodeOffset] = LayerTypeGetResponseExtended
+
+	// For Download section, AR=0 if not response expected, AR=1 if response expected (last section of a window)
+	nextLayerMapping[DownloadSectionRequestType+ExtendedTypeDecodeOffset] = LayerTypeDownloadSectionRequestExtended
+	nextLayerMapping[DownloadSectionRequestWithResponseType+ExtendedTypeDecodeOffset] = LayerTypeDownloadSectionLastRequestExtended
+	nextLayerMapping[DownloadSectionResponseType+ExtendedTypeDecodeOffset] = LayerTypeDownloadSectionResponseExtended
 }
 
-func MsgTypeToNextLayer(mt MessageType) (gopacket.LayerType, error) {
+func MsgTypeToNextLayer(mt MessageType, isExtended bool) (gopacket.LayerType, error) {
+	if isExtended {
+		mt |= ExtendedTypeDecodeOffset
+	}
 	nextLayer, ok := nextLayerMapping[mt]
 	if ok {
 		return nextLayer, nil
 	}
-	return gopacket.LayerTypeZero, errors.New("unknown message type")
+	return gopacket.LayerTypeZero, errors.New("unknown/unsupported message type")
 }

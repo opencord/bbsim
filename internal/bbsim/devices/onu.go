@@ -705,31 +705,6 @@ func (o *Onu) publishOmciEvent(msg bbsim.OmciMessage) {
 	}
 }
 
-// Create a TestResponse packet and send it
-func (o *Onu) sendTestResult(msg bbsim.OmciMessage, stream openolt.Openolt_EnableIndicationServer) error {
-	resp, err := omcilib.BuildTestResult(msg.OmciPkt.Data())
-	if err != nil {
-		return err
-	}
-
-	var omciInd openolt.OmciIndication
-	omciInd.IntfId = o.PonPortID
-	omciInd.OnuId = o.ID
-	omciInd.Pkt = resp
-
-	omci := &openolt.Indication_OmciInd{OmciInd: &omciInd}
-	if err := stream.Send(&openolt.Indication{Data: omci}); err != nil {
-		return err
-	}
-	onuLogger.WithFields(log.Fields{
-		"IntfId":       o.PonPortID,
-		"SerialNumber": o.Sn(),
-		"omciPacket":   omciInd.Pkt,
-	}).Tracef("Sent TestResult OMCI message")
-
-	return nil
-}
-
 // handleOmciRequest is responsible to parse the OMCI packets received from the openolt adapter
 // and generate the appropriate response to it
 func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_EnableIndicationServer) error {
@@ -944,23 +919,29 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			}
 		}()
 	case omci.TestRequestType:
-
-		// Test message is special, it requires sending two packets:
-		//     first packet: TestResponse, says whether test was started successully, handled by omci-sim
-		//     second packet, TestResult, reports the result of running the self-test
-		// TestResult can come some time after a TestResponse
-		//     TODO: Implement some delay between the TestResponse and the TestResult
-		isTest, err := omcilib.IsTestRequest(msg.OmciPkt.Data())
-		if (err == nil) && (isTest) {
-			if sendErr := o.sendTestResult(msg, stream); sendErr != nil {
-				onuLogger.WithFields(log.Fields{
-					"IntfId":       o.PonPortID,
-					"OnuId":        o.ID,
-					"SerialNumber": o.Sn(),
-					"omciPacket":   msg.OmciPkt.Data(),
-					"msg":          msg,
-					"err":          sendErr,
-				}).Error("send-TestResult-indication-failed")
+		var classID me.ClassID
+		var omciResult me.Results
+		var instID uint16
+		responsePkt, errResp, classID, instID, omciResult = omcilib.CreateTestResponse(msg.OmciPkt, msg.OmciMsg)
+		// Send TestResult only in case the TestResponse omci result code is me.Success
+		if responsePkt != nil && errResp == nil && omciResult == me.Success {
+			if testResultPkt, err := omcilib.CreateTestResult(classID, instID, msg.OmciMsg.TransactionID); err == nil {
+				// send test results asynchronously
+				go func() {
+					// Send test results after a second to emulate async behavior
+					time.Sleep(1 * time.Second)
+					if testResultPkt != nil {
+						if err := o.sendOmciIndication(testResultPkt, msg.OmciMsg.TransactionID, stream); err != nil {
+							onuLogger.WithFields(log.Fields{
+								"IntfId":          o.PonPortID,
+								"SerialNumber":    o.Sn(),
+								"omciPacket":      testResultPkt,
+								"msg.OmciMsgType": msg.OmciMsg.MessageType,
+								"transCorrId":     msg.OmciMsg.TransactionID,
+							}).Errorf("failed-to-send-omci-message: %v", err)
+						}
+					}
+				}()
 			}
 		}
 	case omci.SynchronizeTimeRequestType:
