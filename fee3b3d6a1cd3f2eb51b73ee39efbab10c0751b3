@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca4884de_fd7f7f6e",
+        "filename": "internal/common/omci/test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-05-05T21:55:00Z",
+      "side": 1,
+      "message": "@chip: I have trouble decoding TestRequest OMCI layer. Any idea why? I basically get the msgLayer as nil.\nThis is on the BBSIM side, so I am testing this for the first time. BTW, encoding works fine at adapter.",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 2
+      },
+      "revId": "fee3b3d6a1cd3f2eb51b73ee39efbab10c0751b3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
