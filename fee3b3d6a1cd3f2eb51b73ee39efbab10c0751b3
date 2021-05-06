@@ -22,6 +22,30 @@
       "revId": "fee3b3d6a1cd3f2eb51b73ee39efbab10c0751b3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41e2df29_dc5bbaed",
+        "filename": "internal/common/omci/test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1000617
+      },
+      "writtenOn": "2021-05-06T14:04:03Z",
+      "side": 1,
+      "message": "in msgLayer \u003d\u003d nil scope add\n\nvar err error\nif decodeErrorLayer :\u003d omciPkt.ErrorLayer(); decodeErrorLayer !\u003d nil {\n  err \u003d decodeErrorLayer().Error()  // This of type \u0027error\u0027 that you could use instead\n} else {\n  err \u003d \"omci Msg layer could not be detected for LayerTypeTestRequest\"\n}",
+      "parentUuid": "ca4884de_fd7f7f6e",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 2
+      },
+      "revId": "fee3b3d6a1cd3f2eb51b73ee39efbab10c0751b3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
