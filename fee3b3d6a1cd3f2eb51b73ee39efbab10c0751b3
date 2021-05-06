@@ -46,6 +46,23 @@
       "revId": "fee3b3d6a1cd3f2eb51b73ee39efbab10c0751b3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "797ac500_3bf62e95",
+        "filename": "internal/common/omci/test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1000617
+      },
+      "writtenOn": "2021-05-06T14:06:56Z",
+      "side": 1,
+      "message": "For Test Result, it is an async notification and the TID should always be zero.   So may not want to have the option to set it.",
+      "revId": "fee3b3d6a1cd3f2eb51b73ee39efbab10c0751b3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
