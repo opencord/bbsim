@@ -81,6 +81,24 @@
       "revId": "fee3b3d6a1cd3f2eb51b73ee39efbab10c0751b3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f13237b5_0e95d56e",
+        "filename": "internal/common/omci/test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1000617
+      },
+      "writtenOn": "2021-05-06T14:19:24Z",
+      "side": 1,
+      "message": "False alarm.  No JIRA is needed. Encode and decode should work.\n\nNeed more coffee :-)",
+      "parentUuid": "d9c199cd_eeefcae3",
+      "revId": "fee3b3d6a1cd3f2eb51b73ee39efbab10c0751b3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
