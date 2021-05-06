@@ -266,7 +266,7 @@ func (o *OltDevice) InitOlt() {
 	}
 
 	// create new channel for processOltMessages Go routine
-	o.channel = make(chan types.Message)
+	o.channel = make(chan types.Message, 100)
 
 	// FIXME we are assuming we have only one NNI
 	if o.Nnis[0] != nil {
@@ -432,65 +432,67 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) {
 	wg.Add(1)
 	go o.processOltMessages(o.enableContext, stream, &wg)
 
-	// enable the OLT
-	oltMsg := types.Message{
-		Type: types.OltIndication,
-		Data: types.OltIndicationMessage{
-			OperState: types.UP,
-		},
-	}
-	o.channel <- oltMsg
-
-	// send NNI Port Indications
-	for _, nni := range o.Nnis {
-		msg := types.Message{
-			Type: types.NniIndication,
-			Data: types.NniIndicationMessage{
+	if o.InternalState.Current() == "enabled" || o.InternalState.Current() == "initialized"{
+		// enable the OLT
+		oltMsg := types.Message{
+			Type: types.OltIndication,
+			Data: types.OltIndicationMessage{
 				OperState: types.UP,
-				NniPortID: nni.ID,
 			},
 		}
-		o.channel <- msg
-	}
+		o.channel <- oltMsg
 
-	if rebootFlag {
-		for _, pon := range o.Pons {
-			if pon.InternalState.Current() == "disabled" {
-				msg := types.Message{
-					Type: types.PonIndication,
-					Data: types.PonIndicationMessage{
-						OperState: types.UP,
-						PonPortID: pon.ID,
-					},
-				}
-				o.channel <- msg
+		// send NNI Port Indications
+		for _, nni := range o.Nnis {
+			msg := types.Message{
+				Type: types.NniIndication,
+				Data: types.NniIndicationMessage{
+					OperState: types.UP,
+					NniPortID: nni.ID,
+				},
 			}
-			// when the enableContext was canceled the ONUs stopped listening on the channel
-			for _, onu := range pon.Onus {
-				go onu.ProcessOnuMessages(o.enableContext, stream, nil)
-
-				// update the stream on all the services
-				for _, service := range onu.Services {
-					service.UpdateStream(stream)
-				}
-			}
+			o.channel <- msg
 		}
-	} else {
 
-		// 1. controlledActivation == Default: Send both PON and ONUs indications
-		// 2. controlledActivation == only-onu: that means only ONUs will be controlled activated, so auto send PON indications
-
-		if o.ControlledActivation == Default || o.ControlledActivation == OnlyONU {
-			// send PON Port indications
+		if rebootFlag {
 			for _, pon := range o.Pons {
-				msg := types.Message{
-					Type: types.PonIndication,
-					Data: types.PonIndicationMessage{
-						OperState: types.UP,
-						PonPortID: pon.ID,
-					},
+				if pon.InternalState.Current() == "disabled" {
+					msg := types.Message{
+						Type: types.PonIndication,
+						Data: types.PonIndicationMessage{
+							OperState: types.UP,
+							PonPortID: pon.ID,
+						},
+					}
+					o.channel <- msg
 				}
-				o.channel <- msg
+				// when the enableContext was canceled the ONUs stopped listening on the channel
+				for _, onu := range pon.Onus {
+					go onu.ProcessOnuMessages(o.enableContext, stream, nil)
+
+					// update the stream on all the services
+					for _, service := range onu.Services {
+						service.UpdateStream(stream)
+					}
+				}
+			}
+		} else {
+
+			// 1. controlledActivation == Default: Send both PON and ONUs indications
+			// 2. controlledActivation == only-onu: that means only ONUs will be controlled activated, so auto send PON indications
+
+			if o.ControlledActivation == Default || o.ControlledActivation == OnlyONU {
+				// send PON Port indications
+				for _, pon := range o.Pons {
+					msg := types.Message{
+						Type: types.PonIndication,
+						Data: types.PonIndicationMessage{
+							OperState: types.UP,
+							PonPortID: pon.ID,
+						},
+					}
+					o.channel <- msg
+				}
 			}
 		}
 	}
