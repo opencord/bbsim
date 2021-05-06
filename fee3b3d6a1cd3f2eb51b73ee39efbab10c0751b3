@@ -63,6 +63,24 @@
       "revId": "fee3b3d6a1cd3f2eb51b73ee39efbab10c0751b3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d9c199cd_eeefcae3",
+        "filename": "internal/common/omci/test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1000617
+      },
+      "writtenOn": "2021-05-06T14:09:47Z",
+      "side": 1,
+      "message": "Opps. Ignore my previous comment.  Just looked at the spec and test result TID should be the request TID if the value was not self generated.\n\nMy decoder enforces it to be zero which is a bug.   I will send you a patch and submit a JIRA for OMCI-LIB-GO so that we fix it.",
+      "parentUuid": "797ac500_3bf62e95",
+      "revId": "fee3b3d6a1cd3f2eb51b73ee39efbab10c0751b3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
