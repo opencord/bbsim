@@ -309,9 +309,6 @@ func (o *OltDevice) RestartOLT() error {
 		return err
 	}
 
-	time.Sleep(1 * time.Second) // we need to give the OLT the time to respond to all the pending gRPC request before stopping the server
-	o.StopOltServer()
-
 	if softReboot {
 		for _, pon := range o.Pons {
 			if pon.InternalState.Current() == "enabled" {
@@ -341,11 +338,13 @@ func (o *OltDevice) RestartOLT() error {
 		}
 	}
 
+	time.Sleep(1 * time.Second) // we need to give the OLT the time to respond to all the pending gRPC request before stopping the server
+	o.StopOltServer()
+
 	// terminate the OLT's processOltMessages go routine
 	close(o.channel)
 
 	o.enableContextCancel()
-
 	time.Sleep(time.Duration(rebootDelay) * time.Second)
 
 	if err := o.InternalState.Event("initialize"); err != nil {

@@ -342,6 +342,12 @@ func (o *Onu) ProcessOnuMessages(ctx context.Context, stream openolt.Openolt_Ena
 		"stream":  stream,
 	}).Debug("Starting ONU Indication Channel")
 
+	defer onuLogger.WithFields(log.Fields{
+		"onuID":  o.ID,
+		"onuSN":  o.Sn(),
+		"stream": stream,
+	}).Debug("Stopped handling ONU Indication Channel")
+
 loop:
 	for {
 		select {
@@ -493,11 +499,7 @@ loop:
 			}
 		}
 	}
-	onuLogger.WithFields(log.Fields{
-		"onuID":  o.ID,
-		"onuSN":  o.Sn(),
-		"stream": stream,
-	}).Debug("Stopped handling ONU Indication Channel")
+	return
 }
 
 func NewSN(oltid int, intfid uint32, onuid uint32) *openolt.SerialNumber {
