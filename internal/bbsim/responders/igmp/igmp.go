@@ -56,6 +56,8 @@ func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, p
 			GemportId: gemPortId,
 			Pkt:       pkt,
 			PortNo:    portNo,
+			OnuId:     onuId,
+			UniId:     0, // FIXME: When multi-uni support comes in, this hardcoding has to be removed
 		},
 	}
 	//Sending IGMP packets
@@ -96,6 +98,8 @@ func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber str
 			GemportId: gemPortId,
 			Pkt:       pkt,
 			PortNo:    portNo,
+			OnuId:     onuId,
+			UniId:     0,
 		},
 	}
 	//Sending IGMP packets
@@ -149,6 +153,8 @@ func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber str
 			GemportId: gemPortId,
 			Pkt:       pkt,
 			PortNo:    portNo,
+			OnuId:     onuId,
+			UniId:     0, // FIXME: When multi-uni support comes in, this hardcoding has to be removed
 		},
 	}
 	//Sending IGMP packets
