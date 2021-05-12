@@ -1613,6 +1613,10 @@ func (o *OltDevice) GetLogicalOnuDistance(ctx context.Context, in *openolt.Onu) 
 	return &openolt.OnuLogicalDistance{}, nil
 }
 
+func (o *OltDevice) GetPonRxPower(ctx context.Context, in *openolt.Onu) (*openolt.PonRxPowerData, error) {
+	return &openolt.PonRxPowerData{}, nil
+}
+
 func (o *OltDevice) GetGemPortStatistics(ctx context.Context, in *openolt.OnuPacket) (*openolt.GemPortStatistics, error) {
 	return &openolt.GemPortStatistics{}, nil
 }

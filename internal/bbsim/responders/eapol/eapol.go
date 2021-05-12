@@ -52,6 +52,8 @@ func sendEapolPktIn(msg bbsim.ByteMsg, portNo uint32, gemid uint32, stream bbsim
 		GemportId: uint32(gemid),
 		Pkt:       msg.Bytes,
 		PortNo:    portNo,
+		OnuId:     msg.OnuId,
+		UniId:     0, // FIXME: When multi-uni support comes in, this hardcoding has to be removed.
 	}}
 
 	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
@@ -220,6 +222,8 @@ func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, portNo ui
 			GemportId: gemPort,
 			Pkt:       msg,
 			PortNo:    portNo,
+			OnuId:     onuId,
+			UniId:     uniId,
 		},
 	}
 

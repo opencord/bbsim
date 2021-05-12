@@ -142,6 +142,10 @@ func (s *mockClient) GetOnuStatistics(ctx context.Context, in *openolt.Onu, opts
 	return nil, errors.New("unimplemented-in-mock-client")
 }
 
+func (s *mockClient) GetPonRxPower(ctx context.Context, in *openolt.Onu, opts ...grpc.CallOption) (*openolt.PonRxPowerData, error) {
+	return nil, errors.New("unimplemented-in-mock-client")
+}
+
 // this method creates a fake ONU used in the tests
 func createMockOnu(id uint32, ponPortId uint32) *Onu {
 	o := Onu{
