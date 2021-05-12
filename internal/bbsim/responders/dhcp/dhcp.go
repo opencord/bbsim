@@ -264,6 +264,8 @@ func sendDHCPPktIn(msg bbsim.ByteMsg, portNo uint32, gemPortId uint32, stream bb
 		GemportId: gemPortId,
 		Pkt:       msg.Bytes,
 		PortNo:    portNo,
+		OnuId:     msg.OnuId,
+		UniId:     0, // FIXME: When multi-uni support comes in, this hardcoding has to be removed
 	}}
 
 	if err := stream.Send(&openolt.Indication{Data: data}); err != nil {
