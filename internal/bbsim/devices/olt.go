@@ -1097,6 +1097,21 @@ func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.E
 			}).Error("Can't find Onu")
 			return nil, err
 		}
+
+		// if the ONU is disabled reject the flow
+		// as per VOL-4061 there is a small window during which the ONU is disabled
+		// but the port has not been reported as down to ONOS
+		if onu.InternalState.Is(OnuStatePonDisabled) || onu.InternalState.Is(OnuStateDisabled) {
+			oltLogger.WithFields(log.Fields{
+				"OnuId":         flow.OnuId,
+				"IntfId":        flow.AccessIntfId,
+				"Flow":          flow,
+				"SerialNumber":  onu.Sn(),
+				"InternalState": onu.InternalState.Current(),
+			}).Error("rejected-flow-because-of-onu-state")
+			return nil, fmt.Errorf("onu-%s-is-currently-%s", onu.Sn(), onu.InternalState)
+		}
+
 		if !o.enablePerf {
 			onu.Flows = append(onu.Flows, flowKey)
 			// Generate event on first flow for ONU
