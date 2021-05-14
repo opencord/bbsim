@@ -18,7 +18,6 @@ package devices
 
 import (
 	"math/rand"
-	"strconv"
 	"time"
 
 	"github.com/looplab/fsm"
@@ -59,15 +58,6 @@ func getOperStateFSM(cb fsm.Callback) *fsm.FSM {
 			},
 		},
 	)
-}
-
-// deprecated
-func onuSnToString(sn *openolt.SerialNumber) string {
-	s := string(sn.VendorId)
-	for _, i := range sn.VendorSpecific {
-		s = s + strconv.FormatInt(int64(i/16), 16) + strconv.FormatInt(int64(i%16), 16)
-	}
-	return s
 }
 
 func publishEvent(eventType string, intfID int32, onuID int32, onuSerial string) {
