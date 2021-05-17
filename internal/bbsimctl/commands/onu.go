@@ -34,7 +34,8 @@ import (
 
 const (
 	DEFAULT_ONU_DEVICE_HEADER_FORMAT               = "table{{ .PonPortID }}\t{{ .ID }}\t{{ .PortNo }}\t{{ .SerialNumber }}\t{{ .OperState }}\t{{ .InternalState }}\t{{ .ImageSoftwareExpectedSections }}\t{{ .ImageSoftwareReceivedSections }}\t{{ .ActiveImageEntityId }}\t{{ .CommittedImageEntityId }}"
-	DEFAULT_ONU_DEVICE_HEADER_FORMAT_WITH_SERVICES = "table{{ .PonPortID }}\t{{ .ID }}\t{{ .PortNo }}\t{{ .SerialNumber }}\t{{ .OperState }}\t{{ .InternalState }}\t{{ .ImageSoftwareExpectedSections }}\t{{ .ImageSoftwareReceivedSections }}\t{{ .ActiveImageEntityId }}\t{{ .CommittedImageEntityId }}\t{{ .Services }}"
+	DEFAULT_ONU_DEVICE_HEADER_FORMAT_WITH_SERVICES = "table{{ .PonPortID }}\t{{ .ID }}\t{{ .PortNo }}\t{{ .SerialNumber }}\t{{ .OperState }}\t{{ .InternalState }}\t{{ .ImageSoftwareExpectedSections }}\t{{ .ImageSoftwareReceivedSections }}\t{{ .ActiveImageEntityId }}\t{{ .CommittedImageEntityId }}\t{{ .Unis }}\t{{ .Services }}"
+	DEFAULT_UNI_HEADER_FORMAT                      = "table{{ .OnuSn }}\t{{ .OnuID }}\t{{ .ID }}\t{{ .MeID }}\t{{ .OperState }}"
 )
 
 type OnuSnString string
@@ -59,6 +60,12 @@ type ONUGet struct {
 }
 
 type ONUServices struct {
+	Args struct {
+		OnuSn OnuSnString
+	} `positional-args:"yes" required:"yes"`
+}
+
+type ONUUnis struct {
 	Args struct {
 		OnuSn OnuSnString
 	} `positional-args:"yes" required:"yes"`
@@ -112,6 +119,7 @@ type ONUOptions struct {
 	List              ONUList              `command:"list"`
 	Get               ONUGet               `command:"get"`
 	Services          ONUServices          `command:"services"`
+	Unis              ONUUnis              `command:"unis"`
 	ShutDown          ONUShutDown          `command:"shutdown"`
 	PowerOn           ONUPowerOn           `command:"poweron"`
 	RestartEapol      ONUEapolRestart      `command:"auth_restart"`
@@ -209,6 +217,31 @@ func (options *ONUServices) Execute(args []string) error {
 	tableFormat := format.Format(DEFAULT_SERVICE_HEADER_FORMAT)
 	if err := tableFormat.Execute(os.Stdout, true, res.Items); err != nil {
 		log.Fatalf("Error while formatting Services table: %s", err)
+	}
+
+	return nil
+}
+
+func (options *ONUUnis) Execute(args []string) error {
+
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+	req := pb.ONURequest{
+		SerialNumber: string(options.Args.OnuSn),
+	}
+	res, err := client.GetOnuUnis(ctx, &req)
+
+	if err != nil {
+		log.Fatalf("Cannot not get unis for ONU %s: %v", options.Args.OnuSn, err)
+		return err
+	}
+
+	tableFormat := format.Format(DEFAULT_UNI_HEADER_FORMAT)
+	if err := tableFormat.Execute(os.Stdout, true, res.Items); err != nil {
+		log.Fatalf("Error while formatting Unis table: %s", err)
 	}
 
 	return nil

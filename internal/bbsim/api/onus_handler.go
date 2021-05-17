@@ -48,6 +48,7 @@ func (s BBSimServer) GetONUs(ctx context.Context, req *bbsim.Empty) (*bbsim.ONUs
 				ImageSoftwareExpectedSections: int32(o.ImageSoftwareExpectedSections),
 				ActiveImageEntityId:           int32(o.ActiveImageEntityId),
 				CommittedImageEntityId:        int32(o.CommittedImageEntityId),
+				Unis:                          convertBBsimUniPortsToProtoUniPorts(o.UniPorts),
 			}
 			onus.Items = append(onus.Items, &onu)
 		}
@@ -72,6 +73,7 @@ func (s BBSimServer) GetONU(ctx context.Context, req *bbsim.ONURequest) (*bbsim.
 		PonPortID:     int32(onu.PonPortID),
 		PortNo:        int32(onu.PortNo),
 		Services:      convertBBsimServicesToProtoServices(onu.Services),
+		Unis:          convertBBsimUniPortsToProtoUniPorts(onu.UniPorts),
 	}
 	return &res, nil
 }
