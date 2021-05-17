@@ -119,7 +119,7 @@ func createOnu2gResponse(attributeMask uint16, entityID uint16) *omci.GetRespons
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
 			"ManagedEntityId": entityID,
-			"EquipmentId":     toOctets("12345123451234512345", 20),
+			"EquipmentId":     ToOctets("12345123451234512345", 20),
 			"OpticalNetworkUnitManagementAndControlChannelOmccVersion": 180,
 			"VendorProductCode":                           0,
 			"SecurityCapability":                          1,
@@ -157,8 +157,8 @@ func createOnugResponse(attributeMask uint16, entityID uint16, onuSn *openolt.Se
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
 			"ManagedEntityId":         entityID,
-			"VendorId":                toOctets("BBSM", 4),
-			"Version":                 toOctets("v0.0.1", 14),
+			"VendorId":                ToOctets("BBSM", 4),
+			"Version":                 ToOctets("v0.0.1", 14),
 			"SerialNumber":            append(onuSn.VendorId, onuSn.VendorSpecific...),
 			"TrafficManagementOption": 0,
 			"Deprecated":              0,
@@ -166,8 +166,8 @@ func createOnugResponse(attributeMask uint16, entityID uint16, onuSn *openolt.Se
 			"AdministrativeState":     0,
 			"OperationalState":        0,
 			"OnuSurvivalTime":         10,
-			"LogicalOnuId":            toOctets("BBSM", 24),
-			"LogicalPassword":         toOctets("BBSM", 12),
+			"LogicalOnuId":            ToOctets("BBSM", 24),
+			"LogicalPassword":         ToOctets("BBSM", 12),
 			"CredentialsStatus":       0,
 			"ExtendedTcLayerOptions":  0,
 		},
@@ -224,12 +224,12 @@ func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16, ac
 		},
 		Attributes: me.AttributeValueMap{
 			"ManagedEntityId": 0,
-			"Version":         toOctets("00000000000001", 14),
+			"Version":         ToOctets("00000000000001", 14),
 			"IsCommitted":     committed,
 			"IsActive":        active,
 			"IsValid":         1,
-			"ProductCode":     toOctets("product-code", 25),
-			"ImageHash":       toOctets("broadband-sim", 16),
+			"ProductCode":     ToOctets("product-code", 25),
+			"ImageHash":       ToOctets("broadband-sim", 16),
 		},
 		Result:        me.Success,
 		AttributeMask: attributeMask,
@@ -253,7 +253,7 @@ func createIpHostResponse(attributeMask uint16, entityInstance uint16) *omci.Get
 		},
 		Attributes: me.AttributeValueMap{
 			"ManagedEntityId": 0,
-			"MacAddress":      toOctets("aabbcc", 6),
+			"MacAddress":      ToOctets("aabbcc", 6),
 		},
 		Result:        me.Success,
 		AttributeMask: attributeMask,
@@ -590,7 +590,7 @@ func createAnigResponse(attributeMask uint16, entityID uint16) *omci.GetResponse
 	}
 }
 
-func toOctets(str string, size int) []byte {
+func ToOctets(str string, size int) []byte {
 	asciiBytes := []byte(str)
 
 	if len(asciiBytes) < size {
