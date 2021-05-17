@@ -52,6 +52,7 @@ var onuLogger = log.WithFields(log.Fields{
 
 const (
 	maxOmciMsgCounter = 10
+	uniPorts          = 4 // TODO this will need to be configurable
 )
 
 const (
@@ -109,9 +110,11 @@ type Onu struct {
 	// PortNo comes with flows and it's used when sending packetIndications,
 	// There is one PortNo per UNI Port, for now we're only storing the first one
 	// FIXME add support for multiple UNIs (each UNI has a different PortNo)
-	PortNo  uint32
-	Flows   []FlowKey
-	FlowIds []uint64 // keep track of the flows we currently have in the ONU
+	// deprecated
+	PortNo   uint32
+	UniPorts []*UniPort
+	Flows    []FlowKey
+	FlowIds  []uint64 // keep track of the flows we currently have in the ONU
 
 	OperState    *fsm.FSM
 	SerialNumber *openolt.SerialNumber
@@ -131,6 +134,7 @@ type Onu struct {
 	tid       uint16
 	hpTid     uint16
 	seqNumber uint16
+	MibDb     *omcilib.MibDb
 
 	DoneChannel       chan bool // this channel is used to signal once the onu is complete (when the struct is used by BBR)
 	TrafficSchedulers *tech_profile.TrafficSchedulers
@@ -169,7 +173,9 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 	// state as requested by VOLTHA
 	o.OperState = getOperStateFSM(func(e *fsm.Event) {
 		onuLogger.WithFields(log.Fields{
-			"ID": o.ID,
+			"OnuId":  o.ID,
+			"IntfId": o.PonPortID,
+			"OnuSn":  o.Sn(),
 		}).Debugf("Changing ONU OperState from %s to %s", e.Src, e.Dst)
 	})
 	o.onuAlarmsInfo = make(map[omcilib.OnuAlarmInfoMapKey]omcilib.OnuAlarmInfo)
@@ -307,6 +313,29 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 			},
 		},
 	)
+
+	for i := 0; i < uniPorts; i++ {
+		uni, err := NewUniPort(uint32(i), &o)
+		if err != nil {
+			onuLogger.WithFields(log.Fields{
+				"OnuId":  o.ID,
+				"IntfId": o.PonPortID,
+				"OnuSn":  o.Sn(),
+				"Err":    err,
+			}).Fatal("cannot-create-uni-port")
+		}
+		o.UniPorts = append(o.UniPorts, uni)
+	}
+
+	mibDb, err := omcilib.GenerateMibDatabase(len(o.UniPorts))
+	if err != nil {
+		onuLogger.WithFields(log.Fields{
+			"OnuId":  o.ID,
+			"IntfId": o.PonPortID,
+			"OnuSn":  o.Sn(),
+		}).Fatal("cannot-generate-mibdb-for-onu")
+	}
+	o.MibDb = mibDb
 
 	return &o
 }
@@ -748,9 +777,9 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			o.PonPort.removeGemPortBySn(o.SerialNumber)
 		}
 	case omci.MibUploadRequestType:
-		responsePkt, _ = omcilib.CreateMibUploadResponse(msg.OmciMsg.TransactionID)
+		responsePkt, _ = omcilib.CreateMibUploadResponse(msg.OmciMsg.TransactionID, o.MibDb.NumberOfCommands)
 	case omci.MibUploadNextRequestType:
-		responsePkt, _ = omcilib.CreateMibUploadNextResponse(msg.OmciPkt, msg.OmciMsg, o.MibDataSync)
+		responsePkt, _ = omcilib.CreateMibUploadNextResponse(msg.OmciPkt, msg.OmciMsg, o.MibDataSync, o.MibDb)
 	case omci.GetRequestType:
 		onuDown := o.OperState.Current() == "down"
 		responsePkt, _ = omcilib.CreateGetResponse(msg.OmciPkt, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId, o.CommittedImageEntityId, onuDown)
