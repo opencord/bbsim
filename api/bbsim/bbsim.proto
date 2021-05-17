@@ -89,6 +89,15 @@ message ONU {
     int32 ImageSoftwareReceivedSections = 12;
     int32 ActiveImageEntityId = 13;
     int32 CommittedImageEntityId = 14;
+    repeated UNI unis = 15;
+}
+
+message UNI {
+    int32 ID = 1;
+    int32 OnuID = 2;
+    string OnuSn = 3;
+    uint32 MeID = 4;
+    string OperState = 5;
 }
 
 message Service {
@@ -117,6 +126,10 @@ message ONUs {
 
 message Services {
     repeated Service items = 1;
+}
+
+message UNIs {
+    repeated UNI items = 1;
 }
 
 // Inputs
@@ -272,6 +285,10 @@ service BBSim {
 
     // Get all the Services of an ONU by serial number
     rpc GetOnuServices (ONURequest) returns (Services) {
+    }
+
+    // Get all the UNIs of an ONU by serial number
+    rpc GetOnuUnis (ONURequest) returns (UNIs) {
     }
 
     // Shutdown an ONU by serial number

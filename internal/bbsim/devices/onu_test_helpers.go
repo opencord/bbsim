@@ -19,6 +19,7 @@ package devices
 import (
 	"context"
 	"errors"
+	omcilib "github.com/opencord/bbsim/internal/common/omci"
 	"time"
 
 	"github.com/opencord/bbsim/internal/bbsim/types"
@@ -151,6 +152,15 @@ func createMockOnu(id uint32, ponPortId uint32) *Onu {
 	}
 	o.SerialNumber = NewSN(0, ponPortId, o.ID)
 	o.Channel = make(chan types.Message, 10)
+
+	unis := []*UniPort{
+		{ID: 0, Onu: &o, MeId: omcilib.GenerateUniPortEntityId(1)},
+		{ID: 1, Onu: &o, MeId: omcilib.GenerateUniPortEntityId(2)},
+		{ID: 2, Onu: &o, MeId: omcilib.GenerateUniPortEntityId(3)},
+		{ID: 3, Onu: &o, MeId: omcilib.GenerateUniPortEntityId(4)},
+	}
+
+	o.UniPorts = unis
 	return &o
 }
 
