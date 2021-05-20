@@ -141,7 +141,6 @@ func createMockOnu(id uint32, ponPortId uint32) *Onu {
 	o := Onu{
 		ID:        id,
 		PonPortID: ponPortId,
-		PortNo:    0,
 		PonPort: &PonPort{
 			AllocatedGemPorts: make(map[uint16]*openolt.SerialNumber),
 			AllocatedAllocIds: make(map[uint16]*openolt.SerialNumber),
@@ -153,11 +152,11 @@ func createMockOnu(id uint32, ponPortId uint32) *Onu {
 	o.SerialNumber = NewSN(0, ponPortId, o.ID)
 	o.Channel = make(chan types.Message, 10)
 
-	unis := []*UniPort{
-		{ID: 0, Onu: &o, MeId: omcilib.GenerateUniPortEntityId(1)},
-		{ID: 1, Onu: &o, MeId: omcilib.GenerateUniPortEntityId(2)},
-		{ID: 2, Onu: &o, MeId: omcilib.GenerateUniPortEntityId(3)},
-		{ID: 3, Onu: &o, MeId: omcilib.GenerateUniPortEntityId(4)},
+	unis := []UniPortIf{
+		&UniPort{ID: 0, Onu: &o, MeId: omcilib.GenerateUniPortEntityId(1)},
+		&UniPort{ID: 1, Onu: &o, MeId: omcilib.GenerateUniPortEntityId(2)},
+		&UniPort{ID: 2, Onu: &o, MeId: omcilib.GenerateUniPortEntityId(3)},
+		&UniPort{ID: 3, Onu: &o, MeId: omcilib.GenerateUniPortEntityId(4)},
 	}
 
 	o.UniPorts = unis
@@ -166,6 +165,9 @@ func createMockOnu(id uint32, ponPortId uint32) *Onu {
 
 // this method creates a real ONU to be used in the tests
 func createTestOnu() *Onu {
+	nextCtag := map[string]int{}
+	nextStag := map[string]int{}
+
 	olt := OltDevice{
 		ID:               0,
 		OmciResponseRate: 10,
@@ -173,7 +175,7 @@ func createTestOnu() *Onu {
 
 	pon := CreatePonPort(&olt, 1)
 
-	onu := CreateONU(&olt, pon, 1, time.Duration(1*time.Millisecond), true)
+	onu := CreateONU(&olt, pon, 1, time.Duration(1*time.Millisecond), nextCtag, nextStag, true)
 	// NOTE we need this in order to create the OnuChannel
 	_ = onu.InternalState.Event(OnuTxInitialize)
 	onu.DiscoveryRetryDelay = 100 * time.Millisecond

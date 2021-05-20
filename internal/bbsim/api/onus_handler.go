@@ -19,7 +19,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/v4/go/openolt"
 
 	"github.com/opencord/bbsim/api/bbsim"
@@ -42,8 +41,6 @@ func (s BBSimServer) GetONUs(ctx context.Context, req *bbsim.Empty) (*bbsim.ONUs
 				OperState:                     o.OperState.Current(),
 				InternalState:                 o.InternalState.Current(),
 				PonPortID:                     int32(o.PonPortID),
-				PortNo:                        int32(o.PortNo),
-				Services:                      convertBBsimServicesToProtoServices(o.Services),
 				ImageSoftwareReceivedSections: int32(o.ImageSoftwareReceivedSections),
 				ImageSoftwareExpectedSections: int32(o.ImageSoftwareExpectedSections),
 				ActiveImageEntityId:           int32(o.ActiveImageEntityId),
@@ -71,8 +68,6 @@ func (s BBSimServer) GetONU(ctx context.Context, req *bbsim.ONURequest) (*bbsim.
 		OperState:     onu.OperState.Current(),
 		InternalState: onu.InternalState.Current(),
 		PonPortID:     int32(onu.PonPortID),
-		PortNo:        int32(onu.PortNo),
-		Services:      convertBBsimServicesToProtoServices(onu.Services),
 		Unis:          convertBBsimUniPortsToProtoUniPorts(onu.UniPorts),
 	}
 	return &res, nil
@@ -232,6 +227,8 @@ func (s BBSimServer) PoweronAllONUs(context.Context, *bbsim.Empty) (*bbsim.Respo
 
 func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest) (*bbsim.Response, error) {
 
+	return nil, fmt.Errorf("dont-come-here")
+	// FIXME move to UNI
 	// TODO check that the ONU is enabled and the services are initialized before changing the state
 
 	res := &bbsim.Response{}
@@ -269,30 +266,30 @@ func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest
 		startedOn := []string{}
 		success := true
 
-		for _, s := range onu.Services {
-			service := s.(*devices.Service)
-			if service.NeedsIgmp {
-
-				logger.WithFields(log.Fields{
-					"OnuId":   onu.ID,
-					"IntfId":  onu.PonPortID,
-					"OnuSn":   onu.Sn(),
-					"Service": service.Name,
-				}).Debugf("Sending %s event on Service %s", event, service.Name)
-
-				if err := service.IGMPState.Event(event, types.IgmpMessage{GroupAddress: req.GroupAddress}); err != nil {
-					logger.WithFields(log.Fields{
-						"OnuId":   onu.ID,
-						"IntfId":  onu.PonPortID,
-						"OnuSn":   onu.Sn(),
-						"Service": service.Name,
-					}).Errorf("IGMP request failed: %s", err.Error())
-					errors = append(errors, fmt.Sprintf("%s: %s", service.Name, err.Error()))
-					success = false
-				}
-				startedOn = append(startedOn, service.Name)
-			}
-		}
+		//for _, s := range onu.Services {
+		//	service := s.(*devices.Service)
+		//	if service.NeedsIgmp {
+		//
+		//		logger.WithFields(log.Fields{
+		//			"OnuId":   onu.ID,
+		//			"IntfId":  onu.PonPortID,
+		//			"OnuSn":   onu.Sn(),
+		//			"Service": service.Name,
+		//		}).Debugf("Sending %s event on Service %s", event, service.Name)
+		//
+		//		if err := service.IGMPState.Event(event, types.IgmpMessage{GroupAddress: req.GroupAddress}); err != nil {
+		//			logger.WithFields(log.Fields{
+		//				"OnuId":   onu.ID,
+		//				"IntfId":  onu.PonPortID,
+		//				"OnuSn":   onu.Sn(),
+		//				"Service": service.Name,
+		//			}).Errorf("IGMP request failed: %s", err.Error())
+		//			errors = append(errors, fmt.Sprintf("%s: %s", service.Name, err.Error()))
+		//			success = false
+		//		}
+		//		startedOn = append(startedOn, service.Name)
+		//	}
+		//}
 
 		if success {
 			res.StatusCode = int32(codes.OK)
@@ -325,6 +322,8 @@ func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest
 }
 
 func (s BBSimServer) RestartEapol(ctx context.Context, req *bbsim.ONURequest) (*bbsim.Response, error) {
+	return nil, fmt.Errorf("dont-come-here")
+	// FIXME move to UNI
 	res := &bbsim.Response{}
 
 	logger.WithFields(log.Fields{
@@ -345,22 +344,22 @@ func (s BBSimServer) RestartEapol(ctx context.Context, req *bbsim.ONURequest) (*
 	startedOn := []string{}
 	success := true
 
-	for _, s := range onu.Services {
-		service := s.(*devices.Service)
-		if service.NeedsEapol {
-			if err := service.EapolState.Event("start_auth"); err != nil {
-				logger.WithFields(log.Fields{
-					"OnuId":   onu.ID,
-					"IntfId":  onu.PonPortID,
-					"OnuSn":   onu.Sn(),
-					"Service": service.Name,
-				}).Errorf("Cannot restart authenticaton for Service: %s", err.Error())
-				errors = append(errors, fmt.Sprintf("%s: %s", service.Name, err.Error()))
-				success = false
-			}
-			startedOn = append(startedOn, service.Name)
-		}
-	}
+	//for _, s := range onu.Services {
+	//	service := s.(*devices.Service)
+	//	if service.NeedsEapol {
+	//		if err := service.EapolState.Event("start_auth"); err != nil {
+	//			logger.WithFields(log.Fields{
+	//				"OnuId":   onu.ID,
+	//				"IntfId":  onu.PonPortID,
+	//				"OnuSn":   onu.Sn(),
+	//				"Service": service.Name,
+	//			}).Errorf("Cannot restart authenticaton for Service: %s", err.Error())
+	//			errors = append(errors, fmt.Sprintf("%s: %s", service.Name, err.Error()))
+	//			success = false
+	//		}
+	//		startedOn = append(startedOn, service.Name)
+	//	}
+	//}
 
 	if success {
 		res.StatusCode = int32(codes.OK)
@@ -388,6 +387,8 @@ func (s BBSimServer) RestartEapol(ctx context.Context, req *bbsim.ONURequest) (*
 }
 
 func (s BBSimServer) RestartDhcp(ctx context.Context, req *bbsim.ONURequest) (*bbsim.Response, error) {
+	return nil, fmt.Errorf("dont-come-here")
+	// FIXME move to UNI
 	res := &bbsim.Response{}
 
 	logger.WithFields(log.Fields{
@@ -408,23 +409,23 @@ func (s BBSimServer) RestartDhcp(ctx context.Context, req *bbsim.ONURequest) (*b
 	startedOn := []string{}
 	success := true
 
-	for _, s := range onu.Services {
-		service := s.(*devices.Service)
-		if service.NeedsDhcp {
-
-			if err := service.DHCPState.Event("start_dhcp"); err != nil {
-				logger.WithFields(log.Fields{
-					"OnuId":   onu.ID,
-					"IntfId":  onu.PonPortID,
-					"OnuSn":   onu.Sn(),
-					"Service": service.Name,
-				}).Errorf("Cannot restart DHCP for Service: %s", err.Error())
-				errors = append(errors, fmt.Sprintf("%s: %s", service.Name, err.Error()))
-				success = false
-			}
-			startedOn = append(startedOn, service.Name)
-		}
-	}
+	//for _, s := range onu.Services {
+	//	service := s.(*devices.Service)
+	//	if service.NeedsDhcp {
+	//
+	//		if err := service.DHCPState.Event("start_dhcp"); err != nil {
+	//			logger.WithFields(log.Fields{
+	//				"OnuId":   onu.ID,
+	//				"IntfId":  onu.PonPortID,
+	//				"OnuSn":   onu.Sn(),
+	//				"Service": service.Name,
+	//			}).Errorf("Cannot restart DHCP for Service: %s", err.Error())
+	//			errors = append(errors, fmt.Sprintf("%s: %s", service.Name, err.Error()))
+	//			success = false
+	//		}
+	//		startedOn = append(startedOn, service.Name)
+	//	}
+	//}
 
 	if success {
 		res.StatusCode = int32(codes.OK)

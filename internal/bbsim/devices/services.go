@@ -52,7 +52,7 @@ type ServiceIf interface {
 type Service struct {
 	Name                string
 	HwAddress           net.HardwareAddr
-	Onu                 *Onu
+	UniPort             *UniPort
 	CTag                int
 	STag                int
 	NeedsEapol          bool
@@ -77,14 +77,14 @@ type Service struct {
 	Stream        bbsimTypes.Stream                // the gRPC stream to communicate with the adapter, created in the initialize transition
 }
 
-func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTag int,
+func NewService(name string, hwAddress net.HardwareAddr, uni *UniPort, cTag int, sTag int,
 	needsEapol bool, needsDchp bool, needsIgmp bool, tpID int, uniTagMatch int, configMacAddress bool,
 	usPonCTagPriority uint8, usPonSTagPriority uint8, dsPonCTagPriority uint8, dsPonSTagPriority uint8) (*Service, error) {
 
 	service := Service{
 		Name:                name,
 		HwAddress:           hwAddress,
-		Onu:                 onu,
+		UniPort:             uni,
 		CTag:                cTag,
 		STag:                sTag,
 		NeedsEapol:          needsEapol,
@@ -164,15 +164,15 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 
 					for {
 						select {
-						case <-service.Onu.PonPort.Olt.enableContext.Done():
+						case <-service.UniPort.Onu.PonPort.Olt.enableContext.Done():
 							// if the OLT is disabled, then cancel
 							return
 						case <-time.After(eapolWaitTime):
 							if service.EapolState.Current() != "eap_response_success_received" {
 								serviceLogger.WithFields(log.Fields{
-									"OnuId":      service.Onu.ID,
-									"IntfId":     service.Onu.PonPortID,
-									"OnuSn":      service.Onu.Sn(),
+									"OnuId":      service.UniPort.Onu.ID,
+									"IntfId":     service.UniPort.Onu.PonPortID,
+									"OnuSn":      service.UniPort.Onu.Sn(),
 									"Name":       service.Name,
 									"EapolState": service.EapolState.Current(),
 								}).Warn("EAPOL failed, resetting EAPOL State")
@@ -218,15 +218,15 @@ func NewService(name string, hwAddress net.HardwareAddr, onu *Onu, cTag int, sTa
 
 					for {
 						select {
-						case <-service.Onu.PonPort.Olt.enableContext.Done():
+						case <-service.UniPort.Onu.PonPort.Olt.enableContext.Done():
 							// if the OLT is disabled, then cancel
 							return
 						case <-time.After(dhcpWaitTime):
 							if service.DHCPState.Current() != "dhcp_ack_received" {
 								serviceLogger.WithFields(log.Fields{
-									"OnuId":     service.Onu.ID,
-									"IntfId":    service.Onu.PonPortID,
-									"OnuSn":     service.Onu.Sn(),
+									"OnuId":     service.UniPort.Onu.ID,
+									"IntfId":    service.UniPort.Onu.PonPortID,
+									"OnuSn":     service.UniPort.Onu.Sn(),
 									"Name":      service.Name,
 									"DHCPState": service.DHCPState.Current(),
 								}).Warn("DHCP failed, resetting DHCP State")
@@ -300,9 +300,9 @@ func (s *Service) HandleAuth() {
 
 	if !s.NeedsEapol {
 		serviceLogger.WithFields(log.Fields{
-			"OnuId":      s.Onu.ID,
-			"IntfId":     s.Onu.PonPortID,
-			"OnuSn":      s.Onu.Sn(),
+			"OnuId":      s.UniPort.Onu.ID,
+			"IntfId":     s.UniPort.Onu.PonPortID,
+			"OnuSn":      s.UniPort.Onu.Sn(),
 			"Name":       s.Name,
 			"NeedsEapol": s.NeedsEapol,
 		}).Debug("Won't start authentication as EAPOL is not required")
@@ -311,9 +311,9 @@ func (s *Service) HandleAuth() {
 
 	if err := s.EapolState.Event("start_auth"); err != nil {
 		serviceLogger.WithFields(log.Fields{
-			"OnuId":  s.Onu.ID,
-			"IntfId": s.Onu.PonPortID,
-			"OnuSn":  s.Onu.Sn(),
+			"OnuId":  s.UniPort.Onu.ID,
+			"IntfId": s.UniPort.Onu.PonPortID,
+			"OnuSn":  s.UniPort.Onu.Sn(),
 			"Name":   s.Name,
 			"err":    err.Error(),
 		}).Error("Can't start auth for this Service")
@@ -325,9 +325,9 @@ func (s *Service) HandleDhcp(pbit uint8, cTag int) {
 
 	if s.CTag != cTag || (s.UsPonCTagPriority != pbit && pbit != 255) {
 		serviceLogger.WithFields(log.Fields{
-			"OnuId":  s.Onu.ID,
-			"IntfId": s.Onu.PonPortID,
-			"OnuSn":  s.Onu.Sn(),
+			"OnuId":  s.UniPort.Onu.ID,
+			"IntfId": s.UniPort.Onu.PonPortID,
+			"OnuSn":  s.UniPort.Onu.Sn(),
 			"Name":   s.Name,
 		}).Trace("DHCP flow is not for this service, ignoring")
 		return
@@ -335,9 +335,9 @@ func (s *Service) HandleDhcp(pbit uint8, cTag int) {
 
 	if !s.NeedsDhcp {
 		serviceLogger.WithFields(log.Fields{
-			"OnuId":     s.Onu.ID,
-			"IntfId":    s.Onu.PonPortID,
-			"OnuSn":     s.Onu.Sn(),
+			"OnuId":     s.UniPort.Onu.ID,
+			"IntfId":    s.UniPort.Onu.PonPortID,
+			"OnuSn":     s.UniPort.Onu.Sn(),
 			"Name":      s.Name,
 			"NeedsDhcp": s.NeedsDhcp,
 		}).Trace("Won't start DHCP as it is not required")
@@ -348,9 +348,9 @@ func (s *Service) HandleDhcp(pbit uint8, cTag int) {
 
 	if err := s.DHCPState.Event("start_dhcp"); err != nil {
 		serviceLogger.WithFields(log.Fields{
-			"OnuId":  s.Onu.ID,
-			"IntfId": s.Onu.PonPortID,
-			"OnuSn":  s.Onu.Sn(),
+			"OnuId":  s.UniPort.Onu.ID,
+			"IntfId": s.UniPort.Onu.PonPortID,
+			"OnuSn":  s.UniPort.Onu.Sn(),
 			"Name":   s.Name,
 			"err":    err.Error(),
 		}).Error("Can't start DHCP for this Service")
@@ -359,18 +359,18 @@ func (s *Service) HandleDhcp(pbit uint8, cTag int) {
 
 func (s *Service) HandlePackets() {
 	serviceLogger.WithFields(log.Fields{
-		"OnuId":     s.Onu.ID,
-		"IntfId":    s.Onu.PonPortID,
-		"OnuSn":     s.Onu.Sn(),
+		"OnuId":     s.UniPort.Onu.ID,
+		"IntfId":    s.UniPort.Onu.PonPortID,
+		"OnuSn":     s.UniPort.Onu.Sn(),
 		"GemPortId": s.GemPort,
 		"Name":      s.Name,
 	}).Debug("Listening on Service Packet Channel")
 
 	defer func() {
 		serviceLogger.WithFields(log.Fields{
-			"OnuId":     s.Onu.ID,
-			"IntfId":    s.Onu.PonPortID,
-			"OnuSn":     s.Onu.Sn(),
+			"OnuId":     s.UniPort.Onu.ID,
+			"IntfId":    s.UniPort.Onu.PonPortID,
+			"OnuSn":     s.UniPort.Onu.Sn(),
 			"GemPortId": s.GemPort,
 			"Name":      s.Name,
 		}).Debug("Done Listening on Service Packet Channel")
@@ -378,38 +378,38 @@ func (s *Service) HandlePackets() {
 
 	for msg := range s.PacketCh {
 		serviceLogger.WithFields(log.Fields{
-			"OnuId":       s.Onu.ID,
-			"IntfId":      s.Onu.PonPortID,
-			"OnuSn":       s.Onu.Sn(),
+			"OnuId":       s.UniPort.Onu.ID,
+			"IntfId":      s.UniPort.Onu.PonPortID,
+			"OnuSn":       s.UniPort.Onu.Sn(),
 			"Name":        s.Name,
 			"messageType": msg.Type,
 		}).Trace("Received message on Service Packet Channel")
 
 		if msg.Type == packetHandlers.EAPOL {
-			eapol.HandleNextPacket(msg.OnuId, msg.IntfId, s.GemPort, s.Onu.Sn(), s.Onu.PortNo, s.EapolState, msg.Packet, s.Stream, nil)
+			eapol.HandleNextPacket(msg.OnuId, msg.IntfId, s.GemPort, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.EapolState, msg.Packet, s.Stream, nil)
 		} else if msg.Type == packetHandlers.DHCP {
-			_ = dhcp.HandleNextPacket(s.Onu.ID, s.Onu.PonPortID, s.Name, s.Onu.Sn(), s.Onu.PortNo, s.CTag, s.GemPort, s.HwAddress, s.DHCPState, msg.Packet, s.UsPonCTagPriority, s.Stream)
+			_ = dhcp.HandleNextPacket(s.UniPort.Onu.ID, s.UniPort.Onu.PonPortID, s.Name, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.CTag, s.GemPort, s.HwAddress, s.DHCPState, msg.Packet, s.UsPonCTagPriority, s.Stream)
 		} else if msg.Type == packetHandlers.IGMP {
 			log.Warn(hex.EncodeToString(msg.Packet.Data()))
-			_ = igmp.HandleNextPacket(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, msg.Packet, s.CTag, s.UsPonCTagPriority, s.Stream)
+			_ = igmp.HandleNextPacket(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.GemPort, s.HwAddress, msg.Packet, s.CTag, s.UsPonCTagPriority, s.Stream)
 		}
 	}
 }
 
 func (s *Service) HandleChannel() {
 	serviceLogger.WithFields(log.Fields{
-		"OnuId":     s.Onu.ID,
-		"IntfId":    s.Onu.PonPortID,
-		"OnuSn":     s.Onu.Sn(),
+		"OnuId":     s.UniPort.Onu.ID,
+		"IntfId":    s.UniPort.Onu.PonPortID,
+		"OnuSn":     s.UniPort.Onu.Sn(),
 		"GemPortId": s.GemPort,
 		"Name":      s.Name,
 	}).Debug("Listening on Service Channel")
 
 	defer func() {
 		serviceLogger.WithFields(log.Fields{
-			"OnuId":     s.Onu.ID,
-			"IntfId":    s.Onu.PonPortID,
-			"OnuSn":     s.Onu.Sn(),
+			"OnuId":     s.UniPort.Onu.ID,
+			"IntfId":    s.UniPort.Onu.PonPortID,
+			"OnuSn":     s.UniPort.Onu.Sn(),
 			"GemPortId": s.GemPort,
 			"Name":      s.Name,
 		}).Debug("Done Listening on Service Channel")
@@ -419,9 +419,9 @@ func (s *Service) HandleChannel() {
 		case bbsimTypes.StartEAPOL:
 			if err := s.handleEapolStart(s.Stream); err != nil {
 				serviceLogger.WithFields(log.Fields{
-					"OnuId":  s.Onu.ID,
-					"IntfId": s.Onu.PonPortID,
-					"OnuSn":  s.Onu.Sn(),
+					"OnuId":  s.UniPort.Onu.ID,
+					"IntfId": s.UniPort.Onu.PonPortID,
+					"OnuSn":  s.UniPort.Onu.Sn(),
 					"Name":   s.Name,
 					"err":    err,
 				}).Error("Error while sending EapolStart packet")
@@ -430,9 +430,9 @@ func (s *Service) HandleChannel() {
 		case bbsimTypes.StartDHCP:
 			if err := s.handleDHCPStart(s.Stream); err != nil {
 				serviceLogger.WithFields(log.Fields{
-					"OnuId":  s.Onu.ID,
-					"IntfId": s.Onu.PonPortID,
-					"OnuSn":  s.Onu.Sn(),
+					"OnuId":  s.UniPort.Onu.ID,
+					"IntfId": s.UniPort.Onu.PonPortID,
+					"OnuSn":  s.UniPort.Onu.Sn(),
 					"Name":   s.Name,
 					"err":    err,
 				}).Error("Error while sending DHCPDiscovery packet")
@@ -442,30 +442,30 @@ func (s *Service) HandleChannel() {
 		case bbsimTypes.IGMPMembershipReportV2:
 			igmpInfo, _ := msg.Data.(bbsimTypes.IgmpMessage)
 			serviceLogger.WithFields(log.Fields{
-				"OnuId":  s.Onu.ID,
-				"IntfId": s.Onu.PonPortID,
-				"OnuSn":  s.Onu.Sn(),
+				"OnuId":  s.UniPort.Onu.ID,
+				"IntfId": s.UniPort.Onu.PonPortID,
+				"OnuSn":  s.UniPort.Onu.Sn(),
 				"Name":   s.Name,
 			}).Debug("Received IGMPMembershipReportV2 message on ONU channel")
-			_ = igmp.SendIGMPMembershipReportV2(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
+			_ = igmp.SendIGMPMembershipReportV2(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
 		case bbsimTypes.IGMPLeaveGroup:
 			igmpInfo, _ := msg.Data.(bbsimTypes.IgmpMessage)
 			serviceLogger.WithFields(log.Fields{
-				"OnuId":  s.Onu.ID,
-				"IntfId": s.Onu.PonPortID,
-				"OnuSn":  s.Onu.Sn(),
+				"OnuId":  s.UniPort.Onu.ID,
+				"IntfId": s.UniPort.Onu.PonPortID,
+				"OnuSn":  s.UniPort.Onu.Sn(),
 				"Name":   s.Name,
 			}).Debug("Received IGMPLeaveGroupV2 message on ONU channel")
-			_ = igmp.SendIGMPLeaveGroupV2(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
+			_ = igmp.SendIGMPLeaveGroupV2(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
 		case bbsimTypes.IGMPMembershipReportV3:
 			igmpInfo, _ := msg.Data.(bbsimTypes.IgmpMessage)
 			serviceLogger.WithFields(log.Fields{
-				"OnuId":  s.Onu.ID,
-				"IntfId": s.Onu.PonPortID,
-				"OnuSn":  s.Onu.Sn(),
+				"OnuId":  s.UniPort.Onu.ID,
+				"IntfId": s.UniPort.Onu.PonPortID,
+				"OnuSn":  s.UniPort.Onu.Sn(),
 				"Name":   s.Name,
 			}).Debug("Received IGMPMembershipReportV3 message on ONU channel")
-			_ = igmp.SendIGMPMembershipReportV3(s.Onu.PonPortID, s.Onu.ID, s.Onu.Sn(), s.Onu.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
+			_ = igmp.SendIGMPMembershipReportV3(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
 
 		}
 	}
@@ -474,9 +474,9 @@ func (s *Service) HandleChannel() {
 func (s *Service) Initialize(stream bbsimTypes.Stream) {
 	if err := s.InternalState.Event("initialized", stream); err != nil {
 		serviceLogger.WithFields(log.Fields{
-			"OnuId":  s.Onu.ID,
-			"IntfId": s.Onu.PonPortID,
-			"OnuSn":  s.Onu.Sn(),
+			"OnuId":  s.UniPort.Onu.ID,
+			"IntfId": s.UniPort.Onu.PonPortID,
+			"OnuSn":  s.UniPort.Onu.Sn(),
 			"Name":   s.Name,
 			"Err":    err,
 		}).Error("Cannot initialize service")
@@ -486,9 +486,9 @@ func (s *Service) Initialize(stream bbsimTypes.Stream) {
 func (s *Service) Disable() {
 	if err := s.InternalState.Event("disabled"); err != nil {
 		serviceLogger.WithFields(log.Fields{
-			"OnuId":  s.Onu.ID,
-			"IntfId": s.Onu.PonPortID,
-			"OnuSn":  s.Onu.Sn(),
+			"OnuId":  s.UniPort.Onu.ID,
+			"IntfId": s.UniPort.Onu.PonPortID,
+			"OnuSn":  s.UniPort.Onu.Sn(),
 			"Name":   s.Name,
 			"Err":    err,
 		}).Error("Cannot disable service")
@@ -498,19 +498,19 @@ func (s *Service) Disable() {
 func (s *Service) handleEapolStart(stream bbsimTypes.Stream) error {
 	// TODO fail Auth if it does not succeed in 30 seconds
 	serviceLogger.WithFields(log.Fields{
-		"OnuId":   s.Onu.ID,
-		"IntfId":  s.Onu.PonPortID,
-		"OnuSn":   s.Onu.Sn(),
+		"OnuId":   s.UniPort.Onu.ID,
+		"IntfId":  s.UniPort.Onu.PonPortID,
+		"OnuSn":   s.UniPort.Onu.Sn(),
 		"GemPort": s.GemPort,
 		"Name":    s.Name,
 	}).Trace("handleEapolStart")
 
-	if err := eapol.SendEapStart(s.Onu.ID, s.Onu.PonPortID, s.Onu.Sn(), s.Onu.PortNo,
+	if err := eapol.SendEapStart(s.UniPort.Onu.ID, s.UniPort.Onu.PonPortID, s.UniPort.Onu.Sn(), s.UniPort.PortNo,
 		s.HwAddress, s.GemPort, s.EapolState, stream); err != nil {
 		serviceLogger.WithFields(log.Fields{
-			"OnuId":   s.Onu.ID,
-			"IntfId":  s.Onu.PonPortID,
-			"OnuSn":   s.Onu.Sn(),
+			"OnuId":   s.UniPort.Onu.ID,
+			"IntfId":  s.UniPort.Onu.PonPortID,
+			"OnuSn":   s.UniPort.Onu.Sn(),
 			"GemPort": s.GemPort,
 			"Name":    s.Name,
 		}).Error("handleEapolStart")
@@ -522,19 +522,19 @@ func (s *Service) handleEapolStart(stream bbsimTypes.Stream) error {
 func (s *Service) handleDHCPStart(stream bbsimTypes.Stream) error {
 	// TODO fail DHCP if it does not succeed in 30 seconds
 	serviceLogger.WithFields(log.Fields{
-		"OnuId":     s.Onu.ID,
-		"IntfId":    s.Onu.PonPortID,
-		"OnuSn":     s.Onu.Sn(),
+		"OnuId":     s.UniPort.Onu.ID,
+		"IntfId":    s.UniPort.Onu.PonPortID,
+		"OnuSn":     s.UniPort.Onu.Sn(),
 		"Name":      s.Name,
 		"GemPortId": s.GemPort,
 	}).Debugf("HandleDHCPStart")
 
-	if err := dhcp.SendDHCPDiscovery(s.Onu.PonPortID, s.Onu.ID, s.Name, int(s.CTag), s.GemPort,
-		s.Onu.Sn(), s.Onu.PortNo, s.DHCPState, s.HwAddress, s.UsPonCTagPriority, stream); err != nil {
+	if err := dhcp.SendDHCPDiscovery(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.Name, int(s.CTag), s.GemPort,
+		s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.DHCPState, s.HwAddress, s.UsPonCTagPriority, stream); err != nil {
 		serviceLogger.WithFields(log.Fields{
-			"OnuId":     s.Onu.ID,
-			"IntfId":    s.Onu.PonPortID,
-			"OnuSn":     s.Onu.Sn(),
+			"OnuId":     s.UniPort.Onu.ID,
+			"IntfId":    s.UniPort.Onu.PonPortID,
+			"OnuSn":     s.UniPort.Onu.Sn(),
 			"Name":      s.Name,
 			"GemPortId": s.GemPort,
 		}).Error("HandleDHCPStart")
@@ -545,9 +545,9 @@ func (s *Service) handleDHCPStart(stream bbsimTypes.Stream) error {
 
 func (s *Service) logStateChange(stateMachine string, src string, dst string) {
 	serviceLogger.WithFields(log.Fields{
-		"OnuId":  s.Onu.ID,
-		"IntfId": s.Onu.PonPortID,
-		"OnuSn":  s.Onu.Sn(),
+		"OnuId":  s.UniPort.Onu.ID,
+		"IntfId": s.UniPort.Onu.PonPortID,
+		"OnuSn":  s.UniPort.Onu.Sn(),
 		"Name":   s.Name,
 	}).Debugf("Changing Service.%s InternalState from %s to %s", stateMachine, src, dst)
 }
