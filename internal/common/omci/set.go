@@ -73,3 +73,30 @@ func CreateSetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, result me.Re
 	return pkt, nil
 
 }
+
+func CreateSetRequest(managedEntity *me.ManagedEntity, tid uint16) ([]byte, error) {
+
+	// TODO
+	// why can't we create the SetRequest as we do for all other omci Requests (eg: MibResetRequest)?
+	// if we do the Attributes are not sent
+
+	request := &omci.SetRequest{
+		MeBasePacket: omci.MeBasePacket{
+			EntityClass:    managedEntity.GetClassID(),
+			EntityInstance: managedEntity.GetEntityID(),
+		},
+		Attributes:    managedEntity.GetAttributeValueMap(),
+		AttributeMask: 0x800, // FIXME how can we generate this based on managedEntity.AttributeValueMap?
+	}
+	omciLogger.Info(request)
+
+	pkt, err := Serialize(omci.SetRequestType, request, tid)
+
+	if err != nil {
+		omciLogger.WithFields(log.Fields{
+			"Err": err,
+		}).Fatalf("Cannot Serialize SetRequest")
+		return nil, err
+	}
+	return HexEncode(pkt)
+}
