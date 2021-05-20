@@ -20,6 +20,9 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
+	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
+	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
 	"sync"
 
 	pb "github.com/opencord/bbsim/api/bbsim"
@@ -29,9 +32,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
-	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
-	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	me "github.com/opencord/omci-lib-go/generated"
 
@@ -103,16 +103,9 @@ type Onu struct {
 	DiscoveryRetryDelay time.Duration // this is the time between subsequent Discovery Indication
 	DiscoveryDelay      time.Duration // this is the time to send the first Discovery Indication
 
-	Services []ServiceIf
-
 	Backoff *backoff.Backoff
 	// ONU State
-	// PortNo comes with flows and it's used when sending packetIndications,
-	// There is one PortNo per UNI Port, for now we're only storing the first one
-	// FIXME add support for multiple UNIs (each UNI has a different PortNo)
-	// deprecated
-	PortNo   uint32
-	UniPorts []*UniPort
+	UniPorts []UniPortIf
 	Flows    []FlowKey
 	FlowIds  []uint64 // keep track of the flows we currently have in the ONU
 
@@ -149,13 +142,12 @@ func (o *Onu) Sn() string {
 	return common.OnuSnToString(o.SerialNumber)
 }
 
-func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isMock bool) *Onu {
+func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nextCtag map[string]int, nextStag map[string]int, isMock bool) *Onu {
 
 	o := Onu{
 		ID:                            id,
 		PonPortID:                     pon.ID,
 		PonPort:                       pon,
-		PortNo:                        0,
 		tid:                           0x1,
 		hpTid:                         0x8000,
 		seqNumber:                     0,
@@ -262,11 +254,6 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 					},
 				}
 				o.Channel <- msg
-
-				// Once the ONU is enabled start listening for packets
-				for _, s := range o.Services {
-					s.Initialize(o.PonPort.Olt.OpenoltStream)
-				}
 			},
 			fmt.Sprintf("enter_%s", OnuStateDisabled): func(event *fsm.Event) {
 
@@ -291,16 +278,17 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 				}
 				o.Channel <- msg
 
+				// disable the UNI ports
+				for _, uni := range o.UniPorts {
+					_ = uni.Disable()
+				}
+
 				// verify all the flows removes are handled and
 				// terminate the ONU's ProcessOnuMessages Go routine
+				// NOTE may need to wait for the UNIs to be down too before shutting down the channel
 				if len(o.FlowIds) == 0 {
 					close(o.Channel)
 				}
-
-				for _, s := range o.Services {
-					s.Disable()
-				}
-
 			},
 			fmt.Sprintf("enter_%s", OnuStatePonDisabled): func(event *fsm.Event) {
 				o.cleanupOnuState()
@@ -322,7 +310,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 	)
 
 	for i := 0; i < uniPorts; i++ {
-		uni, err := NewUniPort(uint32(i), &o)
+		uni, err := NewUniPort(uint32(i), &o, nextCtag, nextStag)
 		if err != nil {
 			onuLogger.WithFields(log.Fields{
 				"OnuId":  o.ID,
@@ -358,7 +346,6 @@ func (o *Onu) logStateChange(src string, dst string) {
 // cleanupOnuState this method is to clean the local state when the ONU is disabled
 func (o *Onu) cleanupOnuState() {
 	// clean the ONU state
-	o.PortNo = 0
 	o.Flows = []FlowKey{}
 	o.PonPort.removeOnuId(o.ID)
 	o.PonPort.removeAllocId(o.SerialNumber)
@@ -478,50 +465,55 @@ loop:
 					"pktType": msg.Type,
 				}).Trace("Received OnuPacketOut Message")
 
-				if msg.Type == packetHandlers.EAPOL || msg.Type == packetHandlers.DHCP {
+				uni, err := o.findUniByPortNo(msg.PortNo)
 
-					service, err := o.findServiceByMacAddress(msg.MacAddress)
-					if err != nil {
-						onuLogger.WithFields(log.Fields{
-							"IntfId":     msg.IntfId,
-							"OnuId":      msg.OnuId,
-							"pktType":    msg.Type,
-							"MacAddress": msg.MacAddress,
-							"Pkt":        hex.EncodeToString(msg.Packet.Data()),
-							"OnuSn":      o.Sn(),
-						}).Error("Cannot find Service associated with packet")
-						return
-					}
-					service.PacketCh <- msg
-				} else if msg.Type == packetHandlers.IGMP {
-					// if it's an IGMP packet we assume we have a single IGMP service
-					for _, s := range o.Services {
-						service := s.(*Service)
-
-						if service.NeedsIgmp {
-							service.PacketCh <- msg
-						}
-					}
+				if err != nil {
+					onuLogger.WithFields(log.Fields{
+						"IntfId":     msg.IntfId,
+						"OnuId":      msg.OnuId,
+						"pktType":    msg.Type,
+						"portNo":     msg.PortNo,
+						"MacAddress": msg.MacAddress,
+						"Pkt":        hex.EncodeToString(msg.Packet.Data()),
+						"OnuSn":      o.Sn(),
+					}).Error("Cannot find Uni associated with packet")
+					return
 				}
-
+				uni.PacketCh <- msg
+			// BBR specific messages
 			case bbsim.OnuPacketIn:
 				// NOTE we only receive BBR packets here.
 				// Eapol.HandleNextPacket can handle both BBSim and BBr cases so the call is the same
 				// in the DHCP case VOLTHA only act as a proxy, the behaviour is completely different thus we have a dhcp.HandleNextBbrPacket
 				msg, _ := message.Data.(bbsim.OnuPacketMessage)
 
-				log.WithFields(log.Fields{
-					"IntfId":  msg.IntfId,
-					"OnuId":   msg.OnuId,
-					"pktType": msg.Type,
+				onuLogger.WithFields(log.Fields{
+					"IntfId":    msg.IntfId,
+					"OnuId":     msg.OnuId,
+					"PortNo":    msg.PortNo,
+					"GemPortId": msg.GemPortId,
+					"pktType":   msg.Type,
 				}).Trace("Received OnuPacketIn Message")
 
+				uni, err := o.findUniByPortNo(msg.PortNo)
+				if err != nil {
+					onuLogger.WithFields(log.Fields{
+						"IntfId":    msg.IntfId,
+						"OnuId":     msg.OnuId,
+						"PortNo":    msg.PortNo,
+						"GemPortId": msg.GemPortId,
+						"pktType":   msg.Type,
+					}).Error(err.Error())
+				}
+
+				// BBR has one service and one UNI
+				serviceId := uint32(0)
+				oltId := 0
 				if msg.Type == packetHandlers.EAPOL {
-					eapol.HandleNextPacket(msg.OnuId, msg.IntfId, msg.GemPortId, o.Sn(), o.PortNo, o.InternalState, msg.Packet, stream, client)
+					eapol.HandleNextPacket(msg.OnuId, msg.IntfId, msg.GemPortId, o.Sn(), msg.PortNo, uni.ID, serviceId, oltId, o.InternalState, msg.Packet, stream, client)
 				} else if msg.Type == packetHandlers.DHCP {
 					_ = dhcp.HandleNextBbrPacket(o.ID, o.PonPortID, o.Sn(), o.DoneChannel, msg.Packet, client)
 				}
-				// BBR specific messages
 			case bbsim.OmciIndication:
 				// these are OMCI messages received by BBR (VOLTHA emulator)
 				msg, _ := message.Data.(bbsim.OmciIndicationMessage)
@@ -797,46 +789,30 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 		switch msgObj.EntityClass {
 		case me.PhysicalPathTerminationPointEthernetUniClassID:
 			// if we're Setting a PPTP state
-			// we need to send the appropriate alarm
-
-			if msgObj.EntityInstance == 257 {
-				// for now we're only caring about the first UNI
-				// NOTE that the EntityID for the UNI port is for now hardcoded in
-				// omci/mibpackets.go where the PhysicalPathTerminationPointEthernetUni
-				// are reported during the MIB Upload sequence
+			// we need to send the appropriate alarm (handled in the UNI struct)
+			uni, err := o.FindUniByEntityId(msgObj.EntityInstance)
+			if err != nil {
+				onuLogger.Error(err)
+				success = false
+			} else {
+				// 1 locks the UNI, 0 unlocks it
 				adminState := msgObj.Attributes["AdministrativeState"].(uint8)
-				raiseOMCIAlarm := false
+				var err error
 				if adminState == 1 {
-					raiseOMCIAlarm = true
-					// set the OperState to disabled
-					if err := o.OperState.Event(OnuTxDisable); err != nil {
-						onuLogger.WithFields(log.Fields{
-							"OnuId":  o.ID,
-							"IntfId": o.PonPortID,
-							"OnuSn":  o.Sn(),
-						}).Errorf("Cannot change ONU OperState to down: %s", err.Error())
-					}
+					err = uni.Disable()
 				} else {
-					// set the OperState to enabled
-					if err := o.OperState.Event(OnuTxEnable); err != nil {
-						onuLogger.WithFields(log.Fields{
-							"OnuId":  o.ID,
-							"IntfId": o.PonPortID,
-							"OnuSn":  o.Sn(),
-						}).Errorf("Cannot change ONU OperState to up: %s", err.Error())
-					}
+					err = uni.Enable()
 				}
-				msg := bbsim.Message{
-					Type: bbsim.UniStatusAlarm,
-					Data: bbsim.UniStatusAlarmMessage{
-						OnuSN:          o.SerialNumber,
-						OnuID:          o.ID,
-						AdminState:     adminState,
-						EntityID:       msgObj.EntityInstance,
-						RaiseOMCIAlarm: raiseOMCIAlarm,
-					},
+				if err != nil {
+					onuLogger.WithFields(log.Fields{
+						"IntfId":       o.PonPortID,
+						"OnuId":        o.ID,
+						"UniMeId":      uni.MeId,
+						"UniId":        uni.ID,
+						"SerialNumber": o.Sn(),
+						"Err":          err.Error(),
+					}).Warn("cannot-change-uni-status")
 				}
-				o.Channel <- msg
 			}
 		case me.TContClassID:
 			allocId := msgObj.Attributes["AllocId"].(uint16)
@@ -1049,7 +1025,6 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			return fmt.Errorf("error-while-processing-create-download-section-response: %s", errResp.Error())
 		}
 		o.ImageSoftwareReceivedSections++
-
 	case omci.EndSoftwareDownloadRequestType:
 
 		// In the startSoftwareDownload we get the image size and the window size.
@@ -1099,7 +1074,6 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 				}
 			}
 		}
-
 	case omci.ActivateSoftwareRequestType:
 		if responsePkt, errResp = omcilib.CreateActivateSoftwareResponse(msg.OmciPkt, msg.OmciMsg); errResp == nil {
 			o.MibDataSync++
@@ -1235,23 +1209,27 @@ func (o *Onu) sendOmciIndication(responsePkt []byte, txId uint16, stream bbsim.S
 	return nil
 }
 
-func (o *Onu) storePortNumber(portNo uint32) {
-	// NOTE this needed only as long as we don't support multiple UNIs
-	// we need to add support for multiple UNIs
-	// the action plan is:
-	// - refactor the omcisim-sim library to use https://github.com/cboling/omci instead of canned messages
-	// - change the library so that it reports a single UNI and remove this workaroung
-	// - add support for multiple UNIs in BBSim
-	if o.PortNo == 0 || portNo < o.PortNo {
-		onuLogger.WithFields(log.Fields{
-			"IntfId":       o.PonPortID,
-			"OnuId":        o.ID,
-			"SerialNumber": o.Sn(),
-			"OnuPortNo":    o.PortNo,
-			"FlowPortNo":   portNo,
-		}).Debug("Storing ONU portNo")
-		o.PortNo = portNo
+// FindUniById retrieves a UNI by ID
+func (o *Onu) FindUniById(uniID uint32) (*UniPort, error) {
+	for _, u := range o.UniPorts {
+		uni := u.(*UniPort)
+		if uni.ID == uniID {
+			return uni, nil
+		}
 	}
+	return nil, fmt.Errorf("cannot-find-uni-with-id-%d-on-onu-%s", uniID, o.Sn())
+}
+
+// FindUniByEntityId retrieves a uni by MeID (the OMCI entity ID)
+func (o *Onu) FindUniByEntityId(meId uint16) (*UniPort, error) {
+	entityId := omcilib.EntityID{}.FromUint16(meId)
+	for _, u := range o.UniPorts {
+		uni := u.(*UniPort)
+		if uni.MeId.Equals(entityId) {
+			return uni, nil
+		}
+	}
+	return nil, fmt.Errorf("cannot-find-uni-with-meid-%s-on-onu-%s", entityId.ToString(), o.Sn())
 }
 
 func (o *Onu) SetID(id uint32) {
@@ -1288,16 +1266,6 @@ func (o *Onu) handleFlowAdd(msg bbsim.OnuFlowUpdateMessage) {
 		"PbitToGemport":     msg.Flow.PbitToGemport,
 	}).Debug("OLT receives FlowAdd for ONU")
 
-	if msg.Flow.UniId != 0 {
-		// as of now BBSim only support a single UNI, so ignore everything that is not targeted to it
-		onuLogger.WithFields(log.Fields{
-			"IntfId":       o.PonPortID,
-			"OnuId":        o.ID,
-			"SerialNumber": o.Sn(),
-		}).Debug("Ignoring flow as it's not for the first UNI")
-		return
-	}
-
 	o.FlowIds = append(o.FlowIds, msg.Flow.FlowId)
 
 	var gemPortId uint32
@@ -1310,22 +1278,29 @@ func (o *Onu) handleFlowAdd(msg bbsim.OnuFlowUpdateMessage) {
 		// if replicateFlows is false, then the flow is carrying the correct GemPortId
 		gemPortId = uint32(msg.Flow.GemportId)
 	}
-	o.addGemPortToService(gemPortId, msg.Flow.Classifier.EthType, msg.Flow.Classifier.OVid, msg.Flow.Classifier.IVid)
+
+	uni, err := o.FindUniById(uint32(msg.Flow.UniId))
+	if err != nil {
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"OnuId":        o.ID,
+			"UniId":        msg.Flow.UniId,
+			"PortNo":       msg.Flow.PortNo,
+			"SerialNumber": o.Sn(),
+			"FlowId":       msg.Flow.FlowId,
+			"FlowType":     msg.Flow.FlowType,
+		}).Error("cannot-find-uni-port-for-flow")
+	}
+
+	uni.addGemPortToService(gemPortId, msg.Flow.Classifier.EthType, msg.Flow.Classifier.OVid, msg.Flow.Classifier.IVid)
+	uni.StorePortNo(msg.Flow.PortNo)
 
 	if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeEAPOL) && msg.Flow.Classifier.OVid == 4091 {
-		// NOTE storing the PortNO, it's needed when sending PacketIndications
-		o.storePortNumber(uint32(msg.Flow.PortNo))
-
-		for _, s := range o.Services {
-			s.HandleAuth()
-		}
+		uni.HandleAuth()
 	} else if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeIPv4) &&
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
 		msg.Flow.Classifier.DstPort == uint32(67) {
-
-		for _, s := range o.Services {
-			s.HandleDhcp(uint8(msg.Flow.Classifier.OPbits), int(msg.Flow.Classifier.OVid))
-		}
+		uni.HandleDhcp(uint8(msg.Flow.Classifier.OPbits), int(msg.Flow.Classifier.OVid))
 	}
 }
 
@@ -1426,6 +1401,7 @@ func (onu *Onu) getNextTid(highPriority ...bool) uint16 {
 }
 
 // TODO move this method in responders/omcisim
+// StartOmci is called in BBR to start the OMCI state machine
 func (o *Onu) StartOmci(client openolt.OpenoltClient) {
 	mibReset, _ := omcilib.CreateMibResetRequest(o.getNextTid(false))
 	sendOmciMsg(mibReset, o.PonPortID, o.ID, o.SerialNumber, "mibReset", client)
@@ -1470,21 +1446,42 @@ func (o *Onu) handleOmciResponse(msg bbsim.OmciIndicationMessage, client openolt
 		sendOmciMsg(mibUploadNext, o.PonPortID, o.ID, o.SerialNumber, "mibUploadNext", client)
 	case omci.MibUploadNextResponseType:
 		o.seqNumber++
+		// once the mibUpload is complete send a SetRequest for the PPTP to enable the UNI
+		// NOTE that in BBR we only enable the first UNI
+		if o.seqNumber == o.MibDb.NumberOfCommands {
+			meId := omcilib.GenerateUniPortEntityId(1)
 
-		if o.seqNumber > 290 {
-			// NOTE we are done with the MIB Upload (290 is the number of messages the omci-sim library will respond to)
-			// start sending the flows, we don't care about the OMCI setup in BBR, just that a lot of messages can go through
-			if err := o.InternalState.Event(BbrOnuTxSendEapolFlow); err != nil {
+			meParams := me.ParamData{
+				EntityID:   meId.ToUint16(),
+				Attributes: me.AttributeValueMap{"AdministrativeState": 0},
+			}
+			managedEntity, omciError := me.NewPhysicalPathTerminationPointEthernetUni(meParams)
+			if omciError.GetError() != nil {
 				onuLogger.WithFields(log.Fields{
 					"OnuId":  o.ID,
 					"IntfId": o.PonPortID,
 					"OnuSn":  o.Sn(),
-				}).Errorf("Error while transitioning ONU State %v", err)
+				}).Fatal(omciError.GetError())
 			}
+
+			setPPtp, _ := omcilib.CreateSetRequest(managedEntity, 1)
+			sendOmciMsg(setPPtp, o.PonPortID, o.ID, o.SerialNumber, "setRquest", client)
 		} else {
 			mibUploadNext, _ := omcilib.CreateMibUploadNextRequest(o.getNextTid(false), o.seqNumber)
 			sendOmciMsg(mibUploadNext, o.PonPortID, o.ID, o.SerialNumber, "mibUploadNext", client)
 		}
+	case omci.SetResponseType:
+		// once we set the PPTP to active we can start sending flows
+
+		if err := o.InternalState.Event(BbrOnuTxSendEapolFlow); err != nil {
+			onuLogger.WithFields(log.Fields{
+				"OnuId":  o.ID,
+				"IntfId": o.PonPortID,
+				"OnuSn":  o.Sn(),
+			}).Errorf("Error while transitioning ONU State %v", err)
+		}
+	case omci.AlarmNotificationType:
+		log.Info("bbr-received-alarm")
 	}
 }
 
@@ -1536,14 +1533,14 @@ func (o *Onu) sendEapolFlow(client openolt.OpenoltClient) {
 
 func (o *Onu) sendDhcpFlow(client openolt.OpenoltClient) {
 
-	// BBR only works with a single service (ATT HSIA)
-	hsia := o.Services[0].(*Service)
-
+	// BBR only works with a single UNI and a single service (ATT HSIA)
+	hsia := o.UniPorts[0].(*UniPort).Services[0].(*Service)
 	classifierProto := openolt.Classifier{
 		EthType: uint32(layers.EthernetTypeIPv4),
 		SrcPort: uint32(68),
 		DstPort: uint32(67),
 		OVid:    uint32(hsia.CTag),
+		OPbits:  255,
 	}
 
 	actionProto := openolt.Action{}
@@ -1551,7 +1548,7 @@ func (o *Onu) sendDhcpFlow(client openolt.OpenoltClient) {
 	downstreamFlow := openolt.Flow{
 		AccessIntfId:  int32(o.PonPortID),
 		OnuId:         int32(o.ID),
-		UniId:         int32(0), // FIXME do not hardcode this
+		UniId:         int32(0), // BBR only supports a single UNI
 		FlowId:        uint64(o.ID),
 		FlowType:      "downstream",
 		NetworkIntfId: int32(0),
@@ -1627,37 +1624,29 @@ func (onu *Onu) ReDiscoverOnu() {
 	}
 }
 
-func (onu *Onu) addGemPortToService(gemport uint32, ethType uint32, oVlan uint32, iVlan uint32) {
-	for _, s := range onu.Services {
-		if service, ok := s.(*Service); ok {
-			// EAPOL is a strange case, as packets are untagged
-			// but we assume we will have a single service requiring EAPOL
-			if ethType == uint32(layers.EthernetTypeEAPOL) && service.NeedsEapol {
-				service.GemPort = gemport
-			}
-
-			// For DHCP services we single tag the outgoing packets,
-			// thus the flow only contains the CTag and we can use that to match the service
-			if ethType == uint32(layers.EthernetTypeIPv4) && service.NeedsDhcp && service.CTag == int(oVlan) {
-				service.GemPort = gemport
-			}
-
-			// for dataplane services match both C and S tags
-			if service.CTag == int(iVlan) && service.STag == int(oVlan) {
-				service.GemPort = gemport
-			}
-		}
-	}
-}
-
+// deprecated, delegate this to the uniPort
 func (onu *Onu) findServiceByMacAddress(macAddress net.HardwareAddr) (*Service, error) {
-	for _, s := range onu.Services {
-		service := s.(*Service)
-		if service.HwAddress.String() == macAddress.String() {
-			return service, nil
+	// FIXME is there a better way to avoid this loop?
+	for _, u := range onu.UniPorts {
+		uni := u.(*UniPort)
+		for _, s := range uni.Services {
+			service := s.(*Service)
+			if service.HwAddress.String() == macAddress.String() {
+				return service, nil
+			}
 		}
 	}
 	return nil, fmt.Errorf("cannot-find-service-with-mac-address-%s", macAddress.String())
+}
+
+func (onu *Onu) findUniByPortNo(portNo uint32) (*UniPort, error) {
+	for _, u := range onu.UniPorts {
+		uni := u.(*UniPort)
+		if uni.PortNo == portNo {
+			return uni, nil
+		}
+	}
+	return nil, fmt.Errorf("cannot-find-uni-with-port-no-%d", portNo)
 }
 
 func (o *Onu) SendOMCIAlarmNotificationMsg(raiseOMCIAlarm bool, alarmType string) {

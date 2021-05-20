@@ -42,7 +42,8 @@ type OltMock struct {
 	BBSimPort     string
 	BBSimApiPort  string
 
-	conn *grpc.ClientConn
+	conn   *grpc.ClientConn
+	Client *openolt.OpenoltClient
 
 	TargetOnus    int
 	CompletedOnus int // Number of ONUs that have received a DHCPAck
@@ -76,6 +77,7 @@ func (o *OltMock) Start() {
 
 	client, conn := Connect(o.BBSimIp, o.BBSimPort)
 	o.conn = conn
+	o.Client = &client
 	defer conn.Close()
 
 	deviceInfo, err := o.getDeviceInfo(client)
@@ -301,6 +303,7 @@ func (o *OltMock) handleOmciIndication(client openolt.OpenoltClient, omciInd *op
 	onu.Channel <- msg
 }
 
+// packets arriving from the ONU and received in VOLTHA
 func (o *OltMock) handlePktIndication(client openolt.OpenoltClient, pktIndication *openolt.PacketIndication) {
 
 	pkt := gopacket.NewPacket(pktIndication.Pkt, layers.LayerTypeEthernet, gopacket.Default)
@@ -344,7 +347,7 @@ func (o *OltMock) handlePktIndication(client openolt.OpenoltClient, pktIndicatio
 		}
 
 		service := s.(*devices.Service)
-		onu := service.Onu
+		onu := service.UniPort.Onu
 
 		msg := types.Message{
 			Type: types.OnuPacketIn,
