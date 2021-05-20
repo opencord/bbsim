@@ -16,6 +16,24 @@
       "revId": "94a8c2c6fb554ee861753359b2116c2a989c0814",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "164e6a5c_c9532615",
+        "filename": "internal/bbsim/devices/uni_port.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-05-20T16:55:41Z",
+      "side": 1,
+      "message": "No it\u0027s not the same value, we can discuss what\u0027s the max supported number of UNI Ports, but I wanted to prevent someone in the future from setting it to 200 ports (I don\u0027t think such a ONU exists)",
+      "parentUuid": "9d25528f_00cd2de2",
+      "revId": "94a8c2c6fb554ee861753359b2116c2a989c0814",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
