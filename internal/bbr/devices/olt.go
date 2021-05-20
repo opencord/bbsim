@@ -131,7 +131,7 @@ func (o *OltMock) readIndications(client openolt.OpenoltClient) {
 
 			log.WithFields(log.Fields{
 				"error": err,
-			}).Debug("Failed to read from indications")
+			}).Fatal("Failed to read from indications")
 			break
 		}
 
@@ -301,6 +301,7 @@ func (o *OltMock) handleOmciIndication(client openolt.OpenoltClient, omciInd *op
 	onu.Channel <- msg
 }
 
+// packets arriving from the ONU and received in VOLTHA
 func (o *OltMock) handlePktIndication(client openolt.OpenoltClient, pktIndication *openolt.PacketIndication) {
 
 	pkt := gopacket.NewPacket(pktIndication.Pkt, layers.LayerTypeEthernet, gopacket.Default)
@@ -344,7 +345,7 @@ func (o *OltMock) handlePktIndication(client openolt.OpenoltClient, pktIndicatio
 		}
 
 		service := s.(*devices.Service)
-		onu := service.Onu
+		onu := service.UniPort.Onu
 
 		msg := types.Message{
 			Type: types.OnuPacketIn,

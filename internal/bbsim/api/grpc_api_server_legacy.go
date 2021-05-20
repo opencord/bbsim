@@ -53,8 +53,8 @@ func (s BBSimLegacyServer) OLTStatus(ctx context.Context, in *legacy.Empty) (*le
 			OltId:     int64(olt.ID),
 			OltVendor: "BBSIM",
 			OltSerial: olt.SerialNumber,
-			// OltIp:     getOltIP().String(),  // TODO
-			OltState: olt.OperState.Current(),
+			OltIp:     getOltIP().String(),
+			OltState:  olt.OperState.Current(),
 		},
 	}
 

@@ -18,7 +18,9 @@ package sadis
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -30,6 +32,13 @@ import (
 var sadisLogger = log.WithFields(log.Fields{
 	"module": "SADIS",
 })
+
+const (
+	BaseConfigUrl   = "/{version}/cfg"
+	StaticConfigUrl = "/{version}/static"
+	SadisEntryUrl   = "/{version}/subscribers/{ID}"
+	SadisBwUrl      = "/{version}/bandwidthprofiles/{ID}"
+)
 
 type SadisServer struct {
 	Olt *devices.OltDevice
@@ -171,15 +180,27 @@ func GetOltEntry(olt *devices.OltDevice) (*SadisOltEntry, error) {
 	return solt, nil
 }
 
-func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniId string) (*SadisOnuEntryV2, error) {
-	uniSuffix := "-" + uniId
+func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniStr string) (*SadisOnuEntryV2, error) {
+	uniSuffix := "-" + uniStr
 
 	sonuv2 := &SadisOnuEntryV2{
 		ID: onu.Sn() + uniSuffix,
 	}
 
+	uniId, err := strconv.ParseUint(uniStr, 10, 32)
+	if err != nil {
+		return nil, err
+	}
+
+	// find the correct UNI
+	// NOTE that in SADIS uni.Id 0 corresponds to BBSM00000101-1
+	uni, err := onu.FindUniById(uint32(uniId - 1))
+	if err != nil {
+		return nil, err
+	}
+
 	// createUniTagList
-	for _, s := range onu.Services {
+	for _, s := range uni.Services {
 
 		service := s.(*devices.Service)
 
@@ -262,16 +283,28 @@ func (s *SadisServer) ServeBaseConfig(w http.ResponseWriter, r *http.Request) {
 
 func (s *SadisServer) ServeStaticConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+
 	vars := mux.Vars(r)
+
+	if vars["version"] == "v1" {
+		// TODO format error
+		http.Error(w, fmt.Sprintf("api-v1-unsupported"), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+
 	sadisConf := GetSadisConfig(s.Olt, vars["version"])
 
 	sadisConf.Sadis.Integration.URL = ""
 	for i := range s.Olt.Pons {
 		for _, onu := range s.Olt.Pons[i].Onus {
 			if vars["version"] == "v2" {
-				sonuV2, _ := GetOnuEntryV2(s.Olt, onu, "1")
-				sadisConf.Sadis.Entries = append(sadisConf.Sadis.Entries, sonuV2)
+				for _, u := range onu.UniPorts {
+					uni := u.(*devices.UniPort)
+					sonuV2, _ := GetOnuEntryV2(s.Olt, onu, fmt.Sprintf("%d", uni.ID+1))
+					sadisConf.Sadis.Entries = append(sadisConf.Sadis.Entries, sonuV2)
+				}
 			}
 		}
 	}
@@ -324,9 +357,9 @@ func (s *SadisServer) ServeEntry(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sadisLogger.WithFields(log.Fields{
-		"OnuId":     onu.ID,
-		"OnuSn":     sn,
-		"OnuPortNo": uni,
+		"OnuId": onu.ID,
+		"OnuSn": sn,
+		"UniId": uni,
 	}).Debug("Received SADIS request")
 
 	if vars["version"] == "v1" {

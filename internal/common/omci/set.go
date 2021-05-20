@@ -73,3 +73,27 @@ func CreateSetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, result me.Re
 	return pkt, nil
 
 }
+
+func CreateSetRequest(managedEntity *me.ManagedEntity, tid uint16) ([]byte, error) {
+
+	request := &omci.SetRequest{
+		MeBasePacket: omci.MeBasePacket{
+			EntityClass:    managedEntity.GetClassID(),
+			EntityInstance: managedEntity.GetEntityID(),
+		},
+		Attributes: managedEntity.GetAttributeValueMap(),
+		AttributeMask:
+	}
+
+	pkt, err := Serialize(omci.SetRequestType, request, tid)
+
+	if err != nil {
+		omciLogger.WithFields(log.Fields{
+			"Err": err,
+		}).Fatalf("Cannot Serialize SetRequest")
+		return nil, err
+	}
+	return HexEncode(pkt)
+
+	//request := omci.EncodeFrame(me)
+}
