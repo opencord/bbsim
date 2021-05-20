@@ -180,7 +180,6 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 	}
 
 	// Create device and Services
-
 	nextCtag := map[string]int{}
 	nextStag := map[string]int{}
 
@@ -196,46 +195,8 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		// create ONU devices
 		for j := 0; j < olt.NumOnuPerPon; j++ {
 			delay := time.Duration(olt.Delay*j) * time.Millisecond
-			o := CreateONU(&olt, p, uint32(j+1), delay, isMock)
+			o := CreateONU(&olt, p, uint32(j+1), delay, nextCtag, nextStag, isMock)
 
-			for k, s := range common.Services {
-
-				// find the correct cTag for this service
-				if _, ok := nextCtag[s.Name]; !ok {
-					// it's the first time we iterate over this service,
-					// so we start from the config value
-					nextCtag[s.Name] = s.CTag
-				} else {
-					// we have a previous value, so we check it
-					// if Allocation is unique, we increment,
-					// otherwise (shared) we do nothing
-					if s.CTagAllocation == common.TagAllocationUnique.String() {
-						nextCtag[s.Name] = nextCtag[s.Name] + 1
-					}
-				}
-
-				// find the correct sTag for this service
-				if _, ok := nextStag[s.Name]; !ok {
-					nextStag[s.Name] = s.STag
-				} else {
-					if s.STagAllocation == common.TagAllocationUnique.String() {
-						nextStag[s.Name] = nextStag[s.Name] + 1
-					}
-				}
-
-				mac := net.HardwareAddr{0x2e, 0x60, byte(olt.ID), byte(p.ID), byte(o.ID), byte(k)}
-				service, err := NewService(s.Name, mac, o, nextCtag[s.Name], nextStag[s.Name],
-					s.NeedsEapol, s.NeedsDchp, s.NeedsIgmp, s.TechnologyProfileID, s.UniTagMatch,
-					s.ConfigureMacAddress, s.UsPonCTagPriority, s.UsPonSTagPriority, s.DsPonCTagPriority, s.DsPonSTagPriority)
-
-				if err != nil {
-					oltLogger.WithFields(log.Fields{
-						"Err": err.Error(),
-					}).Fatal("Can't create Service")
-				}
-
-				o.Services = append(o.Services, service)
-			}
 			p.Onus = append(p.Onus, o)
 		}
 		olt.Pons = append(olt.Pons, p)
@@ -469,8 +430,8 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) {
 				go onu.ProcessOnuMessages(o.enableContext, stream, nil)
 
 				// update the stream on all the services
-				for _, service := range onu.Services {
-					service.UpdateStream(stream)
+				for _, uni := range onu.UniPorts {
+					uni.UpdateStream(stream)
 				}
 			}
 		}
@@ -821,7 +782,7 @@ loop:
 
 // returns an ONU with a given Serial Number
 func (o *OltDevice) FindOnuBySn(serialNumber string) (*Onu, error) {
-	// TODO this function can be a performance bottleneck when we have many ONUs,
+	// NOTE this function can be a performance bottleneck when we have many ONUs,
 	// memoizing it will remove the bottleneck
 	for _, pon := range o.Pons {
 		for _, onu := range pon.Onus {
@@ -836,7 +797,7 @@ func (o *OltDevice) FindOnuBySn(serialNumber string) (*Onu, error) {
 
 // returns an ONU with a given interface/Onu Id
 func (o *OltDevice) FindOnuById(intfId uint32, onuId uint32) (*Onu, error) {
-	// TODO this function can be a performance bottleneck when we have many ONUs,
+	// NOTE this function can be a performance bottleneck when we have many ONUs,
 	// memoizing it will remove the bottleneck
 	for _, pon := range o.Pons {
 		if pon.ID == intfId {
@@ -852,7 +813,7 @@ func (o *OltDevice) FindOnuById(intfId uint32, onuId uint32) (*Onu, error) {
 
 // returns a Service with a given Mac Address
 func (o *OltDevice) FindServiceByMacAddress(mac net.HardwareAddr) (ServiceIf, error) {
-	// TODO this function can be a performance bottleneck when we have many ONUs,
+	// NOTE this function can be a performance bottleneck when we have many ONUs,
 	// memoizing it will remove the bottleneck
 	for _, pon := range o.Pons {
 		for _, onu := range pon.Onus {
@@ -872,7 +833,7 @@ func (o *OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*ope
 
 	pon, _ := o.GetPonById(onu.IntfId)
 
-	// Initialize the resource maps for this ONU
+	// Enable the resource maps for this ONU
 	olt.AllocIDs[onu.IntfId][onu.OnuId] = make(map[uint32]map[int32]map[uint64]bool)
 	olt.GemPortIDs[onu.IntfId][onu.OnuId] = make(map[uint32]map[int32]map[uint64]bool)
 
@@ -1416,6 +1377,7 @@ func (o *OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (
 	return new(openolt.Empty), nil
 }
 
+// this gRPC methods receives packets from VOLTHA and sends them to the subscriber on the ONU
 func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket) (*openolt.Empty, error) {
 	pon, err := o.GetPonById(onuPkt.IntfId)
 	if err != nil {
@@ -1470,6 +1432,7 @@ func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket)
 		Data: types.OnuPacketMessage{
 			IntfId:     onuPkt.IntfId,
 			OnuId:      onuPkt.OnuId,
+			PortNo:     onuPkt.PortNo,
 			Packet:     rawpkt,
 			Type:       pktType,
 			MacAddress: pktMac,
@@ -1557,16 +1520,22 @@ func (s *OltDevice) CreateTrafficQueues(context.Context, *tech_profile.TrafficQu
 	return new(openolt.Empty), nil
 }
 
-func (s *OltDevice) RemoveTrafficQueues(context.Context, *tech_profile.TrafficQueues) (*openolt.Empty, error) {
-	oltLogger.Info("received RemoveTrafficQueues")
+func (s *OltDevice) RemoveTrafficQueues(_ context.Context, tq *tech_profile.TrafficQueues) (*openolt.Empty, error) {
+	oltLogger.WithFields(log.Fields{
+		"OnuId":     tq.OnuId,
+		"IntfId":    tq.IntfId,
+		"OnuPortNo": tq.PortNo,
+		"UniId":     tq.UniId,
+	}).Info("received RemoveTrafficQueues")
 	return new(openolt.Empty), nil
 }
 
-func (s *OltDevice) CreateTrafficSchedulers(context context.Context, trafficSchedulers *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
+func (s *OltDevice) CreateTrafficSchedulers(_ context.Context, trafficSchedulers *tech_profile.TrafficSchedulers) (*openolt.Empty, error) {
 	oltLogger.WithFields(log.Fields{
 		"OnuId":     trafficSchedulers.OnuId,
 		"IntfId":    trafficSchedulers.IntfId,
 		"OnuPortNo": trafficSchedulers.PortNo,
+		"UniId":     trafficSchedulers.UniId,
 	}).Info("received CreateTrafficSchedulers")
 
 	if !s.enablePerf {

@@ -54,12 +54,14 @@ func createTestService(needsEapol bool, needsDchp bool) (*Service, error) {
 
 	enableContext := context.TODO()
 
-	mac := net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(1)}
+	mac := net.HardwareAddr{0x2e, byte(1), byte(1), byte(1), byte(1), byte(1)}
 	onu := createMockOnu(1, 1)
 	onu.PonPort = &PonPort{}
 	onu.PonPort.Olt = &OltDevice{}
 	onu.PonPort.Olt.enableContext = enableContext
-	return NewService("testService", mac, onu, 900, 900,
+
+	uni := UniPort{ID: 1, Onu: onu}
+	return NewService(0, "testService", mac, &uni, 900, 900,
 		needsEapol, needsDchp, false, 64, 0, false,
 		7, 7, 7, 7)
 }

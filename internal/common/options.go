@@ -130,7 +130,7 @@ type ServiceYaml struct {
 	CTag                int    `yaml:"c_tag"`
 	STag                int    `yaml:"s_tag"`
 	NeedsEapol          bool   `yaml:"needs_eapol"`
-	NeedsDchp           bool   `yaml:"needs_dhcp"`
+	NeedsDhcp           bool   `yaml:"needs_dhcp"`
 	NeedsIgmp           bool   `yaml:"needs_igmp"`
 	CTagAllocation      string `yaml:"c_tag_allocation"`
 	STagAllocation      string `yaml:"s_tag_allocation"`
@@ -157,7 +157,7 @@ func (cfg *YamlServiceConfig) String() string {
 		str = fmt.Sprintf("%sc_tag_allocation=%s, s_tag_allocation=%s, ",
 			str, s.CTagAllocation, s.STagAllocation)
 		str = fmt.Sprintf("%sneeds_eapol=%t, needs_dhcp=%t, needs_igmp=%t",
-			str, s.NeedsEapol, s.NeedsDchp, s.NeedsIgmp)
+			str, s.NeedsEapol, s.NeedsDhcp, s.NeedsIgmp)
 		str = fmt.Sprintf("%stp_id=%d, uni_tag_match=%d",
 			str, s.TechnologyProfileID, s.UniTagMatch)
 		str = fmt.Sprintf("%s]", str)

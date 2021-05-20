@@ -17,6 +17,7 @@
 package omci
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/hex"
 	me "github.com/opencord/omci-lib-go/generated"
@@ -45,6 +46,23 @@ func (e EntityID) ToUint16() uint16 {
 
 func (e EntityID) ToUint32() uint32 {
 	return binary.BigEndian.Uint32(e)
+}
+
+func (e EntityID) FromUint16(id uint16) EntityID {
+	buff := new(bytes.Buffer)
+	err := binary.Write(buff, binary.BigEndian, id)
+	if err != nil {
+		panic(err)
+	}
+
+	return buff.Bytes()
+}
+
+func (e EntityID) Equals(i EntityID) bool {
+	if res := bytes.Compare(e, i); res == 0 {
+		return true
+	}
+	return false
 }
 
 const (

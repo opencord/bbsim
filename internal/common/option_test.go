@@ -32,7 +32,7 @@ func TestLoadBBSimServices(t *testing.T) {
 	assert.Equal(t, services[0].CTagAllocation, TagAllocationUnique.String())
 	assert.Equal(t, services[0].STagAllocation, TagAllocationShared.String())
 	assert.Equal(t, services[0].NeedsEapol, true)
-	assert.Equal(t, services[0].NeedsDchp, true)
+	assert.Equal(t, services[0].NeedsDhcp, true)
 	assert.Equal(t, services[0].NeedsIgmp, false)
 	assert.Equal(t, services[0].TechnologyProfileID, 64)
 }

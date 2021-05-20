@@ -30,7 +30,7 @@ import (
 	"testing"
 )
 
-func createMockOlt(numPon int, numOnu int, services []ServiceIf) *OltDevice {
+func createMockOlt(numPon int, numOnu int, numUni int, services []ServiceIf) *OltDevice {
 	olt := &OltDevice{
 		ID:               0,
 		AllocIDs:         make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool),
@@ -72,11 +72,19 @@ func createMockOlt(numPon int, numOnu int, services []ServiceIf) *OltDevice {
 				Channel: make(chan bbsim.Message, 2048),
 			}
 
-			for k, s := range services {
-				service := s.(*Service)
-				service.HwAddress = net.HardwareAddr{0x2e, 0x60, byte(olt.ID), byte(pon.ID), byte(onuId), byte(k)}
-				service.Onu = &onu
-				onu.Services = append(onu.Services, service)
+			for k := 0; k < uniPorts; k++ {
+				uni := UniPort{
+					ID:     uint32(k + 1),
+					Onu:    &onu,
+					logger: uniLogger,
+				}
+				for l, s := range services {
+					service := s.(*Service)
+					service.HwAddress = net.HardwareAddr{0x2e, byte(olt.ID), byte(pon.ID), byte(onuId), byte(k), byte(l)}
+					service.UniPort = &uni
+					uni.Services = append(uni.Services, service)
+				}
+				onu.UniPorts = append(onu.UniPorts, &uni)
 			}
 
 			onu.SerialNumber = NewSN(olt.ID, pon.ID, onu.ID)
@@ -91,7 +99,7 @@ func createMockOlt(numPon int, numOnu int, services []ServiceIf) *OltDevice {
 func TestCreateOLT(t *testing.T) {
 
 	common.Services = []common.ServiceYaml{
-		{Name: "hsia", CTag: 900, CTagAllocation: common.TagAllocationUnique.String(), STag: 900, STagAllocation: common.TagAllocationShared.String(), NeedsEapol: true, NeedsDchp: true, NeedsIgmp: true},
+		{Name: "hsia", CTag: 900, CTagAllocation: common.TagAllocationUnique.String(), STag: 900, STagAllocation: common.TagAllocationShared.String(), NeedsEapol: true, NeedsDhcp: true, NeedsIgmp: true},
 	}
 
 	common.Config = &common.GlobalConfig{
@@ -114,40 +122,54 @@ func TestCreateOLT(t *testing.T) {
 
 	assert.Equal(t, onus, int(common.Config.Olt.PonPorts*common.Config.Olt.OnusPonPort))
 
+	// counte the UNIs
+	unis := 0
+	for _, p := range olt.Pons {
+		for _, o := range p.Onus {
+			unis = unis + len(o.UniPorts)
+		}
+	}
+	// NOTE when unis will be configurable this test will need to adapt
+	assert.Equal(t, unis, int(common.Config.Olt.PonPorts*common.Config.Olt.OnusPonPort*uniPorts))
+
 	// count the services
 	services := 0
 	for _, p := range olt.Pons {
 		for _, o := range p.Onus {
-			services = services + len(o.Services)
+			for _, u := range o.UniPorts {
+				uni := u.(*UniPort)
+				services = services + len(uni.Services)
+			}
 		}
 	}
+	// NOTE when unis will be configurable this test will need to adapt
+	assert.Equal(t, services, int(common.Config.Olt.PonPorts)*int(common.Config.Olt.OnusPonPort)*uniPorts*len(common.Services))
 
-	assert.Equal(t, services, int(common.Config.Olt.PonPorts)*int(common.Config.Olt.OnusPonPort)*len(common.Services))
-
-	s1 := olt.Pons[0].Onus[0].Services[0].(*Service)
+	s1 := olt.Pons[0].Onus[0].UniPorts[0].(*UniPort).Services[0].(*Service)
 
 	assert.Equal(t, s1.Name, "hsia")
 	assert.Equal(t, s1.CTag, 900)
 	assert.Equal(t, s1.STag, 900)
-	assert.Equal(t, s1.HwAddress.String(), "2e:60:01:00:01:00")
+	assert.Equal(t, "2e:01:00:01:00:00", s1.HwAddress.String())
 	assert.Equal(t, olt.Pons[0].Onus[0].ID, uint32(1))
 
-	s2 := olt.Pons[0].Onus[1].Services[0].(*Service)
-	assert.Equal(t, s2.CTag, 901)
+	// each ONU has 4 UNIs, taking up the c-tags
+	s2 := olt.Pons[0].Onus[1].UniPorts[0].(*UniPort).Services[0].(*Service)
+	assert.Equal(t, s2.CTag, 904)
 	assert.Equal(t, s2.STag, 900)
-	assert.Equal(t, s2.HwAddress.String(), "2e:60:01:00:02:00")
+	assert.Equal(t, s2.HwAddress.String(), "2e:01:00:02:00:00")
 	assert.Equal(t, olt.Pons[0].Onus[1].ID, uint32(2))
 
-	s3 := olt.Pons[1].Onus[0].Services[0].(*Service)
-	assert.Equal(t, s3.CTag, 902)
+	s3 := olt.Pons[1].Onus[0].UniPorts[0].(*UniPort).Services[0].(*Service)
+	assert.Equal(t, s3.CTag, 908)
 	assert.Equal(t, s3.STag, 900)
-	assert.Equal(t, s3.HwAddress.String(), "2e:60:01:01:01:00")
+	assert.Equal(t, s3.HwAddress.String(), "2e:01:01:01:00:00")
 	assert.Equal(t, olt.Pons[1].Onus[0].ID, uint32(1))
 
-	s4 := olt.Pons[1].Onus[1].Services[0].(*Service)
-	assert.Equal(t, s4.CTag, 903)
+	s4 := olt.Pons[1].Onus[1].UniPorts[0].(*UniPort).Services[0].(*Service)
+	assert.Equal(t, s4.CTag, 912)
 	assert.Equal(t, s4.STag, 900)
-	assert.Equal(t, s4.HwAddress.String(), "2e:60:01:01:02:00")
+	assert.Equal(t, s4.HwAddress.String(), "2e:01:01:02:00:00")
 	assert.Equal(t, olt.Pons[1].Onus[1].ID, uint32(2))
 }
 
@@ -156,7 +178,7 @@ func Test_Olt_FindOnuBySn_Success(t *testing.T) {
 	numPon := 4
 	numOnu := 4
 
-	olt := createMockOlt(numPon, numOnu, []ServiceIf{})
+	olt := createMockOlt(numPon, numOnu, 1, []ServiceIf{})
 
 	onu, err := olt.FindOnuBySn("BBSM00000303")
 
@@ -171,7 +193,7 @@ func Test_Olt_FindOnuBySn_Error(t *testing.T) {
 	numPon := 1
 	numOnu := 4
 
-	olt := createMockOlt(numPon, numOnu, []ServiceIf{})
+	olt := createMockOlt(numPon, numOnu, 1, []ServiceIf{})
 
 	_, err := olt.FindOnuBySn("BBSM00000303")
 
@@ -188,9 +210,9 @@ func Test_Olt_FindOnuByMacAddress_Success(t *testing.T) {
 		&Service{Name: "vod"},
 	}
 
-	olt := createMockOlt(numPon, numOnu, services)
+	olt := createMockOlt(numPon, numOnu, 1, services)
 
-	mac := net.HardwareAddr{0x2e, 0x60, byte(olt.ID), byte(3), byte(6), byte(1)}
+	mac := net.HardwareAddr{0x2e, byte(olt.ID), byte(3), byte(6), byte(3), byte(1)}
 	s, err := olt.FindServiceByMacAddress(mac)
 
 	assert.NoError(t, err)
@@ -198,9 +220,10 @@ func Test_Olt_FindOnuByMacAddress_Success(t *testing.T) {
 	service := s.(*Service)
 
 	assert.Equal(t, err, nil)
-	assert.Equal(t, service.Onu.Sn(), "BBSM00000306")
-	assert.Equal(t, service.Onu.ID, uint32(6))
-	assert.Equal(t, service.Onu.PonPortID, uint32(3))
+	assert.Equal(t, service.UniPort.Onu.Sn(), "BBSM00000306")
+	assert.Equal(t, service.UniPort.ID, uint32(4))
+	assert.Equal(t, service.UniPort.Onu.ID, uint32(6))
+	assert.Equal(t, service.UniPort.Onu.PonPortID, uint32(3))
 
 	assert.Equal(t, service.Name, "voip")
 }
@@ -210,7 +233,7 @@ func Test_Olt_FindOnuByMacAddress_Error(t *testing.T) {
 	numPon := 1
 	numOnu := 4
 
-	olt := createMockOlt(numPon, numOnu, []ServiceIf{})
+	olt := createMockOlt(numPon, numOnu, 1, []ServiceIf{})
 
 	mac := net.HardwareAddr{0x2e, 0x60, 0x70, 0x13, byte(3), byte(3)}
 
@@ -223,13 +246,18 @@ func Test_Olt_GetOnuByFlowId(t *testing.T) {
 	numPon := 4
 	numOnu := 4
 
-	olt := createMockOlt(numPon, numOnu, []ServiceIf{})
+	services := []ServiceIf{
+		&Service{Name: "hsia"},
+	}
+
+	olt := createMockOlt(numPon, numOnu, 1, services)
 
 	// Add the flows to onus (to be found)
 	onu1, _ := olt.FindOnuBySn("BBSM00000303")
 	flow1 := openolt.Flow{
 		FlowId:     64,
 		Classifier: &openolt.Classifier{},
+		UniId:      1,
 	}
 	msg1 := types.OnuFlowUpdateMessage{
 		OnuID:     onu1.ID,
@@ -242,6 +270,7 @@ func Test_Olt_GetOnuByFlowId(t *testing.T) {
 	flow2 := openolt.Flow{
 		FlowId:     72,
 		Classifier: &openolt.Classifier{},
+		UniId:      1,
 	}
 	msg2 := types.OnuFlowUpdateMessage{
 		OnuID:     onu2.ID,
@@ -269,7 +298,7 @@ func Test_Olt_storeGemPortId(t *testing.T) {
 	numPon := 2
 	numOnu := 2
 
-	olt := createMockOlt(numPon, numOnu, []ServiceIf{})
+	olt := createMockOlt(numPon, numOnu, 1, []ServiceIf{})
 
 	// add a first flow on the ONU
 	flow1 := &openolt.Flow{
@@ -324,7 +353,7 @@ func Test_Olt_storeGemPortIdReplicatedFlow(t *testing.T) {
 	numPon := 2
 	numOnu := 2
 
-	olt := createMockOlt(numPon, numOnu, []ServiceIf{})
+	olt := createMockOlt(numPon, numOnu, 1, []ServiceIf{})
 
 	// add a flow that needs replication
 	pbitToGemPortMap := make(map[uint32]uint32)
@@ -361,7 +390,7 @@ func Test_Olt_freeGemPortId(t *testing.T) {
 	numPon := 2
 	numOnu := 2
 
-	olt := createMockOlt(numPon, numOnu, []ServiceIf{})
+	olt := createMockOlt(numPon, numOnu, 1, []ServiceIf{})
 
 	olt.GemPortIDs[pon][onu][uni] = make(map[int32]map[uint64]bool)
 	olt.GemPortIDs[pon][onu][uni][gem1] = make(map[uint64]bool)
@@ -418,7 +447,7 @@ func Test_Olt_freeGemPortIdReplicatedflow(t *testing.T) {
 	numPon := 2
 	numOnu := 2
 
-	olt := createMockOlt(numPon, numOnu, []ServiceIf{})
+	olt := createMockOlt(numPon, numOnu, 1, []ServiceIf{})
 
 	olt.GemPortIDs[pon][onu][uni] = make(map[int32]map[uint64]bool)
 	olt.GemPortIDs[pon][onu][uni][gem1] = make(map[uint64]bool)
@@ -446,7 +475,7 @@ func Benchmark_validateAndAddFlows(b *testing.B) {
 	)
 
 	for r := 0; r < b.N; r++ {
-		olt := createMockOlt(1, 512, []ServiceIf{})
+		olt := createMockOlt(1, 512, 4, []ServiceIf{})
 
 		wg := sync.WaitGroup{}
 
@@ -506,7 +535,7 @@ func Test_Olt_validateFlow(t *testing.T) {
 	numPon := 2
 	numOnu := 2
 
-	olt := createMockOlt(numPon, numOnu, []ServiceIf{})
+	olt := createMockOlt(numPon, numOnu, 1, []ServiceIf{})
 
 	olt.GemPortIDs[pon0][onu0][uniPort] = make(map[int32]map[uint64]bool)
 	olt.GemPortIDs[pon1][onu0][uniPort] = make(map[int32]map[uint64]bool)
@@ -595,7 +624,7 @@ func Test_Olt_validateReplicatedFlow(t *testing.T) {
 	numPon := 1
 	numOnu := 1
 
-	olt := createMockOlt(numPon, numOnu, []ServiceIf{})
+	olt := createMockOlt(numPon, numOnu, 1, []ServiceIf{})
 
 	// both the gemports referenced in this flow are already allocated
 	olt.GemPortIDs[pon0][onu0][uniPort] = make(map[int32]map[uint64]bool)
@@ -641,7 +670,7 @@ func Test_Olt_OmciMsgOut(t *testing.T) {
 	numPon := 4
 	numOnu := 4
 
-	olt := createMockOlt(numPon, numOnu, []ServiceIf{})
+	olt := createMockOlt(numPon, numOnu, 1, []ServiceIf{})
 
 	// a malformed packet should return an error
 	msg := &openolt.OmciMsg{

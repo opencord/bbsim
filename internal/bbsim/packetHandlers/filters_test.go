@@ -21,10 +21,16 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/igmp"
+	"github.com/opencord/bbsim/internal/common"
+	log "github.com/sirupsen/logrus"
 	"gotest.tools/assert"
 	"net"
 	"testing"
 )
+
+func init() {
+	common.SetLogLevel(log.StandardLogger(), "error", false)
+}
 
 func Test_IsDhcpPacket_True(t *testing.T) {
 	dhcp := &layers.DHCPv4{

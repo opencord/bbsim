@@ -148,6 +148,7 @@ type PacketMessage struct {
 type OnuPacketMessage struct {
 	IntfId     uint32
 	OnuId      uint32
+	PortNo     uint32
 	Packet     gopacket.Packet
 	Type       packetHandlers.PacketType
 	MacAddress net.HardwareAddr
