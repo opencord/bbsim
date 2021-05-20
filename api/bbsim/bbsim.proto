@@ -82,9 +82,9 @@ message ONU {
     string OperState = 3;
     string InternalState = 4;
     int32 PonPortID = 5;
-    string HwAddress = 8;
-    int32 PortNo = 9;
-    repeated Service services = 10;
+    string HwAddress = 8 [deprecated = true];
+    int32 PortNo = 9 [deprecated = true];
+    repeated Service services = 10 [deprecated = true];
     int32 ImageSoftwareExpectedSections = 11;
     int32 ImageSoftwareReceivedSections = 12;
     int32 ActiveImageEntityId = 13;
@@ -98,6 +98,8 @@ message UNI {
     string OnuSn = 3;
     uint32 MeID = 4;
     string OperState = 5;
+    int32 PortNo = 6;
+    repeated Service services = 7;
 }
 
 message Service {
@@ -114,6 +116,7 @@ message Service {
     string DhcpState = 11;
     string InternalState = 12;
     string IGMPState = 13;
+    uint32 UniId = 14;
 }
 
 message ONUTrafficSchedulers {
@@ -281,10 +284,6 @@ service BBSim {
 
     // Get all the Services
     rpc GetServices (Empty) returns (Services) {
-    }
-
-    // Get all the Services of an ONU by serial number
-    rpc GetOnuServices (ONURequest) returns (Services) {
     }
 
     // Get all the UNIs of an ONU by serial number

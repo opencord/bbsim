@@ -48,11 +48,17 @@ func ValidateAndClose(olt *OltMock) {
 
 	res := true
 	for _, service := range services.Items {
+		if service.UniId != 0 {
+			// BBR only interacts with the first UNI, rightfully so services for different UNIs
+			// won't reach the desired state
+			continue
+		}
 		if service.DhcpState != expectedDhcpState || service.EapolState != expectedEapolState {
 			res = false
 			log.WithFields(log.Fields{
 				"OnuSN":              service.OnuSn,
 				"ServiceName":        service.Name,
+				"UniId":              service.UniId,
 				"DhcpState":          service.DhcpState,
 				"EapolState":         service.EapolState,
 				"ExpectedDhcpState":  expectedDhcpState,
@@ -65,7 +71,7 @@ func ValidateAndClose(olt *OltMock) {
 		// NOTE that in BBR we expect to have a single service but this is not always the case
 		log.WithFields(log.Fields{
 			"ExpectedState": expectedDhcpState,
-		}).Infof("%d ONUs matching expected state", len(services.Items))
+		}).Infof("%d ONUs matching expected state", len(services.Items)/4) // for now BBSim has 4 UNIs per ONU (each UNI has a single service in BBR)
 	}
 
 	olt.conn.Close()

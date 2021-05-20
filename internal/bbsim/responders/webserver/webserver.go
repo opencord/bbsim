@@ -43,10 +43,10 @@ func StartRestServer(olt *devices.OltDevice, wg *sync.WaitGroup) {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// sadis routes
-	router.HandleFunc("/{version}/cfg", s.ServeBaseConfig)
-	router.HandleFunc("/{version}/static", s.ServeStaticConfig)
-	router.HandleFunc("/{version}/subscribers/{ID}", s.ServeEntry)
-	router.HandleFunc("/{version}/bandwidthprofiles/{ID}", s.ServeBWPEntry)
+	router.HandleFunc(sadis.BaseConfigUrl, s.ServeBaseConfig)
+	router.HandleFunc(sadis.StaticConfigUrl, s.ServeStaticConfig)
+	router.HandleFunc(sadis.SadisEntryUrl, s.ServeEntry)
+	router.HandleFunc(sadis.SadisBwUrl, s.ServeBWPEntry)
 
 	// Choose the folder to serve (this is the location inside the container)
 	staticDir := "/app/configs/"
