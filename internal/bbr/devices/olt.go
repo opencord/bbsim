@@ -344,7 +344,7 @@ func (o *OltMock) handlePktIndication(client openolt.OpenoltClient, pktIndicatio
 		}
 
 		service := s.(*devices.Service)
-		onu := service.Onu
+		onu := service.UniPort.Onu
 
 		msg := types.Message{
 			Type: types.OnuPacketIn,
