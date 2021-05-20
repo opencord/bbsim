@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d25528f_00cd2de2",
+        "filename": "internal/bbsim/devices/uni_port.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-20T09:14:20Z",
+      "side": 1,
+      "message": "this is the same value that needs to be configurable? if so please place TODO also here not to forget or refer to the other constants directly.",
+      "revId": "94a8c2c6fb554ee861753359b2116c2a989c0814",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
