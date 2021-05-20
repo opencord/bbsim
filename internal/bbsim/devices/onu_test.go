@@ -17,14 +17,13 @@
 package devices
 
 import (
-	"github.com/google/gopacket/layers"
-	"gotest.tools/assert"
-	"net"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func Test_Onu_CreateOnu(t *testing.T) {
-
+	nextCtag := map[string]int{}
+	nextStag := map[string]int{}
 	olt := OltDevice{
 		ID: 0,
 	}
@@ -33,71 +32,8 @@ func Test_Onu_CreateOnu(t *testing.T) {
 		Olt: &olt,
 	}
 
-	onu := CreateONU(&olt, &pon, 1, 0, false)
+	onu := CreateONU(&olt, &pon, 1, 0, nextCtag, nextStag, false)
 
-	assert.Equal(t, onu.Sn(), "BBSM00000101")
-}
-
-func Test_AddGemPortToService_eapol(t *testing.T) {
-
-	hsia := Service{Name: "hsia", NeedsEapol: true, CTag: 900}
-	voip := Service{Name: "voip", NeedsEapol: false, CTag: 55}
-
-	onu := createTestOnu()
-
-	onu.Services = []ServiceIf{&hsia, &voip}
-
-	onu.addGemPortToService(1024, uint32(layers.EthernetTypeEAPOL), 0, 0)
-
-	assert.Equal(t, hsia.GemPort, uint32(1024))
-	assert.Equal(t, voip.GemPort, uint32(0))
-}
-
-func Test_AddGemPortToService_dhcp(t *testing.T) {
-
-	hsia := Service{Name: "hsia", NeedsEapol: true}
-	voip := Service{Name: "voip", NeedsDhcp: true, CTag: 900}
-	mc := Service{Name: "mc", CTag: 900}
-
-	onu := createTestOnu()
-
-	onu.Services = []ServiceIf{&hsia, &voip, &mc}
-
-	onu.addGemPortToService(1025, uint32(layers.EthernetTypeIPv4), 900, 0)
-
-	assert.Equal(t, hsia.GemPort, uint32(0))
-	assert.Equal(t, voip.GemPort, uint32(1025))
-	assert.Equal(t, mc.GemPort, uint32(0))
-}
-
-func Test_AddGemPortToService_dataplane(t *testing.T) {
-
-	hsia := Service{Name: "hsia", NeedsEapol: true, CTag: 900, STag: 500}
-	voip := Service{Name: "voip", NeedsDhcp: true, CTag: 900}
-
-	onu := createTestOnu()
-
-	onu.Services = []ServiceIf{&hsia, &voip}
-
-	onu.addGemPortToService(1024, uint32(layers.EthernetTypeLLC), 500, 900)
-
-	assert.Equal(t, hsia.GemPort, uint32(1024))
-	assert.Equal(t, voip.GemPort, uint32(0))
-}
-
-func Test_FindServiceByMacAddress(t *testing.T) {
-
-	mac := net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(2)}
-
-	hsia := Service{Name: "hsia", HwAddress: net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(1)}}
-	voip := Service{Name: "voip", HwAddress: mac}
-	vod := Service{Name: "vod", HwAddress: net.HardwareAddr{0x2e, 0x60, byte(1), byte(1), byte(1), byte(3)}}
-
-	onu := createTestOnu()
-
-	onu.Services = []ServiceIf{&hsia, &voip, &vod}
-
-	service, err := onu.findServiceByMacAddress(mac)
-	assert.NilError(t, err)
-	assert.Equal(t, service.HwAddress.String(), mac.String())
+	assert.Equal(t, "BBSM00000101", onu.Sn())
+	assert.Equal(t, 4, len(onu.UniPorts))
 }

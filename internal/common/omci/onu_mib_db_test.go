@@ -36,6 +36,23 @@ func TestEntityID_ToUint16(t *testing.T) {
 	assert.Equal(t, uint16(0), res)
 }
 
+func TestEntityID_FromUint16(t *testing.T) {
+	id := uint16(257)
+	e := EntityID{}.FromUint16(id)
+
+	assert.Equal(t, e.ToString(), "0101")
+	assert.Equal(t, e.ToUint16(), id)
+}
+
+func TestEntityID_Equals(t *testing.T) {
+	a := EntityID{0x01, 0x01}
+	b := EntityID{0x01, 0x01}
+	c := EntityID{0x01, 0x02}
+
+	assert.True(t, a.Equals(b))
+	assert.False(t, a.Equals(c))
+}
+
 func Test_GenerateMibDatabase(t *testing.T) {
 	const uniPortCount = 4
 	mibDb, err := GenerateMibDatabase(uniPortCount)

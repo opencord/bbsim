@@ -28,13 +28,16 @@ func convertBBSimUniPortToProtoUniPort(u *devices.UniPort) *bbsim.UNI {
 		OnuID:     int32(u.Onu.ID),
 		OnuSn:     u.Onu.Sn(),
 		MeID:      uint32(u.MeId.ToUint16()),
+		PortNo:    int32(u.PortNo),
 		OperState: u.OperState.Current(),
+		Services:  convertBBsimServicesToProtoServices(u.Services),
 	}
 }
 
-func convertBBsimUniPortsToProtoUniPorts(list []*devices.UniPort) []*bbsim.UNI {
+func convertBBsimUniPortsToProtoUniPorts(list []devices.UniPortIf) []*bbsim.UNI {
 	unis := []*bbsim.UNI{}
-	for _, uni := range list {
+	for _, u := range list {
+		uni := u.(*devices.UniPort)
 		unis = append(unis, convertBBSimUniPortToProtoUniPort(uni))
 	}
 	return unis

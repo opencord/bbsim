@@ -23,6 +23,10 @@ import (
 	"testing"
 )
 
+func init() {
+	common.SetLogLevel(logrus.StandardLogger(), "error", false)
+}
+
 func Test_SetLogLevel(t *testing.T) {
 	log := logrus.New()
 

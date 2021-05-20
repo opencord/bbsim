@@ -27,7 +27,8 @@ func convertBBSimServiceToProtoService(s *devices.Service) *bbsim.Service {
 		Name:          s.Name,
 		InternalState: s.InternalState.Current(),
 		HwAddress:     s.HwAddress.String(),
-		OnuSn:         s.Onu.Sn(),
+		OnuSn:         s.UniPort.Onu.Sn(),
+		UniId:         s.UniPort.ID,
 		CTag:          int32(s.CTag),
 		STag:          int32(s.STag),
 		NeedsEapol:    s.NeedsEapol,
@@ -59,23 +60,12 @@ func (s BBSimServer) GetServices(ctx context.Context, req *bbsim.Empty) (*bbsim.
 
 	for _, pon := range olt.Pons {
 		for _, o := range pon.Onus {
-			s := convertBBsimServicesToProtoServices(o.Services)
-			services.Items = append(services.Items, s...)
+			for _, u := range o.UniPorts {
+				uni := u.(*devices.UniPort)
+				s := convertBBsimServicesToProtoServices(uni.Services)
+				services.Items = append(services.Items, s...)
+			}
 		}
-	}
-
-	return &services, nil
-}
-
-func (s BBSimServer) GetOnuServices(ctx context.Context, req *bbsim.ONURequest) (*bbsim.Services, error) {
-	onu, err := s.GetONU(ctx, req)
-
-	if err != nil {
-		return nil, err
-	}
-
-	services := bbsim.Services{
-		Items: onu.Services,
 	}
 
 	return &services, nil
