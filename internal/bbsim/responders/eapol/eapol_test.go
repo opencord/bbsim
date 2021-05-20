@@ -45,6 +45,7 @@ var eapolStateMachine = fsm.NewFSM(
 var onuId uint32 = 1
 var gemPortId uint32 = 1
 var ponPortId uint32 = 0
+var uniId uint32 = 0
 var serialNumber string = "BBSM00000001"
 var macAddress = net.HardwareAddr{0x01, 0x80, 0xC2, 0x00, 0x00, 0x03}
 var portNo uint32 = 16
@@ -75,7 +76,7 @@ func TestSendEapStartSuccess(t *testing.T) {
 		fail:  false,
 	}
 
-	if err := SendEapStart(onuId, ponPortId, serialNumber, portNo, macAddress, gemPortId, eapolStateMachine, stream); err != nil {
+	if err := SendEapStart(onuId, ponPortId, serialNumber, portNo, macAddress, gemPortId, uniId, eapolStateMachine, stream); err != nil {
 		t.Errorf("SendEapStart returned an error: %v", err)
 		t.Fail()
 	}
@@ -99,7 +100,7 @@ func TestSendEapStartFailStreamError(t *testing.T) {
 		fail:  true,
 	}
 
-	err := SendEapStart(onuId, ponPortId, serialNumber, portNo, macAddress, gemPortId, eapolStateMachine, stream)
+	err := SendEapStart(onuId, ponPortId, serialNumber, portNo, macAddress, gemPortId, uniId, eapolStateMachine, stream)
 	if err == nil {
 		t.Errorf("SendEapStart did not return an error")
 		t.Fail()
