@@ -34,6 +34,24 @@
       "revId": "94a8c2c6fb554ee861753359b2116c2a989c0814",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e32a169d_ae67d874",
+        "filename": "internal/bbsim/devices/uni_port.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-05-21T09:24:51Z",
+      "side": 1,
+      "message": "it really depends if we will use the same class to model the DPU in the future. for example a DPU can support a total of 24 UNIs for vDSL if I recall correctly.",
+      "parentUuid": "164e6a5c_c9532615",
+      "revId": "94a8c2c6fb554ee861753359b2116c2a989c0814",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
