@@ -204,6 +204,7 @@ func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16, ac
 
 	omciLogger.WithFields(log.Fields{
 		"EntityInstance": entityInstance,
+		"AttributeMask":  attributeMask,
 	}).Trace("received-get-software-image-request")
 
 	// Only one image can be active and committed
@@ -216,6 +217,16 @@ func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16, ac
 		committed = 1
 	}
 
+	imageHash, err := hex.DecodeString(hex.EncodeToString([]byte(fmt.Sprintf("broadband-sim-%d", entityInstance))))
+	if err != nil {
+		omciLogger.WithFields(log.Fields{
+			"entityId":  entityInstance,
+			"active":    active,
+			"committed": committed,
+			"err":       err,
+		}).Error("cannot-generate-image-hash")
+	}
+
 	// NOTE that we need send the response for the correct ME Instance or the adapter won't process it
 	res := &omci.GetResponse{
 		MeBasePacket: omci.MeBasePacket{
@@ -224,12 +235,12 @@ func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16, ac
 		},
 		Attributes: me.AttributeValueMap{
 			"ManagedEntityId": 0,
-			"Version":         toOctets("00000000000001", 14),
+			"Version":         toOctets("00000000000000", 14),
 			"IsCommitted":     committed,
 			"IsActive":        active,
 			"IsValid":         1,
-			"ProductCode":     toOctets("product-code", 25),
-			"ImageHash":       toOctets("broadband-sim", 16),
+			"ProductCode":     toOctets(fmt.Sprintf("product-code-%d", entityInstance), 25),
+			"ImageHash":       imageHash,
 		},
 		Result:        me.Success,
 		AttributeMask: attributeMask,
