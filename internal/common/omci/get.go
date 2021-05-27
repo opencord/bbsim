@@ -204,6 +204,7 @@ func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16, ac
 
 	omciLogger.WithFields(log.Fields{
 		"EntityInstance": entityInstance,
+		"AttributeMask":  attributeMask,
 	}).Trace("received-get-software-image-request")
 
 	// Only one image can be active and committed
@@ -229,7 +230,7 @@ func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16, ac
 			"IsActive":        active,
 			"IsValid":         1,
 			"ProductCode":     toOctets("product-code", 25),
-			"ImageHash":       toOctets("broadband-sim", 16),
+			"ImageHash":       hex.EncodeToString(toOctets("broadband-sim", 16)),
 		},
 		Result:        me.Success,
 		AttributeMask: attributeMask,
