@@ -127,6 +127,9 @@ type Onu struct {
 	ImageSoftwareReceivedSections int
 	ActiveImageEntityId           uint16
 	CommittedImageEntityId        uint16
+	StandbyImageVersion           string
+	ActiveImageVersion            string
+	CommittedImageVersion         string
 	OmciResponseRate              uint8
 	OmciMsgCounter                uint8
 
@@ -163,10 +166,14 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, isM
 		MibDataSync:                   0,
 		ImageSoftwareExpectedSections: 0, // populated during OMCI StartSoftwareDownloadRequest
 		ImageSoftwareReceivedSections: 0,
-		ActiveImageEntityId:           0, // when we start the SoftwareImage with ID 0 is active and committed
-		CommittedImageEntityId:        0,
-		OmciResponseRate:              olt.OmciResponseRate,
-		OmciMsgCounter:                0,
+		//TODO this needs reworking, it's always 0 or 1, possibly base all on the version
+		ActiveImageEntityId:    0, // when we start the SoftwareImage with ID 0 is active and committed
+		CommittedImageEntityId: 0,
+		StandbyImageVersion:    "BBSM_IMG_00000",
+		ActiveImageVersion:     "BBSM_IMG_00001",
+		CommittedImageVersion:  "BBSM_IMG_00001",
+		OmciResponseRate:       olt.OmciResponseRate,
+		OmciMsgCounter:         0,
 	}
 	o.SerialNumber = NewSN(olt.ID, pon.ID, id)
 	// NOTE this state machine is used to track the operational
@@ -782,7 +789,8 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 		responsePkt, _ = omcilib.CreateMibUploadNextResponse(msg.OmciPkt, msg.OmciMsg, o.MibDataSync, o.MibDb)
 	case omci.GetRequestType:
 		onuDown := o.OperState.Current() == "down"
-		responsePkt, _ = omcilib.CreateGetResponse(msg.OmciPkt, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId, o.CommittedImageEntityId, onuDown)
+		responsePkt, _ = omcilib.CreateGetResponse(msg.OmciPkt, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId,
+			o.CommittedImageEntityId, o.StandbyImageVersion, o.ActiveImageVersion, o.CommittedImageVersion, onuDown)
 	case omci.SetRequestType:
 		success := true
 		msgObj, _ := omcilib.ParseSetRequest(msg.OmciPkt)
@@ -1011,6 +1019,10 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 				"SectionNumber":  msgObj.SectionNumber,
 				"SectionData":    msgObj.SectionData,
 			}).Trace("received-download-section-request")
+			//Extracting the first 14 bytes to use as a version for this image.
+			if o.ImageSoftwareReceivedSections == 0 {
+				o.StandbyImageVersion = string(msgObj.SectionData[0:14])
+			}
 			o.ImageSoftwareReceivedSections++
 			if o.InternalState.Current() != OnuStateImageDownloadInProgress {
 				if err := o.InternalState.Event(OnuTxProgressImageDownload); err != nil {
@@ -1101,6 +1113,9 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			}
 			if msgObj, err := omcilib.ParseActivateSoftwareRequest(msg.OmciPkt); err == nil {
 				o.ActiveImageEntityId = msgObj.EntityInstance
+				previousActiveImage := o.ActiveImageVersion
+				o.ActiveImageVersion = o.StandbyImageVersion
+				o.StandbyImageVersion = previousActiveImage
 			} else {
 				onuLogger.Errorf("something-went-wrong-while-activating: %s", err)
 			}
@@ -1134,7 +1149,11 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 				// TODO validate that the image to commit is:
 				// - active
 				// - not already committed
+				o.ActiveImageEntityId = msgObj.EntityInstance
 				o.CommittedImageEntityId = msgObj.EntityInstance
+				//committed becomes standby
+				o.StandbyImageVersion = o.CommittedImageVersion
+				o.CommittedImageVersion = o.ActiveImageVersion
 			} else {
 				onuLogger.Errorf("something-went-wrong-while-committing: %s", err)
 			}
