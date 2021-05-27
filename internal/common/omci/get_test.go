@@ -24,6 +24,7 @@ import (
 	me "github.com/opencord/omci-lib-go/generated"
 	"github.com/opencord/voltha-protos/v4/go/openolt"
 	"gotest.tools/assert"
+	"reflect"
 	"testing"
 )
 
@@ -108,6 +109,26 @@ func TestGetResponse(t *testing.T) {
 			getArgs{createEthernetPerformanceMonitoringHistoryDataResponse(32768, 10), 2},
 			getWant{2, map[string]interface{}{"ManagedEntityId": uint16(10)}},
 		},
+		{"getSoftwareImageResponse",
+			getArgs{createSoftwareImageResponse(61440, 0, 1, 1, "BBSM_IMG_00000", "BBSM_IMG_00001", "BBSM_IMG_00001"), 2},
+			getWant{2, map[string]interface{}{"IsCommitted": uint8(0), "IsActive": uint8(0)}},
+		},
+		{"getSoftwareImageResponseActiveCommitted",
+			getArgs{createSoftwareImageResponse(61440, 1, 1, 1, "BBSM_IMG_00000", "BBSM_IMG_00001", "BBSM_IMG_00001"), 2},
+			getWant{2, map[string]interface{}{"IsCommitted": uint8(1), "IsActive": uint8(1)}},
+		},
+		{"getSoftwareImageResponseVersion",
+			getArgs{createSoftwareImageResponse(61440, 1, 1, 1, "BBSM_IMG_00000", "BBSM_IMG_00001", "BBSM_IMG_00001"), 2},
+			getWant{2, map[string]interface{}{"Version": ToOctets("BBSM_IMG_00001", 14)}},
+		},
+		{"getSoftwareImageResponseProductCode",
+			getArgs{createSoftwareImageResponse(2048, 1, 1, 1, "BBSM_IMG_00000", "BBSM_IMG_00001", "BBSM_IMG_00001"), 2},
+			getWant{2, map[string]interface{}{"ProductCode": ToOctets("BBSIM-ONU", 25)}},
+		},
+		{"getSoftwareImageResponseActiveImageHash",
+			getArgs{createSoftwareImageResponse(1024, 1, 1, 1, "BBSM_IMG_00000", "BBSM_IMG_00001", "BBSM_IMG_00001"), 2},
+			getWant{2, map[string]interface{}{"ImageHash": ToOctets("BBSM_IMG_00001", 25)}},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -135,7 +156,18 @@ func TestGetResponse(t *testing.T) {
 
 			for k, v := range tt.want.attributes {
 				attr := getResponseLayer.Attributes[k]
-				assert.Equal(t, attr, v)
+				attrValue := reflect.ValueOf(attr)
+				if attrValue.Kind() == reflect.Slice {
+					// it the attribute is a list, iterate and compare single values
+					expectedValue := reflect.ValueOf(v)
+					for i := 0; i < attrValue.Len(); i++ {
+						assert.Equal(t, attrValue.Index(i).Interface(), expectedValue.Index(i).Interface(),
+							fmt.Sprintf("Attribute %s does not match, expected: %s, received %s", k, v, attr))
+					}
+				} else {
+					// if it's not a list just compare
+					assert.Equal(t, attr, v)
+				}
 			}
 		})
 	}

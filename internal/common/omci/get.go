@@ -45,7 +45,9 @@ func ParseGetRequest(omciPkt gopacket.Packet) (*omci.GetRequest, error) {
 	return msgObj, nil
 }
 
-func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openolt.SerialNumber, mds uint8, activeImageEntityId uint16, committedImageEntityId uint16, onuDown bool) ([]byte, error) {
+func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openolt.SerialNumber, mds uint8,
+	activeImageEntityId uint16, committedImageEntityId uint16, standbyImageVersion string, activeImageVersion string,
+	committedImageVersion string, onuDown bool) ([]byte, error) {
 
 	msgObj, err := ParseGetRequest(omciPkt)
 
@@ -66,7 +68,8 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openo
 	case me.OnuGClassID:
 		response = createOnugResponse(msgObj.AttributeMask, msgObj.EntityInstance, onuSn)
 	case me.SoftwareImageClassID:
-		response = createSoftwareImageResponse(msgObj.AttributeMask, msgObj.EntityInstance, activeImageEntityId, committedImageEntityId)
+		response = createSoftwareImageResponse(msgObj.AttributeMask, msgObj.EntityInstance,
+			activeImageEntityId, committedImageEntityId, standbyImageVersion, activeImageVersion, committedImageVersion)
 	case me.IpHostConfigDataClassID:
 		response = createIpHostResponse(msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.UniGClassID:
@@ -200,20 +203,35 @@ func createOnugResponse(attributeMask uint16, entityID uint16, onuSn *openolt.Se
 	//}
 }
 
-func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16, activeImageEntityId uint16, committedImageEntityId uint16) *omci.GetResponse {
+func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16, activeImageEntityId uint16,
+	committedImageEntityId uint16, standbyImageVersion string, activeImageVersion string, committedImageVersion string) *omci.GetResponse {
 
 	omciLogger.WithFields(log.Fields{
 		"EntityInstance": entityInstance,
+		"AttributeMask":  attributeMask,
 	}).Trace("received-get-software-image-request")
 
 	// Only one image can be active and committed
 	committed := 0
 	active := 0
+	version := standbyImageVersion
 	if entityInstance == activeImageEntityId {
 		active = 1
+		version = activeImageVersion
 	}
 	if entityInstance == committedImageEntityId {
 		committed = 1
+		version = committedImageVersion
+	}
+
+	imageHash, err := hex.DecodeString(hex.EncodeToString([]byte(version)))
+	if err != nil {
+		omciLogger.WithFields(log.Fields{
+			"entityId":  entityInstance,
+			"active":    active,
+			"committed": committed,
+			"err":       err,
+		}).Error("cannot-generate-image-hash")
 	}
 
 	// NOTE that we need send the response for the correct ME Instance or the adapter won't process it
@@ -224,12 +242,12 @@ func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16, ac
 		},
 		Attributes: me.AttributeValueMap{
 			"ManagedEntityId": 0,
-			"Version":         ToOctets("00000000000001", 14),
+			"Version":         ToOctets(version, 14),
 			"IsCommitted":     committed,
 			"IsActive":        active,
 			"IsValid":         1,
-			"ProductCode":     ToOctets("product-code", 25),
-			"ImageHash":       ToOctets("broadband-sim", 16),
+			"ProductCode":     ToOctets("BBSIM-ONU", 25),
+			"ImageHash":       imageHash,
 		},
 		Result:        me.Success,
 		AttributeMask: attributeMask,
