@@ -1,0 +1,44 @@
+"bandwidthprofile":{
+          "integration":{
+              "cache":{
+                  "enabled":true,
+                  "maxsize":40,
+                  "ttl":"PT1m"
+              }
+          },
+          "entries":[
+              {
+                  "id": "Default",
+                  "gir": 0,
+                  "cbs": 30,
+                  "cir": 16000,
+                  "pbs": 30,
+                  "pir": 32000
+              },
+              {
+                  "id": "User_Bandwidth1",
+                  "gir": 100000,
+                  "cbs": 10000,
+                  "cir": 30000,
+                  "pbs": 1000,
+                  "pir": 20000
+              },
+              {
+                  "id": "User_Bandwidth2",
+                  "gir": 100000,
+                  "cbs": 5000,
+                  "cir": 100000,
+                  "pbs": 5000,
+                  "pir": 300000
+              },
+              {
+                  "id": "User_Bandwidth3",
+                  "gir": 100000,
+                  "cbs": 5000,
+                  "cir": 100000,
+                  "pbs": 5000,
+                  "pir": 400000
+              }
+
+          ]
+      }

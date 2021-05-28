@@ -36,11 +36,19 @@ type SadisServer struct {
 }
 
 // bandwidthProfiles contains some dummy profiles
-var bandwidthProfiles = []*SadisBWPEntry{
-	{ID: "User_Bandwidth1", AIR: 100000, CBS: 10000, CIR: 30000, EBS: 1000, EIR: 100000},
-	{ID: "User_Bandwidth2", AIR: 100000, CBS: 5000, CIR: 100000, EBS: 5000, EIR: 100000},
-	{ID: "User_Bandwidth3", AIR: 100000, CBS: 5000, CIR: 1000000, EBS: 5000, EIR: 1000000},
-	{ID: "Default", AIR: 100000, CBS: 30, CIR: 600, EBS: 30, EIR: 400},
+var bandwidthProfiles = map[string][]*SadisBWPEntry{
+	common.BP_FORMAT_MEF: {
+		{ID: "User_Bandwidth1", AIR: 100000, CBS: 10000, CIR: 30000, EBS: 1000, EIR: 100000},
+		{ID: "User_Bandwidth2", AIR: 100000, CBS: 5000, CIR: 100000, EBS: 5000, EIR: 100000},
+		{ID: "User_Bandwidth3", AIR: 100000, CBS: 5000, CIR: 1000000, EBS: 5000, EIR: 1000000},
+		{ID: "Default", AIR: 100000, CBS: 30, CIR: 600, EBS: 30, EIR: 400},
+	},
+	common.BP_FORMAT_IETF: {
+		{ID: "User_Bandwidth1", CBS: 10000, CIR: 30000, GIR: 100000, PIR: 20000, PBS: 1000},
+		{ID: "User_Bandwidth2", CBS: 5000, CIR: 100000, GIR: 100000, PIR: 30000, PBS: 5000},
+		{ID: "User_Bandwidth3", CBS: 5000, CIR: 1000000, GIR: 100000, PIR: 40000, PBS: 5000},
+		{ID: "Default", CBS: 30, CIR: 600, GIR: 0, PIR: 32000, PBS: 30},
+	},
 }
 
 // SadisConfig is the top-level SADIS configuration struct
@@ -102,12 +110,18 @@ type SadisUniTag struct {
 
 // SADIS BandwithProfile Entry
 type SadisBWPEntry struct {
+	// common attributes
 	ID  string `json:"id"`
-	AIR int    `json:"air"`
 	CBS int    `json:"cbs"`
 	CIR int    `json:"cir"`
-	EBS int    `json:"ebs"`
-	EIR int    `json:"eir"`
+	// MEF attributes
+	AIR int `json:"air,omitempty"`
+	EBS int `json:"ebs,omitempty"`
+	EIR int `json:"eir,omitempty"`
+	// IETF attributes
+	GIR int `json:"gir,omitempty"`
+	PIR int `json:"pir,omitempty"`
+	PBS int `json:"pbs,omitempty"`
 }
 
 // GetSadisConfig returns a full SADIS configuration struct ready to be marshalled into JSON
@@ -263,7 +277,7 @@ func (s *SadisServer) ServeStaticConfig(w http.ResponseWriter, r *http.Request) 
 	}
 
 	sadisConf.BandwidthProfile.Integration.URL = ""
-	sadisConf.BandwidthProfile.Entries = bandwidthProfiles
+	sadisConf.BandwidthProfile.Entries = bandwidthProfiles[common.Config.BBSim.BandwidthProfileFormat]
 
 	sadisJSON, _ := json.Marshal(sadisConf)
 	sadisLogger.Tracef("SADIS JSON: %s", sadisJSON)
@@ -340,7 +354,7 @@ func (s *SadisServer) ServeBWPEntry(w http.ResponseWriter, r *http.Request) {
 
 	sadisLogger.Debugf("Received request for SADIS bandwidth profile %s", id)
 
-	for _, bwpEntry := range bandwidthProfiles {
+	for _, bwpEntry := range bandwidthProfiles[common.Config.BBSim.BandwidthProfileFormat] {
 		if bwpEntry.ID == id {
 			w.WriteHeader(http.StatusOK)
 			_ = json.NewEncoder(w).Encode(bwpEntry)

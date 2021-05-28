@@ -34,6 +34,11 @@ var tagAllocationValues = []string{
 	"unique",
 }
 
+const (
+	BP_FORMAT_MEF  = "mef"
+	BP_FORMAT_IETF = "ietf"
+)
+
 type TagAllocation int
 
 func (t TagAllocation) String() string {
@@ -90,27 +95,28 @@ type OltConfig struct {
 }
 
 type BBSimConfig struct {
-	ConfigFile           string
-	ServiceConfigFile    string
-	DhcpRetry            bool    `yaml:"dhcp_retry"`
-	AuthRetry            bool    `yaml:"auth_retry"`
-	LogLevel             string  `yaml:"log_level"`
-	LogCaller            bool    `yaml:"log_caller"`
-	Delay                int     `yaml:"delay"`
-	CpuProfile           *string `yaml:"cpu_profile"`
-	OpenOltAddress       string  `yaml:"openolt_address"`
-	ApiAddress           string  `yaml:"api_address"`
-	RestApiAddress       string  `yaml:"rest_api_address"`
-	LegacyApiAddress     string  `yaml:"legacy_api_address"`
-	LegacyRestApiAddress string  `yaml:"legacy_rest_api_address"`
-	SadisRestAddress     string  `yaml:"sadis_rest_address"`
-	SadisServer          bool    `yaml:"sadis_server"`
-	KafkaAddress         string  `yaml:"kafka_address"`
-	Events               bool    `yaml:"enable_events"`
-	ControlledActivation string  `yaml:"controlled_activation"`
-	EnablePerf           bool    `yaml:"enable_perf"`
-	KafkaEventTopic      string  `yaml:"kafka_event_topic"`
-	DmiServerAddress     string  `yaml:"dmi_server_address"`
+	ConfigFile             string
+	ServiceConfigFile      string
+	DhcpRetry              bool    `yaml:"dhcp_retry"`
+	AuthRetry              bool    `yaml:"auth_retry"`
+	LogLevel               string  `yaml:"log_level"`
+	LogCaller              bool    `yaml:"log_caller"`
+	Delay                  int     `yaml:"delay"`
+	CpuProfile             *string `yaml:"cpu_profile"`
+	OpenOltAddress         string  `yaml:"openolt_address"`
+	ApiAddress             string  `yaml:"api_address"`
+	RestApiAddress         string  `yaml:"rest_api_address"`
+	LegacyApiAddress       string  `yaml:"legacy_api_address"`
+	LegacyRestApiAddress   string  `yaml:"legacy_rest_api_address"`
+	SadisRestAddress       string  `yaml:"sadis_rest_address"`
+	SadisServer            bool    `yaml:"sadis_server"`
+	KafkaAddress           string  `yaml:"kafka_address"`
+	Events                 bool    `yaml:"enable_events"`
+	ControlledActivation   string  `yaml:"controlled_activation"`
+	EnablePerf             bool    `yaml:"enable_perf"`
+	KafkaEventTopic        string  `yaml:"kafka_event_topic"`
+	DmiServerAddress       string  `yaml:"dmi_server_address"`
+	BandwidthProfileFormat string  `yaml:"bp_format"`
 }
 
 type BBRConfig struct {
@@ -218,6 +224,7 @@ func readCliParams() *GlobalConfig {
 
 	configFile := flag.String("config", conf.BBSim.ConfigFile, "Configuration file path")
 	servicesFile := flag.String("services", conf.BBSim.ServiceConfigFile, "Service Configuration file path")
+	sadisBpFormat := flag.String("bp_format", conf.BBSim.BandwidthProfileFormat, "Bandwidth profile format, 'mef' or 'ietf'")
 
 	olt_id := flag.Int("olt_id", conf.Olt.ID, "OLT device ID")
 	nni := flag.Int("nni", int(conf.Olt.NniPorts), "Number of NNI ports per OLT device to be emulated")
@@ -277,6 +284,12 @@ func readCliParams() *GlobalConfig {
 		conf.Olt.DeviceId = net.HardwareAddr{0xA, 0xA, 0xA, 0xA, 0xA, byte(conf.Olt.ID)}.String()
 	}
 
+	// check that the BP format is valid
+	if (*sadisBpFormat != BP_FORMAT_MEF) && (*sadisBpFormat != BP_FORMAT_IETF) {
+		log.Fatalf("Invalid parameter 'bp_format', supported values are %s and %s, you provided %s", BP_FORMAT_MEF, BP_FORMAT_IETF, *sadisBpFormat)
+	}
+	conf.BBSim.BandwidthProfileFormat = *sadisBpFormat
+
 	return conf
 }
 
@@ -284,26 +297,27 @@ func getDefaultOps() *GlobalConfig {
 
 	c := &GlobalConfig{
 		BBSimConfig{
-			ConfigFile:           "configs/bbsim.yaml",
-			ServiceConfigFile:    "configs/att-services.yaml",
-			LogLevel:             "debug",
-			LogCaller:            false,
-			Delay:                200,
-			OpenOltAddress:       ":50060",
-			ApiAddress:           ":50070",
-			RestApiAddress:       ":50071",
-			LegacyApiAddress:     ":50072",
-			LegacyRestApiAddress: ":50073",
-			SadisRestAddress:     ":50074",
-			SadisServer:          true,
-			KafkaAddress:         ":9092",
-			Events:               false,
-			ControlledActivation: "default",
-			EnablePerf:           false,
-			KafkaEventTopic:      "",
-			DhcpRetry:            false,
-			AuthRetry:            false,
-			DmiServerAddress:     ":50075",
+			ConfigFile:             "configs/bbsim.yaml",
+			ServiceConfigFile:      "configs/att-services.yaml",
+			LogLevel:               "debug",
+			LogCaller:              false,
+			Delay:                  200,
+			OpenOltAddress:         ":50060",
+			ApiAddress:             ":50070",
+			RestApiAddress:         ":50071",
+			LegacyApiAddress:       ":50072",
+			LegacyRestApiAddress:   ":50073",
+			SadisRestAddress:       ":50074",
+			SadisServer:            true,
+			KafkaAddress:           ":9092",
+			Events:                 false,
+			ControlledActivation:   "default",
+			EnablePerf:             false,
+			KafkaEventTopic:        "",
+			DhcpRetry:              false,
+			AuthRetry:              false,
+			DmiServerAddress:       ":50075",
+			BandwidthProfileFormat: BP_FORMAT_MEF,
 		},
 		OltConfig{
 			Vendor:             "BBSim",
