@@ -24,6 +24,7 @@ bbsim:
   # log_caller: false
   # delay: 200
   # kafka_event_topic: ""
+  bp_format: "mef"
 
 # OLT device settings
 olt:
