@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d39e1cd_7c955c17",
+        "filename": "internal/common/omci/get_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2021-06-02T13:04:56Z",
+      "side": 1,
+      "message": "c\u0026p issue - should be \u0027\"broadband-sim\", 16\u0027",
+      "range": {
+        "startLine": 126,
+        "startChar": 78,
+        "endLine": 126,
+        "endChar": 96
+      },
+      "revId": "7f2fbdf41c567899ae4ed0aca6d404cd43fb7b87",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
