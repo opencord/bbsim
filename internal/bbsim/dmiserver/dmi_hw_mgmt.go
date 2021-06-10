@@ -82,7 +82,7 @@ func (dms *DmiAPIServer) StartManagingDevice(req *dmi.ModifiableComponent, strea
 		dms.ponTransceiverCageUuids[i] = getUUID(dms.deviceSerial + "cage" + label)
 
 		transName := fmt.Sprintf("sfp-%d", i)
-		cageName := fmt.Sprintf("cage-%d", i)
+		cageName := fmt.Sprintf("sfp-plus-transceiver-cage-pon-%d", i)
 
 		trans := dmi.Component{
 			Name:        transName,
