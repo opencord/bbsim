@@ -240,14 +240,14 @@ api/openolt/openolt.pb.go: api/openolt/openolt.proto setup_tools
 	@echo $@
 	@${PROTOC} -I. \
       -I${GOOGLEAPI}/third_party/googleapis \
-      --go_out=plugins=grpc:./ \
+      --go_out=plugins=grpc:./ --go_opt=paths=source_relative \
       $<
 
 api/bbsim/bbsim_dmi.pb.go: api/bbsim/bbsim_dmi.proto setup_tools
 	@echo $@
 	@${PROTOC} -I. \
       -I${GOOGLEAPI}/third_party/googleapis \
-      --go_out=plugins=grpc:./ \
+      --go_out=plugins=grpc:./ --go_opt=paths=source_relative \
       $<
 
 api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go: api/bbsim/bbsim.proto api/bbsim/bbsim.yaml setup_tools
@@ -255,8 +255,8 @@ api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go: api/bbsim/bbsim.proto api/bbsim/
 	@${PROTOC} -I. \
 	  -I${GOOGLEAPI}/third_party/googleapis \
 	  -I${VOLTHA_PROTOS}/protos/ \
-      --go_out=plugins=grpc:./ \
-	  --grpc-gateway_out=logtostderr=true,grpc_api_configuration=api/bbsim/bbsim.yaml,allow_delete_body=true:./ \
+      --go_out=plugins=grpc:./ --go_opt=paths=source_relative \
+	  --grpc-gateway_out=logtostderr=true,paths=source_relative,grpc_api_configuration=api/bbsim/bbsim.yaml,allow_delete_body=true:./ \
       $<
 
 api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go: api/legacy/bbsim.proto setup_tools
@@ -266,7 +266,7 @@ api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go: api/legacy/bbsim.proto setup_t
 	  -I${GOOGLEAPI}/ \
 	  -I${VOLTHA_PROTOS}/protos/ \
       --go_out=plugins=grpc:./ \
-	  --grpc-gateway_out=logtostderr=true,allow_delete_body=true:./ \
+	  --grpc-gateway_out=logtostderr=true,paths=source_relative,allow_delete_body=true:./ \
       $<
 
 docs/swagger/bbsim/bbsim.swagger.json: api/bbsim/bbsim.yaml setup_tools
