@@ -22,6 +22,30 @@
       "revId": "f194d35335cf2d1d3c36d8e3d0c9661ccb241e22",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a34b531d_ae023051",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2021-06-14T07:32:40Z",
+      "side": 1,
+      "message": "undated -\u003e updated",
+      "parentUuid": "f5168c79_bcb43b40",
+      "range": {
+        "startLine": 238,
+        "startChar": 30,
+        "endLine": 238,
+        "endChar": 32
+      },
+      "revId": "f194d35335cf2d1d3c36d8e3d0c9661ccb241e22",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
