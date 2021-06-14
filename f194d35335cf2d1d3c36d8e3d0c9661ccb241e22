@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5168c79_bcb43b40",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2021-06-14T07:24:07Z",
+      "side": 1,
+      "message": "@Teo: I think there was a misunderstanding about the intended SW upgrade use case to be tested - the following should be possible: \n- ONU starts with SW version \"0\" in both image storage areas\n- there is a SW upgrade of the inactive image storage area with SW version \"1\" and a subsequent activation\n- now we have SW version \"1\" active and \"0\" inactive\n- another SW upgrade follows, which updates and activates SW version \"0\" on the inactive image storage area with SW version \"1\"\n- as a result, both image storage areas now contain SW version \"1\" and the active flag has changed to the just undated image storage area",
+      "range": {
+        "startLine": 238,
+        "startChar": 30,
+        "endLine": 238,
+        "endChar": 32
+      },
+      "revId": "f194d35335cf2d1d3c36d8e3d0c9661ccb241e22",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
