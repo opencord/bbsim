@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "441e3b58_ad818ea0",
+        "filename": "internal/bbsim/api/grpc_api_server_legacy.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-06-16T12:28:49Z",
+      "side": 1,
+      "message": "why is this involved in multi-uni ?",
+      "revId": "282995d5724e014ef2f0ef5e4457a937d0d90e67",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "46c6a245_e8044b8f",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-06-16T12:28:49Z",
+      "side": 1,
+      "message": "EAPOL",
+      "revId": "282995d5724e014ef2f0ef5e4457a937d0d90e67",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "738a1706_9c021d1c",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-06-16T12:28:49Z",
+      "side": 1,
+      "message": "DHCP",
+      "revId": "282995d5724e014ef2f0ef5e4457a937d0d90e67",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e43e370_d9d408f3",
+        "filename": "internal/bbsim/devices/onu_flow_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-06-16T12:28:49Z",
+      "side": 1,
+      "message": "shoudl we extend the unit tests to cover the multi uni flow add ?",
+      "revId": "282995d5724e014ef2f0ef5e4457a937d0d90e67",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8681f3a4_ba964c20",
+        "filename": "internal/bbsim/responders/sadis/sadis_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-06-16T12:28:49Z",
+      "side": 1,
+      "message": "in the old implementation we were starting from 923,i do not see any issues in changing it, but just wanted to make sure it\u0027s intentional.",
+      "revId": "282995d5724e014ef2f0ef5e4457a937d0d90e67",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
