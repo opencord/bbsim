@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "809dba28_26804e10",
+        "filename": "internal/bbsim/api/grpc_api_server_legacy.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-06-21T15:44:20Z",
+      "side": 1,
+      "message": "It\u0027s not, removed",
+      "parentUuid": "441e3b58_ad818ea0",
+      "revId": "282995d5724e014ef2f0ef5e4457a937d0d90e67",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "46c6a245_e8044b8f",
         "filename": "internal/bbsim/api/onus_handler.go",
         "patchSetId": 8
@@ -33,6 +51,24 @@
       "revId": "282995d5724e014ef2f0ef5e4457a937d0d90e67",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f479db71_54af4936",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-06-21T15:44:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "46c6a245_e8044b8f",
+      "revId": "282995d5724e014ef2f0ef5e4457a937d0d90e67",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "1f1c2177_cc80116e",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-06-21T15:44:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "738a1706_9c021d1c",
+      "revId": "282995d5724e014ef2f0ef5e4457a937d0d90e67",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e43e370_d9d408f3",
         "filename": "internal/bbsim/devices/onu_flow_test.go",
         "patchSetId": 8
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "89c94579_c2556e11",
+        "filename": "internal/bbsim/devices/onu_flow_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-06-21T15:44:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5e43e370_d9d408f3",
+      "revId": "282995d5724e014ef2f0ef5e4457a937d0d90e67",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8681f3a4_ba964c20",
         "filename": "internal/bbsim/responders/sadis/sadis_test.go",
         "patchSetId": 8
@@ -84,6 +156,24 @@
       "revId": "282995d5724e014ef2f0ef5e4457a937d0d90e67",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4b782535_552f0a34",
+        "filename": "internal/bbsim/responders/sadis/sadis_test.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-06-21T15:44:20Z",
+      "side": 1,
+      "message": "Yes, it was intentional, it\u0027s just an arbitrary numbner",
+      "parentUuid": "8681f3a4_ba964c20",
+      "revId": "282995d5724e014ef2f0ef5e4457a937d0d90e67",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
     }
   ]
 }
