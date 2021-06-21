@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d32bcd2_07abf302",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-06-21T08:53:59Z",
+      "side": 1,
+      "message": "Let me see if I can address this today/tomorrow before merging it",
+      "revId": "c00e97a5649926cff6e6b07056d83a5f1b1bf3f1",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
