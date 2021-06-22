@@ -26,10 +26,10 @@ import (
 
 func Test_Onu_StateMachine_enable(t *testing.T) {
 	onu := createTestOnu()
-	assert.Equal(t, onu.InternalState.Current(), "initialized")
-	_ = onu.InternalState.Event("discover")
-	assert.Equal(t, onu.InternalState.Current(), "discovered")
-	_ = onu.InternalState.Event("enable")
+	assert.Equal(t, onu.InternalState.Current(), OnuStateInitialized)
+	_ = onu.InternalState.Event(OnuTxDiscover)
+	assert.Equal(t, onu.InternalState.Current(), OnuStateDiscovered)
+	_ = onu.InternalState.Event(OnuTxEnable)
 	assert.Equal(t, onu.InternalState.Current(), OnuStateEnabled)
 }
 
@@ -61,6 +61,55 @@ func Test_Onu_StateMachine_disable(t *testing.T) {
 	assert.Equal(t, len(onu.PonPort.AllocatedOnuIds), 0)
 	assert.Equal(t, len(onu.PonPort.AllocatedAllocIds), 0)
 	assert.Equal(t, len(onu.PonPort.AllocatedGemPorts), 0)
+}
+
+func Test_Onu_StateMachine_pon_disable(t *testing.T) {
+	onu := createTestOnu()
+	var err error
+
+	onu.InternalState.SetState(OnuStateEnabled)
+	err = onu.InternalState.Event(OnuTxPonDisable)
+	assert.NilError(t, err)
+	assert.Equal(t, OnuStatePonDisabled, onu.InternalState.Current())
+
+	onu.InternalState.SetState(OnuStateImageDownloadComplete)
+	err = onu.InternalState.Event(OnuTxPonDisable)
+	assert.NilError(t, err)
+	assert.Equal(t, OnuStatePonDisabled, onu.InternalState.Current())
+}
+
+func Test_Onu_StateMachine_software_image(t *testing.T) {
+	onu := createTestOnu()
+	var err error
+
+	// happy path
+	onu.InternalState.SetState(OnuStateEnabled)
+	err = onu.InternalState.Event(OnuTxStartImageDownload)
+	assert.NilError(t, err)
+	assert.Equal(t, OnuStateImageDownloadStarted, onu.InternalState.Current())
+
+	err = onu.InternalState.Event(OnuTxProgressImageDownload)
+	assert.NilError(t, err)
+	assert.Equal(t, OnuStateImageDownloadInProgress, onu.InternalState.Current())
+
+	err = onu.InternalState.Event(OnuTxCompleteImageDownload)
+	assert.NilError(t, err)
+	assert.Equal(t, OnuStateImageDownloadComplete, onu.InternalState.Current())
+
+	err = onu.InternalState.Event(OnuTxActivateImage)
+	assert.NilError(t, err)
+	assert.Equal(t, OnuStateImageActivated, onu.InternalState.Current())
+
+	// after image activate we get an ONU reboot, thus the state is back to Enabled before committing
+	onu.InternalState.SetState(OnuStateEnabled)
+	err = onu.InternalState.Event(OnuTxCommitImage)
+	assert.NilError(t, err)
+	assert.Equal(t, OnuStateImageCommitted, onu.InternalState.Current())
+
+	// but we should be able to start a new download
+	err = onu.InternalState.Event(OnuTxStartImageDownload)
+	assert.NilError(t, err)
+	assert.Equal(t, OnuStateImageDownloadStarted, onu.InternalState.Current())
 }
 
 // check that I can go to auth_started only if
