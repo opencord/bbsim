@@ -20,10 +20,11 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"sync"
+
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
-	"sync"
 
 	pb "github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
@@ -52,7 +53,6 @@ var onuLogger = log.WithFields(log.Fields{
 
 const (
 	maxOmciMsgCounter = 10
-	uniPorts          = 4 // TODO this will need to be configurable
 )
 
 const (
@@ -308,8 +308,13 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 			},
 		},
 	)
-
-	for i := 0; i < uniPorts; i++ {
+	onuLogger.WithFields(log.Fields{
+		"OnuId":  o.ID,
+		"IntfId": o.PonPortID,
+		"OnuSn":  o.Sn(),
+		"NumUni": olt.NumUni,
+	}).Debug("creating-uni-ports")
+	for i := 0; i < olt.NumUni; i++ {
 		uni, err := NewUniPort(uint32(i), &o, nextCtag, nextStag)
 		if err != nil {
 			onuLogger.WithFields(log.Fields{
