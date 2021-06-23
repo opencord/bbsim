@@ -62,7 +62,6 @@ func startApiServer(apiDoneChannel chan bool, group *sync.WaitGroup) {
 		grpcServer.Stop()
 		log.Warnf("Stopping API gRPC server")
 	}
-
 	group.Done()
 }
 
