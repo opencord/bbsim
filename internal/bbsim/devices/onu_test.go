@@ -24,8 +24,10 @@ import (
 func Test_Onu_CreateOnu(t *testing.T) {
 	nextCtag := map[string]int{}
 	nextStag := map[string]int{}
+
 	olt := OltDevice{
-		ID: 0,
+		ID:     0,
+		NumUni: 4,
 	}
 	pon := PonPort{
 		ID:  1,

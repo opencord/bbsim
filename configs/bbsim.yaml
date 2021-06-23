@@ -34,6 +34,7 @@ olt:
   device_serial_number: BBSM00000001
   pon_ports: 1
   nni_ports: 1
+  uni_ports: 4
   onus_per_port: 1
   technology: "XGS-PON"
   id: 0                 # OLT-ID of the device

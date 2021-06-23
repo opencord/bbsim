@@ -70,6 +70,7 @@ type OltDevice struct {
 	NumNni               int
 	NumPon               int
 	NumOnuPerPon         int
+	NumUni               int
 	InternalState        *fsm.FSM
 	channel              chan types.Message
 	dhcpServer           dhcp.DHCPServerIf
@@ -114,6 +115,7 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		"NumNni":       options.Olt.NniPorts,
 		"NumPon":       options.Olt.PonPorts,
 		"NumOnuPerPon": options.Olt.OnusPonPort,
+		"NumUni":       options.Olt.UniPorts,
 	}).Debug("CreateOLT")
 
 	olt = OltDevice{
@@ -125,6 +127,7 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		NumNni:              int(options.Olt.NniPorts),
 		NumPon:              int(options.Olt.PonPorts),
 		NumOnuPerPon:        int(options.Olt.OnusPonPort),
+		NumUni:              int(options.Olt.UniPorts),
 		Pons:                []*PonPort{},
 		Nnis:                []*NniPort{},
 		Delay:               options.BBSim.Delay,

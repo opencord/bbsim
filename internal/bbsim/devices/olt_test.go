@@ -72,7 +72,7 @@ func createMockOlt(numPon int, numOnu int, numUni int, services []ServiceIf) *Ol
 				Channel: make(chan bbsim.Message, 2048),
 			}
 
-			for k := 0; k < uniPorts; k++ {
+			for k := 0; k < numUni; k++ {
 				uni := UniPort{
 					ID:     uint32(k + 1),
 					Onu:    &onu,
@@ -107,6 +107,7 @@ func TestCreateOLT(t *testing.T) {
 			ID:          1,
 			PonPorts:    2,
 			OnusPonPort: 2,
+			UniPorts:    4,
 		},
 	}
 
@@ -130,7 +131,7 @@ func TestCreateOLT(t *testing.T) {
 		}
 	}
 	// NOTE when unis will be configurable this test will need to adapt
-	assert.Equal(t, unis, int(common.Config.Olt.PonPorts*common.Config.Olt.OnusPonPort*uniPorts))
+	assert.Equal(t, unis, int(common.Config.Olt.PonPorts*common.Config.Olt.OnusPonPort*common.Config.Olt.UniPorts))
 
 	// count the services
 	services := 0
@@ -143,7 +144,7 @@ func TestCreateOLT(t *testing.T) {
 		}
 	}
 	// NOTE when unis will be configurable this test will need to adapt
-	assert.Equal(t, services, int(common.Config.Olt.PonPorts)*int(common.Config.Olt.OnusPonPort)*uniPorts*len(common.Services))
+	assert.Equal(t, services, int(common.Config.Olt.PonPorts)*int(common.Config.Olt.OnusPonPort)*int(common.Config.Olt.UniPorts)*len(common.Services))
 
 	s1 := olt.Pons[0].Onus[0].UniPorts[0].(*UniPort).Services[0].(*Service)
 
@@ -203,6 +204,7 @@ func Test_Olt_FindOnuBySn_Error(t *testing.T) {
 func Test_Olt_FindOnuByMacAddress_Success(t *testing.T) {
 	numPon := 4
 	numOnu := 4
+	numUni := 4
 
 	services := []ServiceIf{
 		&Service{Name: "hsia"},
@@ -210,7 +212,7 @@ func Test_Olt_FindOnuByMacAddress_Success(t *testing.T) {
 		&Service{Name: "vod"},
 	}
 
-	olt := createMockOlt(numPon, numOnu, 1, services)
+	olt := createMockOlt(numPon, numOnu, numUni, services)
 
 	mac := net.HardwareAddr{0x2e, byte(olt.ID), byte(3), byte(6), byte(3), byte(1)}
 	s, err := olt.FindServiceByMacAddress(mac)
