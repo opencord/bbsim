@@ -112,6 +112,8 @@ type Onu struct {
 	OperState    *fsm.FSM
 	SerialNumber *openolt.SerialNumber
 
+	AdminLockState uint8 // 0 is enabled, 1 is disabled.
+
 	Channel chan bbsim.Message // this Channel is to track state changes OMCI messages, EAPOL and DHCP packets
 
 	// OMCI params
@@ -785,7 +787,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 	case omci.MibUploadNextRequestType:
 		responsePkt, _ = omcilib.CreateMibUploadNextResponse(msg.OmciPkt, msg.OmciMsg, o.MibDataSync, o.MibDb)
 	case omci.GetRequestType:
-		onuDown := o.OperState.Current() == "down"
+		onuDown := o.AdminLockState == 1
 		responsePkt, _ = omcilib.CreateGetResponse(msg.OmciPkt, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId,
 			o.CommittedImageEntityId, o.StandbyImageVersion, o.ActiveImageVersion, o.CommittedImageVersion, onuDown)
 	case omci.SetRequestType:
@@ -819,6 +821,14 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 					}).Warn("cannot-change-uni-status")
 				}
 			}
+		case me.OnuGClassID:
+			o.AdminLockState = msgObj.Attributes["AdministrativeState"].(uint8)
+			onuLogger.WithFields(log.Fields{
+				"IntfId":         o.PonPortID,
+				"OnuId":          o.ID,
+				"SerialNumber":   o.Sn(),
+				"AdminLockState": o.AdminLockState,
+			}).Debug("set-onu-admin-lock-state")
 		case me.TContClassID:
 			allocId := msgObj.Attributes["AllocId"].(uint16)
 
