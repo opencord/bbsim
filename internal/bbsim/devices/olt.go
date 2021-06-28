@@ -50,14 +50,22 @@ var oltLogger = log.WithFields(log.Fields{
 })
 
 const (
-	onuIdStart     = 1
-	onuIdEnd       = 127
-	allocIdStart   = 1024
-	allocIdEnd     = 16383
-	gemportIdStart = 1024
-	gemportIdEnd   = 65535
-	flowIdStart    = 1
-	flowIdEnd      = 65535
+	onuIdStart = 1
+	// Least pon port on the real OLTs we test with today have 16 ports (not including the pluggable OLTs).
+	// Given that we have to support 512 ONUs per OLT, we have to have up to 32 ONU per PON (could be less
+	// on a higher density port OLT).
+	// We pass just enough limits here to ensure the resource pool is as
+	// compact as possible on the etcd to reduce storage.
+	onuIdEnd            = onuIdStart + 31
+	allocIdStart        = 1024
+	allocIdPerOnu       = 4
+	allocIdEnd          = allocIdStart + (onuIdEnd-onuIdStart+1)*allocIdPerOnu // up to 4 alloc-id per ONU
+	gemPortIdPerAllocId = 8
+	gemportIdStart      = 1024
+	gemportIdEnd        = gemportIdStart + (onuIdEnd-onuIdStart+1)*allocIdPerOnu*gemPortIdPerAllocId // up to 8 gemport-id per tcont/alloc-id
+	// The flow ids are no more necessary by the adapter, but still need to pass something dummy. Pass a very small valid range.
+	flowIdStart = 1
+	flowIdEnd   = flowIdStart + 1
 )
 
 type OltDevice struct {
