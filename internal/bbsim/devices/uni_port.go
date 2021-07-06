@@ -208,6 +208,9 @@ func (u *UniPort) Enable() error {
 }
 
 func (u *UniPort) Disable() error {
+	if u.OperState.Is(UniStateDown) {
+		return nil
+	}
 	return u.OperState.Event(uniTxDisable)
 }
 
