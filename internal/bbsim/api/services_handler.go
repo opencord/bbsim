@@ -70,3 +70,29 @@ func (s BBSimServer) GetServices(ctx context.Context, req *bbsim.Empty) (*bbsim.
 
 	return &services, nil
 }
+
+func (s BBSimServer) GetUniServices(ctx context.Context, req *bbsim.UNIRequest) (*bbsim.Services, error) {
+
+	services := bbsim.Services{
+		Items: []*bbsim.Service{},
+	}
+
+	olt := devices.GetOLT()
+
+	for _, pon := range olt.Pons {
+		for _, o := range pon.Onus {
+			for _, u := range o.UniPorts {
+				uni := u.(*devices.UniPort)
+				s := convertBBsimServicesToProtoServices(uni.Services)
+				for _, service := range s {
+					if service.UniId == req.IDNumber && service.OnuSn == req.SerialNumber {
+						services.Items = append(services.Items, s...)
+						return &services, nil
+					}
+				}
+			}
+		}
+	}
+
+	return &services, nil
+}

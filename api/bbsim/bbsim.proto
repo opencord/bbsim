@@ -145,6 +145,11 @@ message PONRequest {
     uint32 PonPortId = 1;
 }
 
+message UNIRequest {
+    string SerialNumber = 1;
+    uint32 IDNumber = 2;
+}
+
 // Alarms
 
 message AlarmType {
@@ -286,6 +291,10 @@ service BBSim {
     rpc GetServices (Empty) returns (Services) {
     }
 
+    // Get all the Services by Uni ID
+    rpc GetUniServices (UNIRequest) returns (Services) {
+    }
+
     // Get all the UNIs of an ONU by serial number
     rpc GetOnuUnis (ONURequest) returns (UNIs) {
     }
@@ -330,5 +339,8 @@ service BBSim {
     }
     // Get Traffic scheduler information for ONU
     rpc GetOnuTrafficSchedulers (ONURequest) returns (ONUTrafficSchedulers) {
+    }
+
+    rpc GetUnis (Empty) returns (UNIs) {
     }
 }
