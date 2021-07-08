@@ -20,6 +20,7 @@ import (
 	"context"
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
+	"strconv"
 )
 
 func convertBBSimServiceToProtoService(s *devices.Service) *bbsim.Service {
@@ -50,7 +51,7 @@ func convertBBsimServicesToProtoServices(list []devices.ServiceIf) []*bbsim.Serv
 	return services
 }
 
-func (s BBSimServer) GetServices(ctx context.Context, req *bbsim.Empty) (*bbsim.Services, error) {
+func (s BBSimServer) GetServices(ctx context.Context, req *bbsim.UNIRequest) (*bbsim.Services, error) {
 
 	services := bbsim.Services{
 		Items: []*bbsim.Service{},
@@ -63,7 +64,16 @@ func (s BBSimServer) GetServices(ctx context.Context, req *bbsim.Empty) (*bbsim.
 			for _, u := range o.UniPorts {
 				uni := u.(*devices.UniPort)
 				s := convertBBsimServicesToProtoServices(uni.Services)
-				services.Items = append(services.Items, s...)
+				for _, service := range s {
+					intVar, err := strconv.Atoi(req.UniID)
+					if req.UniID == "" && req.OnuSerialNumber == "" {
+						services.Items = append(services.Items, s...)
+					} else if err == nil && service.UniId == uint32(intVar) && service.OnuSn == req.OnuSerialNumber {
+						services.Items = append(services.Items, s...)
+					} else if req.UniID == "" && service.OnuSn == req.OnuSerialNumber {
+						services.Items = append(services.Items, s...)
+					}
+				}
 			}
 		}
 	}

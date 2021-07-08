@@ -583,3 +583,19 @@ func handleShutdownONU(onu *devices.Onu) (*bbsim.Response, error) {
 
 	return res, nil
 }
+
+func (s BBSimServer) GetUnis(ctx context.Context, req *bbsim.Empty) (*bbsim.UNIs, error) {
+	onus, err := s.GetONUs(ctx, req)
+
+	if err != nil {
+		return nil, err
+	}
+	unis := []*bbsim.UNI{}
+	for _, onu := range onus.Items {
+		unis = append(unis, onu.Unis...)
+	}
+	unis_ret := bbsim.UNIs{
+		Items: unis,
+	}
+	return &unis_ret, nil
+}

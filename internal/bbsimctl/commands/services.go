@@ -41,7 +41,7 @@ func RegisterServiceCommands(parser *flags.Parser) {
 	_, _ = parser.AddCommand("service", "Service Commands", "Commands to interact with ONU Services", &ServiceOptions{})
 }
 
-func getServices() *pb.Services {
+func getServices(OnuSn string, UniID string) (*pb.Services, error) {
 
 	client, conn := connect()
 	defer conn.Close()
@@ -50,17 +50,23 @@ func getServices() *pb.Services {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 
-	services, err := client.GetServices(ctx, &pb.Empty{})
+	req := pb.UNIRequest{
+		OnuSerialNumber: OnuSn,
+		UniID:           UniID,
+	}
+
+	services, err := client.GetServices(ctx, &req)
+
+	return services, err
+}
+
+func (options *ServiceList) Execute(args []string) error {
+	services, err := getServices("", "")
+
 	if err != nil {
 		log.Fatalf("could not get OLT: %v", err)
 		return nil
 	}
-	return services
-}
-
-func (options *ServiceList) Execute(args []string) error {
-	services := getServices()
-
 	// print out
 	tableFormat := format.Format(DEFAULT_SERVICE_HEADER_FORMAT)
 	if err := tableFormat.Execute(os.Stdout, true, services.Items); err != nil {
