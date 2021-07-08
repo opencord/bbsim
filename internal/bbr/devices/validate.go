@@ -24,6 +24,7 @@ import (
 	"github.com/opencord/bbsim/api/bbsim"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	pb "github.com/opencord/bbsim/api/bbsim"
 )
 
 func ValidateAndClose(olt *OltMock) {
@@ -35,7 +36,12 @@ func ValidateAndClose(olt *OltMock) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	services, err := client.GetServices(ctx, &bbsim.Empty{})
+	req := pb.UNIRequest{
+		OnuSerialNumber: "",
+		UniID: "",
+	}
+
+	services, err := client.GetServices(ctx, &req)
 
 	if err != nil {
 		log.WithFields(log.Fields{
