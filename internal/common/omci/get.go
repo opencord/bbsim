@@ -90,6 +90,9 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openo
 		response = createFecPerformanceMonitoringHistoryDataResponse(msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.GemPortNetworkCtpPerformanceMonitoringHistoryDataClassID:
 		response = createGemPortNetworkCtpPerformanceMonitoringHistoryData(msgObj.AttributeMask, msgObj.EntityInstance)
+	case me.EthernetFrameExtendedPmClassID,
+		me.EthernetFrameExtendedPm64BitClassID:
+		response = createEthernetFrameExtendedPmGetResponse(msgObj.EntityClass, msgObj.AttributeMask, msgObj.EntityInstance)
 	default:
 		omciLogger.WithFields(log.Fields{
 			"EntityClass":    msgObj.EntityClass,
@@ -600,6 +603,49 @@ func createAnigResponse(attributeMask uint16, entityID uint16) *omci.GetResponse
 	return &omci.GetResponse{
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.AniGClassID,
+			EntityInstance: entityID,
+		},
+		Attributes:    managedEntity.GetAttributeValueMap(),
+		AttributeMask: attributeMask,
+		Result:        me.Success,
+	}
+}
+
+func createEthernetFrameExtendedPmGetResponse(meClass me.ClassID, attributeMask uint16, entityID uint16) *omci.GetResponse {
+
+	callback := me.NewEthernetFrameExtendedPm
+	if meClass != me.EthernetFrameExtendedPmClassID {
+		callback = me.NewEthernetFrameExtendedPm64Bit
+	}
+	managedEntity, meErr := callback(me.ParamData{
+		EntityID: entityID,
+		Attributes: me.AttributeValueMap{
+			"ManagedEntityId":        entityID,
+			"DropEvents":             rand.Intn(100),
+			"Octets":                 rand.Intn(100),
+			"Frames":                 rand.Intn(100),
+			"BroadcastFrames":        rand.Intn(100),
+			"MulticastFrames":        rand.Intn(100),
+			"CrcErroredFrames":       rand.Intn(100),
+			"UndersizeFrames":        rand.Intn(100),
+			"OversizeFrames":         rand.Intn(100),
+			"Frames64Octets":         rand.Intn(100),
+			"Frames65To127Octets":    rand.Intn(100),
+			"Frames128To255Octets":   rand.Intn(100),
+			"Frames256To511Octets":   rand.Intn(100),
+			"Frames512To1023Octets":  rand.Intn(100),
+			"Frames1024To1518Octets": rand.Intn(100),
+		},
+	})
+
+	if meErr.GetError() != nil {
+		omciLogger.Errorf("NewEthernetFrameExtendedPm %v", meErr.Error())
+		return nil
+	}
+
+	return &omci.GetResponse{
+		MeBasePacket: omci.MeBasePacket{
+			EntityClass:    meClass,
 			EntityInstance: entityID,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
