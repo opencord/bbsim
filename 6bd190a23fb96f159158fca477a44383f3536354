@@ -22,6 +22,47 @@
       "revId": "6bd190a23fb96f159158fca477a44383f3536354",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "54acdf69_bca6087c",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-07-13T00:42:26Z",
+      "side": 1,
+      "message": "Yeah, it is good improvement to generate true random numbers, but the adapter nor the test framework cares much about these numbers. All that is important is that the adapter can pull these metrics from the ONU (here bbsim) when requested from NBI. Of course in the real world, a real ONU would return free running counters for each metric in this ME.",
+      "parentUuid": "8bcc1a84_6559a748",
+      "range": {
+        "startLine": 624,
+        "startChar": 29,
+        "endLine": 624,
+        "endChar": 33
+      },
+      "revId": "6bd190a23fb96f159158fca477a44383f3536354",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dffe1fa6_cc0f2e6f",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-07-13T00:42:26Z",
+      "side": 1,
+      "message": "There is only GetResponse code implementation. Don\u0027t you also need code to handler Create ME (basically CreateResponse). Check internal/common/omci/create.go",
+      "revId": "6bd190a23fb96f159158fca477a44383f3536354",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
