@@ -105,6 +105,24 @@
       "revId": "6bd190a23fb96f159158fca477a44383f3536354",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4fcf3d6_76edb81b",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2021-07-13T06:25:57Z",
+      "side": 1,
+      "message": "Success handling is enough. Nothing more needs to be done then.",
+      "parentUuid": "e99c6bc0_f5ba9207",
+      "revId": "6bd190a23fb96f159158fca477a44383f3536354",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
     }
   ]
 }
