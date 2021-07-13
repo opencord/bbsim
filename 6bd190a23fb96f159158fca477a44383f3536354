@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "c5568933_f0d00345",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-07-13T03:50:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "54acdf69_bca6087c",
+      "range": {
+        "startLine": 624,
+        "startChar": 29,
+        "endLine": 624,
+        "endChar": 33
+      },
+      "revId": "6bd190a23fb96f159158fca477a44383f3536354",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dffe1fa6_cc0f2e6f",
         "filename": "internal/common/omci/get.go",
         "patchSetId": 2
@@ -60,6 +84,24 @@
       "writtenOn": "2021-07-13T00:42:26Z",
       "side": 1,
       "message": "There is only GetResponse code implementation. Don\u0027t you also need code to handler Create ME (basically CreateResponse). Check internal/common/omci/create.go",
+      "revId": "6bd190a23fb96f159158fca477a44383f3536354",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e99c6bc0_f5ba9207",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-07-13T03:50:40Z",
+      "side": 1,
+      "message": "CreateResponse is already handled as success for all me\u0027s in bbsim. Do we need to introduce error case for 64 bit so that 32 bit case is resulted? just for code coverage?",
+      "parentUuid": "dffe1fa6_cc0f2e6f",
       "revId": "6bd190a23fb96f159158fca477a44383f3536354",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
