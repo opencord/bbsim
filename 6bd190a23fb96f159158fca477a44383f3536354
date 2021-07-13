@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8bcc1a84_6559a748",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2021-07-13T00:32:47Z",
+      "side": 1,
+      "message": "rand needs to be seeded else it will return the same sequence of numbers on each iteration. perhaps this does not matter, but thought i would point it out. (https://pkg.go.dev/math/rand#Seed)\n\nAlso from a testing perspective is it helpful to be able to configure what the returned results are as opposed to generate random numbers?",
+      "range": {
+        "startLine": 624,
+        "startChar": 29,
+        "endLine": 624,
+        "endChar": 33
+      },
+      "revId": "6bd190a23fb96f159158fca477a44383f3536354",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
