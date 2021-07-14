@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e5bf1c9_0f2d668f",
+        "filename": "internal/bbsimctl/commands/uni.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-07-14T22:20:14Z",
+      "side": 1,
+      "message": "is it possible to add an autocompleter to the UniIdInt?\nthere is an example on OnuSnString: https://github.com/opencord/bbsim/blob/master/internal/bbsimctl/commands/onu.go#L427-L448\n\nBut let\u0027s do this in a different patch, I\u0027m going to merge this one",
+      "range": {
+        "startLine": 36,
+        "startChar": 5,
+        "endLine": 36,
+        "endChar": 13
+      },
+      "revId": "b0a333a28bd7c85ba3dde3254a2fb5a8e18392be",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
