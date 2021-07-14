@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "3f5b875c_6f9444f8",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-07-14T12:49:11Z",
+      "side": 1,
+      "message": "I would prefer that BBSIM returns defined fixed values, that differ between the paramters (e.g. just +1). So I would not suggest to have random values but defined ones, that are also known per definition to the robot test. Then the individual values can be checked accordingly in the BBSIM test (with according test case update). This would easily enable us to exclude some parameter specific decoding issue. \nI already announced to Andrea that I would recommend to make the Pm counter tests more tense in the R2.9 work path - this could be one of the improvements.",
+      "parentUuid": "c5568933_f0d00345",
+      "range": {
+        "startLine": 624,
+        "startChar": 29,
+        "endLine": 624,
+        "endChar": 33
+      },
+      "revId": "6bd190a23fb96f159158fca477a44383f3536354",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dffe1fa6_cc0f2e6f",
         "filename": "internal/common/omci/get.go",
         "patchSetId": 2
@@ -120,6 +144,24 @@
       "side": 1,
       "message": "Success handling is enough. Nothing more needs to be done then.",
       "parentUuid": "e99c6bc0_f5ba9207",
+      "revId": "6bd190a23fb96f159158fca477a44383f3536354",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4c92af6_b84468fe",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-07-14T12:49:11Z",
+      "side": 1,
+      "message": "I would rather vote for Himanis reflection to also test the possible negative acknowledgement of 64 bit counters and to supply 32 bit counters (which also should be different from the 64 bit values). \nBut in my point of view that should be a different test case then the base (64 bit) test. That requires a configuration option for BBSIM then.\nAs mentioned, also in my point of view some of the R2.9 activities.",
+      "parentUuid": "f4fcf3d6_76edb81b",
       "revId": "6bd190a23fb96f159158fca477a44383f3536354",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
       "unresolved": true
