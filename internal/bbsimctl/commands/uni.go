@@ -20,6 +20,8 @@ package commands
 import (
 	"context"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/jessevdk/go-flags"
 	pb "github.com/opencord/bbsim/api/bbsim"
@@ -138,4 +140,29 @@ func (options *UNIServices) Execute(args []string) error {
 	}
 
 	return nil
+}
+
+func (uniId *UniIdInt) Complete(match string) []flags.Completion {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+
+	onus, err := client.GetONUs(ctx, &pb.Empty{})
+	unis := onus.Items[0].Unis
+	if err != nil {
+		log.Fatalf("could not get ONUs: %v", err)
+		return nil
+	}
+
+	list := make([]flags.Completion, 0)
+	for _, uni := range unis {
+		strID := strconv.Itoa(int(uni.ID))
+		if strings.HasPrefix(strID, match) {
+			list = append(list, flags.Completion{Item: strID})
+		}
+	}
+
+	return list
 }
