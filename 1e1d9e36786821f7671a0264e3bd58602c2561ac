@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06d2b911_2dfa8c63",
+        "filename": "internal/bbsimctl/commands/uni.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-07-27T20:12:30Z",
+      "side": 1,
+      "message": "can we add a comment explaining why we\u0027re reading the first ONU UNIs?\n\nSomething on the lines of:\ngo-flag doesn\u0027t allow us to read the previous parameters to the command so we can\u0027t get the ONU Serial Number,\nbut all the ONUs have the same number of UNIs thus we can re-use the UNIs belonging to the first ONU in the list\n\nand reference this issue: https://github.com/jessevdk/go-flags/issues/305",
+      "range": {
+        "startLine": 153,
+        "startChar": 1,
+        "endLine": 153,
+        "endChar": 27
+      },
+      "revId": "1e1d9e36786821f7671a0264e3bd58602c2561ac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "981ac885_5b49b8a3",
+        "filename": "internal/bbsimctl/commands/uni.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-07-27T20:12:30Z",
+      "side": 1,
+      "message": "if this happens it means we can\u0027t get the list on ONUs, this error handling should be done before we try to access the list",
+      "range": {
+        "startLine": 155,
+        "startChar": 14,
+        "endLine": 155,
+        "endChar": 36
+      },
+      "revId": "1e1d9e36786821f7671a0264e3bd58602c2561ac",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
