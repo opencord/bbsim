@@ -245,8 +245,9 @@ func (options *ONUEapolRestart) Execute(args []string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
-	req := pb.ONURequest{
-		SerialNumber: string(options.Args.OnuSn),
+	req := pb.UNIRequest{
+		OnuSerialNumber: string(options.Args.OnuSn),
+		UniID:           "",
 	}
 	res, err := client.RestartEapol(ctx, &req)
 
@@ -266,8 +267,9 @@ func (options *ONUDhcpRestart) Execute(args []string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
-	req := pb.ONURequest{
-		SerialNumber: string(options.Args.OnuSn),
+	req := pb.UNIRequest{
+		OnuSerialNumber: string(options.Args.OnuSn),
+		UniID:           "",
 	}
 	res, err := client.RestartDhcp(ctx, &req)
 

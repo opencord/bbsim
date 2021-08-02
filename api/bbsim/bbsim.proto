@@ -316,10 +316,10 @@ service BBSim {
     }
 
     // Restart EAPOL for ONU
-    rpc RestartEapol (ONURequest) returns (Response) {
+    rpc RestartEapol (UNIRequest) returns (Response) {
     }
     // Restart DHCP for ONU
-    rpc RestartDhcp (ONURequest) returns (Response) {
+    rpc RestartDhcp (UNIRequest) returns (Response) {
     }
     // Send ONU alarm indication
     rpc SetOnuAlarmIndication (ONUAlarmRequest) returns (Response) {
