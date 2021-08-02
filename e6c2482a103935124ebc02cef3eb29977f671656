@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6968b451_a21424e7",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-08-02T23:45:07Z",
+      "side": 1,
+      "message": "comment needs to be updated",
+      "range": {
+        "startLine": 346,
+        "startChar": 1,
+        "endLine": 347,
+        "endChar": 70
+      },
+      "revId": "e6c2482a103935124ebc02cef3eb29977f671656",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd62767e_313bdbf7",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-08-02T23:45:07Z",
+      "side": 1,
+      "message": "to restart authentication on all UNIs for ONU",
+      "range": {
+        "startLine": 354,
+        "startChar": 40,
+        "endLine": 354,
+        "endChar": 58
+      },
+      "revId": "e6c2482a103935124ebc02cef3eb29977f671656",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9b1b9cf_661057dc",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-08-02T23:45:07Z",
+      "side": 1,
+      "message": "to restart authentication on UNI",
+      "range": {
+        "startLine": 359,
+        "startChar": 40,
+        "endLine": 359,
+        "endChar": 58
+      },
+      "revId": "e6c2482a103935124ebc02cef3eb29977f671656",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4687c5e3_4971f6ef",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-08-02T23:45:07Z",
+      "side": 1,
+      "message": "please add the UNI ID if specified",
+      "range": {
+        "startLine": 429,
+        "startChar": 11,
+        "endLine": 429,
+        "endChar": 50
+      },
+      "revId": "e6c2482a103935124ebc02cef3eb29977f671656",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27eb8c37_3400fddd",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-08-02T23:45:07Z",
+      "side": 1,
+      "message": "please add the UNI ID if specified",
+      "range": {
+        "startLine": 436,
+        "startChar": 12,
+        "endLine": 436,
+        "endChar": 64
+      },
+      "revId": "e6c2482a103935124ebc02cef3eb29977f671656",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2ebd1f8_f2436288",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-08-02T23:45:07Z",
+      "side": 1,
+      "message": "please update the comment",
+      "range": {
+        "startLine": 444,
+        "startChar": 1,
+        "endLine": 444,
+        "endChar": 70
+      },
+      "revId": "e6c2482a103935124ebc02cef3eb29977f671656",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a52def68_2e8f2ae8",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-08-02T23:45:07Z",
+      "side": 1,
+      "message": "same comments as per EAPOL",
+      "range": {
+        "startLine": 448,
+        "startChar": 0,
+        "endLine": 457,
+        "endChar": 2
+      },
+      "revId": "e6c2482a103935124ebc02cef3eb29977f671656",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32b182e2_c337628d",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-08-02T23:45:07Z",
+      "side": 1,
+      "message": "same comment as per EAPOL related logs, add UNI ID if specified",
+      "range": {
+        "startLine": 513,
+        "startChar": 2,
+        "endLine": 523,
+        "endChar": 65
+      },
+      "revId": "e6c2482a103935124ebc02cef3eb29977f671656",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": true
+    }
+  ]
+}
