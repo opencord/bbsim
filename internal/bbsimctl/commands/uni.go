@@ -19,6 +19,7 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -56,10 +57,26 @@ type UNIServices struct {
 	} `positional-args:"yes"`
 }
 
+type UNIEapolRestart struct {
+	Args struct {
+		OnuSn OnuSnString
+		UniId UniIdInt
+	} `positional-args:"yes" required:"yes"`
+}
+
+type UNIDhcpRestart struct {
+	Args struct {
+		OnuSn OnuSnString
+		UniId UniIdInt
+	} `positional-args:"yes" required:"yes"`
+}
+
 type UNIOptions struct {
-	List     UNIList     `command:"list"`
-	Get      UNIGet      `command:"get"`
-	Services UNIServices `command:"services"`
+	List         UNIList         `command:"list"`
+	Get          UNIGet          `command:"get"`
+	Services     UNIServices     `command:"services"`
+	RestartEapol UNIEapolRestart `command:"auth_restart"`
+	RestartDchp  UNIDhcpRestart  `command:"dhcp_restart"`
 }
 
 func RegisterUNICommands(parser *flags.Parser) {
@@ -138,6 +155,52 @@ func (options *UNIServices) Execute(args []string) error {
 	if err := tableFormat.Execute(os.Stdout, true, services.Items); err != nil {
 		log.Fatalf("Error while formatting ONUs table: %s", err)
 	}
+
+	return nil
+}
+
+func (options *UNIEapolRestart) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+
+	req := pb.UNIRequest{
+		OnuSerialNumber: string(options.Args.OnuSn),
+		UniID:           string(options.Args.UniId),
+	}
+	res, err := client.RestartEapol(ctx, &req)
+
+	if err != nil {
+		log.Fatalf("Cannot restart EAPOL for ONU %s and UNI %s: %v", options.Args.OnuSn, options.Args.UniId, err)
+		return err
+	}
+
+	fmt.Println(fmt.Sprintf("[Status: %d] %s", res.StatusCode, res.Message))
+
+	return nil
+}
+
+func (options *UNIDhcpRestart) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+
+	req := pb.UNIRequest{
+		OnuSerialNumber: string(options.Args.OnuSn),
+		UniID:           string(options.Args.UniId),
+	}
+	res, err := client.RestartDhcp(ctx, &req)
+
+	if err != nil {
+		log.Fatalf("Cannot restart DHCP for ONU %s and UNI %s: %v", options.Args.OnuSn, options.Args.UniId, err)
+		return err
+	}
+
+	fmt.Println(fmt.Sprintf("[Status: %d] %s", res.StatusCode, res.Message))
 
 	return nil
 }

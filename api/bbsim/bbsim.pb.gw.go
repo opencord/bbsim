@@ -427,8 +427,12 @@ func local_request_BBSim_PoweronONUsOnPON_0(ctx context.Context, marshaler runti
 
 }
 
+var (
+	filter_BBSim_RestartEapol_0 = &utilities.DoubleArray{Encoding: map[string]int{"OnuSerialNumber": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+)
+
 func request_BBSim_RestartEapol_0(ctx context.Context, marshaler runtime.Marshaler, client BBSimClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ONURequest
+	var protoReq UNIRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -438,15 +442,22 @@ func request_BBSim_RestartEapol_0(ctx context.Context, marshaler runtime.Marshal
 		_   = err
 	)
 
-	val, ok = pathParams["SerialNumber"]
+	val, ok = pathParams["OnuSerialNumber"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "SerialNumber")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "OnuSerialNumber")
 	}
 
-	protoReq.SerialNumber, err = runtime.String(val)
+	protoReq.OnuSerialNumber, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "SerialNumber", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "OnuSerialNumber", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_BBSim_RestartEapol_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.RestartEapol(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -455,7 +466,7 @@ func request_BBSim_RestartEapol_0(ctx context.Context, marshaler runtime.Marshal
 }
 
 func local_request_BBSim_RestartEapol_0(ctx context.Context, marshaler runtime.Marshaler, server BBSimServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ONURequest
+	var protoReq UNIRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -465,15 +476,19 @@ func local_request_BBSim_RestartEapol_0(ctx context.Context, marshaler runtime.M
 		_   = err
 	)
 
-	val, ok = pathParams["SerialNumber"]
+	val, ok = pathParams["OnuSerialNumber"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "SerialNumber")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "OnuSerialNumber")
 	}
 
-	protoReq.SerialNumber, err = runtime.String(val)
+	protoReq.OnuSerialNumber, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "SerialNumber", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "OnuSerialNumber", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_BBSim_RestartEapol_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := server.RestartEapol(ctx, &protoReq)
@@ -481,8 +496,12 @@ func local_request_BBSim_RestartEapol_0(ctx context.Context, marshaler runtime.M
 
 }
 
+var (
+	filter_BBSim_RestartDhcp_0 = &utilities.DoubleArray{Encoding: map[string]int{"OnuSerialNumber": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+)
+
 func request_BBSim_RestartDhcp_0(ctx context.Context, marshaler runtime.Marshaler, client BBSimClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ONURequest
+	var protoReq UNIRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -492,15 +511,22 @@ func request_BBSim_RestartDhcp_0(ctx context.Context, marshaler runtime.Marshale
 		_   = err
 	)
 
-	val, ok = pathParams["SerialNumber"]
+	val, ok = pathParams["OnuSerialNumber"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "SerialNumber")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "OnuSerialNumber")
 	}
 
-	protoReq.SerialNumber, err = runtime.String(val)
+	protoReq.OnuSerialNumber, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "SerialNumber", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "OnuSerialNumber", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_BBSim_RestartDhcp_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.RestartDhcp(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -509,7 +535,7 @@ func request_BBSim_RestartDhcp_0(ctx context.Context, marshaler runtime.Marshale
 }
 
 func local_request_BBSim_RestartDhcp_0(ctx context.Context, marshaler runtime.Marshaler, server BBSimServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ONURequest
+	var protoReq UNIRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -519,15 +545,19 @@ func local_request_BBSim_RestartDhcp_0(ctx context.Context, marshaler runtime.Ma
 		_   = err
 	)
 
-	val, ok = pathParams["SerialNumber"]
+	val, ok = pathParams["OnuSerialNumber"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "SerialNumber")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "OnuSerialNumber")
 	}
 
-	protoReq.SerialNumber, err = runtime.String(val)
+	protoReq.OnuSerialNumber, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "SerialNumber", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "OnuSerialNumber", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_BBSim_RestartDhcp_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := server.RestartDhcp(ctx, &protoReq)
@@ -1880,9 +1910,9 @@ var (
 
 	pattern_BBSim_PoweronONUsOnPON_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "olt", "port", "PonPortId", "onus"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_BBSim_RestartEapol_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "olt", "onus", "SerialNumber", "eapol"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_BBSim_RestartEapol_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "olt", "onus", "OnuSerialNumber", "eapol"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_BBSim_RestartDhcp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "olt", "onus", "SerialNumber", "dhcp"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_BBSim_RestartDhcp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "olt", "onus", "OnuSerialNumber", "dhcp"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_BBSim_SetOnuAlarmIndication_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6}, []string{"v1", "olt", "onus", "SerialNumber", "alarms", "AlarmType", "Status"}, "", runtime.AssumeColonVerbOpt(true)))
 
