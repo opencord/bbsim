@@ -53,9 +53,9 @@ http:
     get: "/v1/olt/onus/{SerialNumber}/trafficschedulers"
 
   - selector: bbsim.BBSim.RestartEapol
-    post: "/v1/olt/onus/{SerialNumber}/eapol"
+    post: "/v1/olt/onus/{OnuSerialNumber}/eapol"
   - selector: bbsim.BBSim.RestartDhcp
-    post: "/v1/olt/onus/{SerialNumber}/dhcp"
+    post: "/v1/olt/onus/{OnuSerialNumber}/dhcp"
   - selector: bbsim.BBSim.ChangeIgmpState
     post: "/v1/olt/onus/{OnuReq.SerialNumber}/igmp/{SubActionVal}/{GroupAddress}"
 
