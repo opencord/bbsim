@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/v4/go/openolt"
+	"strconv"
 
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
@@ -341,19 +342,26 @@ func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest
 	return res, nil
 }
 
-func (s BBSimServer) RestartEapol(ctx context.Context, req *bbsim.ONURequest) (*bbsim.Response, error) {
-	// NOTE this API will change the EAPOL state for all UNIs on the requested ONU
-	// TODO a new API needs to be created to individually manage the UNIs
+func (s BBSimServer) RestartEapol(ctx context.Context, req *bbsim.UNIRequest) (*bbsim.Response, error) {
+	// NOTE this API will change the EAPOL state for all UNIs on the requested ONU if no UNI is specified
+	// Otherwise, it will change the EAPOL state for only the specified UNI on the ONU
 
 	res := &bbsim.Response{}
 
-	logger.WithFields(log.Fields{
-		"OnuSn": req.SerialNumber,
-	}).Infof("Received request to restart authentication ONU")
+	if req.UniID == "" {
+		logger.WithFields(log.Fields{
+			"OnuSn": req.OnuSerialNumber,
+		}).Infof("Received request to restart authentication for all UNIs on the ONU")
+	} else {
+		logger.WithFields(log.Fields{
+			"OnuSn": req.OnuSerialNumber,
+			"UniId": req.UniID,
+		}).Infof("Received request to restart authentication on UNI")
+	}
 
 	olt := devices.GetOLT()
 
-	onu, err := olt.FindOnuBySn(req.SerialNumber)
+	onu, err := olt.FindOnuBySn(req.OnuSerialNumber)
 
 	if err != nil {
 		res.StatusCode = int32(codes.NotFound)
@@ -365,8 +373,13 @@ func (s BBSimServer) RestartEapol(ctx context.Context, req *bbsim.ONURequest) (*
 	startedOn := []string{}
 	success := true
 
+	uniIDint, err := strconv.Atoi(req.UniID)
 	for _, u := range onu.UniPorts {
 		uni := u.(*devices.UniPort)
+		//if a specific uni is specified, only restart it
+		if err == nil && req.UniID != "" && uni.ID != uint32(uniIDint) {
+			continue
+		}
 		if !uni.OperState.Is(devices.UniStateUp) {
 			// if the UNI is disabled, ignore it
 			continue
@@ -410,35 +423,65 @@ func (s BBSimServer) RestartEapol(ctx context.Context, req *bbsim.ONURequest) (*
 			res.Message = "No service requires EAPOL"
 		}
 
-		logger.WithFields(log.Fields{
-			"OnuSn":   req.SerialNumber,
-			"Message": res.Message,
-		}).Info("Processed EAPOL restart request for ONU")
+		if req.UniID == "" {
+			logger.WithFields(log.Fields{
+				"OnuSn":   req.OnuSerialNumber,
+				"Message": res.Message,
+			}).Info("Processed EAPOL restart request for all UNIs on the ONU")
+		} else {
+			logger.WithFields(log.Fields{
+				"OnuSn":   req.OnuSerialNumber,
+				"Message": res.Message,
+				"UniId":   req.UniID,
+			}).Info("Processed EAPOL restart request on UNI")
+		}
+
 	} else {
 		res.StatusCode = int32(codes.FailedPrecondition)
 		res.Message = fmt.Sprintf("%v", errors)
 		logger.WithFields(log.Fields{
-			"OnuSn":   req.SerialNumber,
+			"OnuSn":   req.OnuSerialNumber,
 			"Message": res.Message,
-		}).Error("Error while processing DHCP restart request for ONU")
+		}).Error("Error while processing EAPOL restart request for ONU")
+
+		if req.UniID == "" {
+			logger.WithFields(log.Fields{
+				"OnuSn":   req.OnuSerialNumber,
+				"Message": res.Message,
+			}).Error("Error while processing EAPOL restart request for all UNIs on the ONU")
+		} else {
+			logger.WithFields(log.Fields{
+				"OnuSn":   req.OnuSerialNumber,
+				"Message": res.Message,
+				"UniId":   req.UniID,
+			}).Error("Error while processing EAPOL restart request on UNI")
+		}
+
 	}
 
 	return res, nil
 }
 
-func (s BBSimServer) RestartDhcp(ctx context.Context, req *bbsim.ONURequest) (*bbsim.Response, error) {
-	// NOTE this API will change the DHCP state for all UNIs on the requested ONU
-	// TODO a new API needs to be created to individually manage the UNIs
+func (s BBSimServer) RestartDhcp(ctx context.Context, req *bbsim.UNIRequest) (*bbsim.Response, error) {
+	// NOTE this API will change the DHCP state for all UNIs on the requested ONU if no UNI is specified
+	// Otherwise, it will change the DHCP state for only the specified UNI on the ONU
 
 	res := &bbsim.Response{}
 
-	logger.WithFields(log.Fields{
-		"OnuSn": req.SerialNumber,
-	}).Infof("Received request to restart DHCP on ONU")
+	if req.UniID == "" {
+		logger.WithFields(log.Fields{
+			"OnuSn": req.OnuSerialNumber,
+		}).Infof("Received request to restart authentication for all UNIs on the ONU")
+	} else {
+		logger.WithFields(log.Fields{
+			"OnuSn": req.OnuSerialNumber,
+			"UniId": req.UniID,
+		}).Infof("Received request to restart authentication on UNI")
+	}
 
 	olt := devices.GetOLT()
 
-	onu, err := olt.FindOnuBySn(req.SerialNumber)
+	onu, err := olt.FindOnuBySn(req.OnuSerialNumber)
 
 	if err != nil {
 		res.StatusCode = int32(codes.NotFound)
@@ -450,8 +493,13 @@ func (s BBSimServer) RestartDhcp(ctx context.Context, req *bbsim.ONURequest) (*b
 	startedOn := []string{}
 	success := true
 
+	uniIDint, err := strconv.Atoi(req.UniID)
 	for _, u := range onu.UniPorts {
 		uni := u.(*devices.UniPort)
+		//if a specific uni is specified, only restart it
+		if err == nil && req.UniID != "" && uni.ID != uint32(uniIDint) {
+			continue
+		}
 		if !uni.OperState.Is(devices.UniStateUp) {
 			// if the UNI is disabled, ignore it
 			continue
@@ -460,7 +508,6 @@ func (s BBSimServer) RestartDhcp(ctx context.Context, req *bbsim.ONURequest) (*b
 			service := s.(*devices.Service)
 			serviceKey := fmt.Sprintf("uni[%d]%s", uni.ID, service.Name)
 			if service.NeedsDhcp {
-
 				if err := service.DHCPState.Event("start_dhcp"); err != nil {
 					logger.WithFields(log.Fields{
 						"OnuId":   onu.ID,
@@ -486,17 +533,35 @@ func (s BBSimServer) RestartDhcp(ctx context.Context, req *bbsim.ONURequest) (*b
 		} else {
 			res.Message = "No service requires DHCP"
 		}
-		logger.WithFields(log.Fields{
-			"OnuSn":   req.SerialNumber,
-			"Message": res.Message,
-		}).Info("Processed DHCP restart request for ONU")
+
+		if req.UniID == "" {
+			logger.WithFields(log.Fields{
+				"OnuSn":   req.OnuSerialNumber,
+				"Message": res.Message,
+			}).Info("Processed DHCP restart request for all UNIs on the ONU")
+		} else {
+			logger.WithFields(log.Fields{
+				"OnuSn":   req.OnuSerialNumber,
+				"Message": res.Message,
+				"UniId":   req.UniID,
+			}).Info("Processed DHCP restart request on UNI")
+		}
 	} else {
 		res.StatusCode = int32(codes.FailedPrecondition)
 		res.Message = fmt.Sprintf("%v", errors)
-		logger.WithFields(log.Fields{
-			"OnuSn":   req.SerialNumber,
-			"Message": res.Message,
-		}).Error("Error while processing DHCP restart request for ONU")
+
+		if req.UniID == "" {
+			logger.WithFields(log.Fields{
+				"OnuSn":   req.OnuSerialNumber,
+				"Message": res.Message,
+			}).Error("Error while processing DHCP restart request for all UNIs on the ONU")
+		} else {
+			logger.WithFields(log.Fields{
+				"OnuSn":   req.OnuSerialNumber,
+				"Message": res.Message,
+				"UniId":   req.UniID,
+			}).Error("Error while processing DHCP restart request on UNI")
+		}
 	}
 
 	return res, nil
