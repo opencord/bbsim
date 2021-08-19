@@ -42,8 +42,8 @@ import (
 	"github.com/opencord/bbsim/internal/common"
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
 	"github.com/opencord/omci-lib-go"
-	"github.com/opencord/voltha-protos/v4/go/openolt"
-	"github.com/opencord/voltha-protos/v4/go/tech_profile"
+	"github.com/opencord/voltha-protos/v5/go/openolt"
+	"github.com/opencord/voltha-protos/v5/go/tech_profile"
 	log "github.com/sirupsen/logrus"
 )
 

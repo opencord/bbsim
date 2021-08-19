@@ -20,7 +20,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/omci-lib-go"
-	"github.com/opencord/voltha-protos/v4/go/openolt"
+	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"net"
 )
 

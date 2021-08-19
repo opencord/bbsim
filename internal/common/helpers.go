@@ -20,7 +20,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/opencord/voltha-protos/v4/go/openolt"
+	"github.com/opencord/voltha-protos/v5/go/openolt"
 )
 
 func OnuSnToString(sn *openolt.SerialNumber) string {
