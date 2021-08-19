@@ -26,7 +26,7 @@ import (
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
-	"github.com/opencord/voltha-protos/v4/go/openolt"
+	"github.com/opencord/voltha-protos/v5/go/openolt"
 	log "github.com/sirupsen/logrus"
 	"net"
 	"reflect"

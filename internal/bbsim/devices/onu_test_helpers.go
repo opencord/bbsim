@@ -25,11 +25,11 @@ import (
 	"time"
 
 	"github.com/opencord/bbsim/internal/bbsim/types"
-	"github.com/opencord/voltha-protos/v4/go/common"
-	"github.com/opencord/voltha-protos/v4/go/ext/config"
+	"github.com/opencord/voltha-protos/v5/go/common"
+	"github.com/opencord/voltha-protos/v5/go/ext/config"
 
-	"github.com/opencord/voltha-protos/v4/go/openolt"
-	"github.com/opencord/voltha-protos/v4/go/tech_profile"
+	"github.com/opencord/voltha-protos/v5/go/openolt"
+	"github.com/opencord/voltha-protos/v5/go/tech_profile"
 	"google.golang.org/grpc"
 )
 

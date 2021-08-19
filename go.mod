@@ -2,9 +2,15 @@ module github.com/opencord/bbsim
 
 go 1.12
 
+replace (
+	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
+	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
+	google.golang.org/grpc => google.golang.org/grpc v1.25.1
+)
+
 require (
 	github.com/Shopify/sarama v1.26.1
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.5.2
 	github.com/google/gopacket v1.1.17
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.7.3
@@ -17,12 +23,14 @@ require (
 	github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4
 	github.com/opencord/device-management-interface v0.11.0
 	github.com/opencord/omci-lib-go v1.2.1
-	github.com/opencord/voltha-protos/v4 v4.2.0
+	github.com/opencord/voltha-protos/v5 v5.0.0
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.5.1
-	google.golang.org/genproto v0.0.0-20190927181202-20e1ac93f88c
-	google.golang.org/grpc v1.29.1
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	google.golang.org/genproto v0.0.0-20210924002016-3dee208752a0
+	google.golang.org/grpc v1.41.0
+	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.3.0
 	gotest.tools v2.2.0+incompatible
 )

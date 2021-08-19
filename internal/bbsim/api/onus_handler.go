@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/opencord/bbsim/internal/bbsim/types"
-	"github.com/opencord/voltha-protos/v4/go/openolt"
+	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"strconv"
 
 	"github.com/opencord/bbsim/api/bbsim"

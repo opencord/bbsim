@@ -21,11 +21,11 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/device-management-interface/go/dmi"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 //DmiEventsGenerator has the attributes for generating events
@@ -168,7 +168,7 @@ func noThresholdEventGenerationFunc(eventID dmi.EventIds, cType dmi.ComponentTyp
 		var evnt dmi.Event
 		evnt.EventId = eventID
 		evnt = *updateEventMetaData(comp, dmiEG.apiSrv, &evnt)
-		evnt.RaisedTs = ptypes.TimestampNow()
+		evnt.RaisedTs = timestamppb.Now()
 		logger.Debugf("Got a No Threshold event %+v", evnt)
 		sendOutEventOnKafka(evnt, dmiEG.apiSrv)
 		break
@@ -181,7 +181,7 @@ func thresholdEventGenerationFunc(eventID dmi.EventIds, cType dmi.ComponentType)
 		var evnt dmi.Event
 		evnt.EventId = eventID
 		evnt = *updateEventMetaData(comp, dmiEG.apiSrv, &evnt)
-		evnt.RaisedTs = ptypes.TimestampNow()
+		evnt.RaisedTs = timestamppb.Now()
 		configuredEvents := make(map[dmi.EventIds]dmi.EventCfg)
 
 		dmiEG.access.Lock()

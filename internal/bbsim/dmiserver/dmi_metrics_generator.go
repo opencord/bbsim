@@ -18,12 +18,13 @@ package dmiserver
 
 import (
 	"context"
-	log "github.com/sirupsen/logrus"
 	"math/rand"
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
+	log "github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	dmi "github.com/opencord/device-management-interface/go/dmi"
 )
 
@@ -253,7 +254,7 @@ func generateCPUUsageMetric(cpu *dmi.Component, apiSrv *DmiAPIServer) *dmi.Metri
 		Value:     generateRand(1, 20),
 		Type:      dmi.DataValueType_VALUE_TYPE_OTHER,
 		Scale:     dmi.ValueScale_VALUE_SCALE_UNITS,
-		Timestamp: ptypes.TimestampNow(),
+		Timestamp: timestamppb.Now(),
 	}
 	return &met
 }
@@ -265,7 +266,7 @@ func generateFanSpeedMetric(fan *dmi.Component, apiSrv *DmiAPIServer) *dmi.Metri
 		Value:     generateRand(3000, 4000),
 		Type:      dmi.DataValueType_VALUE_TYPE_RPM,
 		Scale:     dmi.ValueScale_VALUE_SCALE_UNITS,
-		Timestamp: ptypes.TimestampNow(),
+		Timestamp: timestamppb.Now(),
 	}
 	return &met
 }
@@ -301,7 +302,7 @@ func generateRAMUsageMetric(ram *dmi.Component, apiSrv *DmiAPIServer) *dmi.Metri
 		Value:     generateRand(1, 8),
 		Type:      dmi.DataValueType_VALUE_TYPE_OTHER,
 		Scale:     dmi.ValueScale_VALUE_SCALE_GIGA,
-		Timestamp: ptypes.TimestampNow(),
+		Timestamp: timestamppb.Now(),
 	}
 	return &met
 }
@@ -313,7 +314,7 @@ func generateDiskUsageMetric(disk *dmi.Component, apiSrv *DmiAPIServer) *dmi.Met
 		Value:     generateRand(50, 500),
 		Type:      dmi.DataValueType_VALUE_TYPE_OTHER,
 		Scale:     dmi.ValueScale_VALUE_SCALE_GIGA,
-		Timestamp: ptypes.TimestampNow(),
+		Timestamp: timestamppb.Now(),
 	}
 	return &met
 }
@@ -325,7 +326,7 @@ func generateInnerSurroundingTempMetric(istemp *dmi.Component, apiSrv *DmiAPISer
 		Value:     generateRand(30, 40),
 		Type:      dmi.DataValueType_VALUE_TYPE_CELSIUS,
 		Scale:     dmi.ValueScale_VALUE_SCALE_UNITS,
-		Timestamp: ptypes.TimestampNow(),
+		Timestamp: timestamppb.Now(),
 	}
 	return &met
 }
