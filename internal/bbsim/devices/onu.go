@@ -173,9 +173,8 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 		CommittedImageVersion:  "BBSM_IMG_00001",
 		OmciResponseRate:       olt.OmciResponseRate,
 		OmciMsgCounter:         0,
+		FlowIds:                make(map[uint64]*FlowData),
 	}
-	o.FlowIds = make(map[uint64]*FlowData)
-
 	o.SerialNumber = NewSN(olt.ID, pon.ID, id)
 	// NOTE this state machine is used to track the operational
 	// state as requested by VOLTHA

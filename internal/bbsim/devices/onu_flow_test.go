@@ -86,7 +86,11 @@ func Test_HandleFlowAddFlowId(t *testing.T) {
 func Test_HandleFlowRemoveFlowId(t *testing.T) {
 	onu := createMockOnu(1, 1)
 
-	onu.FlowIds = []uint64{1, 2, 34, 64, 92}
+	onu.FlowIds[1] = &FlowData{PCP: 10, VLAN: 900}
+	onu.FlowIds[2] = &FlowData{PCP: 11, VLAN: 901}
+	onu.FlowIds[34] = &FlowData{PCP: 12, VLAN: 902}
+	onu.FlowIds[64] = &FlowData{PCP: 13, VLAN: 903}
+	onu.FlowIds[92] = &FlowData{PCP: 14, VLAN: 904}
 
 	flow := openolt.Flow{
 		FlowId:     64,
@@ -99,10 +103,15 @@ func Test_HandleFlowRemoveFlowId(t *testing.T) {
 	}
 	onu.handleFlowRemove(msg)
 	assert.Equal(t, len(onu.FlowIds), 4)
-	assert.Equal(t, onu.FlowIds[0], uint64(1))
-	assert.Equal(t, onu.FlowIds[1], uint64(2))
-	assert.Equal(t, onu.FlowIds[2], uint64(34))
-	assert.Equal(t, onu.FlowIds[3], uint64(92))
+	assert.Assert(t, onu.FlowIds[64] == nil)
+	assert.Equal(t, onu.FlowIds[1].PCP, uint8(10))
+	assert.Equal(t, onu.FlowIds[1].VLAN, int(900))
+	assert.Equal(t, onu.FlowIds[2].PCP, uint8(11))
+	assert.Equal(t, onu.FlowIds[2].VLAN, int(901))
+	assert.Equal(t, onu.FlowIds[34].PCP, uint8(12))
+	assert.Equal(t, onu.FlowIds[34].VLAN, int(902))
+	assert.Equal(t, onu.FlowIds[92].PCP, uint8(14))
+	assert.Equal(t, onu.FlowIds[92].VLAN, int(904))
 }
 
 // checks that when the last flow is removed we reset the stored flags in the ONU
@@ -117,7 +126,7 @@ func Test_HandleFlowRemoveFlowId_LastFlow(t *testing.T) {
 		fsm.Callbacks{},
 	)
 
-	onu.FlowIds = []uint64{64}
+	onu.FlowIds[64] = &FlowData{PCP: 10, VLAN: 900}
 
 	flow := openolt.Flow{
 		FlowId:     64,
