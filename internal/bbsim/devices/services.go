@@ -53,6 +53,7 @@ type ServiceIf interface {
 	HandlePackets()                  // start listening on the PacketCh
 	HandleAuth()                     // Sends the EapoStart packet
 	HandleDhcp(pbit uint8, cTag int) // Sends the DHCPDiscover packet
+	RemoveDhcp(pbit uint8, cTag int) // Clears the DHCP state
 
 	Initialize(stream bbsimTypes.Stream)
 	UpdateStream(stream bbsimTypes.Stream)
@@ -214,6 +215,7 @@ func NewService(id uint32, name string, hwAddress net.HardwareAddr, uni *UniPort
 			{Name: "dhcp_request_sent", Src: []string{"dhcp_discovery_sent"}, Dst: "dhcp_request_sent"},
 			{Name: "dhcp_ack_received", Src: []string{"dhcp_request_sent"}, Dst: "dhcp_ack_received"},
 			{Name: "dhcp_failed", Src: []string{"dhcp_started", "dhcp_discovery_sent", "dhcp_request_sent"}, Dst: "dhcp_failed"},
+			{Name: "reset", Src: []string{"dhcp_ack_received", "dhcp_failed"}, Dst: "created"},
 		},
 		fsm.Callbacks{
 			"enter_state": func(e *fsm.Event) {
@@ -382,6 +384,37 @@ func (s *Service) HandleDhcp(pbit uint8, cTag int) {
 			"Name":   s.Name,
 			"err":    err.Error(),
 		}).Error("Can't start DHCP for this Service")
+	}
+}
+
+// RemoveDhcp is used to clear the DHCP state for a particular Service when the corresponding flow removal is received
+func (s *Service) RemoveDhcp(pbit uint8, cTag int) {
+	if s.CTag != cTag || (s.UsPonCTagPriority != pbit && pbit != 255) {
+		serviceLogger.WithFields(log.Fields{
+			"OnuId":                     s.UniPort.Onu.ID,
+			"IntfId":                    s.UniPort.Onu.PonPortID,
+			"OnuSn":                     s.UniPort.Onu.Sn(),
+			"PortNo":                    s.UniPort.PortNo,
+			"UniId":                     s.UniPort.ID,
+			"Name":                      s.Name,
+			"Service.CTag":              s.CTag,
+			"Service.UsPonCTagPriority": s.UsPonCTagPriority,
+			"cTag":                      cTag,
+			"pbit":                      pbit,
+		}).Debug("DHCP flow removal is not for this service, ignoring")
+		return
+	}
+
+	if err := s.DHCPState.Event("reset"); err != nil {
+		serviceLogger.WithFields(log.Fields{
+			"OnuId":  s.UniPort.Onu.ID,
+			"IntfId": s.UniPort.Onu.PonPortID,
+			"OnuSn":  s.UniPort.Onu.Sn(),
+			"PortNo": s.UniPort.PortNo,
+			"UniId":  s.UniPort.ID,
+			"Name":   s.Name,
+			"err":    err.Error(),
+		}).Error("Can't clear DHCP state for this Service")
 	}
 }
 

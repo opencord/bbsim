@@ -158,6 +158,7 @@ func createMockOnu(id uint32, ponPortId uint32) *Onu {
 		},
 		OmciResponseRate: 10,
 		OmciMsgCounter:   0,
+		FlowIds:          make(map[uint64]*FlowData),
 	}
 	o.SerialNumber = NewSN(0, ponPortId, o.ID)
 	o.Channel = make(chan types.Message, 10)
