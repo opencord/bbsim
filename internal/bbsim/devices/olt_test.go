@@ -70,6 +70,7 @@ func createMockOlt(numPon int, numOnu int, numUni int, services []ServiceIf) *Ol
 					fsm.Callbacks{},
 				),
 				Channel: make(chan bbsim.Message, 2048),
+				FlowIds: make(map[uint64]*FlowData),
 			}
 
 			for k := 0; k < numUni; k++ {

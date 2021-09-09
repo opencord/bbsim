@@ -95,6 +95,11 @@ type FlowKey struct {
 	Direction string
 }
 
+type FlowData struct {
+	PCP  uint8
+	VLAN int
+}
+
 type Onu struct {
 	ID                  uint32
 	PonPortID           uint32
@@ -107,7 +112,7 @@ type Onu struct {
 	// ONU State
 	UniPorts []UniPortIf
 	Flows    []FlowKey
-	FlowIds  []uint64 // keep track of the flows we currently have in the ONU
+	FlowIds  map[uint64]*FlowData // keep track of the flows we currently have in the ONU
 
 	OperState    *fsm.FSM
 	SerialNumber *openolt.SerialNumber
@@ -168,6 +173,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 		CommittedImageVersion:  "BBSM_IMG_00001",
 		OmciResponseRate:       olt.OmciResponseRate,
 		OmciMsgCounter:         0,
+		FlowIds:                make(map[uint64]*FlowData),
 	}
 	o.SerialNumber = NewSN(olt.ID, pon.ID, id)
 	// NOTE this state machine is used to track the operational
@@ -1281,7 +1287,7 @@ func (o *Onu) handleFlowAdd(msg bbsim.OnuFlowUpdateMessage) {
 		"PbitToGemport":     msg.Flow.PbitToGemport,
 	}).Debug("OLT receives FlowAdd for ONU")
 
-	o.FlowIds = append(o.FlowIds, msg.Flow.FlowId)
+	o.FlowIds[msg.Flow.FlowId] = &FlowData{PCP: uint8(msg.Flow.Classifier.OPbits), VLAN: int(msg.Flow.Classifier.OVid)}
 
 	var gemPortId uint32
 	if msg.Flow.ReplicateFlow {
@@ -1320,6 +1326,22 @@ func (o *Onu) handleFlowAdd(msg bbsim.OnuFlowUpdateMessage) {
 }
 
 func (o *Onu) handleFlowRemove(msg bbsim.OnuFlowUpdateMessage) {
+	// When we receive a flow removal we should clear the DHCP state machine so that we can restart it when a new flow is received:
+	uni, err := o.FindUniById(uint32(msg.Flow.UniId))
+	if err != nil {
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"OnuId":        o.ID,
+			"UniId":        msg.Flow.UniId,
+			"PortNo":       msg.Flow.PortNo,
+			"SerialNumber": o.Sn(),
+			"FlowId":       msg.Flow.FlowId,
+			"FlowType":     msg.Flow.FlowType,
+		}).Error("cannot-find-uni-port-for-flow-removal")
+	}
+
+	uni.RemoveDhcp(o.FlowIds[msg.Flow.FlowId].PCP, o.FlowIds[msg.Flow.FlowId].VLAN)
+
 	onuLogger.WithFields(log.Fields{
 		"IntfId":       o.PonPortID,
 		"OnuId":        o.ID,
@@ -1328,10 +1350,11 @@ func (o *Onu) handleFlowRemove(msg bbsim.OnuFlowUpdateMessage) {
 		"FlowType":     msg.Flow.FlowType,
 	}).Debug("ONU receives FlowRemove")
 
-	for idx, flow := range o.FlowIds {
+	// Iterating through a map, the first variable is the flowID
+	for fId := range o.FlowIds {
 		// If the gemport is found, delete it from local cache.
-		if flow == msg.Flow.FlowId {
-			o.FlowIds = append(o.FlowIds[:idx], o.FlowIds[idx+1:]...)
+		if fId == msg.Flow.FlowId {
+			delete(o.FlowIds, fId)
 			break
 		}
 	}

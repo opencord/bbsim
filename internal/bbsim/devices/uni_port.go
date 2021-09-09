@@ -260,6 +260,13 @@ func (u *UniPort) HandleDhcp(pbit uint8, cTag int) {
 	}
 }
 
+// Attempt to remove Dhcp for all services, but check for whether the specific service is valid in the services.go file
+func (u *UniPort) RemoveDhcp(pbit uint8, cTag int) {
+	for _, s := range u.Services {
+		s.RemoveDhcp(pbit, cTag)
+	}
+}
+
 func (u *UniPort) addGemPortToService(gemport uint32, ethType uint32, oVlan uint32, iVlan uint32) {
 	for _, s := range u.Services {
 		if service, ok := s.(*Service); ok {
