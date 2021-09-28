@@ -763,6 +763,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			"OmciMsgCounter":   o.OmciMsgCounter,
 			"OmciResponseRate": o.OmciResponseRate,
 			"omciMsgType":      msg.OmciMsg.MessageType,
+			"txId":             msg.OmciMsg.TransactionID,
 		}).Debug("skipping-omci-msg-response")
 		return fmt.Errorf("skipping-omci-msg-response-because-of-response-rate-%d", o.OmciResponseRate)
 	}
