@@ -33,6 +33,23 @@
       "message": "voltha scale test DT",
       "revId": "de2dd92d8446dacdb4a8c2186fdc92893c673677",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "46d57a9f_09cf18bc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-09-28T17:56:14Z",
+      "side": 1,
+      "message": "voltha scale test DT",
+      "revId": "de2dd92d8446dacdb4a8c2186fdc92893c673677",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
