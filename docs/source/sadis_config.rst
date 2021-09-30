@@ -16,13 +16,10 @@ As you can imagine this file will get pretty big pretty quickly as soon as you s
 the number of ONUs and/or Services in your setup. For that reason (and to avoid mistakes)
 we strongly suggest to configure ONOS to fetch informations from BBSim.
 
-If you are using ``kind-voltha`` to deploy your setup, you can easily achieve that by:
+Configuring ONOS with an external sadis source is already done if you are using the `voltha-helm-charts
+README <https://github.com/opencord/voltha-helm-charts/blob/master/README.md>`_.
 
-.. code:: bash
-
-    CONFIG_SADIS=external voltha up
-
-Or you can manually configure ONOS as explained below.
+If you prefer you can manually configure ONOS as explained below.
 
 Using the BBSim Sadis server in ONOS
 ------------------------------------
