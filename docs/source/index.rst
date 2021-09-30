@@ -33,8 +33,7 @@ In order to use BBSim you need to have:
 - helm
 - a working installation of VOLTHA
 
-We strongly recommend the utilization of `kind-voltha
-<https://github.com/ciena/kind-voltha>`_ to setup such environment.
+To setup such an environment please look at the `voltha-helm-charts README <https://github.com/opencord/voltha-helm-charts/blob/master/README.md>`_.
 
 Installation
 ------------
