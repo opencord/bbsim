@@ -22,7 +22,7 @@ import (
 	"testing"
 
 	"github.com/looplab/fsm"
-	"github.com/opencord/voltha-protos/v4/go/openolt"
+	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )

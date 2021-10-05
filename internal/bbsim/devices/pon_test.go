@@ -17,7 +17,7 @@
 package devices
 
 import (
-	"github.com/opencord/voltha-protos/v4/go/openolt"
+	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"

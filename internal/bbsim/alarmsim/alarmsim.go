@@ -24,7 +24,7 @@ import (
 	"github.com/opencord/bbsim/internal/common"
 
 	"github.com/opencord/bbsim/api/bbsim"
-	"github.com/opencord/voltha-protos/v4/go/openolt"
+	"github.com/opencord/voltha-protos/v5/go/openolt"
 )
 
 func AlarmNameToEnum(name string) (bbsim.AlarmType_Types, error) {
