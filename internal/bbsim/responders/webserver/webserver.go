@@ -17,18 +17,28 @@
 package webserver
 
 import (
+	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"github.com/opencord/bbsim/internal/bbsim/responders/sadis"
 	"github.com/opencord/bbsim/internal/common"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 )
 
 var logger = log.WithFields(log.Fields{
 	"module": "WEBSERVER",
 })
+
+type imageRequestCount struct {
+	Requests int `json:"requests"`
+}
+
+var imageRequests = 0
 
 // StartRestServer starts REST server which esposes:
 // - a SADIS configuration for the currently simulated OLT
@@ -48,13 +58,58 @@ func StartRestServer(olt *devices.OltDevice, wg *sync.WaitGroup) {
 	router.HandleFunc(sadis.SadisEntryUrl, s.ServeEntry)
 	router.HandleFunc(sadis.SadisBwUrl, s.ServeBWPEntry)
 
+	// expose the requests counter
+	router.HandleFunc("/images-count", func(w http.ResponseWriter, r *http.Request) {
+		c := imageRequestCount{Requests: imageRequests}
+		response, err := json.Marshal(c)
+
+		if err != nil {
+			logger.WithFields(log.Fields{
+				"err": err.Error(),
+			}).Error("Cannot parse imageRequestCount to JSON")
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = w.Write([]byte(err.Error()))
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(response)
+	})
+
 	// Choose the folder to serve (this is the location inside the container)
 	staticDir := "/app/configs/"
+	fileServer := http.FileServer(http.Dir(staticDir))
 
 	// Create the route
-	router.
-		PathPrefix("/images/").
-		Handler(http.StripPrefix("/images/", http.FileServer(http.Dir(staticDir))))
+	router.PathPrefix("/images/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path, err := filepath.Abs(r.URL.Path)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		path = strings.Replace(path, "/images/", "", 1)
+
+		path = filepath.Join(staticDir, path)
+
+		_, err = os.Stat(path)
+		if os.IsNotExist(err) {
+			// file does not exist, return 404
+			http.Error(w, "file-not-found", http.StatusNotFound)
+			return
+		} else if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		imageRequests = imageRequests + 1
+		logger.WithFields(log.Fields{
+			"count": imageRequests,
+		}).Info("Got image request")
+
+		http.StripPrefix("/images/", fileServer).ServeHTTP(w, r)
+	})
 
 	log.Fatal(http.ListenAndServe(addr, router))
 
