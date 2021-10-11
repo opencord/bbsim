@@ -23,6 +23,7 @@ const (
 	EAPOL
 	DHCP
 	IGMP
+	ICMP
 )
 
 func (t PacketType) String() string {
@@ -31,6 +32,7 @@ func (t PacketType) String() string {
 		"EAPOL",
 		"DHCP",
 		"IGMP",
+		"ICMP",
 	}
 	return names[t]
 }

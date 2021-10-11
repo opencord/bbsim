@@ -72,6 +72,7 @@ func (m MessageType) String() string {
 		"OnuPacketIn",
 		"IGMPMembershipReportV2",
 		"IGMPLeaveGroup",
+		"AlarmIndication",
 		"IGMPMembershipReportV3",
 		"FlowRemoved",
 		"UniStatusAlarm",

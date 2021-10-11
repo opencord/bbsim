@@ -55,8 +55,9 @@ func CreateNNI(olt *OltDevice) (NniPort, error) {
 func (n *NniPort) handleNniPacket(packet gopacket.Packet) error {
 	isDhcp := packetHandlers.IsDhcpPacket(packet)
 	isLldp := packetHandlers.IsLldpPacket(packet)
+	isIcmp := packetHandlers.IsIcmpPacket(packet)
 
-	if !isDhcp && !isLldp {
+	if !isDhcp && !isLldp && !isIcmp {
 		nniLogger.WithFields(log.Fields{
 			"packet": packet,
 		}).Trace("Dropping NNI packet as it's not DHCP")
@@ -91,6 +92,8 @@ func (n *NniPort) handleNniPacket(packet gopacket.Packet) error {
 	} else if isLldp {
 		// TODO rework this when BBSim supports data-plane packets
 		nniLogger.Trace("Received LLDP Packet, ignoring it")
+	} else if isIcmp {
+		nniLogger.Trace("Received ICMP Packet, ignoring it")
 	}
 	return nil
 }

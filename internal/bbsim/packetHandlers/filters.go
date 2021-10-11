@@ -44,6 +44,13 @@ func IsLldpPacket(pkt gopacket.Packet) bool {
 	return false
 }
 
+func IsIcmpPacket(pkt gopacket.Packet) bool {
+	if layer := pkt.Layer(layers.LayerTypeICMPv6); layer != nil {
+		return true
+	}
+	return false
+}
+
 // return true if the packet is coming in the OLT from the DHCP Server
 // given that we only check DHCP packets we can use the Operation
 // Request are outgoing (toward the server)
@@ -90,6 +97,8 @@ func GetPktType(pkt gopacket.Packet) (PacketType, error) {
 		return DHCP, nil
 	} else if IsIgmpPacket(pkt) {
 		return IGMP, nil
+	} else if IsIcmpPacket(pkt) {
+		return ICMP, nil
 	}
 	return UNKNOWN, errors.New("unknown-packet-type")
 }
