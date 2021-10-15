@@ -18,7 +18,7 @@ package devices
 
 import (
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
-	me "github.com/opencord/omci-lib-go/generated"
+	me "github.com/opencord/omci-lib-go/v2/generated"
 	"testing"
 
 	"gotest.tools/assert"

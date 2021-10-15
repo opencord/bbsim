@@ -22,7 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/gopacket"
-	"github.com/opencord/omci-lib-go"
+	"github.com/opencord/omci-lib-go/v2"
 	log "github.com/sirupsen/logrus"
 )
 

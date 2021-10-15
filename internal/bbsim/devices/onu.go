@@ -34,14 +34,14 @@ import (
 	"time"
 
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
-	me "github.com/opencord/omci-lib-go/generated"
+	me "github.com/opencord/omci-lib-go/v2/generated"
 
 	"github.com/google/gopacket/layers"
 	"github.com/jpillora/backoff"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/common"
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
-	"github.com/opencord/omci-lib-go"
+	"github.com/opencord/omci-lib-go/v2"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"github.com/opencord/voltha-protos/v5/go/tech_profile"
 	log "github.com/sirupsen/logrus"

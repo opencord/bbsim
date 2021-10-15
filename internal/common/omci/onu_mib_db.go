@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
-	me "github.com/opencord/omci-lib-go/generated"
+	me "github.com/opencord/omci-lib-go/v2/generated"
 )
 
 type MibDbEntry struct {

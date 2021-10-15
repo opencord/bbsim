@@ -19,7 +19,7 @@ package types
 import (
 	"github.com/google/gopacket"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
-	"github.com/opencord/omci-lib-go"
+	"github.com/opencord/omci-lib-go/v2"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"net"
 )
