@@ -13,7 +13,7 @@
         "hardwareIdentifier": "0a:0a:0a:0a:0a:00",
         "ipAddress": "0.0.0.0",
         "nasId": "BBSIM_OLT_0",
-        "uplinkPort": 1048576
+        "uplinkPort": 16777216
       },
       {
         "id": "BBSM00000001-1",
