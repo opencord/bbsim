@@ -175,7 +175,7 @@ func GetOltEntry(olt *devices.OltDevice) (*SadisOltEntry, error) {
 		HardwareIdentifier: common.Config.Olt.DeviceId,
 		IPAddress:          ip,
 		NasID:              olt.SerialNumber,
-		UplinkPort:         1048576, // TODO currently assumes we only have one NNI port
+		UplinkPort:         16777216, // TODO currently assumes we only have one NNI port
 	}
 	return solt, nil
 }
