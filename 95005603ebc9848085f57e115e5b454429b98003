@@ -33,6 +33,23 @@
       "message": "recheck",
       "revId": "95005603ebc9848085f57e115e5b454429b98003",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3e25a13e_5ae5a019",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2021-10-25T16:50:41Z",
+      "side": 1,
+      "message": "overriding Jenkins due to circular dependency with core and adapters\n",
+      "revId": "95005603ebc9848085f57e115e5b454429b98003",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
