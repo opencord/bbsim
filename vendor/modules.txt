@@ -3,6 +3,8 @@ github.com/Shopify/sarama
 # github.com/aead/cmac v0.0.0-20160719120800-7af84192f0b1
 github.com/aead/cmac
 github.com/aead/cmac/aes
+# github.com/boguslaw-wojcik/crc32a v1.0.0
+github.com/boguslaw-wojcik/crc32a
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/deckarep/golang-set v1.7.1
