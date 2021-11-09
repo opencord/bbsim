@@ -36,6 +36,7 @@ import (
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	me "github.com/opencord/omci-lib-go/v2/generated"
 
+	"github.com/boguslaw-wojcik/crc32a"
 	"github.com/google/gopacket/layers"
 	"github.com/jpillora/backoff"
 	"github.com/looplab/fsm"
@@ -127,6 +128,7 @@ type Onu struct {
 	CommittedImageVersion         string
 	OmciResponseRate              uint8
 	OmciMsgCounter                uint8
+	ImageSectionData              []byte
 
 	// OMCI params (Used in BBR)
 	tid       uint16
@@ -160,6 +162,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 		MibDataSync:                   0,
 		ImageSoftwareExpectedSections: 0, // populated during OMCI StartSoftwareDownloadRequest
 		ImageSoftwareReceivedSections: 0,
+		ImageSectionData:              []byte{},
 		//TODO this needs reworking, it's always 0 or 1, possibly base all on the version
 		ActiveImageEntityId:    0, // when we start the SoftwareImage with ID 0 is active and committed
 		CommittedImageEntityId: 0,
@@ -980,7 +983,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 	case omci.StartSoftwareDownloadRequestType:
 
 		o.ImageSoftwareReceivedSections = 0
-
+		o.ImageSectionData = []byte{}
 		o.ImageSoftwareExpectedSections = omcilib.ComputeDownloadSectionsCount(msg.OmciPkt)
 
 		if responsePkt, errResp = omcilib.CreateStartSoftwareDownloadResponse(msg.OmciPkt, msg.OmciMsg); errResp == nil {
@@ -1015,6 +1018,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			if o.ImageSoftwareReceivedSections == 0 {
 				o.StandbyImageVersion = string(msgObj.SectionData[0:14])
 			}
+			o.ImageSectionData = append(o.ImageSectionData, msgObj.SectionData...)
 			o.ImageSoftwareReceivedSections++
 			if o.InternalState.Current() != OnuStateImageDownloadInProgress {
 				if err := o.InternalState.Event(OnuTxProgressImageDownload); err != nil {
@@ -1057,7 +1061,30 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			}).Errorf("onu-did-not-receive-all-image-sections")
 			success = false
 		}
-
+		if success {
+			// Validate Image Crc.
+			msgObj, err := omcilib.ParseEndSoftwareDownloadRequest(msg.OmciPkt)
+			if err != nil {
+				onuLogger.WithFields(log.Fields{
+					"OmciMsgType":  msg.OmciMsg.MessageType,
+					"TransCorrId":  msg.OmciMsg.TransactionID,
+					"Err":          errResp.Error(),
+					"IntfId":       o.PonPortID,
+					"SerialNumber": o.Sn(),
+				}).Error("error-while-processing-end-software-download-request")
+			}
+			computedCRC := crc32a.Checksum(o.ImageSectionData)
+			if msgObj.CRC32 != computedCRC {
+				onuLogger.WithFields(log.Fields{
+					"OnuId":         o.ID,
+					"IntfId":        o.PonPortID,
+					"OnuSn":         o.Sn(),
+					"ReceivedCRC":   msgObj.CRC32,
+					"CalculatedCRC": computedCRC,
+				}).Errorf("onu-image-crc-validation-falied")
+				success = false
+			}
+		}
 		if success {
 			if responsePkt, errResp = omcilib.CreateEndSoftwareDownloadResponse(msg.OmciPkt, msg.OmciMsg, me.Success); errResp == nil {
 				o.MibDataSync++
