@@ -18,6 +18,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "9172a0a6_1b599c53",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-11-10T08:32:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8b073215_f966f4ab",
+      "revId": "7823e3d9fd3ffe8c772a8301ee34668cf1e90645",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "24ec38fa_32a1afa0",
@@ -35,6 +53,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "20e42551_97a1bb28",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1034,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-11-10T08:32:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "24ec38fa_32a1afa0",
+      "revId": "7823e3d9fd3ffe8c772a8301ee34668cf1e90645",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "14d9758d_dc1bf8f5",
@@ -48,6 +84,24 @@
       "writtenOn": "2021-11-10T08:22:50Z",
       "side": 1,
       "message": "Additionally I had to revert the byte order (to network order/big endian) from the crc32a result, guss that is needed in the comparison as well.",
+      "revId": "7823e3d9fd3ffe8c772a8301ee34668cf1e90645",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "eae9c106_d5bcc74a",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1077,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2021-11-10T08:32:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "14d9758d_dc1bf8f5",
       "revId": "7823e3d9fd3ffe8c772a8301ee34668cf1e90645",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
