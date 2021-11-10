@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8b073215_f966f4ab",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-11-10T08:22:50Z",
+      "side": 1,
+      "message": "Guess you don\u0027t need that here if you have it the same way in line 986.",
+      "revId": "7823e3d9fd3ffe8c772a8301ee34668cf1e90645",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "24ec38fa_32a1afa0",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1034,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-11-10T08:22:50Z",
+      "side": 1,
+      "message": "Also this specific downloadSection type includes image data.\nThe last section received here may also include (0) padding, which falsifies the checksum if you include that into computation.\nEndSoftwareDownload gives you the real length of the image (to substract the received padding again).",
+      "revId": "7823e3d9fd3ffe8c772a8301ee34668cf1e90645",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "14d9758d_dc1bf8f5",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1077,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-11-10T08:22:50Z",
+      "side": 1,
+      "message": "Additionally I had to revert the byte order (to network order/big endian) from the crc32a result, guss that is needed in the comparison as well.",
+      "revId": "7823e3d9fd3ffe8c772a8301ee34668cf1e90645",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
