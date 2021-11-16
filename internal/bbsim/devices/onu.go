@@ -126,6 +126,7 @@ type Onu struct {
 	CommittedImageEntityId        uint16
 	StandbyImageVersion           string
 	ActiveImageVersion            string
+	InDownloadImageVersion        string
 	CommittedImageVersion         string
 	OmciResponseRate              uint8
 	OmciMsgCounter                uint8
@@ -1016,7 +1017,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			}).Trace("received-download-section-request")
 			//Extracting the first 14 bytes to use as a version for this image.
 			if o.ImageSoftwareReceivedSections == 0 {
-				o.StandbyImageVersion = string(msgObj.SectionData[0:14])
+				o.InDownloadImageVersion = string(msgObj.SectionData[0:14])
 			}
 			o.ImageSectionData = append(o.ImageSectionData, msgObj.SectionData...)
 			o.ImageSoftwareReceivedSections++
@@ -1107,6 +1108,16 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 					"CalculatedCRC": computedCRC,
 				}).Errorf("onu-image-crc-validation-falied")
 				success = false
+			} else {
+				// update the standbyImage with the downloaded one
+				onuLogger.WithFields(log.Fields{
+					"OnuId":                  o.ID,
+					"IntfId":                 o.PonPortID,
+					"OnuSn":                  o.Sn(),
+					"StandbyVersion":         o.StandbyImageVersion,
+					"InDownloadImageVersion": o.InDownloadImageVersion,
+				}).Debug("onu-image-version-updated")
+				o.StandbyImageVersion = o.InDownloadImageVersion
 			}
 		}
 		if success {
