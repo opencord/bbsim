@@ -24,6 +24,7 @@ import (
 	me "github.com/opencord/omci-lib-go/v2/generated"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"gotest.tools/assert"
+	"strconv"
 	"testing"
 )
 
@@ -128,13 +129,15 @@ func makeOmciStartSoftwareDownloadRequest(t *testing.T) []byte {
 	return omciPkt
 }
 
-func makeOmciEndSoftwareDownloadRequest(t *testing.T) []byte {
+func makeOmciEndSoftwareDownloadRequest(t *testing.T, imageSize uint32, imageCrc uint32) []byte {
 	omciReq := &omci.EndSoftwareDownloadRequest{
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass: me.SoftwareImageClassID,
 		},
 		NumberOfInstances: 1,
 		ImageInstances:    []uint16{0},
+		ImageSize:         imageSize,
+		CRC32:             imageCrc,
 	}
 	omciPkt, err := omcilib.Serialize(omci.EndSoftwareDownloadRequestType, omciReq, 66)
 	if err != nil {
@@ -250,9 +253,11 @@ func Test_MibDataSyncIncrease(t *testing.T) {
 	assert.Equal(t, onu.MibDataSync, uint8(4))
 
 	// End software download
-	onu.ImageSoftwareReceivedSections = 1 // we fake that we have received the one download section we expect
+	onu.ImageSoftwareExpectedSections = 31
+	onu.ImageSoftwareReceivedSections = 31 // we fake that we have received all the download section we expect
+	onu.ImageSectionData = []byte{111, 114, 116, 116, 105, 116, 111, 114, 32, 113, 117, 105, 115, 46, 32, 86, 105, 118, 97, 109, 117, 115, 32, 110, 101, 99, 32, 108, 105, 98, 101}
 	onu.InternalState.SetState(OnuStateImageDownloadInProgress)
-	err = onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciEndSoftwareDownloadRequest(t)), stream)
+	err = onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciEndSoftwareDownloadRequest(t, 31, 1523894119)), stream)
 	assert.NilError(t, err)
 	assert.Equal(t, onu.MibDataSync, uint8(5))
 
@@ -360,4 +365,38 @@ func Test_OmciResponseRate(t *testing.T) {
 		}
 		assert.Equal(t, stream.CallCount, int(onu.OmciResponseRate))
 	}
+}
+
+func Test_EndSoftwareDownloadRequestHandling(t *testing.T) {
+	onu := createTestOnu()
+
+	// test EndSoftwareDownloadRequest in case of abort
+	onu.ImageSoftwareReceivedSections = 2
+	imageCrc, _ := strconv.ParseInt("FFFFFFFF", 16, 64)
+	msg := makeOmciMessage(t, onu, makeOmciEndSoftwareDownloadRequest(t, 0, uint32(imageCrc)))
+	res := onu.handleEndSoftwareDownloadRequest(msg)
+	assert.Equal(t, res, true)
+	assert.Equal(t, onu.ImageSoftwareReceivedSections, 0)
+
+	// test EndSoftwareDownloadRequest if we received less sections than expected
+	onu.ImageSoftwareExpectedSections = 2
+	onu.ImageSoftwareReceivedSections = 1
+	msg = makeOmciMessage(t, onu, makeOmciEndSoftwareDownloadRequest(t, 2, 2))
+	res = onu.handleEndSoftwareDownloadRequest(msg)
+	assert.Equal(t, res, false)
+
+	// test CRC Mismatch
+	onu.ImageSectionData = []byte{111, 114, 116, 116, 105, 116, 111, 114, 32, 113, 117, 105, 115, 46, 32, 86, 105, 118, 97, 109, 117, 115, 32, 110, 101, 99, 32, 108, 105, 98, 101}
+	onu.ImageSoftwareExpectedSections = 2
+	onu.ImageSoftwareReceivedSections = 2
+	msg = makeOmciMessage(t, onu, makeOmciEndSoftwareDownloadRequest(t, 31, 12))
+	res = onu.handleEndSoftwareDownloadRequest(msg)
+	assert.Equal(t, res, false)
+
+	// if it's a valid case then set the StandbyImageVersion
+	onu.InDownloadImageVersion = "DownloadedImage"
+	msg = makeOmciMessage(t, onu, makeOmciEndSoftwareDownloadRequest(t, 31, 1523894119))
+	res = onu.handleEndSoftwareDownloadRequest(msg)
+	assert.Equal(t, res, true)
+	assert.Equal(t, onu.StandbyImageVersion, "DownloadedImage")
 }

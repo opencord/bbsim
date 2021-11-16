@@ -126,6 +126,7 @@ type Onu struct {
 	CommittedImageEntityId        uint16
 	StandbyImageVersion           string
 	ActiveImageVersion            string
+	InDownloadImageVersion        string
 	CommittedImageVersion         string
 	OmciResponseRate              uint8
 	OmciMsgCounter                uint8
@@ -1016,7 +1017,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			}).Trace("received-download-section-request")
 			//Extracting the first 14 bytes to use as a version for this image.
 			if o.ImageSoftwareReceivedSections == 0 {
-				o.StandbyImageVersion = string(msgObj.SectionData[0:14])
+				o.InDownloadImageVersion = string(msgObj.SectionData[0:14])
 			}
 			o.ImageSectionData = append(o.ImageSectionData, msgObj.SectionData...)
 			o.ImageSoftwareReceivedSections++
@@ -1057,58 +1058,8 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			o.ImageSoftwareReceivedSections++
 		}
 	case omci.EndSoftwareDownloadRequestType:
+		success := o.handleEndSoftwareDownloadRequest(msg)
 
-		// In the startSoftwareDownload we get the image size and the window size.
-		// We calculate how many DownloadSection we should receive and validate
-		// that we got the correct amount when we receive this message
-		success := true
-		if o.ImageSoftwareExpectedSections != o.ImageSoftwareReceivedSections {
-			onuLogger.WithFields(log.Fields{
-				"OnuId":            o.ID,
-				"IntfId":           o.PonPortID,
-				"OnuSn":            o.Sn(),
-				"ExpectedSections": o.ImageSoftwareExpectedSections,
-				"ReceivedSections": o.ImageSoftwareReceivedSections,
-			}).Errorf("onu-did-not-receive-all-image-sections")
-			success = false
-		}
-		if success {
-			// Validate Image Crc.
-			msgObj, err := omcilib.ParseEndSoftwareDownloadRequest(msg.OmciPkt)
-			if err != nil {
-				onuLogger.WithFields(log.Fields{
-					"OmciMsgType":  msg.OmciMsg.MessageType,
-					"TransCorrId":  msg.OmciMsg.TransactionID,
-					"Err":          errResp.Error(),
-					"IntfId":       o.PonPortID,
-					"SerialNumber": o.Sn(),
-				}).Error("error-while-processing-end-software-download-request")
-			}
-			computedCRC := crc32a.Checksum(o.ImageSectionData[:int(msgObj.ImageSize)])
-			//Convert the crc to network byte order
-			var byteSlice []byte = make([]byte, 4)
-			binary.LittleEndian.PutUint32(byteSlice, uint32(computedCRC))
-			computedCRC = binary.BigEndian.Uint32(byteSlice)
-
-			onuLogger.WithFields(log.Fields{
-				"OnuId":         o.ID,
-				"IntfId":        o.PonPortID,
-				"OnuSn":         o.Sn(),
-				"ReceivedCRC":   msgObj.CRC32,
-				"CalculatedCRC": computedCRC,
-			}).Debug("onu-image-crc-validation-params")
-
-			if msgObj.CRC32 != computedCRC {
-				onuLogger.WithFields(log.Fields{
-					"OnuId":         o.ID,
-					"IntfId":        o.PonPortID,
-					"OnuSn":         o.Sn(),
-					"ReceivedCRC":   msgObj.CRC32,
-					"CalculatedCRC": computedCRC,
-				}).Errorf("onu-image-crc-validation-falied")
-				success = false
-			}
-		}
 		if success {
 			if responsePkt, errResp = omcilib.CreateEndSoftwareDownloadResponse(msg.OmciPkt, msg.OmciMsg, me.Success); errResp == nil {
 				o.MibDataSync++
@@ -1127,7 +1078,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 					"Err":          errResp.Error(),
 					"IntfId":       o.PonPortID,
 					"SerialNumber": o.Sn(),
-				}).Error("error-while-processing-end-software-download-request")
+				}).Error("error-while-responding-to-end-software-download-request")
 			}
 		} else {
 			if responsePkt, errResp = omcilib.CreateEndSoftwareDownloadResponse(msg.OmciPkt, msg.OmciMsg, me.ProcessingError); errResp == nil {
@@ -1422,6 +1373,81 @@ func (o *Onu) Reboot(timeout time.Duration) error {
 		return err
 	}
 	return nil
+}
+
+// returns true if the request is successful, false otherwise
+func (o *Onu) handleEndSoftwareDownloadRequest(msg bbsim.OmciMessage) bool {
+	msgObj, err := omcilib.ParseEndSoftwareDownloadRequest(msg.OmciPkt)
+	if err != nil {
+		onuLogger.WithFields(log.Fields{
+			"OmciMsgType":  msg.OmciMsg.MessageType,
+			"TransCorrId":  msg.OmciMsg.TransactionID,
+			"Err":          err.Error(),
+			"IntfId":       o.PonPortID,
+			"SerialNumber": o.Sn(),
+		}).Error("error-while-processing-end-software-download-request")
+		return false
+	}
+
+	onuLogger.WithFields(log.Fields{
+		"OnuId":  o.ID,
+		"IntfId": o.PonPortID,
+		"OnuSn":  o.Sn(),
+		"msgObj": msgObj,
+	}).Trace("EndSoftwareDownloadRequest received message")
+
+	// if the image download is ongoing and we receive a message with
+	// ImageSize = 0 and Crc = 4294967295 (0xFFFFFFFF) respond with success
+	if o.ImageSoftwareReceivedSections > 0 &&
+		msgObj.ImageSize == 0 &&
+		msgObj.CRC32 == 4294967295 {
+		o.ImageSoftwareReceivedSections = 0
+		// NOTE potentially we may want to add a ONU state to reflect
+		// the software download abort
+		return true
+	}
+
+	// In the startSoftwareDownload we get the image size and the window size.
+	// We calculate how many DownloadSection we should receive and validate
+	// that we got the correct amount when we receive this message
+	// If the received sections are different from the expected sections
+	// respond with failure
+	if o.ImageSoftwareExpectedSections != o.ImageSoftwareReceivedSections {
+		onuLogger.WithFields(log.Fields{
+			"OnuId":            o.ID,
+			"IntfId":           o.PonPortID,
+			"OnuSn":            o.Sn(),
+			"ExpectedSections": o.ImageSoftwareExpectedSections,
+			"ReceivedSections": o.ImageSoftwareReceivedSections,
+		}).Errorf("onu-did-not-receive-all-image-sections")
+		return false
+	}
+
+	// check the received CRC vs the computed CRC
+	computedCRC := crc32a.Checksum(o.ImageSectionData[:int(msgObj.ImageSize)])
+	//Convert the crc to network byte order
+	var byteSlice = make([]byte, 4)
+	binary.LittleEndian.PutUint32(byteSlice, computedCRC)
+	computedCRC = binary.BigEndian.Uint32(byteSlice)
+	if msgObj.CRC32 != computedCRC {
+		onuLogger.WithFields(log.Fields{
+			"OnuId":         o.ID,
+			"IntfId":        o.PonPortID,
+			"OnuSn":         o.Sn(),
+			"ReceivedCRC":   msgObj.CRC32,
+			"CalculatedCRC": computedCRC,
+		}).Errorf("onu-image-crc-validation-failed")
+		return false
+	}
+
+	o.StandbyImageVersion = o.InDownloadImageVersion
+	onuLogger.WithFields(log.Fields{
+		"OnuId":          o.ID,
+		"IntfId":         o.PonPortID,
+		"OnuSn":          o.Sn(),
+		"StandbyVersion": o.StandbyImageVersion,
+	}).Debug("onu-image-version-updated")
+	return true
 }
 
 // BBR methods
