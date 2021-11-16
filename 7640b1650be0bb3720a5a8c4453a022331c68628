@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9b6033dc_5db25a37",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1066,
+      "author": {
+        "id": 1000666
+      },
+      "writtenOn": "2021-11-16T08:21:59Z",
+      "side": 1,
+      "message": "EndSwDlRequest may also be used to indicate that the download shall be aborted, in which case the file len is given with 0 and CRC\u003d0xFFFFFFFF. \nIf such is received, BBSIM has to abort the running transfer (reset all according internal indications for the download), but also has to send a success-response to indicate it has accepted the abort. \nSo here in first place it should be checked given file-len and/or CRC and if \u0027abort\u0027 is indicated \u0027success\u0027 is to be left on \u0027true\u0027 (to initiate the success-response later) (plus further internal reset of download paramters if needed).\nThis extra check of course needs to be placed before the section number comparison, as the abort request can be received at any time during the running download (with still incomplete number oof sections).",
+      "revId": "7640b1650be0bb3720a5a8c4453a022331c68628",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
