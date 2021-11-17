@@ -16,6 +16,24 @@
       "message": "Why is that? You wanted to catch the \u0027abort download\u0027? \nIf so then conditions (as meintioned earlier) are: len \u003d 0 and/or CRC\u003d0xFFFFFFFF",
       "revId": "07511ed1b78ec4e1ffcab4f314bc7e8ea7304002",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3e433051_4b58ac56",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1399,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2021-11-17T18:56:22Z",
+      "side": 1,
+      "message": "Good catch, I misread the logs. Fixed it.",
+      "parentUuid": "4204e397_10992229",
+      "revId": "07511ed1b78ec4e1ffcab4f314bc7e8ea7304002",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
