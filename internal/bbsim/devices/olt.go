@@ -1147,47 +1147,12 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 	olt.freeAllocId(flow)
 
 	if !o.enablePerf { // remove only if flow were stored
-		flowKey := FlowKey{
-			ID:        flow.FlowId,
-			Direction: flow.FlowType,
+		if flow.FlowType == "any" {
+			o.DeleteFlow(FlowKey{ID: flow.FlowId, Direction: "upstream"}, true)
+			o.DeleteFlow(FlowKey{ID: flow.FlowId, Direction: "downstream"}, true)
+		} else {
+			o.DeleteFlow(FlowKey{ID: flow.FlowId, Direction: flow.FlowType}, false)
 		}
-
-		// Check if flow exists
-		storedFlowIntf, ok := o.Flows.Load(flowKey)
-		if !ok {
-			oltLogger.Errorf("Flow %v not found", flow)
-			return new(openolt.Empty), status.Errorf(codes.NotFound, "Flow not found")
-		}
-
-		storedFlow := storedFlowIntf.(openolt.Flow)
-
-		// if its ONU flow remove it from ONU also
-		if storedFlow.AccessIntfId != -1 {
-			pon, err := o.GetPonById(uint32(storedFlow.AccessIntfId))
-			if err != nil {
-				oltLogger.WithFields(log.Fields{
-					"OnuId":  storedFlow.OnuId,
-					"IntfId": storedFlow.AccessIntfId,
-					"PONs":   olt.Pons,
-					"err":    err,
-				}).Error("PON-port-not-found")
-				return new(openolt.Empty), nil
-			}
-			onu, err := pon.GetOnuById(uint32(storedFlow.OnuId))
-			if err != nil {
-				oltLogger.WithFields(log.Fields{
-					"OnuId":  storedFlow.OnuId,
-					"IntfId": storedFlow.AccessIntfId,
-					"err":    err,
-				}).Error("ONU-not-found")
-				return new(openolt.Empty), nil
-			}
-			onu.DeleteFlow(flowKey)
-			publishEvent("Flow-remove-received", int32(onu.PonPortID), int32(onu.ID), onu.Sn())
-		}
-
-		// delete from olt flows
-		o.Flows.Delete(flowKey)
 	}
 
 	if flow.AccessIntfId == -1 {
@@ -1198,6 +1163,10 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 		oltLogger.WithFields(log.Fields{
 			"FlowId": flow.FlowId,
 		}).Debug("Removing OLT multicast flow")
+	} else if flow.FlowType == "any" {
+		oltLogger.WithFields(log.Fields{
+			"FlowId": flow.FlowId,
+		}).Debug("Removing any flow with given flowId")
 	} else {
 
 		onu, err := o.GetOnuByFlowId(flow.FlowId)
@@ -1218,6 +1187,53 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 		}
 		onu.Channel <- msg
 	}
+
+	return new(openolt.Empty), nil
+}
+
+func (o *OltDevice) DeleteFlow(flowKey FlowKey, onlyFromOlt bool) (*openolt.Empty, error) {
+
+	// Check if flow exists
+	storedFlowIntf, ok := o.Flows.Load(flowKey)
+	if !ok {
+		oltLogger.Errorf("Flow %v not found", flowKey)
+		return new(openolt.Empty), status.Errorf(codes.NotFound, "Flow not found")
+	}
+
+	storedFlow := storedFlowIntf.(openolt.Flow)
+
+	if onlyFromOlt {
+		o.Flows.Delete(flowKey)
+		return new(openolt.Empty), nil
+	}
+
+	// if its ONU flow remove it from ONU also
+	if storedFlow.AccessIntfId != -1 {
+		pon, err := o.GetPonById(uint32(storedFlow.AccessIntfId))
+		if err != nil {
+			oltLogger.WithFields(log.Fields{
+				"OnuId":  storedFlow.OnuId,
+				"IntfId": storedFlow.AccessIntfId,
+				"PONs":   olt.Pons,
+				"err":    err,
+			}).Error("PON-port-not-found")
+			return new(openolt.Empty), nil
+		}
+		onu, err := pon.GetOnuById(uint32(storedFlow.OnuId))
+		if err != nil {
+			oltLogger.WithFields(log.Fields{
+				"OnuId":  storedFlow.OnuId,
+				"IntfId": storedFlow.AccessIntfId,
+				"err":    err,
+			}).Error("ONU-not-found")
+			return new(openolt.Empty), nil
+		}
+		onu.DeleteFlow(flowKey)
+		publishEvent("Flow-remove-received", int32(onu.PonPortID), int32(onu.ID), onu.Sn())
+	}
+
+	// delete from olt flows
+	o.Flows.Delete(flowKey)
 
 	return new(openolt.Empty), nil
 }
