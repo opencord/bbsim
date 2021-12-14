@@ -21,11 +21,11 @@ import (
 	"errors"
 	bbsim_common "github.com/opencord/bbsim/internal/common"
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
+	"github.com/opencord/voltha-protos/v5/go/extension"
 	log "github.com/sirupsen/logrus"
 	"time"
 
 	"github.com/opencord/bbsim/internal/bbsim/types"
-	"github.com/opencord/voltha-protos/v5/go/common"
 	"github.com/opencord/voltha-protos/v5/go/ext/config"
 
 	"github.com/opencord/voltha-protos/v5/go/openolt"
@@ -121,7 +121,7 @@ func (s *mockClient) PerformGroupOperation(ctx context.Context, group *openolt.G
 func (s *mockClient) DeleteGroup(ctx context.Context, group *openolt.Group, opts ...grpc.CallOption) (*openolt.Empty, error) {
 	return nil, errors.New("unimplemented-in-mock-client")
 }
-func (s *mockClient) GetExtValue(ctx context.Context, in *openolt.ValueParam, opts ...grpc.CallOption) (*common.ReturnValues, error) {
+func (s *mockClient) GetExtValue(ctx context.Context, in *openolt.ValueParam, opts ...grpc.CallOption) (*extension.ReturnValues, error) {
 	return nil, errors.New("unimplemented-in-mock-client")
 }
 func (s *mockClient) OnuItuPonAlarmSet(ctx context.Context, in *config.OnuItuPonAlarm, opts ...grpc.CallOption) (*openolt.Empty, error) {

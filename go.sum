@@ -89,8 +89,8 @@ github.com/opencord/device-management-interface v0.11.0 h1:hoKjrkQWPr0IFXWn6HbGd
 github.com/opencord/device-management-interface v0.11.0/go.mod h1:G1owSqGBGaqllrwtjxfLTsy9EDsGhdhmqkJM3XOnPD0=
 github.com/opencord/omci-lib-go/v2 v2.1.2 h1:IgwSGEtM8zf/o8wrDLdY+q0WshDYwRwMGYeL35gMqVQ=
 github.com/opencord/omci-lib-go/v2 v2.1.2/go.mod h1:o1S/jhDLHNikFU7uG2TR5UOM5KmKlqwLlVncXi0FBYQ=
-github.com/opencord/voltha-protos/v5 v5.0.0 h1:US2k7qYPMnOueOCrprq9LjuMT3wK9uyxPwAVwjMmKhc=
-github.com/opencord/voltha-protos/v5 v5.0.0/go.mod h1:uVKXQB499Ir6G+rc47dSThNja1S4Vy3h9JLSDuJGmzI=
+github.com/opencord/voltha-protos/v5 v5.1.2 h1:biyhoK+5JBcpT3HvUBb1xzN5cAKA0xXU/hLbtzuR9xI=
+github.com/opencord/voltha-protos/v5 v5.1.2/go.mod h1:dvz08S+JLdfjhFtd3Rf38DLeD9jQ6JO1+0K3NTdheRo=
 github.com/pierrec/lz4 v2.4.1+incompatible h1:mFe7ttWaflA46Mhqh+jUfjp2qTbPYxLB2/OyBppH9dg=
 github.com/pierrec/lz4 v2.4.1+incompatible/go.mod h1:pdkljMzZIN41W+lC3N2tnIh5sFi+IEE17M5jbnwPHcY=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
@@ -148,8 +148,8 @@ golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1/go.mod h1:I/5z698sn9Ka8T
 google.golang.org/appengine v1.4.0/go.mod h1:xpcJRLb0r/rnEns0DIKYYv+WjYCduHsrkT7/EB5XEv4=
 google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55/go.mod h1:DMBHOl98Agz4BDEuKkezgsaosCRResVns1a3J2ZsMNc=
 google.golang.org/genproto v0.0.0-20190927181202-20e1ac93f88c/go.mod h1:IbNlFCBrqXvoKpeg0TB2l7cyZUmoaFKYIwrEpbDKLA8=
-google.golang.org/genproto v0.0.0-20210924002016-3dee208752a0 h1:5Tbluzus3QxoAJx4IefGt1W0HQZW4nuMrVk684jI74Q=
-google.golang.org/genproto v0.0.0-20210924002016-3dee208752a0/go.mod h1:5CzLGKJ67TSI2B9POpiiyGha0AjJvZIUgRMt1dSmuhc=
+google.golang.org/genproto v0.0.0-20211207154714-918901c715cf h1:PSEM+IQFb9xdsj2CGhfqUTfsZvF8DScCVP1QZb2IiTQ=
+google.golang.org/genproto v0.0.0-20211207154714-918901c715cf/go.mod h1:5CzLGKJ67TSI2B9POpiiyGha0AjJvZIUgRMt1dSmuhc=
 google.golang.org/grpc v1.25.1 h1:wdKvqQk7IttEw92GoRyKG2IDrUIpgpj6H6m81yfeMW0=
 google.golang.org/grpc v1.25.1/go.mod h1:c3i+UQWmh7LiEpx4sFZnkU36qjEYZ0imhYfXVyQciAY=
 google.golang.org/protobuf v0.0.0-20200109180630-ec00e32a8dfd/go.mod h1:DFci5gLYBciE7Vtevhsrf46CRTquxDuWsQurQQe4oz8=

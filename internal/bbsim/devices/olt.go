@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/opencord/voltha-protos/v5/go/extension"
 	"net"
 	"strconv"
 	"sync"
@@ -35,7 +36,6 @@ import (
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/common"
-	common_protos "github.com/opencord/voltha-protos/v5/go/common"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"github.com/opencord/voltha-protos/v5/go/tech_profile"
 	log "github.com/sirupsen/logrus"
@@ -1608,8 +1608,8 @@ func (o *OltDevice) DeleteGroup(ctx context.Context, group *openolt.Group) (*ope
 	return &openolt.Empty{}, nil
 }
 
-func (o *OltDevice) GetExtValue(ctx context.Context, in *openolt.ValueParam) (*common_protos.ReturnValues, error) {
-	return &common_protos.ReturnValues{}, nil
+func (o *OltDevice) GetExtValue(ctx context.Context, in *openolt.ValueParam) (*extension.ReturnValues, error) {
+	return &extension.ReturnValues{}, nil
 }
 
 func (o *OltDevice) OnuItuPonAlarmSet(ctx context.Context, in *config.OnuItuPonAlarm) (*openolt.Empty, error) {
