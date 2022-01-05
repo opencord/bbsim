@@ -75,6 +75,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "da98715b_8f95f3d9",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 688,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-01-05T18:23:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cdfd19b5_d3f9307d",
+      "range": {
+        "startLine": 688,
+        "startChar": 26,
+        "endLine": 688,
+        "endChar": 87
+      },
+      "revId": "97891b02fabb00909a95443a134e072c3f391cfd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "2a46b447_9c70f1c4",
@@ -136,6 +160,30 @@
       "side": 1,
       "message": "Also we need to make sure that the new value is between 1 and 255 (according to the specs)",
       "parentUuid": "43d4ebeb_78f61cbc",
+      "range": {
+        "startLine": 1783,
+        "startChar": 17,
+        "endLine": 1783,
+        "endChar": 18
+      },
+      "revId": "97891b02fabb00909a95443a134e072c3f391cfd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9fe68018_26cfa97b",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1783,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-01-05T18:23:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a90c4750_38c6df95",
       "range": {
         "startLine": 1783,
         "startChar": 17,
