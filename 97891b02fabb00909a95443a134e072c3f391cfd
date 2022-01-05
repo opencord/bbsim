@@ -35,6 +35,46 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "8209229c_25d59cdc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-01-05T16:11:00Z",
+      "side": 1,
+      "message": "Thanks Elia! Great job, couple minor comments",
+      "revId": "97891b02fabb00909a95443a134e072c3f391cfd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "cdfd19b5_d3f9307d",
+        "filename": "internal/bbsim/api/onus_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 688,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-01-05T16:11:00Z",
+      "side": 1,
+      "message": "It could be helpful to log the previous and current value of the MDS (might help with debugging issues)",
+      "range": {
+        "startLine": 688,
+        "startChar": 26,
+        "endLine": 688,
+        "endChar": 87
+      },
+      "revId": "97891b02fabb00909a95443a134e072c3f391cfd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "2a46b447_9c70f1c4",
@@ -48,6 +88,30 @@
       "writtenOn": "2022-01-05T14:41:03Z",
       "side": 1,
       "message": "A random number in the given range not equal to the current MDS value would make the test scenario somewhat more realistic.",
+      "range": {
+        "startLine": 1783,
+        "startChar": 17,
+        "endLine": 1783,
+        "endChar": 18
+      },
+      "revId": "97891b02fabb00909a95443a134e072c3f391cfd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "43d4ebeb_78f61cbc",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1783,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-01-05T16:11:00Z",
+      "side": 1,
+      "message": "@holger would set the MDS to MDS - (rand.Intn(9) + 1) make sense?\nI believe that would emulate a certain number of messages dropped (between 1 and 10)",
+      "parentUuid": "2a46b447_9c70f1c4",
       "range": {
         "startLine": 1783,
         "startChar": 17,
