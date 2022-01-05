@@ -124,6 +124,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "a90c4750_38c6df95",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1783,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-01-05T16:35:01Z",
+      "side": 1,
+      "message": "Also we need to make sure that the new value is between 1 and 255 (according to the specs)",
+      "parentUuid": "43d4ebeb_78f61cbc",
+      "range": {
+        "startLine": 1783,
+        "startChar": 17,
+        "endLine": 1783,
+        "endChar": 18
+      },
+      "revId": "97891b02fabb00909a95443a134e072c3f391cfd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "04471b15_02580240",
         "filename": "internal/bbsim/devices/onu_omci_test.go",
         "patchSetId": 1
