@@ -18,6 +18,46 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "b8f16cda_951381de",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2022-01-05T14:41:03Z",
+      "side": 1,
+      "message": "Hello Elia, nice to meet you too!",
+      "revId": "97891b02fabb00909a95443a134e072c3f391cfd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2a46b447_9c70f1c4",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1783,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2022-01-05T14:41:03Z",
+      "side": 1,
+      "message": "A random number in the given range not equal to the current MDS value would make the test scenario somewhat more realistic.",
+      "range": {
+        "startLine": 1783,
+        "startChar": 17,
+        "endLine": 1783,
+        "endChar": 18
+      },
+      "revId": "97891b02fabb00909a95443a134e072c3f391cfd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "04471b15_02580240",
