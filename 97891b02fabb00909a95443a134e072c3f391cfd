@@ -33,6 +33,24 @@
       "message": "you expect the value to be 0 here correct? I think that an equality check with 0 might be better.",
       "revId": "97891b02fabb00909a95443a134e072c3f391cfd",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "94753d54_a5c8e687",
+        "filename": "internal/bbsim/devices/onu_omci_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-01-05T11:44:32Z",
+      "side": 1,
+      "message": "Since the request was just to invalidate the MDS, setting the value to 0 was an arbitrary choice that may be subject to change. I used this assertion to make the test independent from the value.",
+      "parentUuid": "04471b15_02580240",
+      "revId": "97891b02fabb00909a95443a134e072c3f391cfd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
