@@ -17,6 +17,9 @@
 package devices
 
 import (
+	"strconv"
+	"testing"
+
 	"github.com/google/gopacket"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
@@ -24,8 +27,6 @@ import (
 	me "github.com/opencord/omci-lib-go/v2/generated"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"gotest.tools/assert"
-	"strconv"
-	"testing"
 )
 
 var mockAttr = me.AttributeValueMap{
@@ -310,6 +311,21 @@ func Test_MibDataSyncRotation(t *testing.T) {
 	err := onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciDeleteRequest(t)), stream)
 	assert.NilError(t, err)
 	assert.Equal(t, onu.MibDataSync, uint8(0))
+}
+
+func Test_MibDataSyncInvalidation(t *testing.T) {
+	onu := createMockOnu(1, 1)
+	onu.MibDataSync = 250
+	assert.Equal(t, onu.MibDataSync, uint8(250))
+
+	onu.InvalidateMibDataSync()
+
+	// check if the MDS has been changed
+	assert.Assert(t, onu.MibDataSync != uint8(250))
+
+	// the MDS has to be between 1 and 255, since 0 is valid for a reset
+	assert.Assert(t, onu.MibDataSync > 0)
+	assert.Assert(t, onu.MibDataSync <= 255)
 }
 
 func Test_GemPortValidation(t *testing.T) {

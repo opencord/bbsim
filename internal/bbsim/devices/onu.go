@@ -21,6 +21,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"math/rand"
 	"sync"
 
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
@@ -1776,5 +1777,18 @@ func (o *Onu) IncrementAlarmSequenceNumber(key omcilib.OnuAlarmInfoMapKey) uint8
 			SequenceNo: 1,
 		}
 		return 1
+	}
+}
+
+func (o *Onu) InvalidateMibDataSync() {
+	rand.Seed(time.Now().UnixNano())
+	r := uint8(rand.Intn(10) + 1)
+
+	o.MibDataSync += r
+
+	// Since MibDataSync is a uint8, summing to it will never
+	// result in a value higher than 255, but could be 0
+	if o.MibDataSync == 0 {
+		o.MibDataSync++
 	}
 }
