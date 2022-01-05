@@ -339,4 +339,8 @@ service BBSim {
     //Return all the UNIs for all the ONUs
     rpc GetUnis (Empty) returns (UNIs) {
     }
+
+    //Invalidate the MDS counter for the ONU
+    rpc InvalidateMds (ONURequest) returns (Response) {
+    }
 }

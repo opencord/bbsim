@@ -19,9 +19,10 @@ package api
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
-	"strconv"
 
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
@@ -663,4 +664,28 @@ func (s BBSimServer) GetUnis(ctx context.Context, req *bbsim.Empty) (*bbsim.UNIs
 		Items: unis,
 	}
 	return &unis_ret, nil
+}
+
+// Invalidate the MDS counter of the ONU
+func (s BBSimServer) InvalidateMds(ctx context.Context, req *bbsim.ONURequest) (*bbsim.Response, error) {
+	logger.WithFields(log.Fields{
+		"OnuSn": req.SerialNumber,
+	}).Infof("Received request to invalidate the MDS counter of the ONU")
+
+	res := &bbsim.Response{}
+	olt := devices.GetOLT()
+
+	onu, err := olt.FindOnuBySn(req.SerialNumber)
+	if err != nil {
+		res.StatusCode = int32(codes.NotFound)
+		res.Message = err.Error()
+		return res, err
+	}
+
+	onu.InvalidateMibDataSync()
+
+	res.StatusCode = int32(codes.OK)
+	res.Message = fmt.Sprintf("MDS coutner of ONU %s successfully invalidated.", onu.Sn())
+
+	return res, nil
 }

@@ -115,6 +115,7 @@ Here are the one currently supported, for more usage information use the followi
       flows
       get
       igmp
+      invalidate_mds
       list
       poweron
       services

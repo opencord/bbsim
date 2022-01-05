@@ -1778,3 +1778,7 @@ func (o *Onu) IncrementAlarmSequenceNumber(key omcilib.OnuAlarmInfoMapKey) uint8
 		return 1
 	}
 }
+
+func (o *Onu) InvalidateMibDataSync() {
+	o.MibDataSync = 0
+}

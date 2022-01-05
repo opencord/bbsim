@@ -115,6 +115,12 @@ type ONUServices struct {
 	} `positional-args:"yes"`
 }
 
+type ONUInvalidateMds struct {
+	Args struct {
+		OnuSn OnuSnString
+	} `positional-args:"yes" required:"yes"`
+}
+
 type ONUOptions struct {
 	List              ONUList              `command:"list"`
 	Get               ONUGet               `command:"get"`
@@ -127,6 +133,7 @@ type ONUOptions struct {
 	Alarms            AlarmOptions         `command:"alarms"`
 	Flows             ONUFlows             `command:"flows"`
 	Services          ONUServices          `command:"services"`
+	InvalidateMds     ONUInvalidateMds     `command:"invalidate_mds"`
 }
 
 func RegisterONUCommands(parser *flags.Parser) {
@@ -397,6 +404,27 @@ func (options *ONUFlows) Execute(args []string) error {
 	}
 	tableFlow.Render()
 	tableFlow.SetNewLine("")
+	return nil
+}
+
+func (options *ONUInvalidateMds) Execute(args []string) error {
+	client, conn := connect()
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
+	defer cancel()
+	req := pb.ONURequest{
+		SerialNumber: string(options.Args.OnuSn),
+	}
+	res, err := client.InvalidateMds(ctx, &req)
+
+	if err != nil {
+		log.Fatalf("Cannot invalidate MDS counter on ONU %s: %v", options.Args.OnuSn, err)
+		return err
+	}
+
+	fmt.Println(fmt.Sprintf("[Status: %d] %s", res.StatusCode, res.Message))
+
 	return nil
 }
 
