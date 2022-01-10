@@ -21,7 +21,10 @@ import (
 	"net"
 	"testing"
 
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
+	"github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"google.golang.org/grpc"
 	"gotest.tools/assert"
@@ -49,6 +52,8 @@ var uniId uint32 = 0
 var serialNumber string = "BBSM00000001"
 var macAddress = net.HardwareAddr{0x01, 0x80, 0xC2, 0x00, 0x00, 0x03}
 var portNo uint32 = 16
+var serviceId uint32 = 0
+var oltId int = 0
 
 type mockStream struct {
 	grpc.ServerStream
@@ -143,4 +148,60 @@ func TestUpdateAuthFailed(t *testing.T) {
 	}
 	assert.Equal(t, err.Error(), "event auth_failed inappropriate in current state eap_response_success_received")
 
+}
+
+func createTestEAPOLPkt(eap *layers.EAP) gopacket.Packet {
+	bytes := createEAPOLPkt(eap, serviceId, uniId, onuId, ponPortId, oltId)
+	return gopacket.NewPacket(bytes, layers.LayerTypeEthernet, gopacket.Default)
+}
+
+func handleTestEAPOLPkt(pkt gopacket.Packet, stream types.Stream) {
+	HandleNextPacket(onuId, ponPortId, gemPortId, serialNumber, portNo, uniId, serviceId, oltId, eapolStateMachine, pkt, stream, nil)
+}
+
+func TestDropUnexpectedPackets(t *testing.T) {
+	stream := &mockStream{
+		Calls: make(map[int]*openolt.PacketIndication),
+	}
+
+	const eapId uint8 = 1
+
+	//Create test packets
+	identityRequest := createEAPIdentityRequest(eapId)
+	challangeRequest := createEAPChallengeRequest(eapId, []byte{0x10})
+	success := createEAPSuccess(eapId)
+
+	identityPkt := createTestEAPOLPkt(identityRequest)
+	challangePkt := createTestEAPOLPkt(challangeRequest)
+	successPkt := createTestEAPOLPkt(success)
+
+	testStates := map[string]struct {
+		packets          []gopacket.Packet
+		destinationState string
+	}{
+		//All packet should be dropped in state auth_started
+		"auth_started": {[]gopacket.Packet{identityPkt, challangePkt, successPkt}, "auth_failed"},
+		//Only the identity request packet should be handled in state eap_start_sent
+		"eap_start_sent": {[]gopacket.Packet{challangePkt, successPkt}, "auth_failed"},
+		//Only the challange request packet should be handled in state eap_response_identity_sent
+		"eap_response_identity_sent": {[]gopacket.Packet{identityPkt, successPkt}, "auth_failed"},
+		//Only the success packet should be handled in state eap_response_challenge_sent
+		"eap_response_challenge_sent": {[]gopacket.Packet{identityPkt, challangePkt}, "auth_failed"},
+		//All packet should be dropped in state eap_response_success_received
+		"eap_response_success_received": {[]gopacket.Packet{identityPkt, challangePkt, successPkt}, "eap_response_success_received"},
+		//All packet should be dropped in state auth_failed
+		"auth_failed": {[]gopacket.Packet{identityPkt, challangePkt}, "auth_failed"},
+	}
+
+	for s, info := range testStates {
+		for _, p := range info.packets {
+			eapolStateMachine.SetState(s)
+			handleTestEAPOLPkt(p, stream)
+
+			//No response should be sent
+			assert.Equal(t, stream.CallCount, 0)
+			//The state machine should transition to the failed state
+			assert.Equal(t, eapolStateMachine.Current(), info.destinationState)
+		}
+	}
 }
