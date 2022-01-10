@@ -1,0 +1,176 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "305fb48d_c4600edf",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-10T10:04:30Z",
+      "side": 1,
+      "message": "some comments, good work",
+      "revId": "5fc3258e0e4392802e25c2a117fb693fa6483dd3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "cbb4436e_3f880af4",
+        "filename": "internal/bbsim/responders/eapol/eapol.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-10T10:04:30Z",
+      "side": 1,
+      "message": "being a little picky here, but it\u0027s best to extract the state constants into an enum and reuse the same enum value everywhere, so if the string needs to be changed it can be done in only one place.",
+      "range": {
+        "startLine": 330,
+        "startChar": 47,
+        "endLine": 330,
+        "endChar": 63
+      },
+      "revId": "5fc3258e0e4392802e25c2a117fb693fa6483dd3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e3f0f36e_9c7ac322",
+        "filename": "internal/bbsim/responders/eapol/eapol.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-10T10:04:30Z",
+      "side": 1,
+      "message": "same",
+      "range": {
+        "startLine": 339,
+        "startChar": 0,
+        "endLine": 339,
+        "endChar": 3
+      },
+      "revId": "5fc3258e0e4392802e25c2a117fb693fa6483dd3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c5482936_460bc96e",
+        "filename": "internal/bbsim/responders/eapol/eapol.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-10T10:04:30Z",
+      "side": 1,
+      "message": "same",
+      "range": {
+        "startLine": 397,
+        "startChar": 47,
+        "endLine": 397,
+        "endChar": 74
+      },
+      "revId": "5fc3258e0e4392802e25c2a117fb693fa6483dd3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "edc93882_ff99aa0d",
+        "filename": "internal/bbsim/responders/eapol/eapol.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-10T10:04:30Z",
+      "side": 1,
+      "message": "ignoring the error is not a good practice, at least there should be a log, same is valid for other occurrences in the class.",
+      "revId": "5fc3258e0e4392802e25c2a117fb693fa6483dd3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b02e05eb_19ba0d48",
+        "filename": "internal/bbsim/responders/eapol/eapol.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-10T10:04:30Z",
+      "side": 1,
+      "message": "same",
+      "range": {
+        "startLine": 471,
+        "startChar": 48,
+        "endLine": 471,
+        "endChar": 75
+      },
+      "revId": "5fc3258e0e4392802e25c2a117fb693fa6483dd3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0f252815_0135c251",
+        "filename": "internal/bbsim/responders/eapol/eapol.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-10T10:04:30Z",
+      "side": 1,
+      "message": "same",
+      "range": {
+        "startLine": 480,
+        "startChar": 4,
+        "endLine": 480,
+        "endChar": 5
+      },
+      "revId": "5fc3258e0e4392802e25c2a117fb693fa6483dd3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "4d8d889c_3031fde8",
+        "filename": "internal/bbsim/responders/eapol/eapol_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-10T10:04:30Z",
+      "side": 1,
+      "message": "reuse constants here as well.",
+      "range": {
+        "startLine": 183,
+        "startChar": 3,
+        "endLine": 183,
+        "endChar": 15
+      },
+      "revId": "5fc3258e0e4392802e25c2a117fb693fa6483dd3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
