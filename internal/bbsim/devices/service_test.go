@@ -18,13 +18,15 @@ package devices
 
 import (
 	"context"
+	"net"
+	"testing"
+	"time"
+
+	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
 	"github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"github.com/stretchr/testify/assert"
-	"net"
-	"testing"
-	"time"
 )
 
 type mockService struct {
@@ -80,12 +82,12 @@ func TestService_InternalState(t *testing.T) {
 	assert.NotNil(t, s.Channel)
 
 	// set EAPOL and DHCP states to something else
-	s.EapolState.SetState("eap_response_success_received")
+	s.EapolState.SetState(eapol.StateResponseSuccessReceived)
 	s.DHCPState.SetState("dhcp_ack_received")
 
 	s.Disable()
 	// make sure the EAPOL and DHCP states have been reset after disable
-	assert.Equal(t, "created", s.EapolState.Current())
+	assert.Equal(t, eapol.StateCreated, s.EapolState.Current())
 	assert.Equal(t, "created", s.DHCPState.Current())
 
 	// make sure the channel have been closed
@@ -112,7 +114,7 @@ func TestService_HandleAuth_noEapol(t *testing.T) {
 	assert.Equal(t, stream.CallCount, 0)
 
 	// state should not change
-	assert.Equal(t, s.EapolState.Current(), "created")
+	assert.Equal(t, s.EapolState.Current(), eapol.StateCreated)
 }
 
 // make sure that if the service does need EAPOL we're sending any packet
@@ -133,7 +135,7 @@ func TestService_HandleAuth_withEapol(t *testing.T) {
 	assert.Equal(t, stream.CallCount, 1)
 
 	// state should not change
-	assert.Equal(t, s.EapolState.Current(), "eap_start_sent")
+	assert.Equal(t, s.EapolState.Current(), eapol.StateStartSent)
 }
 
 // make sure that if the service does not need DHCP we're not sending any packet
@@ -259,16 +261,16 @@ func TestService_EAPOLFailed(t *testing.T) {
 	s.Initialize(stream)
 
 	// set to failed if timeout occurs
-	_ = s.EapolState.Event("start_auth")
+	_ = s.EapolState.Event(eapol.EventStartAuth)
 	time.Sleep(1 * time.Second)
-	assert.Equal(t, "auth_failed", s.EapolState.Current())
+	assert.Equal(t, eapol.StateAuthFailed, s.EapolState.Current())
 
 	// do not set to failed if succeeded
-	s.EapolState.SetState("created")
-	_ = s.EapolState.Event("start_auth")
-	s.EapolState.SetState("eap_response_success_received")
+	s.EapolState.SetState(eapol.StateCreated)
+	_ = s.EapolState.Event(eapol.EventStartAuth)
+	s.EapolState.SetState(eapol.StateResponseSuccessReceived)
 	time.Sleep(1 * time.Second)
-	assert.Equal(t, "eap_response_success_received", s.EapolState.Current())
+	assert.Equal(t, eapol.StateResponseSuccessReceived, s.EapolState.Current())
 
 }
 
@@ -291,11 +293,11 @@ func TestService_EAPOLRestart(t *testing.T) {
 	s.Initialize(stream)
 
 	// set to failed if timeout occurs
-	_ = s.EapolState.Event("start_auth")
+	_ = s.EapolState.Event(eapol.EventStartAuth)
 
 	// after a second EAPOL should have failed and restarted
 	time.Sleep(1 * time.Second)
-	assert.Equal(t, "eap_start_sent", s.EapolState.Current())
+	assert.Equal(t, eapol.StateStartSent, s.EapolState.Current())
 }
 
 // Test that if the DHCP state machine doesn't complete in 30 seconds we

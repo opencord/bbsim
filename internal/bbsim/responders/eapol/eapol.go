@@ -36,6 +36,24 @@ var eapolLogger = log.WithFields(log.Fields{
 
 var eapolVersion uint8 = 1
 
+// constants for the EAPOL state machine states and events
+const (
+	StateCreated                 = "created"
+	StateAuthStarted             = "auth_started"
+	StateStartSent               = "eap_start_sent"
+	StateResponseIdentitySent    = "eap_response_identity_sent"
+	StateResponseChallengeSent   = "eap_response_challenge_sent"
+	StateResponseSuccessReceived = "eap_response_success_received"
+	StateAuthFailed              = "auth_failed"
+
+	EventStartAuth               = "start_auth"
+	EventStartSent               = "eap_start_sent"
+	EventResponseIdentitySent    = "eap_response_identity_sent"
+	EventResponseChallengeSent   = "eap_response_challenge_sent"
+	EventResponseSuccessReceived = "eap_response_success_received"
+	EventAuthFailed              = "auth_failed"
+)
+
 func sendEapolPktIn(msg bbsim.ByteMsg, portNo uint32, gemid uint32, stream bbsim.Stream) error {
 	// FIXME unify sendDHCPPktIn and sendEapolPktIn methods
 
@@ -181,7 +199,7 @@ func sendEapolPktOut(client openolt.OpenoltClient, intfId uint32, onuId uint32, 
 }
 
 func updateAuthFailed(onuId uint32, ponPortId uint32, serialNumber string, onuStateMachine *fsm.FSM) error {
-	if err := onuStateMachine.Event("auth_failed"); err != nil {
+	if err := onuStateMachine.Event(EventAuthFailed); err != nil {
 		eapolLogger.WithFields(log.Fields{
 			"OnuId":  onuId,
 			"IntfId": ponPortId,
@@ -253,7 +271,7 @@ func SendEapStart(onuId uint32, ponPortId uint32, serialNumber string, portNo ui
 		"GemPortId": gemPort,
 	}).Debug("Sent EapStart packet")
 
-	if err := stateMachine.Event("eap_start_sent"); err != nil {
+	if err := stateMachine.Event(EventStartSent); err != nil {
 		eapolLogger.WithFields(log.Fields{
 			"OnuId":     onuId,
 			"IntfId":    ponPortId,
@@ -327,6 +345,21 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, gemPortId uint32, serialNu
 		}).Infof("Sent EAPIdentityRequest packet")
 		return
 	} else if eap.Code == layers.EAPCodeRequest && eap.Type == layers.EAPTypeIdentity {
+		if state := stateMachine.Current(); state != StateStartSent {
+			log.WithFields(log.Fields{
+				"OnuId":  onuId,
+				"IntfId": ponPortId,
+				"OnuSn":  serialNumber,
+				"PortNo": portNo,
+				"UniId":  uniId,
+			}).Errorf("Received EAPIdentityRequest packet while in state %q, dropped", state)
+
+			if state := stateMachine.Current(); state != StateAuthFailed && state != StateResponseSuccessReceived {
+				_ = updateAuthFailed(onuId, ponPortId, serialNumber, stateMachine)
+			}
+			return
+		}
+
 		reseap := createEAPIdentityResponse(eap.Id)
 		pkt := createEAPOLPkt(reseap, serviceId, uniId, onuId, ponPortId, oltId)
 
@@ -337,7 +370,7 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, gemPortId uint32, serialNu
 		}
 
 		if err := sendEapolPktIn(msg, portNo, gemPortId, stream); err != nil {
-			_ = stateMachine.Event("auth_failed")
+			_ = updateAuthFailed(onuId, ponPortId, serialNumber, stateMachine)
 			return
 		}
 		eapolLogger.WithFields(log.Fields{
@@ -347,7 +380,7 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, gemPortId uint32, serialNu
 			"PortNo": portNo,
 			"UniId":  uniId,
 		}).Debugf("Sent EAPIdentityResponse packet")
-		if err := stateMachine.Event("eap_response_identity_sent"); err != nil {
+		if err := stateMachine.Event(EventResponseIdentitySent); err != nil {
 			eapolLogger.WithFields(log.Fields{
 				"OnuId":  onuId,
 				"IntfId": ponPortId,
@@ -381,6 +414,21 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, gemPortId uint32, serialNu
 		}).Infof("Sent EAPChallengeRequest packet")
 		return
 	} else if eap.Code == layers.EAPCodeRequest && eap.Type == layers.EAPTypeOTP {
+		if state := stateMachine.Current(); state != StateResponseIdentitySent {
+			log.WithFields(log.Fields{
+				"OnuId":  onuId,
+				"IntfId": ponPortId,
+				"OnuSn":  serialNumber,
+				"PortNo": portNo,
+				"UniId":  uniId,
+			}).Errorf("Received EAPChallengeRequest packet while in state %q, dropped", state)
+
+			if state := stateMachine.Current(); state != StateAuthFailed && state != StateResponseSuccessReceived {
+				_ = updateAuthFailed(onuId, ponPortId, serialNumber, stateMachine)
+			}
+			return
+		}
+
 		senddata := getMD5Data(eap)
 		senddata = append([]byte{0x10}, senddata...)
 		sendeap := createEAPChallengeResponse(eap.Id, senddata)
@@ -393,7 +441,7 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, gemPortId uint32, serialNu
 		}
 
 		if err := sendEapolPktIn(msg, portNo, gemPortId, stream); err != nil {
-			_ = stateMachine.Event("auth_failed")
+			_ = updateAuthFailed(onuId, ponPortId, serialNumber, stateMachine)
 			return
 		}
 		eapolLogger.WithFields(log.Fields{
@@ -403,7 +451,7 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, gemPortId uint32, serialNu
 			"PortNo": portNo,
 			"UniId":  uniId,
 		}).Debugf("Sent EAPChallengeResponse packet")
-		if err := stateMachine.Event("eap_response_challenge_sent"); err != nil {
+		if err := stateMachine.Event(EventResponseChallengeSent); err != nil {
 			eapolLogger.WithFields(log.Fields{
 				"OnuId":  onuId,
 				"IntfId": ponPortId,
@@ -442,6 +490,21 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, gemPortId uint32, serialNu
 			}).Errorf("Error while transitioning ONU State %v", err)
 		}
 	} else if eap.Code == layers.EAPCodeSuccess && eap.Type == layers.EAPTypeNone {
+		if state := stateMachine.Current(); state != StateResponseChallengeSent {
+			log.WithFields(log.Fields{
+				"OnuId":  onuId,
+				"IntfId": ponPortId,
+				"OnuSn":  serialNumber,
+				"PortNo": portNo,
+				"UniId":  uniId,
+			}).Errorf("Received EAP Success packet while in state %q, dropped", state)
+
+			if state := stateMachine.Current(); state != StateAuthFailed && state != StateResponseSuccessReceived {
+				_ = updateAuthFailed(onuId, ponPortId, serialNumber, stateMachine)
+			}
+			return
+		}
+
 		eapolLogger.WithFields(log.Fields{
 			"OnuId":  onuId,
 			"IntfId": ponPortId,
@@ -449,7 +512,7 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, gemPortId uint32, serialNu
 			"PortNo": portNo,
 			"UniId":  uniId,
 		}).Debugf("Received EAPSuccess packet")
-		if err := stateMachine.Event("eap_response_success_received"); err != nil {
+		if err := stateMachine.Event(EventResponseSuccessReceived); err != nil {
 			eapolLogger.WithFields(log.Fields{
 				"OnuId":  onuId,
 				"IntfId": ponPortId,

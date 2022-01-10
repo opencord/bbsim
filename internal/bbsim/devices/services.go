@@ -19,6 +19,9 @@ package devices
 import (
 	"encoding/hex"
 	"fmt"
+	"net"
+	"time"
+
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
@@ -27,8 +30,6 @@ import (
 	bbsimTypes "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/bbsim/internal/common"
 	log "github.com/sirupsen/logrus"
-	"net"
-	"time"
 )
 
 var serviceLogger = log.WithFields(log.Fields{
@@ -138,7 +139,7 @@ func NewService(id uint32, name string, hwAddress net.HardwareAddr, uni *UniPort
 			},
 			fmt.Sprintf("enter_%s", ServiceStateDisabled): func(e *fsm.Event) {
 				// reset the state machines
-				service.EapolState.SetState("created")
+				service.EapolState.SetState(eapol.StateCreated)
 				service.DHCPState.SetState("created")
 
 				// stop listening for packets
@@ -152,26 +153,26 @@ func NewService(id uint32, name string, hwAddress net.HardwareAddr, uni *UniPort
 	)
 
 	service.EapolState = fsm.NewFSM(
-		"created",
+		eapol.StateCreated,
 		fsm.Events{
-			{Name: "start_auth", Src: []string{"created", "eap_response_success_received", "auth_failed"}, Dst: "auth_started"},
-			{Name: "eap_start_sent", Src: []string{"auth_started"}, Dst: "eap_start_sent"},
-			{Name: "eap_response_identity_sent", Src: []string{"eap_start_sent"}, Dst: "eap_response_identity_sent"},
-			{Name: "eap_response_challenge_sent", Src: []string{"eap_response_identity_sent"}, Dst: "eap_response_challenge_sent"},
-			{Name: "eap_response_success_received", Src: []string{"eap_response_challenge_sent"}, Dst: "eap_response_success_received"},
-			{Name: "auth_failed", Src: []string{"auth_started", "eap_start_sent", "eap_response_identity_sent", "eap_response_challenge_sent"}, Dst: "auth_failed"},
+			{Name: eapol.EventStartAuth, Src: []string{eapol.StateCreated, eapol.StateResponseSuccessReceived, eapol.StateAuthFailed}, Dst: eapol.StateAuthStarted},
+			{Name: eapol.EventStartSent, Src: []string{eapol.StateAuthStarted}, Dst: eapol.StateStartSent},
+			{Name: eapol.EventResponseIdentitySent, Src: []string{eapol.StateStartSent}, Dst: eapol.StateResponseIdentitySent},
+			{Name: eapol.EventResponseChallengeSent, Src: []string{eapol.StateResponseIdentitySent}, Dst: eapol.StateResponseChallengeSent},
+			{Name: eapol.EventResponseSuccessReceived, Src: []string{eapol.StateResponseChallengeSent}, Dst: eapol.StateResponseSuccessReceived},
+			{Name: eapol.EventAuthFailed, Src: []string{eapol.StateAuthStarted, eapol.StateStartSent, eapol.StateResponseIdentitySent, eapol.StateResponseChallengeSent}, Dst: eapol.StateAuthFailed},
 		},
 		fsm.Callbacks{
 			"enter_state": func(e *fsm.Event) {
 				service.logStateChange("EapolState", e.Src, e.Dst)
 			},
-			"before_start_auth": func(e *fsm.Event) {
+			fmt.Sprintf("before_%s", eapol.EventStartAuth): func(e *fsm.Event) {
 				msg := bbsimTypes.Message{
 					Type: bbsimTypes.StartEAPOL,
 				}
 				service.Channel <- msg
 			},
-			"enter_auth_started": func(e *fsm.Event) {
+			fmt.Sprintf("enter_%s", eapol.StateAuthStarted): func(e *fsm.Event) {
 				go func() {
 
 					for {
@@ -180,7 +181,7 @@ func NewService(id uint32, name string, hwAddress net.HardwareAddr, uni *UniPort
 							// if the OLT is disabled, then cancel
 							return
 						case <-time.After(eapolWaitTime):
-							if service.EapolState.Current() != "eap_response_success_received" {
+							if service.EapolState.Current() != eapol.StateResponseSuccessReceived {
 								serviceLogger.WithFields(log.Fields{
 									"OnuId":      service.UniPort.Onu.ID,
 									"IntfId":     service.UniPort.Onu.PonPortID,
@@ -191,9 +192,9 @@ func NewService(id uint32, name string, hwAddress net.HardwareAddr, uni *UniPort
 									"EapolState": service.EapolState.Current(),
 								}).Warn("EAPOL failed, resetting EAPOL State")
 
-								_ = service.EapolState.Event("auth_failed")
+								_ = service.EapolState.Event(eapol.EventAuthFailed)
 								if common.Config.BBSim.AuthRetry {
-									_ = service.EapolState.Event("start_auth")
+									_ = service.EapolState.Event(eapol.EventStartAuth)
 								}
 
 								return
@@ -325,7 +326,7 @@ func (s *Service) HandleAuth() {
 		return
 	}
 
-	if err := s.EapolState.Event("start_auth"); err != nil {
+	if err := s.EapolState.Event(eapol.EventStartAuth); err != nil {
 		serviceLogger.WithFields(log.Fields{
 			"OnuId":  s.UniPort.Onu.ID,
 			"IntfId": s.UniPort.Onu.PonPortID,
@@ -467,7 +468,7 @@ func (s *Service) HandleChannel() {
 					"Name":      s.Name,
 					"err":       err,
 				}).Error("Error while sending EapolStart packet")
-				_ = s.EapolState.Event("auth_failed")
+				_ = s.EapolState.Event(eapol.EventAuthFailed)
 			}
 		case bbsimTypes.StartDHCP:
 			if err := s.handleDHCPStart(s.Stream); err != nil {

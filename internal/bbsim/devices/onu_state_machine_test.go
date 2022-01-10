@@ -17,9 +17,11 @@
 package devices
 
 import (
+	"testing"
+
+	"github.com/opencord/bbsim/internal/bbsim/responders/eapol"
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
 	me "github.com/opencord/omci-lib-go/v2/generated"
-	"testing"
 
 	"gotest.tools/assert"
 )
@@ -121,7 +123,7 @@ func Test_Onu_StateMachine_eapol_no_flow(t *testing.T) {
 	assert.Equal(t, onu.InternalState.Current(), OnuStateEnabled)
 
 	// fail as no EapolFlow has been received
-	err := onu.InternalState.Event("start_auth")
+	err := onu.InternalState.Event(eapol.EventStartAuth)
 	if err == nil {
 		t.Fatal("can't start EAPOL without EapolFlow")
 	}
@@ -137,7 +139,7 @@ func Test_Onu_StateMachine_eapol_no_gem(t *testing.T) {
 	assert.Equal(t, onu.InternalState.Current(), OnuStateEnabled)
 
 	// fail has no GemPort has been set
-	err := onu.InternalState.Event("start_auth")
+	err := onu.InternalState.Event(eapol.EventStartAuth)
 	if err == nil {
 		t.Fatal("can't start EAPOL without GemPort")
 	}
@@ -154,33 +156,33 @@ func Test_Onu_StateMachine_eapol_start(t *testing.T) {
 	assert.Equal(t, onu.InternalState.Current(), OnuStateEnabled)
 
 	// succeed
-	_ = onu.InternalState.Event("start_auth")
-	assert.Equal(t, onu.InternalState.Current(), "auth_started")
+	_ = onu.InternalState.Event(eapol.EventStartAuth)
+	assert.Equal(t, onu.InternalState.Current(), eapol.StateAuthStarted)
 }
 
 func Test_Onu_StateMachine_eapol_states(t *testing.T) {
 	t.Skip("Needs to be moved in the Service struct")
 	onu := createTestOnu()
 
-	onu.InternalState.SetState("auth_started")
+	onu.InternalState.SetState(eapol.StateAuthStarted)
 
-	assert.Equal(t, onu.InternalState.Current(), "auth_started")
-	_ = onu.InternalState.Event("eap_start_sent")
-	assert.Equal(t, onu.InternalState.Current(), "eap_start_sent")
-	_ = onu.InternalState.Event("eap_response_identity_sent")
-	assert.Equal(t, onu.InternalState.Current(), "eap_response_identity_sent")
-	_ = onu.InternalState.Event("eap_response_challenge_sent")
-	assert.Equal(t, onu.InternalState.Current(), "eap_response_challenge_sent")
-	_ = onu.InternalState.Event("eap_response_success_received")
-	assert.Equal(t, onu.InternalState.Current(), "eap_response_success_received")
+	assert.Equal(t, onu.InternalState.Current(), eapol.StateAuthStarted)
+	_ = onu.InternalState.Event(eapol.EventStartSent)
+	assert.Equal(t, onu.InternalState.Current(), eapol.StateStartSent)
+	_ = onu.InternalState.Event(eapol.EventResponseIdentitySent)
+	assert.Equal(t, onu.InternalState.Current(), eapol.StateResponseIdentitySent)
+	_ = onu.InternalState.Event(eapol.EventResponseChallengeSent)
+	assert.Equal(t, onu.InternalState.Current(), eapol.StateResponseChallengeSent)
+	_ = onu.InternalState.Event(eapol.EventResponseSuccessReceived)
+	assert.Equal(t, onu.InternalState.Current(), eapol.StateResponseSuccessReceived)
 
 	// test that we can retrigger EAPOL
-	states := []string{"eap_start_sent", "eap_response_identity_sent", "eap_response_challenge_sent", "eap_response_success_received", "auth_failed", "dhcp_ack_received", "dhcp_failed"}
+	states := []string{eapol.StateStartSent, eapol.StateResponseIdentitySent, eapol.StateResponseChallengeSent, eapol.StateResponseSuccessReceived, eapol.StateAuthFailed, "dhcp_ack_received", "dhcp_failed"}
 	for _, state := range states {
 		onu.InternalState.SetState(state)
-		err := onu.InternalState.Event("start_auth")
+		err := onu.InternalState.Event(eapol.EventStartAuth)
 		assert.Equal(t, err, nil)
-		assert.Equal(t, onu.InternalState.Current(), "auth_started")
+		assert.Equal(t, onu.InternalState.Current(), eapol.StateAuthStarted)
 	}
 }
 
@@ -205,14 +207,14 @@ func Test_Onu_StateMachine_dhcp_no_flow(t *testing.T) {
 	t.Skip("Needs to be moved in the Service struct")
 	onu := createTestOnu()
 
-	onu.InternalState.SetState("eap_response_success_received")
-	assert.Equal(t, onu.InternalState.Current(), "eap_response_success_received")
+	onu.InternalState.SetState(eapol.StateResponseSuccessReceived)
+	assert.Equal(t, onu.InternalState.Current(), eapol.StateResponseSuccessReceived)
 
 	err := onu.InternalState.Event("start_dhcp")
 	if err == nil {
 		t.Fail()
 	}
-	assert.Equal(t, onu.InternalState.Current(), "eap_response_success_received")
+	assert.Equal(t, onu.InternalState.Current(), eapol.StateResponseSuccessReceived)
 	assert.Equal(t, err.Error(), "transition canceled with error: cannot-go-to-dhcp-started-as-dhcp-flow-is-missing")
 }
 
@@ -221,14 +223,14 @@ func Test_Onu_StateMachine_dhcp_no_gem(t *testing.T) {
 	t.Skip("Needs to be moved in the Service struct")
 	onu := createTestOnu()
 
-	onu.InternalState.SetState("eap_response_success_received")
-	assert.Equal(t, onu.InternalState.Current(), "eap_response_success_received")
+	onu.InternalState.SetState(eapol.StateResponseSuccessReceived)
+	assert.Equal(t, onu.InternalState.Current(), eapol.StateResponseSuccessReceived)
 
 	err := onu.InternalState.Event("start_dhcp")
 	if err == nil {
 		t.Fail()
 	}
-	assert.Equal(t, onu.InternalState.Current(), "eap_response_success_received")
+	assert.Equal(t, onu.InternalState.Current(), eapol.StateResponseSuccessReceived)
 	assert.Equal(t, err.Error(), "transition canceled with error: cannot-go-to-dhcp-started-as-gemport-is-missing")
 }
 
@@ -236,8 +238,8 @@ func Test_Onu_StateMachine_dhcp_start(t *testing.T) {
 	t.Skip("Needs to be moved in the Service struct")
 	onu := createTestOnu()
 
-	onu.InternalState.SetState("eap_response_success_received")
-	assert.Equal(t, onu.InternalState.Current(), "eap_response_success_received")
+	onu.InternalState.SetState(eapol.StateResponseSuccessReceived)
+	assert.Equal(t, onu.InternalState.Current(), eapol.StateResponseSuccessReceived)
 
 	// default transition
 	_ = onu.InternalState.Event("start_dhcp")
@@ -259,7 +261,7 @@ func Test_Onu_StateMachine_dhcp_states(t *testing.T) {
 	assert.Equal(t, onu.InternalState.Current(), "dhcp_ack_received")
 
 	// test that we can retrigger DHCP
-	states := []string{"eap_response_success_received", "dhcp_discovery_sent", "dhcp_request_sent", "dhcp_ack_received", "dhcp_failed"}
+	states := []string{eapol.StateResponseSuccessReceived, "dhcp_discovery_sent", "dhcp_request_sent", "dhcp_ack_received", "dhcp_failed"}
 	for _, state := range states {
 		onu.InternalState.SetState(state)
 		err := onu.InternalState.Event("start_dhcp")
