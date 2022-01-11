@@ -10,52 +10,58 @@ the list via ``./bbsim --help``
 .. code:: bash
 
    $ ./bbsim --help
-   Usage of /app/bbsim:
-      -api_address string
-            IP address:port (default ":50070")
-      -authRetry
-            Set this flag if BBSim should retry EAPOL (Authentication) upon failure until success
-      -ca string
-            Set the mode for controlled activation of PON ports and ONUs (default "default")
-      -config string
-            Configuration file path (default "configs/bbsim.yaml")
-      -cpuprofile string
-            write cpu profile to file
-      -delay int
-            The delay between ONU DISCOVERY batches in milliseconds (1 ONU per each PON PORT at a time (default 200)
-      -dhcpRetry
-            Set this flag if BBSim should retry DHCP upon failure until success
-      -enableEvents
-            Enable sending BBSim events on configured kafka server
-      -enableperf
-            Setting this flag will cause BBSim to not store data like traffic schedulers, flows of ONUs etc..
-      -kafkaAddress string
-            IP:Port for kafka (default ":9092")
-      -kafkaEventTopic string
-            Ability to configure the topic on which BBSim publishes events on Kafka
-      -logCaller
-            Whether to print the caller filename or not
-      -logLevel string
-            Set the log level (trace, debug, info, warn, error) (default "debug")
-      -nni int
-            Number of NNI ports per OLT device to be emulated (default 1)
-      -oltRebootDelay int
-            Time that BBSim should before restarting after a reboot (default 60)
-      -olt_id int
-            OLT device ID
-      -onu int
-            Number of ONU devices per PON port to be emulated (default 1)
-      -openolt_address string
-            IP address:port (default ":50060")
-      -pon int
-            Number of PON ports per OLT device to be emulated (default 1)
-      -rest_api_address string
-            IP address:port (default ":50071")
-      -services string
-            Service Configuration file path (default "configs/att-services.yaml")
-      -omci_response_rate int
-            Amount of OMCI messages to respond to - ranges from 0 (drop all messages)
-            to 10 (respond to all messages) so that if it's set to 9 we don't respond to every 10th message.
+   Usage of ./bbsim:
+     -api_address string
+           IP address:port (default ":50070")
+     -authRetry
+           Set this flag if BBSim should retry EAPOL (Authentication) upon failure until success
+     -bp_format string
+           Bandwidth profile format, 'mef' or 'ietf' (default "mef")
+     -ca string
+           Set the mode for controlled activation of PON ports and ONUs (default "default")
+     -config string
+           Configuration file path (default "configs/bbsim.yaml")
+     -cpuprofile string
+           write cpu profile to file
+     -delay int
+           The delay between ONU DISCOVERY batches in milliseconds (1 ONU per each PON PORT at a time (default 200)
+     -dhcpRetry
+           Set this flag if BBSim should retry DHCP upon failure until success
+     -dmi_server_address string
+           IP address:port (default ":50075")
+     -enableEvents
+           Enable sending BBSim events on configured kafka server
+     -enableperf
+           Setting this flag will cause BBSim to not store data like traffic schedulers, flows of ONUs etc..
+     -kafkaAddress string
+           IP:Port for kafka (default ":9092")
+     -kafkaEventTopic string
+           Ability to configure the topic on which BBSim publishes events on Kafka
+     -logCaller
+           Whether to print the caller filename or not
+     -logLevel string
+           Set the log level (trace, debug, info, warn, error) (default "debug")
+     -nni int
+           Number of NNI ports per OLT device to be emulated (default 1)
+     -oltRebootDelay int
+           Time that BBSim should before restarting after a reboot (default 60)
+     -olt_id int
+           OLT device ID
+     -omci_response_rate int
+           Amount of OMCI messages to respond to (default 10)
+     -onu int
+           Number of ONU devices per PON port to be emulated (default 1)
+     -openolt_address string
+           IP address:port (default ":50060")
+     -pon int
+           Number of PON ports per OLT device to be emulated (default 1)
+     -rest_api_address string
+           IP address:port (default ":50071")
+     -services string
+           Service Configuration file path (default "configs/att-services.yaml")
+     -uni int
+           Number of UNI Ports per ONU device to be emulated (default 4)
+
 
 
 
