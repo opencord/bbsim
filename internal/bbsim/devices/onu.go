@@ -108,9 +108,10 @@ type Onu struct {
 
 	Backoff *backoff.Backoff
 	// ONU State
-	UniPorts []UniPortIf
-	Flows    []FlowKey
-	FlowIds  []uint64 // keep track of the flows we currently have in the ONU
+	UniPorts     []UniPortIf
+	PotsUniPorts []PotsUniPortIf
+	Flows        []FlowKey
+	FlowIds      []uint64 // keep track of the flows we currently have in the ONU
 
 	OperState    *fsm.FSM
 	SerialNumber *openolt.SerialNumber
@@ -290,6 +291,11 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 					_ = uni.Disable()
 				}
 
+				// disable the POTS UNI ports
+				for _, uni := range o.PotsUniPorts {
+					_ = uni.Disable()
+				}
+
 				// verify all the flows removes are handled and
 				// terminate the ONU's ProcessOnuMessages Go routine
 				// NOTE may need to wait for the UNIs to be down too before shutting down the channel
@@ -316,11 +322,14 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 		},
 	)
 	onuLogger.WithFields(log.Fields{
-		"OnuId":  o.ID,
-		"IntfId": o.PonPortID,
-		"OnuSn":  o.Sn(),
-		"NumUni": olt.NumUni,
+		"OnuId":      o.ID,
+		"IntfId":     o.PonPortID,
+		"OnuSn":      o.Sn(),
+		"NumUni":     olt.NumUni,
+		"NumPotsUni": olt.NumPotsUni,
 	}).Debug("creating-uni-ports")
+
+	// create Ethernet UNIs
 	for i := 0; i < olt.NumUni; i++ {
 		uni, err := NewUniPort(uint32(i), &o, nextCtag, nextStag)
 		if err != nil {
@@ -333,8 +342,21 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 		}
 		o.UniPorts = append(o.UniPorts, uni)
 	}
+	// create POTS UNIs, with progressive IDs
+	for i := olt.NumUni; i < (olt.NumUni + olt.NumPotsUni); i++ {
+		uni, err := NewPotsUniPort(uint32(i), &o)
+		if err != nil {
+			onuLogger.WithFields(log.Fields{
+				"OnuId":  o.ID,
+				"IntfId": o.PonPortID,
+				"OnuSn":  o.Sn(),
+				"Err":    err,
+			}).Fatal("cannot-create-pots-uni-port")
+		}
+		o.PotsUniPorts = append(o.PotsUniPorts, uni)
+	}
 
-	mibDb, err := omcilib.GenerateMibDatabase(len(o.UniPorts))
+	mibDb, err := omcilib.GenerateMibDatabase(len(o.UniPorts), len(o.PotsUniPorts))
 	if err != nil {
 		onuLogger.WithFields(log.Fields{
 			"OnuId":  o.ID,
@@ -827,6 +849,33 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 					}).Warn("cannot-change-uni-status")
 				}
 			}
+		case me.PhysicalPathTerminationPointPotsUniClassID:
+			// if we're Setting a PPTP state
+			// we need to send the appropriate alarm (handled in the POTS UNI struct)
+			uni, err := o.FindPotsUniByEntityId(msgObj.EntityInstance)
+			if err != nil {
+				onuLogger.Error(err)
+				success = false
+			} else {
+				// 1 locks the UNI, 0 unlocks it
+				adminState := msgObj.Attributes["AdministrativeState"].(uint8)
+				var err error
+				if adminState == 1 {
+					err = uni.Disable()
+				} else {
+					err = uni.Enable()
+				}
+				if err != nil {
+					onuLogger.WithFields(log.Fields{
+						"IntfId":       o.PonPortID,
+						"OnuId":        o.ID,
+						"UniMeId":      uni.MeId,
+						"UniId":        uni.ID,
+						"SerialNumber": o.Sn(),
+						"Err":          err.Error(),
+					}).Warn("cannot-change-pots-uni-status")
+				}
+			}
 		case me.OnuGClassID:
 			o.AdminLockState = msgObj.Attributes["AdministrativeState"].(uint8)
 			onuLogger.WithFields(log.Fields{
@@ -1239,6 +1288,17 @@ func (o *Onu) FindUniById(uniID uint32) (*UniPort, error) {
 	return nil, fmt.Errorf("cannot-find-uni-with-id-%d-on-onu-%s", uniID, o.Sn())
 }
 
+// FindUniById retrieves a UNI by ID
+func (o *Onu) FindPotsUniById(uniID uint32) (*PotsUniPort, error) {
+	for _, u := range o.PotsUniPorts {
+		uni := u.(*PotsUniPort)
+		if uni.ID == uniID {
+			return uni, nil
+		}
+	}
+	return nil, fmt.Errorf("cannot-find-pots-uni-with-id-%d-on-onu-%s", uniID, o.Sn())
+}
+
 // FindUniByEntityId retrieves a uni by MeID (the OMCI entity ID)
 func (o *Onu) FindUniByEntityId(meId uint16) (*UniPort, error) {
 	entityId := omcilib.EntityID{}.FromUint16(meId)
@@ -1249,6 +1309,18 @@ func (o *Onu) FindUniByEntityId(meId uint16) (*UniPort, error) {
 		}
 	}
 	return nil, fmt.Errorf("cannot-find-uni-with-meid-%s-on-onu-%s", entityId.ToString(), o.Sn())
+}
+
+// FindPotsUniByEntityId retrieves a POTS uni by MeID (the OMCI entity ID)
+func (o *Onu) FindPotsUniByEntityId(meId uint16) (*PotsUniPort, error) {
+	entityId := omcilib.EntityID{}.FromUint16(meId)
+	for _, u := range o.PotsUniPorts {
+		uni := u.(*PotsUniPort)
+		if uni.MeId.Equals(entityId) {
+			return uni, nil
+		}
+	}
+	return nil, fmt.Errorf("cannot-find-pots-uni-with-meid-%s-on-onu-%s", entityId.ToString(), o.Sn())
 }
 
 func (o *Onu) SetID(id uint32) {
