@@ -17,8 +17,9 @@
 package devices
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Onu_CreateOnu(t *testing.T) {
@@ -26,8 +27,9 @@ func Test_Onu_CreateOnu(t *testing.T) {
 	nextStag := map[string]int{}
 
 	olt := OltDevice{
-		ID:     0,
-		NumUni: 4,
+		ID:      0,
+		NumUni:  4,
+		NumPots: 1,
 	}
 	pon := PonPort{
 		ID:  1,
@@ -38,4 +40,5 @@ func Test_Onu_CreateOnu(t *testing.T) {
 
 	assert.Equal(t, "BBSM00000101", onu.Sn())
 	assert.Equal(t, 4, len(onu.UniPorts))
+	assert.Equal(t, 1, len(onu.PotsPorts))
 }

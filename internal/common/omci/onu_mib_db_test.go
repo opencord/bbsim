@@ -17,10 +17,11 @@
 package omci
 
 import (
+	"testing"
+
 	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestEntityID_ToUint16(t *testing.T) {
@@ -55,7 +56,7 @@ func TestEntityID_Equals(t *testing.T) {
 
 func Test_GenerateMibDatabase(t *testing.T) {
 	const uniPortCount = 4
-	mibDb, err := GenerateMibDatabase(uniPortCount)
+	mibDb, err := GenerateMibDatabase(uniPortCount, 0)
 
 	expectedItems := 9                     //ONU-G + 2 Circuit Packs (4 messages each)
 	expectedItems += 2 * uniPortCount      // 1 PPTP and 1 UniG per UNI
@@ -64,6 +65,44 @@ func Test_GenerateMibDatabase(t *testing.T) {
 	expectedItems += 1                     // ONU-2g
 	expectedItems += 2 * 8 * tconts        // 8 upstream queues for each T-CONT, and we report each queue twice
 	expectedItems += 2 * 16 * uniPortCount // 16 downstream queues for each T-CONT, and we report each queue twice
+
+	assert.NoError(t, err)
+	assert.NotNil(t, mibDb)
+	assert.Equal(t, expectedItems, int(mibDb.NumberOfCommands))
+
+	// now try to serialize all messages to check on the attributes
+	for _, entry := range mibDb.items {
+		reportedMe, meErr := me.LoadManagedEntityDefinition(entry.classId, me.ParamData{
+			EntityID:   entry.entityId.ToUint16(),
+			Attributes: entry.params,
+		})
+		assert.NoError(t, meErr.GetError())
+
+		response := &omci.MibUploadNextResponse{
+			MeBasePacket: omci.MeBasePacket{
+				EntityClass: me.OnuDataClassID,
+			},
+			ReportedME: *reportedMe,
+		}
+
+		_, err := Serialize(omci.MibUploadNextResponseType, response, uint16(10))
+		assert.NoError(t, err)
+	}
+
+}
+
+func Test_GenerateMibDatabase_withPots(t *testing.T) {
+	const uniPortCount = 4
+	const potsPortCount = 1
+	mibDb, err := GenerateMibDatabase(uniPortCount, potsPortCount)
+
+	expectedItems := 13                                      //ONU-G + 3 Circuit Packs (4 messages each)
+	expectedItems += 2 * (uniPortCount + potsPortCount)      // 1 PPTP and 1 UniG per UNI
+	expectedItems += 1                                       // ANI-G
+	expectedItems += 2 * tconts                              // T-CONT and traffic schedulers
+	expectedItems += 1                                       // ONU-2g
+	expectedItems += 2 * 8 * tconts                          // 8 upstream queues for each T-CONT, and we report each queue twice
+	expectedItems += 2 * 16 * (uniPortCount + potsPortCount) // 16 downstream queues for each T-CONT, and we report each queue twice
 
 	assert.NoError(t, err)
 	assert.NotNil(t, mibDb)

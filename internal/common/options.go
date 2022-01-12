@@ -93,6 +93,7 @@ type OltConfig struct {
 	PortStatsInterval  int    `yaml:"port_stats_interval"`
 	OmciResponseRate   uint8  `yaml:"omci_response_rate"`
 	UniPorts           uint32 `yaml:"uni_ports"`
+	PotsPorts          uint32 `yaml:"pots_ports"`
 }
 
 type BBSimConfig struct {
@@ -231,7 +232,8 @@ func readCliParams() *GlobalConfig {
 	nni := flag.Int("nni", int(conf.Olt.NniPorts), "Number of NNI ports per OLT device to be emulated")
 	pon := flag.Int("pon", int(conf.Olt.PonPorts), "Number of PON ports per OLT device to be emulated")
 	onu := flag.Int("onu", int(conf.Olt.OnusPonPort), "Number of ONU devices per PON port to be emulated")
-	uni := flag.Int("uni", int(conf.Olt.UniPorts), "Number of UNI Ports per ONU device to be emulated")
+	uni := flag.Int("uni", int(conf.Olt.UniPorts), "Number of Ethernet UNI Ports per ONU device to be emulated")
+	pots := flag.Int("pots", int(conf.Olt.PotsPorts), "Number of POTS UNI Ports per ONU device to be emulated")
 
 	oltRebootDelay := flag.Int("oltRebootDelay", conf.Olt.OltRebootDelay, "Time that BBSim should before restarting after a reboot")
 	omci_response_rate := flag.Int("omci_response_rate", int(conf.Olt.OmciResponseRate), "Amount of OMCI messages to respond to")
@@ -262,6 +264,7 @@ func readCliParams() *GlobalConfig {
 	conf.Olt.NniPorts = uint32(*nni)
 	conf.Olt.PonPorts = uint32(*pon)
 	conf.Olt.UniPorts = uint32(*uni)
+	conf.Olt.PotsPorts = uint32(*pots)
 	conf.Olt.OnusPonPort = uint32(*onu)
 	conf.Olt.OltRebootDelay = *oltRebootDelay
 	conf.Olt.OmciResponseRate = uint8(*omci_response_rate)
@@ -338,6 +341,7 @@ func getDefaultOps() *GlobalConfig {
 			PortStatsInterval:  20,
 			OmciResponseRate:   10,
 			UniPorts:           4,
+			PotsPorts:          0,
 		},
 		BBRConfig{
 			LogLevel:  "debug",

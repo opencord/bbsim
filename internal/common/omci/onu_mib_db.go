@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+
 	me "github.com/opencord/omci-lib-go/v2/generated"
 )
 
@@ -69,6 +70,7 @@ const (
 	cardHolderOnuType byte = 0x01 // ONU is a single piece of integrated equipment
 	ethernetUnitType  byte = 0x2f // Ethernet BASE-T
 	xgsPonUnitType    byte = 0xee // XG-PON10G10
+	potsUnitType      byte = 0x20 // POTS
 	cardHolderSlotID  byte = 0x01
 	tcontSlotId       byte = 0x80 // why is this not the same as the cardHolderSlotID, it does not point to anything
 	aniGId            byte = 0x01
@@ -90,7 +92,7 @@ func GenerateUniPortEntityId(id uint32) EntityID {
 
 // creates a MIB database for a ONU
 // CircuitPack and CardHolder are static, everything else can be configured
-func GenerateMibDatabase(uniPortCount int) (*MibDb, error) {
+func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int) (*MibDb, error) {
 
 	mibDb := MibDb{
 		items: []MibDbEntry{},
@@ -129,7 +131,7 @@ func GenerateMibDatabase(uniPortCount int) (*MibDb, error) {
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
-			"VendorId":            "ONF",
+			"VendorId":            ToOctets("ONF", 4),
 			"AdministrativeState": 0,
 			"OperationalState":    0,
 			"BridgedOrIpInd":      0,
@@ -185,7 +187,7 @@ func GenerateMibDatabase(uniPortCount int) (*MibDb, error) {
 		circuitPackEntityID,
 		me.AttributeValueMap{
 			"Type":          ethernetUnitType,
-			"NumberOfPorts": uniPortCount,
+			"NumberOfPorts": ethUniPortCount,
 			"SerialNumber":  ToOctets("BBSM-Circuit-Pack", 20),
 			"Version":       ToOctets("v0.0.1", 20),
 		},
@@ -194,7 +196,7 @@ func GenerateMibDatabase(uniPortCount int) (*MibDb, error) {
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
-			"VendorId":            "ONF",
+			"VendorId":            ToOctets("ONF", 4),
 			"AdministrativeState": 0,
 			"OperationalState":    0,
 			"BridgedOrIpInd":      0,
@@ -219,33 +221,101 @@ func GenerateMibDatabase(uniPortCount int) (*MibDb, error) {
 		},
 	})
 
+	if potsUniPortCount > 0 {
+		// circuitPack POTS
+		// NOTE the circuit pack is divided in multiple messages as too big to fit in a single one
+		mibDb.items = append(mibDb.items, MibDbEntry{
+			me.CircuitPackClassID,
+			circuitPackEntityID,
+			me.AttributeValueMap{
+				"Type":          potsUnitType,
+				"NumberOfPorts": potsUniPortCount,
+				"SerialNumber":  ToOctets("BBSM-Circuit-Pack", 20),
+				"Version":       ToOctets("v0.0.1", 20),
+			},
+		})
+		mibDb.items = append(mibDb.items, MibDbEntry{
+			me.CircuitPackClassID,
+			circuitPackEntityID,
+			me.AttributeValueMap{
+				"VendorId":            ToOctets("ONF", 4),
+				"AdministrativeState": 0,
+				"OperationalState":    0,
+				"BridgedOrIpInd":      0,
+			},
+		})
+		mibDb.items = append(mibDb.items, MibDbEntry{
+			me.CircuitPackClassID,
+			circuitPackEntityID,
+			me.AttributeValueMap{
+				"EquipmentId":                 ToOctets("BBSM-Circuit-Pack", 20),
+				"CardConfiguration":           0,
+				"TotalTContBufferNumber":      8,
+				"TotalPriorityQueueNumber":    8,
+				"TotalTrafficSchedulerNumber": 16,
+			},
+		})
+		mibDb.items = append(mibDb.items, MibDbEntry{
+			me.CircuitPackClassID,
+			circuitPackEntityID,
+			me.AttributeValueMap{
+				"PowerShedOverride": uint32(0),
+			},
+		})
+	}
+
 	// PPTP and UNI-Gs
 	// NOTE this are dependent on the number of UNI this ONU supports
 	// Through an identical ID, the UNI-G ME is implicitly linked to an instance of a PPTP
-	for i := 1; i <= uniPortCount; i++ {
+	totalPortsCount := ethUniPortCount + potsUniPortCount
+	for i := 1; i <= totalPortsCount; i++ {
 		uniEntityId := GenerateUniPortEntityId(uint32(i))
 
-		mibDb.items = append(mibDb.items, MibDbEntry{
-			me.PhysicalPathTerminationPointEthernetUniClassID,
-			uniEntityId,
-			me.AttributeValueMap{
-				"ExpectedType":                  0,
-				"SensedType":                    ethernetUnitType,
-				"AutoDetectionConfiguration":    0,
-				"EthernetLoopbackConfiguration": 0,
-				"AdministrativeState":           0,
-				"OperationalState":              0,
-				"ConfigurationInd":              3,
-				"MaxFrameSize":                  1518,
-				"DteOrDceInd":                   0,
-				"PauseTime":                     0,
-				"BridgedOrIpInd":                2,
-				"Arc":                           0,
-				"ArcInterval":                   0,
-				"PppoeFilter":                   0,
-				"PowerControl":                  0,
-			},
-		})
+		if i <= ethUniPortCount {
+			// first, create the correct amount of ethernet UNIs, the same is done in onu.go
+			mibDb.items = append(mibDb.items, MibDbEntry{
+				me.PhysicalPathTerminationPointEthernetUniClassID,
+				uniEntityId,
+				me.AttributeValueMap{
+					"ExpectedType":                  0,
+					"SensedType":                    ethernetUnitType,
+					"AutoDetectionConfiguration":    0,
+					"EthernetLoopbackConfiguration": 0,
+					"AdministrativeState":           0,
+					"OperationalState":              0,
+					"ConfigurationInd":              3,
+					"MaxFrameSize":                  1518,
+					"DteOrDceInd":                   0,
+					"PauseTime":                     0,
+					"BridgedOrIpInd":                2,
+					"Arc":                           0,
+					"ArcInterval":                   0,
+					"PppoeFilter":                   0,
+					"PowerControl":                  0,
+				},
+			})
+		} else {
+			// the remaining ones are pots UNIs, the same is done in onu.go
+			mibDb.items = append(mibDb.items, MibDbEntry{
+				me.PhysicalPathTerminationPointPotsUniClassID,
+				uniEntityId,
+				me.AttributeValueMap{
+					"AdministrativeState": 0,
+					"Deprecated":          0,
+					"Arc":                 0,
+					"ArcInterval":         0,
+					"Impedance":           0,
+					"TransmissionPath":    0,
+					"RxGain":              0,
+					"TxGain":              0,
+					"OperationalState":    0,
+					"HookState":           0,
+					"PotsHoldoverTime":    0,
+					"NominalFeedVoltage":  0,
+					"LossOfSoftswitch":    0,
+				},
+			})
+		}
 
 		mibDb.items = append(mibDb.items, MibDbEntry{
 			me.UniGClassID,

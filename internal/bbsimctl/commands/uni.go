@@ -32,8 +32,8 @@ import (
 )
 
 const (
-	DEFAULT_UNI_HEADER_FORMAT               = "table{{ .OnuSn }}\t{{ .OnuID }}\t{{ .ID }}\t{{ .MeID }}\t{{ .PortNo }}\t{{ .OperState }}"
-	DEFAULT_UNI_HEADER_FORMAT_WITH_SERVICES = "table{{ .OnuSn }}\t{{ .OnuID }}\t{{ .ID }}\t{{ .MeID }}\t{{ .PortNo }}\t{{ .OperState }}\t{{ .Services }}"
+	DEFAULT_UNI_HEADER_FORMAT               = "table{{ .OnuSn }}\t{{ .OnuID }}\t{{ .ID }}\t{{ .MeID }}\t{{ .PortNo }}\t{{ .OperState }}\t{{ .Type }}"
+	DEFAULT_UNI_HEADER_FORMAT_WITH_SERVICES = "table{{ .OnuSn }}\t{{ .OnuID }}\t{{ .ID }}\t{{ .MeID }}\t{{ .PortNo }}\t{{ .OperState }}\t{{ .Type }}\t{{ .Services }}"
 )
 
 type UniIdInt string

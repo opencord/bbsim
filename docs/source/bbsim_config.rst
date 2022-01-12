@@ -55,6 +55,8 @@ the list via ``./bbsim --help``
            IP address:port (default ":50060")
      -pon int
            Number of PON ports per OLT device to be emulated (default 1)
+     -pots int
+           Number of POTS UNI Ports per ONU device to be emulated (default 0)
      -rest_api_address string
            IP address:port (default ":50071")
      -services string
