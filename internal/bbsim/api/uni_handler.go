@@ -18,6 +18,7 @@ package api
 
 import (
 	"context"
+
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 )
@@ -31,6 +32,19 @@ func convertBBSimUniPortToProtoUniPort(u *devices.UniPort) *bbsim.UNI {
 		PortNo:    int32(u.PortNo),
 		OperState: u.OperState.Current(),
 		Services:  convertBBsimServicesToProtoServices(u.Services),
+		Type:      bbsim.UniType_ETH,
+	}
+}
+
+func convertBBSimPotsPortToProtoUniPort(u *devices.PotsPort) *bbsim.UNI {
+	return &bbsim.UNI{
+		ID:        int32(u.ID),
+		OnuID:     int32(u.Onu.ID),
+		OnuSn:     u.Onu.Sn(),
+		MeID:      uint32(u.MeId.ToUint16()),
+		PortNo:    int32(u.PortNo),
+		OperState: u.OperState.Current(),
+		Type:      bbsim.UniType_POTS,
 	}
 }
 
@@ -39,6 +53,15 @@ func convertBBsimUniPortsToProtoUniPorts(list []devices.UniPortIf) []*bbsim.UNI 
 	for _, u := range list {
 		uni := u.(*devices.UniPort)
 		unis = append(unis, convertBBSimUniPortToProtoUniPort(uni))
+	}
+	return unis
+}
+
+func convertBBsimPotsPortsToProtoUniPorts(list []devices.PotsPortIf) []*bbsim.UNI {
+	unis := []*bbsim.UNI{}
+	for _, u := range list {
+		uni := u.(*devices.PotsPort)
+		unis = append(unis, convertBBSimPotsPortToProtoUniPort(uni))
 	}
 	return unis
 }
