@@ -20,11 +20,12 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/opencord/voltha-protos/v5/go/extension"
 	"net"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/opencord/voltha-protos/v5/go/extension"
 
 	"github.com/opencord/bbsim/internal/bbsim/responders/dhcp"
 	"github.com/opencord/bbsim/internal/bbsim/types"
@@ -79,6 +80,7 @@ type OltDevice struct {
 	NumPon               int
 	NumOnuPerPon         int
 	NumUni               int
+	NumPots              int
 	InternalState        *fsm.FSM
 	channel              chan types.Message
 	dhcpServer           dhcp.DHCPServerIf
@@ -124,6 +126,7 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		"NumPon":       options.Olt.PonPorts,
 		"NumOnuPerPon": options.Olt.OnusPonPort,
 		"NumUni":       options.Olt.UniPorts,
+		"NumPots":      options.Olt.PotsPorts,
 	}).Debug("CreateOLT")
 
 	olt = OltDevice{
@@ -136,6 +139,7 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		NumPon:              int(options.Olt.PonPorts),
 		NumOnuPerPon:        int(options.Olt.OnusPonPort),
 		NumUni:              int(options.Olt.UniPorts),
+		NumPots:             int(options.Olt.PotsPorts),
 		Pons:                []*PonPort{},
 		Nnis:                []*NniPort{},
 		Delay:               options.BBSim.Delay,

@@ -20,13 +20,14 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/rand"
+	"strconv"
+
 	"github.com/google/gopacket"
 	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	log "github.com/sirupsen/logrus"
-	"math/rand"
-	"strconv"
 )
 
 func ParseGetRequest(omciPkt gopacket.Packet) (*omci.GetRequest, error) {
@@ -72,10 +73,14 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openo
 			activeImageEntityId, committedImageEntityId, standbyImageVersion, activeImageVersion, committedImageVersion)
 	case me.IpHostConfigDataClassID:
 		response = createIpHostResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+	case me.VoipConfigDataClassID:
+		response = createVoipConfigDataResponse(msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.UniGClassID:
 		response = createUnigResponse(msgObj.AttributeMask, msgObj.EntityInstance, onuDown)
 	case me.PhysicalPathTerminationPointEthernetUniClassID:
-		response = createPptpResponse(msgObj.AttributeMask, msgObj.EntityInstance, onuDown)
+		response = createPptpEthernetResponse(msgObj.AttributeMask, msgObj.EntityInstance, onuDown)
+	case me.PhysicalPathTerminationPointPotsUniClassID:
+		response = createPptpPotsResponse(msgObj.AttributeMask, msgObj.EntityInstance, onuDown)
 	case me.AniGClassID:
 		response = createAnigResponse(msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.OnuDataClassID:
@@ -281,6 +286,28 @@ func createIpHostResponse(attributeMask uint16, entityInstance uint16) *omci.Get
 	}
 }
 
+func createVoipConfigDataResponse(attributeMask uint16, entityInstance uint16) *omci.GetResponse {
+	return &omci.GetResponse{
+		MeBasePacket: omci.MeBasePacket{
+			EntityClass:    me.VoipConfigDataClassID,
+			EntityInstance: entityInstance,
+		},
+		Attributes: me.AttributeValueMap{
+			"ManagedEntityId":                   0,
+			"AvailableSignallingProtocols":      1,
+			"SignallingProtocolUsed":            1,
+			"AvailableVoipConfigurationMethods": 1,
+			"VoipConfigurationMethodUsed":       1,
+			"VoipConfigurationAddressPointer":   0xFFFF,
+			"VoipConfigurationState":            0,
+			"RetrieveProfile":                   0,
+			"ProfileVersion":                    0,
+		},
+		Result:        me.Success,
+		AttributeMask: attributeMask,
+	}
+}
+
 func createUnigResponse(attributeMask uint16, entityID uint16, onuDown bool) *omci.GetResponse {
 	// Valid values for uni_admin_state are 0 (unlocks) and 1 (locks)
 	omciAdminState := 1
@@ -315,7 +342,7 @@ func createUnigResponse(attributeMask uint16, entityID uint16, onuDown bool) *om
 	}
 }
 
-func createPptpResponse(attributeMask uint16, entityID uint16, onuDown bool) *omci.GetResponse {
+func createPptpEthernetResponse(attributeMask uint16, entityID uint16, onuDown bool) *omci.GetResponse {
 	// Valid values for oper_state are 0 (enabled) and 1 (disabled)
 	// Valid values for uni_admin_state are 0 (unlocks) and 1 (locks)
 	onuAdminState := 1
@@ -353,6 +380,50 @@ func createPptpResponse(attributeMask uint16, entityID uint16, onuDown bool) *om
 	return &omci.GetResponse{
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.PhysicalPathTerminationPointEthernetUniClassID,
+			EntityInstance: entityID,
+		},
+		Attributes:    managedEntity.GetAttributeValueMap(),
+		AttributeMask: attributeMask,
+		Result:        me.Success,
+	}
+}
+
+func createPptpPotsResponse(attributeMask uint16, entityID uint16, onuDown bool) *omci.GetResponse {
+	// Valid values for oper_state are 0 (enabled) and 1 (disabled)
+	// Valid values for uni_admin_state are 0 (unlocks) and 1 (locks)
+	onuAdminState := 1
+	if !onuDown {
+		onuAdminState = 0
+	}
+	onuOperState := onuAdminState // For now make the assumption that oper state reflects the admin state
+	managedEntity, meErr := me.NewPhysicalPathTerminationPointPotsUni(me.ParamData{
+		EntityID: entityID,
+		Attributes: me.AttributeValueMap{
+			"ManagedEntityId":     entityID,
+			"AdministrativeState": onuAdminState,
+			"Deprecated":          0,
+			"Arc":                 0,
+			"ArcInterval":         0,
+			"Impedance":           0,
+			"TransmissionPath":    0,
+			"RxGain":              0,
+			"TxGain":              0,
+			"OperationalState":    onuOperState,
+			"HookState":           0,
+			"PotsHoldoverTime":    0,
+			"NominalFeedVoltage":  0,
+			"LossOfSoftswitch":    0,
+		},
+	})
+
+	if meErr.GetError() != nil {
+		omciLogger.Errorf("NewPhysicalPathTerminationPointPotsUni %v", meErr.Error())
+		return nil
+	}
+
+	return &omci.GetResponse{
+		MeBasePacket: omci.MeBasePacket{
+			EntityClass:    me.PhysicalPathTerminationPointPotsUniClassID,
 			EntityInstance: entityID,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
