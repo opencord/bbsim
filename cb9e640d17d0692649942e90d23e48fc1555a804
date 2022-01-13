@@ -35,6 +35,46 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "041707e9_5ca47dcc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-13T13:38:19Z",
+      "side": 1,
+      "message": "minor comments, LGTM otherwise",
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2f1f6df9_742b3b3b",
+        "filename": "api/bbsim/bbsim.proto",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-13T13:38:19Z",
+      "side": 1,
+      "message": "remove useless space",
+      "range": {
+        "startLine": 108,
+        "startChar": 21,
+        "endLine": 108,
+        "endChar": 22
+      },
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "205d8bdf_2105f9d3",
@@ -60,6 +100,29 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "29e46d35_32dd4564",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-13T13:38:19Z",
+      "side": 1,
+      "message": "PotsPorts is probably enough",
+      "range": {
+        "startLine": 129,
+        "startChar": 18,
+        "endLine": 129,
+        "endChar": 42
+      },
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "479b1e93_3df5ceb9",
         "filename": "internal/bbsim/devices/onu.go",
         "patchSetId": 1
@@ -76,6 +139,52 @@
         "startChar": 11,
         "endLine": 295,
         "endChar": 14
+      },
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6994be38_62d6b10b",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-13T13:38:19Z",
+      "side": 1,
+      "message": "NumPots",
+      "range": {
+        "startLine": 329,
+        "startChar": 20,
+        "endLine": 329,
+        "endChar": 30
+      },
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7f38d9f0_aa60731f",
+        "filename": "internal/common/omci/onu_mib_db.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-13T13:38:19Z",
+      "side": 1,
+      "message": "please ask this to Chip either via email or slack",
+      "range": {
+        "startLine": 253,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 76
       },
       "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
