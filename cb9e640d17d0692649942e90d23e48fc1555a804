@@ -18,6 +18,23 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "b4221997_0073b54f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-01-13T02:00:52Z",
+      "side": 1,
+      "message": "@gamze @holger do you mind taking a look and check if this is a valuable starting point for POTS support in BBSim? Thanks",
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "205d8bdf_2105f9d3",
