@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "81f68f65_dcc0906b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-01-13T01:59:51Z",
+      "side": 1,
+      "message": "Looks a great starting point to me",
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "205d8bdf_2105f9d3",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-01-13T01:59:51Z",
+      "side": 1,
+      "message": "NumPots should be enough. I think if we call Uni the ethernet ports and Pots the telephone ports we might save some duplication and make the code more readable",
+      "range": {
+        "startLine": 83,
+        "startChar": 1,
+        "endLine": 83,
+        "endChar": 11
+      },
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "479b1e93_3df5ceb9",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-01-13T01:59:51Z",
+      "side": 1,
+      "message": "pots?",
+      "range": {
+        "startLine": 295,
+        "startChar": 11,
+        "endLine": 295,
+        "endChar": 14
+      },
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "25744c04_29b5217e",
+        "filename": "internal/common/omci/onu_mib_db.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-01-13T01:59:51Z",
+      "side": 1,
+      "message": "do we need to create queues for the POTS port as well?",
+      "range": {
+        "startLine": 335,
+        "startChar": 2,
+        "endLine": 335,
+        "endChar": 50
+      },
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
