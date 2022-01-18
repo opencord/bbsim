@@ -16,6 +16,29 @@
       "message": "aside from technical elements under discussion LGTM",
       "revId": "5d65614823da2ec5aedeab1d25cc065b6018ddc9",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f7a7001e_050c5d3f",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1291,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-01-18T23:25:21Z",
+      "side": 1,
+      "message": "FindPotsUniById",
+      "range": {
+        "startLine": 1291,
+        "startChar": 3,
+        "endLine": 1291,
+        "endChar": 14
+      },
+      "revId": "5d65614823da2ec5aedeab1d25cc065b6018ddc9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
