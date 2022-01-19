@@ -1,6 +1,23 @@
 {
   "comments": [
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "236c6399_955b73dd",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-01-19T01:16:22Z",
+      "side": 1,
+      "message": "@yasin: Can you check https://gerrit.opencord.org/c/openolt/+/30300. I think we can do away with \"any\" flow-type. You will need to do similar changes in the bbsim.",
+      "revId": "7d5da92c0eef50c2a97a3a0c6169feee5bf1b94d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "08d5ccf8_95a76432",
