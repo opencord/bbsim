@@ -164,7 +164,7 @@ func NewUniPort(ID uint32, onu *Onu, nextCtag map[string]int, nextStag map[strin
 				// check we're not going over
 				if nextStag[s.Name] > 4096 {
 					uni.logger.WithFields(log.Fields{
-						"cTag":    nextCtag[s.Name],
+						"sTag":    nextStag[s.Name],
 						"Service": s.Name,
 					}).Fatal("s-tag-limit-reached-too-many-subscribers")
 				}
