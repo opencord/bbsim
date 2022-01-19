@@ -18,6 +18,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "18212978_a5050f89",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000816
+      },
+      "writtenOn": "2022-01-19T13:31:44Z",
+      "side": 1,
+      "message": "got it thanks",
+      "parentUuid": "236c6399_955b73dd",
+      "revId": "7d5da92c0eef50c2a97a3a0c6169feee5bf1b94d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "08d5ccf8_95a76432",
@@ -31,6 +49,30 @@
       "writtenOn": "2022-01-18T21:53:19Z",
       "side": 1,
       "message": "is \"any\" a new FlowType that has been created?\nin the protos I only find \"upstream, downstream, broadcast, multicast\"\nhttps://github.com/opencord/voltha-protos/blob/master/protos/voltha_protos/openolt.proto#L480\n\nOn a different note it might be a good idea to change the \"FlowType\" to be an Enum of the possible values",
+      "range": {
+        "startLine": 1150,
+        "startChar": 23,
+        "endLine": 1150,
+        "endChar": 26
+      },
+      "revId": "7d5da92c0eef50c2a97a3a0c6169feee5bf1b94d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3f09b3f3_fbe7017b",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1150,
+      "author": {
+        "id": 1000816
+      },
+      "writtenOn": "2022-01-19T13:31:44Z",
+      "side": 1,
+      "message": "Yes I meant to create a new FlowType but we don\u0027t need it anymore since Girish explained in his comment. I will revert this changes.",
+      "parentUuid": "08d5ccf8_95a76432",
       "range": {
         "startLine": 1150,
         "startChar": 23,
