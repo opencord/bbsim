@@ -289,6 +289,57 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "afc948ff_21d02036",
+        "filename": "internal/common/omci/onu_mib_db.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1000617
+      },
+      "writtenOn": "2022-01-20T22:48:15Z",
+      "side": 1,
+      "message": "If just doing a single POTS UNI in the first BBSIM release, may want to compare it to 1 instead of \u003e0.   Otherwise need a for loop similar to the ETH UNI section after this one.  The JSON shared from the PCAP had a single POTS entry (type\u003d32) and NumberOfPorts \u003d\u003d 1 (line 232 below).",
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6851d1dd_74ee0ef4",
+        "filename": "internal/common/omci/onu_mib_db.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1000617
+      },
+      "writtenOn": "2022-01-20T22:48:15Z",
+      "side": 1,
+      "message": "I have not worked with the BBSIM MIB DB, but it looks like you can do these appends as a single append since they are using the same class ID and EntityID.   Just add all the following attributes to the first append above.\n\nMateo or Andrea may know for sure.",
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b9b78278_d63b1d38",
+        "filename": "internal/common/omci/onu_mib_db.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1000617
+      },
+      "writtenOn": "2022-01-20T22:48:15Z",
+      "side": 1,
+      "message": "VendorId is a multibyte field in the MIB and probably needs to be octet encoded.  ToOctets(\"ONF\", 4)",
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "7f38d9f0_aa60731f",
         "filename": "internal/common/omci/onu_mib_db.go",
         "patchSetId": 1
@@ -300,6 +351,30 @@
       "writtenOn": "2022-01-13T13:38:19Z",
       "side": 1,
       "message": "please ask this to Chip either via email or slack",
+      "range": {
+        "startLine": 253,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 76
+      },
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2e7733fa_01135941",
+        "filename": "internal/common/omci/onu_mib_db.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1000617
+      },
+      "writtenOn": "2022-01-20T22:48:15Z",
+      "side": 1,
+      "message": "These numbers should be good.",
+      "parentUuid": "7f38d9f0_aa60731f",
       "range": {
         "startLine": 253,
         "startChar": 0,
