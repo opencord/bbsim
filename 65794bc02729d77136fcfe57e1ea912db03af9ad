@@ -24,6 +24,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "c9244b6a_fa697b16",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1186,
+      "author": {
+        "id": 1000816
+      },
+      "writtenOn": "2022-01-24T22:32:53Z",
+      "side": 0,
+      "message": "Ack",
+      "parentUuid": "ee127421_fec0ed2f",
+      "range": {
+        "startLine": 1154,
+        "startChar": 0,
+        "endLine": 1186,
+        "endChar": 0
+      },
+      "revId": "65794bc02729d77136fcfe57e1ea912db03af9ad",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "14700844_964b41b4",
@@ -37,6 +61,30 @@
       "writtenOn": "2022-01-24T21:38:27Z",
       "side": 0,
       "message": "I am a bit confused. This section is showing up as removed. Did it exist already?",
+      "range": {
+        "startLine": 1186,
+        "startChar": 0,
+        "endLine": 1189,
+        "endChar": 49
+      },
+      "revId": "65794bc02729d77136fcfe57e1ea912db03af9ad",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1f83b6c5_04dcbc5e",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1189,
+      "author": {
+        "id": 1000816
+      },
+      "writtenOn": "2022-01-24T22:32:53Z",
+      "side": 0,
+      "message": "Ack",
+      "parentUuid": "14700844_964b41b4",
       "range": {
         "startLine": 1186,
         "startChar": 0,
