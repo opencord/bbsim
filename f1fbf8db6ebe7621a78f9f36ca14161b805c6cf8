@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3f3cda40_1af1ed9c",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-01-24T21:38:27Z",
+      "side": 1,
+      "message": "Hi Yasin, do you mind generating a clean patch. I think there are some changes that show up as removed here while they do not exist on master - https://github.com/opencord/bbsim/commits/master",
+      "revId": "f1fbf8db6ebe7621a78f9f36ca14161b805c6cf8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ae8c108a_5d2847bb",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-01-24T21:38:27Z",
+      "side": 1,
+      "message": "Where is onu.FlowIds updated?",
+      "revId": "f1fbf8db6ebe7621a78f9f36ca14161b805c6cf8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
