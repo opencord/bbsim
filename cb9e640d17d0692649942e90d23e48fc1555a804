@@ -304,6 +304,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "5aea1c8e_8b79a80a",
+        "filename": "internal/common/omci/onu_mib_db.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-01-24T08:55:01Z",
+      "side": 1,
+      "message": "The implementation in this patch supports any number of POTS ports, and the same loop used to create ETH UNIs is actually used for POTS too, as you can see at lines 297-318.",
+      "parentUuid": "afc948ff_21d02036",
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "6851d1dd_74ee0ef4",
@@ -321,6 +339,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "df99b5e3_b73b42df",
+        "filename": "internal/common/omci/onu_mib_db.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-01-24T08:55:01Z",
+      "side": 1,
+      "message": "Matteo confirmed to me that this is necessary because every item is sent in a different packet, and some packets would otherwise be too big.",
+      "parentUuid": "6851d1dd_74ee0ef4",
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "b9b78278_d63b1d38",
@@ -334,6 +370,24 @@
       "writtenOn": "2022-01-20T22:48:15Z",
       "side": 1,
       "message": "VendorId is a multibyte field in the MIB and probably needs to be octet encoded.  ToOctets(\"ONF\", 4)",
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1757e63b_f0645150",
+        "filename": "internal/common/omci/onu_mib_db.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-01-24T08:55:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b9b78278_d63b1d38",
       "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
@@ -375,6 +429,30 @@
       "side": 1,
       "message": "These numbers should be good.",
       "parentUuid": "7f38d9f0_aa60731f",
+      "range": {
+        "startLine": 253,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 76
+      },
+      "revId": "cb9e640d17d0692649942e90d23e48fc1555a804",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "8a32e870_c161edeb",
+        "filename": "internal/common/omci/onu_mib_db.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-01-24T08:55:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2e7733fa_01135941",
       "range": {
         "startLine": 253,
         "startChar": 0,
