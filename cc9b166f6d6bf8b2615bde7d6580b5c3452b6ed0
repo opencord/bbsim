@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "8dcbb459_3771f91f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-01-26T17:01:19Z",
+      "side": 1,
+      "message": "@yasin: This patch was causing a regression here https://jenkins.opencord.org/view/All%20Jobs/job/periodic-voltha-multiple-olts-openonu-go-test-bbsim/801, so it has to be reverted. Can you please check what is going wrong.",
+      "revId": "cc9b166f6d6bf8b2615bde7d6580b5c3452b6ed0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
