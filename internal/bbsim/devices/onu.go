@@ -93,6 +93,11 @@ const (
 	BbrOnuStateDhcpFlowSent  = "dhcp_flow_sent"
 )
 
+type FlowKey struct {
+	ID        uint64
+	Direction string
+}
+
 type Onu struct {
 	ID                  uint32
 	PonPortID           uint32
@@ -105,6 +110,7 @@ type Onu struct {
 	// ONU State
 	UniPorts  []UniPortIf
 	PotsPorts []PotsPortIf
+	Flows     []FlowKey
 	FlowIds   []uint64 // keep track of the flows we currently have in the ONU
 
 	OperState    *fsm.FSM
@@ -155,7 +161,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 		seqNumber:                     0,
 		DoneChannel:                   make(chan bool, 1),
 		DiscoveryRetryDelay:           60 * time.Second, // this is used to send OnuDiscoveryIndications until an activate call is received
-		FlowIds:                       []uint64{},
+		Flows:                         []FlowKey{},
 		DiscoveryDelay:                delay,
 		MibDataSync:                   0,
 		ImageSoftwareExpectedSections: 0, // populated during OMCI StartSoftwareDownloadRequest
@@ -374,7 +380,7 @@ func (o *Onu) logStateChange(src string, dst string) {
 // cleanupOnuState this method is to clean the local state when the ONU is disabled
 func (o *Onu) cleanupOnuState() {
 	// clean the ONU state
-	o.FlowIds = []uint64{}
+	o.Flows = []FlowKey{}
 	o.PonPort.removeOnuId(o.ID)
 	o.PonPort.removeAllocId(o.SerialNumber)
 	o.PonPort.removeGemPortBySn(o.SerialNumber)
@@ -1742,12 +1748,15 @@ func (o *Onu) sendDhcpFlow(client openolt.OpenoltClient) {
 	}).Info("Sent DHCP Flow")
 }
 
-// DeleteFlow method search and delete flowId from the onu flowIds slice
-func (onu *Onu) DeleteFlow(id uint64) {
-	for pos, flowId := range onu.FlowIds {
-		if flowId == id {
-			// delete the flowId by shifting all flowIds by one
-			onu.FlowIds = append(onu.FlowIds[:pos], onu.FlowIds[pos+1:]...)
+// DeleteFlow method search and delete flowKey from the onu flows slice
+func (onu *Onu) DeleteFlow(key FlowKey) {
+	for pos, flowKey := range onu.Flows {
+		if flowKey == key {
+			// delete the flowKey by shifting all flowKeys by one
+			onu.Flows = append(onu.Flows[:pos], onu.Flows[pos+1:]...)
+			t := make([]FlowKey, len(onu.Flows))
+			copy(t, onu.Flows)
+			onu.Flows = t
 			break
 		}
 	}

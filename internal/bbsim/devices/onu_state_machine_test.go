@@ -40,7 +40,10 @@ func Test_Onu_StateMachine_disable(t *testing.T) {
 	onu.InternalState.SetState(OnuStateEnabled)
 	assert.Equal(t, onu.InternalState.Current(), OnuStateEnabled)
 
-	onu.FlowIds = []uint64{1, 2}
+	onu.Flows = []FlowKey{
+		{ID: 1, Direction: "upstream"},
+		{ID: 2, Direction: "downstream"},
+	}
 	key := omcilib.OnuAlarmInfoMapKey{
 		MeInstance: 257,
 		MeClassID:  me.PhysicalPathTerminationPointEthernetUniClassID,
@@ -54,7 +57,7 @@ func Test_Onu_StateMachine_disable(t *testing.T) {
 	assert.Equal(t, onu.InternalState.Current(), OnuStateDisabled)
 
 	assert.Equal(t, len(onu.onuAlarmsInfo), 0)
-	assert.Equal(t, len(onu.FlowIds), 0)
+	assert.Equal(t, len(onu.Flows), 0)
 	assert.Equal(t, len(onu.PonPort.AllocatedOnuIds), 0)
 	assert.Equal(t, len(onu.PonPort.AllocatedAllocIds), 0)
 	assert.Equal(t, len(onu.PonPort.AllocatedGemPorts), 0)

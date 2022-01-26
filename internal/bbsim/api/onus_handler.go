@@ -578,7 +578,7 @@ func (s BBSimServer) GetFlows(ctx context.Context, req *bbsim.ONURequest) (*bbsi
 	res := &bbsim.Flows{}
 
 	if req.SerialNumber == "" {
-		olt.Flows.Range(func(flowId, flow interface{}) bool {
+		olt.Flows.Range(func(flowKey, flow interface{}) bool {
 			flowObj := flow.(openolt.Flow)
 			res.Flows = append(res.Flows, &flowObj)
 			return true
@@ -592,12 +592,12 @@ func (s BBSimServer) GetFlows(ctx context.Context, req *bbsim.ONURequest) (*bbsi
 			}).Error("Can't get ONU in GetFlows request")
 			return nil, err
 		}
-		for _, flowId := range onu.FlowIds {
-			flow, _ := olt.Flows.Load(flowId)
+		for _, flowKey := range onu.Flows {
+			flow, _ := olt.Flows.Load(flowKey)
 			flowObj := flow.(openolt.Flow)
 			res.Flows = append(res.Flows, &flowObj)
 		}
-		res.FlowCount = uint32(len(onu.FlowIds))
+		res.FlowCount = uint32(len(onu.Flows))
 	}
 	return res, nil
 }

@@ -1032,8 +1032,10 @@ func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.E
 		"PortNo":    flow.PortNo,
 	}).Tracef("OLT receives FlowAdd")
 
+	flowKey := FlowKey{}
 	if !o.enablePerf {
-		o.Flows.Store(flow.FlowId, *flow)
+		flowKey = FlowKey{ID: flow.FlowId, Direction: flow.FlowType}
+		olt.Flows.Store(flowKey, *flow)
 	}
 
 	if flow.AccessIntfId == -1 {
@@ -1092,8 +1094,9 @@ func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.E
 		}
 
 		if !o.enablePerf {
+			onu.Flows = append(onu.Flows, flowKey)
 			// Generate event on first flow for ONU
-			if len(onu.FlowIds) == 0 {
+			if len(onu.Flows) == 1 {
 				publishEvent("Flow-add-received", int32(onu.PonPortID), int32(onu.ID), onu.Sn())
 			}
 		}
@@ -1148,8 +1151,13 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 	olt.freeAllocId(flow)
 
 	if !o.enablePerf { // remove only if flow were stored
+		flowKey := FlowKey{
+			ID:        flow.FlowId,
+			Direction: flow.FlowType,
+		}
+
 		// Check if flow exists
-		storedFlowIntf, ok := o.Flows.Load(flow.FlowId)
+		storedFlowIntf, ok := o.Flows.Load(flowKey)
 		if !ok {
 			oltLogger.Errorf("Flow %v not found", flow)
 			return new(openolt.Empty), status.Errorf(codes.NotFound, "Flow not found")
@@ -1178,11 +1186,12 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 				}).Error("ONU-not-found")
 				return new(openolt.Empty), nil
 			}
+			onu.DeleteFlow(flowKey)
 			publishEvent("Flow-remove-received", int32(onu.PonPortID), int32(onu.ID), onu.Sn())
 		}
 
 		// delete from olt flows
-		o.Flows.Delete(flow.FlowId)
+		o.Flows.Delete(flowKey)
 	}
 
 	if flow.AccessIntfId == -1 {
