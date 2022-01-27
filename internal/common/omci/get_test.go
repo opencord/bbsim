@@ -75,7 +75,38 @@ func TestGetResponse(t *testing.T) {
 		VendorId:       []byte("BBSM"),
 		VendorSpecific: []byte{0, byte(1 % 256), byte(1), byte(1)},
 	}
-
+	extendedPmData := map[string]interface{}{
+		"DropEvents":             100,
+		"Octets":                 101,
+		"Frames":                 102,
+		"BroadcastFrames":        103,
+		"MulticastFrames":        104,
+		"CrcErroredFrames":       105,
+		"UndersizeFrames":        106,
+		"OversizeFrames":         107,
+		"Frames64Octets":         108,
+		"Frames65To127Octets":    109,
+		"Frames128To255Octets":   110,
+		"Frames256To511Octets":   111,
+		"Frames512To1023Octets":  112,
+		"Frames1024To1518Octets": 113,
+	}
+	resetExtendedPmData  := map[string]interface{} {
+		"DropEvents":             0,
+		"Octets":                 0,
+		"Frames":                 0,
+		"BroadcastFrames":        0,
+		"MulticastFrames":        0,
+		"CrcErroredFrames":       0,
+		"UndersizeFrames":        0,
+		"OversizeFrames":         0,
+		"Frames64Octets":         0,
+		"Frames65To127Octets":    0,
+		"Frames128To255Octets":   0,
+		"Frames256To511Octets":   0,
+		"Frames512To1023Octets":  0,
+		"Frames1024To1518Octets": 0,
+	}
 	tests := []struct {
 		name string
 		args getArgs
@@ -129,6 +160,38 @@ func TestGetResponse(t *testing.T) {
 			getArgs{createSoftwareImageResponse(1024, 1, 1, 1, "BBSM_IMG_00000", "BBSM_IMG_00001", "BBSM_IMG_00001"), 2},
 			getWant{2, map[string]interface{}{"ImageHash": ToOctets("BBSM_IMG_00001", 25)}},
 		},
+		{"getEthernetFrameExtendedPMDataResponse",
+			getArgs{createEthernetFrameExtendedPmGetResponse(me.EthernetFrameExtendedPmClassID, 16128, 10, extendedPmData), 2},
+			getWant{2, map[string]interface{}{"ManagedEntityId": uint16(10),
+				"DropEvents":             uint32(100),
+				"Octets":                 uint32(101),
+				"Frames":                 uint32(102),
+				"BroadcastFrames":        uint32(103),
+				"MulticastFrames":        uint32(104),
+				"CrcErroredFrames":       uint32(105),}},
+		},
+		{"getEthernetFrameExtendedPMResetDataResponse",
+			getArgs{createEthernetFrameExtendedPmGetResponse(me.EthernetFrameExtendedPmClassID, 16128, 11, resetExtendedPmData), 2},
+			getWant{2, map[string]interface{}{"ManagedEntityId": uint16(11),
+				"DropEvents":             uint32(0),
+				"Octets":                 uint32(0),
+				"Frames":                 uint32(0),
+				"BroadcastFrames":        uint32(0),
+				"MulticastFrames":        uint32(0),
+				"CrcErroredFrames":       uint32(0),}},
+		},
+		{"getEthernetFrameExtendedPM64BitDataResponse",
+			getArgs{createEthernetFrameExtendedPmGetResponse(me.EthernetFrameExtendedPm64BitClassID, 3, 10, extendedPmData), 2},
+			getWant{2, map[string]interface{}{"ManagedEntityId": uint16(10),
+				"Frames512To1023Octets":  uint64(112),
+				"Frames1024To1518Octets": uint64(113),}},
+		},
+		{"getEthernetFrameExtendedPM64BitResetDataResponse",
+			getArgs{createEthernetFrameExtendedPmGetResponse(me.EthernetFrameExtendedPm64BitClassID, 3, 11, resetExtendedPmData), 2},
+			getWant{2, map[string]interface{}{"ManagedEntityId": uint16(11),
+				"Frames512To1023Octets":  uint64(0),
+				"Frames1024To1518Octets": uint64(0),}},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -151,7 +214,6 @@ func TestGetResponse(t *testing.T) {
 			// the myb_sync.handleOmciMessage is called and then
 			// myb_sync.handleOmciGetResponseMessage where we extract the GetResponse layer
 			getResponseLayer := omciToGetResponse(t, omciPkt)
-
 			assert.Equal(t, getResponseLayer.Result, me.Success)
 
 			for k, v := range tt.want.attributes {
