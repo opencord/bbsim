@@ -50,6 +50,23 @@
       "message": "recheck",
       "revId": "c07b952da1c08be82f1f868cf32434c20d3868f4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "09a235ae_5d54c993",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-27T16:23:30Z",
+      "side": 1,
+      "message": "voltha test openonu multiolt",
+      "revId": "c07b952da1c08be82f1f868cf32434c20d3868f4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
