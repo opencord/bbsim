@@ -185,6 +185,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 		}).Debugf("Changing ONU OperState from %s to %s", e.Src, e.Dst)
 	})
 	o.onuAlarmsInfo = make(map[omcilib.OnuAlarmInfoMapKey]omcilib.OnuAlarmInfo)
+
 	// NOTE this state machine is used to activate the OMCI, EAPOL and DHCP clients
 	o.InternalState = fsm.NewFSM(
 		OnuStateCreated,
@@ -815,8 +816,20 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 		responsePkt, _ = omcilib.CreateMibUploadNextResponse(msg.OmciPkt, msg.OmciMsg, o.MibDataSync, o.MibDb)
 	case omci.GetRequestType:
 		onuDown := o.AdminLockState == 1
-		responsePkt, _ = omcilib.CreateGetResponse(msg.OmciPkt, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId,
-			o.CommittedImageEntityId, o.StandbyImageVersion, o.ActiveImageVersion, o.CommittedImageVersion, onuDown)
+		msgObj, _ := omcilib.ParseGetRequest(msg.OmciPkt)
+		if msgObj.EntityClass == me.EthernetFrameExtendedPmClassID || msgObj.EntityClass == me.EthernetFrameExtendedPm64BitClassID {
+			pmData := o.GetEthernetFrameExtendedPMData()
+			onuLogger.WithFields(log.Fields{
+				"get-onu-extended-pm-data": pmData,
+				"me-instance":              msgObj.EntityInstance,
+			}).Debug("get-onu-ethernet-frame-extended-pm-data")
+			responsePkt, _ = omcilib.CreateGetResponse(msgObj, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId,
+				o.CommittedImageEntityId, o.StandbyImageVersion, o.ActiveImageVersion, o.CommittedImageVersion, onuDown, pmData)
+
+		} else {
+			responsePkt, _ = omcilib.CreateGetResponse(msgObj, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId,
+				o.CommittedImageEntityId, o.StandbyImageVersion, o.ActiveImageVersion, o.CommittedImageVersion, onuDown, nil)
+		}
 	case omci.SetRequestType:
 		success := true
 		msgObj, _ := omcilib.ParseSetRequest(msg.OmciPkt)
@@ -917,7 +930,15 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 					o.PonPort.storeAllocId(allocId, o.SerialNumber)
 				}
 			}
-
+		case me.EthernetFrameExtendedPmClassID,
+			me.EthernetFrameExtendedPm64BitClassID:
+			onuLogger.WithFields(log.Fields{
+				"me-instance": msgObj.EntityInstance,
+			}).Debug("set-request-received")
+			// No need to reset counters as onu adapter will simply send the set control block request to actually reset
+			// the counters, and respond with 0's without sending the get request to device.
+			// Also, if we even reset the counters here in cache, then on get we need to restore the counters back which
+			// would be of no use as ultimately the counters need to be restored.
 		}
 
 		if success {
@@ -1861,5 +1882,24 @@ func (o *Onu) InvalidateMibDataSync() {
 	// result in a value higher than 255, but could be 0
 	if o.MibDataSync == 0 {
 		o.MibDataSync++
+	}
+}
+
+func (o *Onu) GetEthernetFrameExtendedPMData() map[string]interface{} {
+	return map[string]interface{}{
+		"DropEvents":             100,
+		"Octets":                 101,
+		"Frames":                 102,
+		"BroadcastFrames":        103,
+		"MulticastFrames":        104,
+		"CrcErroredFrames":       105,
+		"UndersizeFrames":        106,
+		"OversizeFrames":         107,
+		"Frames64Octets":         108,
+		"Frames65To127Octets":    109,
+		"Frames128To255Octets":   110,
+		"Frames256To511Octets":   111,
+		"Frames512To1023Octets":  112,
+		"Frames1024To1518Octets": 113,
 	}
 }
