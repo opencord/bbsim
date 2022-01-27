@@ -1034,7 +1034,7 @@ func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.E
 
 	flowKey := FlowKey{}
 	if !o.enablePerf {
-		flowKey = FlowKey{ID: flow.FlowId, Direction: flow.FlowType}
+		flowKey = FlowKey{ID: flow.FlowId}
 		olt.Flows.Store(flowKey, *flow)
 	}
 
@@ -1151,11 +1151,7 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 	olt.freeAllocId(flow)
 
 	if !o.enablePerf { // remove only if flow were stored
-		flowKey := FlowKey{
-			ID:        flow.FlowId,
-			Direction: flow.FlowType,
-		}
-
+		flowKey := FlowKey{ID: flow.FlowId}
 		// Check if flow exists
 		storedFlowIntf, ok := o.Flows.Load(flowKey)
 		if !ok {

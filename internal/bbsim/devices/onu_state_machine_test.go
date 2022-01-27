@@ -41,8 +41,8 @@ func Test_Onu_StateMachine_disable(t *testing.T) {
 	assert.Equal(t, onu.InternalState.Current(), OnuStateEnabled)
 
 	onu.Flows = []FlowKey{
-		{ID: 1, Direction: "upstream"},
-		{ID: 2, Direction: "downstream"},
+		{ID: 1},
+		{ID: 2},
 	}
 	key := omcilib.OnuAlarmInfoMapKey{
 		MeInstance: 257,
