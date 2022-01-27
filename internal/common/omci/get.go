@@ -46,15 +46,9 @@ func ParseGetRequest(omciPkt gopacket.Packet) (*omci.GetRequest, error) {
 	return msgObj, nil
 }
 
-func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openolt.SerialNumber, mds uint8,
+func CreateGetResponse(msgObj *omci.GetRequest, omciMsg *omci.OMCI, onuSn *openolt.SerialNumber, mds uint8,
 	activeImageEntityId uint16, committedImageEntityId uint16, standbyImageVersion string, activeImageVersion string,
-	committedImageVersion string, onuDown bool) ([]byte, error) {
-
-	msgObj, err := ParseGetRequest(omciPkt)
-
-	if err != nil {
-		return nil, err
-	}
+	committedImageVersion string, onuDown bool, onuExtendedPMData map[string]interface{}) ([]byte, error) {
 
 	omciLogger.WithFields(log.Fields{
 		"EntityClass":    msgObj.EntityClass,
@@ -97,7 +91,7 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openo
 		response = createGemPortNetworkCtpPerformanceMonitoringHistoryData(msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.EthernetFrameExtendedPmClassID,
 		me.EthernetFrameExtendedPm64BitClassID:
-		response = createEthernetFrameExtendedPmGetResponse(msgObj.EntityClass, msgObj.AttributeMask, msgObj.EntityInstance)
+		response = createEthernetFrameExtendedPmGetResponse(msgObj.EntityClass, msgObj.AttributeMask, msgObj.EntityInstance, onuExtendedPMData)
 	default:
 		omciLogger.WithFields(log.Fields{
 			"EntityClass":    msgObj.EntityClass,
@@ -682,31 +676,34 @@ func createAnigResponse(attributeMask uint16, entityID uint16) *omci.GetResponse
 	}
 }
 
-func createEthernetFrameExtendedPmGetResponse(meClass me.ClassID, attributeMask uint16, entityID uint16) *omci.GetResponse {
+func createEthernetFrameExtendedPmGetResponse(meClass me.ClassID, attributeMask uint16, entityID uint16,
+	onuExtendedPMData map[string]interface{}) *omci.GetResponse {
 
 	callback := me.NewEthernetFrameExtendedPm
 	if meClass != me.EthernetFrameExtendedPmClassID {
 		callback = me.NewEthernetFrameExtendedPm64Bit
 	}
+	var attr me.AttributeValueMap
+	attr = me.AttributeValueMap{
+		"ManagedEntityId":        entityID,
+		"DropEvents":             onuExtendedPMData["DropEvents"],
+		"Octets":                 onuExtendedPMData["Octets"],
+		"Frames":                 onuExtendedPMData["Frames"],
+		"BroadcastFrames":        onuExtendedPMData["BroadcastFrames"],
+		"MulticastFrames":        onuExtendedPMData["MulticastFrames"],
+		"CrcErroredFrames":       onuExtendedPMData["CrcErroredFrames"],
+		"UndersizeFrames":        onuExtendedPMData["UndersizeFrames"],
+		"OversizeFrames":         onuExtendedPMData["OversizeFrames"],
+		"Frames64Octets":         onuExtendedPMData["Frames64Octets"],
+		"Frames65To127Octets":    onuExtendedPMData["Frames65To127Octets"],
+		"Frames128To255Octets":   onuExtendedPMData["Frames128To255Octets"],
+		"Frames256To511Octets":   onuExtendedPMData["Frames256To511Octets"],
+		"Frames512To1023Octets":  onuExtendedPMData["Frames512To1023Octets"],
+		"Frames1024To1518Octets": onuExtendedPMData["Frames1024To1518Octets"],
+	}
 	managedEntity, meErr := callback(me.ParamData{
-		EntityID: entityID,
-		Attributes: me.AttributeValueMap{
-			"ManagedEntityId":        entityID,
-			"DropEvents":             rand.Intn(100),
-			"Octets":                 rand.Intn(100),
-			"Frames":                 rand.Intn(100),
-			"BroadcastFrames":        rand.Intn(100),
-			"MulticastFrames":        rand.Intn(100),
-			"CrcErroredFrames":       rand.Intn(100),
-			"UndersizeFrames":        rand.Intn(100),
-			"OversizeFrames":         rand.Intn(100),
-			"Frames64Octets":         rand.Intn(100),
-			"Frames65To127Octets":    rand.Intn(100),
-			"Frames128To255Octets":   rand.Intn(100),
-			"Frames256To511Octets":   rand.Intn(100),
-			"Frames512To1023Octets":  rand.Intn(100),
-			"Frames1024To1518Octets": rand.Intn(100),
-		},
+		EntityID:   entityID,
+		Attributes: attr,
 	})
 
 	if meErr.GetError() != nil {
