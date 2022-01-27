@@ -94,8 +94,7 @@ const (
 )
 
 type FlowKey struct {
-	ID        uint64
-	Direction string
+	ID uint64
 }
 
 type Onu struct {
