@@ -143,6 +143,8 @@ type Onu struct {
 	TrafficSchedulers *tech_profile.TrafficSchedulers
 	onuAlarmsInfoLock sync.RWMutex
 	onuAlarmsInfo     map[omcilib.OnuAlarmInfoMapKey]omcilib.OnuAlarmInfo
+	onuExtendedPMData map[uint16]map[string]interface{} // key is entity id for all unis in each direction
+	onuExtendedPMLock sync.RWMutex
 }
 
 func (o *Onu) Sn() string {
@@ -185,6 +187,8 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 		}).Debugf("Changing ONU OperState from %s to %s", e.Src, e.Dst)
 	})
 	o.onuAlarmsInfo = make(map[omcilib.OnuAlarmInfoMapKey]omcilib.OnuAlarmInfo)
+	o.onuExtendedPMData = make(map[uint16]map[string]interface{})
+
 	// NOTE this state machine is used to activate the OMCI, EAPOL and DHCP clients
 	o.InternalState = fsm.NewFSM(
 		OnuStateCreated,
@@ -339,6 +343,9 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 				"Err":    err,
 			}).Fatal("cannot-create-uni-port")
 		}
+		// For each uni, create upstream and downstream extended pm data
+		o.onuExtendedPMData[uni.MeId.ToUint16()] = o.GetEthernetFrameExtendedPMData()
+		o.onuExtendedPMData[uint16(uni.MeId.ToUint16())+0x100] = o.GetEthernetFrameExtendedPMData()
 		o.UniPorts = append(o.UniPorts, uni)
 	}
 	// create POTS UNIs, with progressive IDs
@@ -815,8 +822,16 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 		responsePkt, _ = omcilib.CreateMibUploadNextResponse(msg.OmciPkt, msg.OmciMsg, o.MibDataSync, o.MibDb)
 	case omci.GetRequestType:
 		onuDown := o.AdminLockState == 1
-		responsePkt, _ = omcilib.CreateGetResponse(msg.OmciPkt, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId,
-			o.CommittedImageEntityId, o.StandbyImageVersion, o.ActiveImageVersion, o.CommittedImageVersion, onuDown)
+		msgObj, _ := omcilib.ParseGetRequest(msg.OmciPkt)
+		if msgObj.EntityClass == me.EthernetFrameExtendedPmClassID || msgObj.EntityClass == me.EthernetFrameExtendedPm64BitClassID {
+			pmData := o.GetEthernetFrameExtendedPMDataCopyFromCache(msgObj.EntityInstance)
+			responsePkt, _ = omcilib.CreateGetResponse(msgObj, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId,
+				o.CommittedImageEntityId, o.StandbyImageVersion, o.ActiveImageVersion, o.CommittedImageVersion, onuDown, pmData)
+
+		} else {
+			responsePkt, _ = omcilib.CreateGetResponse(msgObj, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId,
+				o.CommittedImageEntityId, o.StandbyImageVersion, o.ActiveImageVersion, o.CommittedImageVersion, onuDown, nil)
+		}
 	case omci.SetRequestType:
 		success := true
 		msgObj, _ := omcilib.ParseSetRequest(msg.OmciPkt)
@@ -917,7 +932,15 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 					o.PonPort.storeAllocId(allocId, o.SerialNumber)
 				}
 			}
-
+		case me.EthernetFrameExtendedPmClassID,
+			me.EthernetFrameExtendedPm64BitClassID:
+			// This will be used to set/clear reset bit in the control block.
+			cBlock := msgObj.Attributes["ControlBlock"].([]uint16)
+			resetFlag := cBlock[3] & (1 << (16 - 1)) //16th bit of acc disable is resetBit
+			if resetFlag != 0 {
+				// reset the ethernet frame extended pm counters.
+				o.ResetEthernetFrameExtendedPMCache(msgObj.EntityInstance)
+			}
 		}
 
 		if success {
@@ -1861,5 +1884,42 @@ func (o *Onu) InvalidateMibDataSync() {
 	// result in a value higher than 255, but could be 0
 	if o.MibDataSync == 0 {
 		o.MibDataSync++
+	}
+}
+
+func (o *Onu) ResetEthernetFrameExtendedPMCache(meID uint16) {
+	o.onuExtendedPMLock.Lock()
+	for k := range o.onuExtendedPMData[meID] {
+		o.onuExtendedPMData[meID][k] = 0
+	}
+	o.onuExtendedPMLock.Unlock()
+}
+
+func (o *Onu) GetEthernetFrameExtendedPMDataCopyFromCache(meID uint16) map[string]interface{} {
+	o.onuExtendedPMLock.Lock()
+	data := make(map[string]interface{})
+	for k := range o.onuExtendedPMData[meID] {
+		data[k] = o.onuExtendedPMData[meID][k]
+	}
+	o.onuExtendedPMLock.Unlock()
+	return data
+}
+
+func (o *Onu) GetEthernetFrameExtendedPMData() map[string]interface{} {
+	return map[string]interface{}{
+		"DropEvents":             100,
+		"Octets":                 101,
+		"Frames":                 102,
+		"BroadcastFrames":        103,
+		"MulticastFrames":        104,
+		"CrcErroredFrames":       105,
+		"UndersizeFrames":        106,
+		"OversizeFrames":         107,
+		"Frames64Octets":         108,
+		"Frames65To127Octets":    109,
+		"Frames128To255Octets":   110,
+		"Frames256To511Octets":   111,
+		"Frames512To1023Octets":  112,
+		"Frames1024To1518Octets": 113,
 	}
 }
