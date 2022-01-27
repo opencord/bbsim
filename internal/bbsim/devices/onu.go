@@ -185,6 +185,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 		}).Debugf("Changing ONU OperState from %s to %s", e.Src, e.Dst)
 	})
 	o.onuAlarmsInfo = make(map[omcilib.OnuAlarmInfoMapKey]omcilib.OnuAlarmInfo)
+
 	// NOTE this state machine is used to activate the OMCI, EAPOL and DHCP clients
 	o.InternalState = fsm.NewFSM(
 		OnuStateCreated,
@@ -817,6 +818,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 		onuDown := o.AdminLockState == 1
 		responsePkt, _ = omcilib.CreateGetResponse(msg.OmciPkt, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId,
 			o.CommittedImageEntityId, o.StandbyImageVersion, o.ActiveImageVersion, o.CommittedImageVersion, onuDown)
+
 	case omci.SetRequestType:
 		success := true
 		msgObj, _ := omcilib.ParseSetRequest(msg.OmciPkt)
@@ -917,7 +919,15 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 					o.PonPort.storeAllocId(allocId, o.SerialNumber)
 				}
 			}
-
+		case me.EthernetFrameExtendedPmClassID,
+			me.EthernetFrameExtendedPm64BitClassID:
+			onuLogger.WithFields(log.Fields{
+				"me-instance": msgObj.EntityInstance,
+			}).Debug("set-request-received")
+			// No need to reset counters as onu adapter will simply send the set control block request to actually reset
+			// the counters, and respond with 0's without sending the get request to device.
+			// Also, if we even reset the counters here in cache, then on get we need to restore the counters back which
+			// would be of no use as ultimately the counters need to be restored.
 		}
 
 		if success {

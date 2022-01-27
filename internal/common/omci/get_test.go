@@ -75,7 +75,6 @@ func TestGetResponse(t *testing.T) {
 		VendorId:       []byte("BBSM"),
 		VendorSpecific: []byte{0, byte(1 % 256), byte(1), byte(1)},
 	}
-
 	tests := []struct {
 		name string
 		args getArgs
@@ -129,6 +128,22 @@ func TestGetResponse(t *testing.T) {
 			getArgs{createSoftwareImageResponse(1024, 1, 1, 1, "BBSM_IMG_00000", "BBSM_IMG_00001", "BBSM_IMG_00001"), 2},
 			getWant{2, map[string]interface{}{"ImageHash": ToOctets("BBSM_IMG_00001", 25)}},
 		},
+		{"getEthernetFrameExtendedPMDataResponse",
+			getArgs{createEthernetFrameExtendedPmGetResponse(me.EthernetFrameExtendedPmClassID, 16128, 10), 2},
+			getWant{2, map[string]interface{}{"ManagedEntityId": uint16(10),
+				"DropEvents":       uint32(100),
+				"Octets":           uint32(101),
+				"Frames":           uint32(102),
+				"BroadcastFrames":  uint32(103),
+				"MulticastFrames":  uint32(104),
+				"CrcErroredFrames": uint32(105)}},
+		},
+		{"getEthernetFrameExtendedPM64BitDataResponse",
+			getArgs{createEthernetFrameExtendedPmGetResponse(me.EthernetFrameExtendedPm64BitClassID, 3, 10), 2},
+			getWant{2, map[string]interface{}{"ManagedEntityId": uint16(10),
+				"Frames512To1023Octets":  uint64(112),
+				"Frames1024To1518Octets": uint64(113)}},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -151,7 +166,6 @@ func TestGetResponse(t *testing.T) {
 			// the myb_sync.handleOmciMessage is called and then
 			// myb_sync.handleOmciGetResponseMessage where we extract the GetResponse layer
 			getResponseLayer := omciToGetResponse(t, omciPkt)
-
 			assert.Equal(t, getResponseLayer.Result, me.Success)
 
 			for k, v := range tt.want.attributes {

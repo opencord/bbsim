@@ -49,13 +49,10 @@ func ParseGetRequest(omciPkt gopacket.Packet) (*omci.GetRequest, error) {
 func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openolt.SerialNumber, mds uint8,
 	activeImageEntityId uint16, committedImageEntityId uint16, standbyImageVersion string, activeImageVersion string,
 	committedImageVersion string, onuDown bool) ([]byte, error) {
-
 	msgObj, err := ParseGetRequest(omciPkt)
-
 	if err != nil {
 		return nil, err
 	}
-
 	omciLogger.WithFields(log.Fields{
 		"EntityClass":    msgObj.EntityClass,
 		"EntityInstance": msgObj.EntityInstance,
@@ -688,25 +685,26 @@ func createEthernetFrameExtendedPmGetResponse(meClass me.ClassID, attributeMask 
 	if meClass != me.EthernetFrameExtendedPmClassID {
 		callback = me.NewEthernetFrameExtendedPm64Bit
 	}
+	attr := me.AttributeValueMap{
+		"ManagedEntityId":        entityID,
+		"DropEvents":             100,
+		"Octets":                 101,
+		"Frames":                 102,
+		"BroadcastFrames":        103,
+		"MulticastFrames":        104,
+		"CrcErroredFrames":       105,
+		"UndersizeFrames":        106,
+		"OversizeFrames":         107,
+		"Frames64Octets":         108,
+		"Frames65To127Octets":    109,
+		"Frames128To255Octets":   110,
+		"Frames256To511Octets":   111,
+		"Frames512To1023Octets":  112,
+		"Frames1024To1518Octets": 113,
+	}
 	managedEntity, meErr := callback(me.ParamData{
-		EntityID: entityID,
-		Attributes: me.AttributeValueMap{
-			"ManagedEntityId":        entityID,
-			"DropEvents":             rand.Intn(100),
-			"Octets":                 rand.Intn(100),
-			"Frames":                 rand.Intn(100),
-			"BroadcastFrames":        rand.Intn(100),
-			"MulticastFrames":        rand.Intn(100),
-			"CrcErroredFrames":       rand.Intn(100),
-			"UndersizeFrames":        rand.Intn(100),
-			"OversizeFrames":         rand.Intn(100),
-			"Frames64Octets":         rand.Intn(100),
-			"Frames65To127Octets":    rand.Intn(100),
-			"Frames128To255Octets":   rand.Intn(100),
-			"Frames256To511Octets":   rand.Intn(100),
-			"Frames512To1023Octets":  rand.Intn(100),
-			"Frames1024To1518Octets": rand.Intn(100),
-		},
+		EntityID:   entityID,
+		Attributes: attr,
 	})
 
 	if meErr.GetError() != nil {
