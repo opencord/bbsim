@@ -84,6 +84,23 @@
       "message": "verified here: with extended timeout: https://jenkins.opencord.org/job/patchset-voltha-multiple-olts-openonu-go-test-bbsim/16/console",
       "revId": "c07b952da1c08be82f1f868cf32434c20d3868f4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a0d3c09d_0cffe2da",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-28T12:50:59Z",
+      "side": 1,
+      "message": "recheck",
+      "revId": "c07b952da1c08be82f1f868cf32434c20d3868f4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
