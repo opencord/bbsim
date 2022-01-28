@@ -18,9 +18,10 @@ package api
 
 import (
 	"context"
+	"strconv"
+
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
-	"strconv"
 )
 
 func convertBBSimServiceToProtoService(s *devices.Service) *bbsim.Service {
@@ -67,11 +68,11 @@ func (s BBSimServer) GetServices(ctx context.Context, req *bbsim.UNIRequest) (*b
 				for _, service := range s {
 					intVar, err := strconv.Atoi(req.UniID)
 					if req.UniID == "" && req.OnuSerialNumber == "" {
-						services.Items = append(services.Items, s...)
+						services.Items = append(services.Items, service)
 					} else if err == nil && service.UniId == uint32(intVar) && service.OnuSn == req.OnuSerialNumber {
-						services.Items = append(services.Items, s...)
+						services.Items = append(services.Items, service)
 					} else if req.UniID == "" && service.OnuSn == req.OnuSerialNumber {
-						services.Items = append(services.Items, s...)
+						services.Items = append(services.Items, service)
 					}
 				}
 			}
