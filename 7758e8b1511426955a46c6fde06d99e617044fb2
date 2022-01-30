@@ -24,6 +24,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "ad1ec8bf_0e7f2152",
+        "filename": "VERSION",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2022-01-30T18:26:27Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "147b8c49_76dc36f7",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 6
+      },
+      "revId": "7758e8b1511426955a46c6fde06d99e617044fb2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "a476c822_23e0240e",
@@ -47,6 +71,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "c7c84b50_3d39477a",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2022-01-30T18:26:27Z",
+      "side": 1,
+      "message": "in the onu adapter code, we needed to have different me instance id for a uni in upstream and downstream direction for ethernetframeextended pm ME. So, the downstream me instance is uni port\u0027s entity id and upstream is simply uni port\u0027s entity id + 0x100.",
+      "parentUuid": "a476c822_23e0240e",
+      "range": {
+        "startLine": 349,
+        "startChar": 52,
+        "endLine": 349,
+        "endChar": 57
+      },
+      "revId": "7758e8b1511426955a46c6fde06d99e617044fb2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "d643cbee_5d5f84b0",
@@ -60,6 +108,30 @@
       "writtenOn": "2022-01-28T13:02:50Z",
       "side": 1,
       "message": "are these random values that you have selected ?",
+      "range": {
+        "startLine": 1909,
+        "startChar": 0,
+        "endLine": 1926,
+        "endChar": 1
+      },
+      "revId": "7758e8b1511426955a46c6fde06d99e617044fb2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0b62608d_65d6190a",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1926,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2022-01-30T18:26:27Z",
+      "side": 1,
+      "message": "yes to make sure we have known numbers to check-in tests.",
+      "parentUuid": "d643cbee_5d5f84b0",
       "range": {
         "startLine": 1909,
         "startChar": 0,

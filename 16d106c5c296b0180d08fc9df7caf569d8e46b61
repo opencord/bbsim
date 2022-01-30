@@ -16,6 +16,24 @@
       "message": "After reset and get, the values returned would be again the original value? So how would the user know the values were reset - unless I am missing something here. \nI am just thinking from the testing perspective here for integration into voltha-system-tests.\nAlso is reset on a per counter basis (based on mask) being addressed here.",
       "revId": "16d106c5c296b0180d08fc9df7caf569d8e46b61",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "628052bd_dc456613",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1909,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2022-01-30T18:26:27Z",
+      "side": 1,
+      "message": "1. A reset flag is always given in the get command, and if the reset flag is provided, code does not fetches the counter from device and instead replies with 0.\n2. A reset is either for all unis or for a single uni, but the device always gets the reset per uni from the code. There is no mask applicable in case of reset.",
+      "parentUuid": "f0dcc2d3_62d23bc9",
+      "revId": "16d106c5c296b0180d08fc9df7caf569d8e46b61",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
