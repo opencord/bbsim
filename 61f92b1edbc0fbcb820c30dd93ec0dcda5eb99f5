@@ -41,6 +41,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "8ffcdd95_6b62e4da",
+        "filename": "internal/bbsim/devices/flows_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-01-31T15:51:29Z",
+      "side": 1,
+      "message": "\"downstream\" was used multiple times but never put in a constant. I moved these definitions to internal/bbsim/devices/helpers.go and substituted the string with the constant where needed.",
+      "parentUuid": "c319cdd4_f5675f57",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 1
+      },
+      "revId": "61f92b1edbc0fbcb820c30dd93ec0dcda5eb99f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "c6937f0b_46e0b593",
@@ -58,6 +82,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "ace9b0d6_90353f04",
+        "filename": "internal/bbsim/devices/flows_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-01-31T15:51:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c6937f0b_46e0b593",
+      "revId": "61f92b1edbc0fbcb820c30dd93ec0dcda5eb99f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "f451b62d_45257724",
@@ -71,6 +113,30 @@
       "writtenOn": "2022-01-31T14:55:11Z",
       "side": 1,
       "message": "same for strings here",
+      "range": {
+        "startLine": 138,
+        "startChar": 0,
+        "endLine": 140,
+        "endChar": 2
+      },
+      "revId": "61f92b1edbc0fbcb820c30dd93ec0dcda5eb99f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "422121d4_aabf7fa2",
+        "filename": "internal/bbsim/devices/flows_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-01-31T15:51:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f451b62d_45257724",
       "range": {
         "startLine": 138,
         "startChar": 0,
