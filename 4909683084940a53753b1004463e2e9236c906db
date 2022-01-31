@@ -33,6 +33,29 @@
       "message": "recheck",
       "revId": "4909683084940a53753b1004463e2e9236c906db",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d676fd99_647d4421",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 829,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-01-31T13:36:05Z",
+      "side": 1,
+      "message": "Since pmData always has the same value, should this be done here?\nMoving its definition and the log directly into createEthernetFrameExtendedPmGetResponse would eliminate the need for this conditional block and the modification of omcilib.CreateGetResponse\u0027s signature to pass the value.",
+      "range": {
+        "startLine": 820,
+        "startChar": 2,
+        "endLine": 829,
+        "endChar": 3
+      },
+      "revId": "4909683084940a53753b1004463e2e9236c906db",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
