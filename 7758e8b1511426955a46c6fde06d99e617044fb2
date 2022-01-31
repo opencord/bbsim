@@ -164,6 +164,30 @@
       },
       "revId": "7758e8b1511426955a46c6fde06d99e617044fb2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "86141382_ec74ae33",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 1926,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2022-01-31T07:21:52Z",
+      "side": 1,
+      "message": "no actually what I meant is that instead of returning some random counter values, I have taken some fixed values so that these can be used in voltha system tests as well. It is not specifically for the unit test but for all testing.",
+      "parentUuid": "b7ca851a_c099294e",
+      "range": {
+        "startLine": 1909,
+        "startChar": 0,
+        "endLine": 1926,
+        "endChar": 1
+      },
+      "revId": "7758e8b1511426955a46c6fde06d99e617044fb2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
