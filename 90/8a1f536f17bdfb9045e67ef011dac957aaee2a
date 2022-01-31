@@ -1,0 +1,9 @@
+Code-Review+1: Elia Battiston <elia@opennetworking.org>
+Code-Review+1: Matteo Scandolo <teo@opennetworking.org>
+Code-Review+2: Andrea Campanella <andrea@opennetworking.org>
+Verified+1: Jenkins Technical User <do-not-reply@opennetworking.org>
+Submitted-by: Andrea Campanella <andrea@opennetworking.org>
+Submitted-at: Mon, 31 Jan 2022 18:32:32 +0000
+Reviewed-on: https://gerrit.opencord.org/c/bbsim/+/30553
+Project: bbsim
+Branch: refs/heads/master
