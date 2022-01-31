@@ -39,6 +39,30 @@
       },
       "revId": "560e95508f9dd4efe2bd54b80c0aecd1763c3351",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "84afb432_84d723fb",
+        "filename": "internal/bbsim/devices/flows_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-01-31T19:20:03Z",
+      "side": 1,
+      "message": "The reason for this logic is that the initialization of mock components leaves some calls in the same stream where we expect the DHCP packet indication. Because of this I check that there is at least one, and then assert that the last one is the DHCP packet.\nIf this makes the test less understandable I can clear the stream at the end of initialization, leaving only the desired call in the stream.",
+      "parentUuid": "22e24eba_280bf06f",
+      "range": {
+        "startLine": 203,
+        "startChar": 32,
+        "endLine": 203,
+        "endChar": 36
+      },
+      "revId": "560e95508f9dd4efe2bd54b80c0aecd1763c3351",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
