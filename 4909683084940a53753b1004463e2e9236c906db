@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "05e41530_14cffd16",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000726
+      },
+      "writtenOn": "2022-01-31T09:46:42Z",
+      "side": 1,
+      "message": "Ideally, a reset operation is updating the control block to reset the counters. The open onu adapter does not send a get request if reset option is present in the get command. Hence, bbsim does not need to reset its counters. In the next get operation without reset flag, adapter will send the get request to bbsim and then the fixed counters will be reported. ",
+      "revId": "4909683084940a53753b1004463e2e9236c906db",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
