@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a7cddedd_3dbadd91",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-31T14:55:11Z",
+      "side": 1,
+      "message": "minor comments, LGTM otherwise",
+      "revId": "61f92b1edbc0fbcb820c30dd93ec0dcda5eb99f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c319cdd4_f5675f57",
+        "filename": "internal/bbsim/devices/flows_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-31T14:55:11Z",
+      "side": 1,
+      "message": "can these be imported/reused, ti seems something that should be already present in BBSIM",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 1
+      },
+      "revId": "61f92b1edbc0fbcb820c30dd93ec0dcda5eb99f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c6937f0b_46e0b593",
+        "filename": "internal/bbsim/devices/flows_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-31T14:55:11Z",
+      "side": 1,
+      "message": "extract name as constant and reuse",
+      "revId": "61f92b1edbc0fbcb820c30dd93ec0dcda5eb99f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f451b62d_45257724",
+        "filename": "internal/bbsim/devices/flows_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-01-31T14:55:11Z",
+      "side": 1,
+      "message": "same for strings here",
+      "range": {
+        "startLine": 138,
+        "startChar": 0,
+        "endLine": 140,
+        "endChar": 2
+      },
+      "revId": "61f92b1edbc0fbcb820c30dd93ec0dcda5eb99f5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
