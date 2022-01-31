@@ -43,6 +43,14 @@ var ControlledActivationModes = map[string]mode{
 	"both":     Both,
 }
 
+//Constants for openolt Flows
+const (
+	flowTypeUpstream   = "upstream"
+	flowTypeDownstream = "downstream"
+	flowTagTypeSingle  = "single_tag"
+	flowTagTypeDouble  = "double_tag"
+)
+
 var newFSM = fsm.NewFSM
 
 func getOperStateFSM(cb fsm.Callback) *fsm.FSM {

@@ -1664,7 +1664,7 @@ func (o *Onu) sendEapolFlow(client openolt.OpenoltClient) {
 		OnuId:         int32(o.ID),
 		UniId:         int32(0), // NOTE do not hardcode this, we need to support multiple UNIs
 		FlowId:        uint64(o.ID),
-		FlowType:      "downstream",
+		FlowType:      flowTypeDownstream,
 		NetworkIntfId: int32(0),
 		Classifier:    &classifierProto,
 		Action:        &actionProto,
@@ -1715,7 +1715,7 @@ func (o *Onu) sendDhcpFlow(client openolt.OpenoltClient) {
 		OnuId:         int32(o.ID),
 		UniId:         int32(0), // BBR only supports a single UNI
 		FlowId:        uint64(o.ID),
-		FlowType:      "downstream",
+		FlowType:      flowTypeDownstream,
 		NetworkIntfId: int32(0),
 		Classifier:    &classifierProto,
 		Action:        &actionProto,
