@@ -16,6 +16,46 @@
       "message": "recheck",
       "revId": "132fe74e9f78eb7ddb7b73a09fde93c05ec0584e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3c9171f2_ef29e158",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-02-01T19:14:06Z",
+      "side": 1,
+      "message": "Looks good to me, minor cosmetic comment (up to you if you want to address it or not)",
+      "revId": "132fe74e9f78eb7ddb7b73a09fde93c05ec0584e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d4f19f67_299c47f0",
+        "filename": "internal/bbsim/devices/pon.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-02-01T19:14:06Z",
+      "side": 1,
+      "message": "AllocIDKey?",
+      "range": {
+        "startLine": 33,
+        "startChar": 5,
+        "endLine": 33,
+        "endChar": 15
+      },
+      "revId": "132fe74e9f78eb7ddb7b73a09fde93c05ec0584e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
