@@ -17,12 +17,13 @@
 package devices
 
 import (
+	"testing"
+
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"gotest.tools/assert"
-	"testing"
 )
 
 // test that BBR correctly sends the EAPOL Flow
@@ -43,7 +44,7 @@ func Test_Onu_SendEapolFlow(t *testing.T) {
 	assert.Equal(t, client.FlowAddSpy.Calls[1].OnuId, int32(onu.ID))
 	assert.Equal(t, client.FlowAddSpy.Calls[1].UniId, int32(0))
 	assert.Equal(t, client.FlowAddSpy.Calls[1].FlowId, uint64(onu.ID))
-	assert.Equal(t, client.FlowAddSpy.Calls[1].FlowType, "downstream")
+	assert.Equal(t, client.FlowAddSpy.Calls[1].FlowType, flowTypeDownstream)
 	assert.Equal(t, client.FlowAddSpy.Calls[1].PortNo, onu.ID)
 }
 
@@ -152,7 +153,7 @@ func TestOnu_HhandleEAPOLStart(t *testing.T) {
 		OnuId:         int32(onu.ID),
 		UniId:         int32(0),
 		FlowId:        uint64(onu.ID),
-		FlowType:      "downstream",
+		FlowType:      flowTypeDownstream,
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
 		Classifier: &openolt.Classifier{
@@ -199,7 +200,7 @@ func Test_HandleFlowAddEapolWithGem(t *testing.T) {
 		OnuId:         int32(onu.ID),
 		UniId:         int32(0),
 		FlowId:        uint64(onu.ID),
-		FlowType:      "downstream",
+		FlowType:      flowTypeDownstream,
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
 		Classifier: &openolt.Classifier{
@@ -240,7 +241,7 @@ func Test_HandleFlowAddEapolWrongUNI(t *testing.T) {
 		OnuId:         int32(onu.ID),
 		UniId:         int32(1),
 		FlowId:        uint64(onu.ID),
-		FlowType:      "downstream",
+		FlowType:      flowTypeDownstream,
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
 		Classifier: &openolt.Classifier{
@@ -282,7 +283,7 @@ func Test_HandleFlowAddDhcp(t *testing.T) {
 		OnuId:         int32(onu.ID),
 		UniId:         int32(0),
 		FlowId:        uint64(onu.ID),
-		FlowType:      "downstream",
+		FlowType:      flowTypeDownstream,
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
 		Classifier: &openolt.Classifier{
@@ -326,7 +327,7 @@ func Test_HandleFlowAddDhcpPBit255(t *testing.T) {
 		OnuId:         int32(onu.ID),
 		UniId:         int32(0),
 		FlowId:        uint64(onu.ID),
-		FlowType:      "downstream",
+		FlowType:      flowTypeDownstream,
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
 		Classifier: &openolt.Classifier{
@@ -370,7 +371,7 @@ func Test_HandleFlowAddDhcpIgnoreByPbit(t *testing.T) {
 		OnuId:         int32(onu.ID),
 		UniId:         int32(0),
 		FlowId:        uint64(onu.ID),
-		FlowType:      "downstream",
+		FlowType:      flowTypeDownstream,
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
 		Classifier: &openolt.Classifier{
@@ -413,7 +414,7 @@ func Test_HandleFlowAddDhcpNoDhcp(t *testing.T) {
 		OnuId:         int32(onu.ID),
 		UniId:         int32(0),
 		FlowId:        uint64(onu.ID),
-		FlowType:      "downstream",
+		FlowType:      flowTypeDownstream,
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
 		Classifier: &openolt.Classifier{
@@ -458,7 +459,7 @@ func Test_HandleFlowAddDhcpWithoutGem(t *testing.T) {
 		OnuId:         int32(onu.ID),
 		UniId:         int32(0),
 		FlowId:        uint64(onu.ID),
-		FlowType:      "downstream",
+		FlowType:      flowTypeDownstream,
 		AllocId:       int32(0),
 		NetworkIntfId: int32(0),
 		Classifier: &openolt.Classifier{
