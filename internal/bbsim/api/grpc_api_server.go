@@ -89,10 +89,10 @@ func (s BBSimServer) GetOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Olt, 
 			allocatedGemPorts = append(allocatedGemPorts, resource)
 		}
 
-		for k, v := range pon.AllocatedAllocIds {
+		for _, v := range pon.AllocatedAllocIds {
 			resource := &bbsim.PonAllocatedResources{
-				SerialNumber: common.OnuSnToString(v),
-				Id:           int32(k),
+				SerialNumber: common.OnuSnToString(v.OnuSn),
+				Id:           int32(v.AllocID),
 			}
 			allocatedAllocIds = append(allocatedAllocIds, resource)
 		}

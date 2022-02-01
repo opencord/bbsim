@@ -129,23 +129,26 @@ func Test_isGemPortAllocated(t *testing.T) {
 func Test_removeAllocId(t *testing.T) {
 
 	const (
-		allocId1 = 1024
-		allocId2 = 1025
+		entityID1 = 1024
+		entityID2 = 1025
+		allocId1  = 1024
+		allocId2  = 1025
 	)
 
 	pon := &PonPort{
-		AllocatedAllocIds: make(map[uint16]*openolt.SerialNumber),
+		AllocatedAllocIds: make(map[uint16]*AllocIDKey),
 	}
 
-	pon.AllocatedAllocIds[allocId1] = sn1
-	pon.AllocatedAllocIds[allocId2] = sn2
+	pon.AllocatedAllocIds[entityID1] = &AllocIDKey{sn1, allocId1}
+	pon.AllocatedAllocIds[entityID2] = &AllocIDKey{sn2, allocId2}
 
 	assert.Equal(t, len(pon.AllocatedAllocIds), 2)
 
-	pon.removeAllocId(sn1)
+	pon.removeAllocId(entityID1)
 
 	assert.Equal(t, len(pon.AllocatedAllocIds), 1)
-	assert.Nil(t, pon.AllocatedAllocIds[allocId1])
-	assert.Equal(t, pon.AllocatedAllocIds[allocId2], sn2)
+	assert.Nil(t, pon.AllocatedAllocIds[entityID1])
+	assert.NotNil(t, pon.AllocatedAllocIds[entityID2])
+	assert.Equal(t, pon.AllocatedAllocIds[entityID2].OnuSn, sn2)
 
 }
