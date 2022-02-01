@@ -284,7 +284,7 @@ func Test_MibDataSyncReset(t *testing.T) {
 
 	// create a GemPort and an AllocId for this ONU
 	onu.PonPort.storeGemPort(1024, onu.SerialNumber)
-	onu.PonPort.storeAllocId(1024, onu.SerialNumber)
+	onu.PonPort.storeAllocId(1024, 1024, onu.SerialNumber)
 
 	// send a MibReset
 	err := onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciMibResetRequest(t)), stream)
