@@ -56,6 +56,30 @@
       },
       "revId": "132fe74e9f78eb7ddb7b73a09fde93c05ec0584e",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "797ce277_aba2cf16",
+        "filename": "internal/bbsim/devices/pon.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-02-02T18:22:29Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d4f19f67_299c47f0",
+      "range": {
+        "startLine": 33,
+        "startChar": 5,
+        "endLine": 33,
+        "endChar": 15
+      },
+      "revId": "132fe74e9f78eb7ddb7b73a09fde93c05ec0584e",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
