@@ -43,6 +43,8 @@ the list via ``./bbsim --help``
            Set the log level (trace, debug, info, warn, error) (default "debug")
      -nni int
            Number of NNI ports per OLT device to be emulated (default 1)
+     -nni_speed uint
+           Reported speed of the NNI ports in Mbps (default 1000)
      -oltRebootDelay int
            Time that BBSim should before restarting after a reboot (default 60)
      -olt_id int

@@ -77,6 +77,7 @@ type OltDevice struct {
 	ID                   int
 	SerialNumber         string
 	NumNni               int
+	NniSpeed             uint32
 	NumPon               int
 	NumOnuPerPon         int
 	NumUni               int
@@ -123,6 +124,7 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 	oltLogger.WithFields(log.Fields{
 		"ID":           options.Olt.ID,
 		"NumNni":       options.Olt.NniPorts,
+		"NniSpeed":     options.Olt.NniSpeed,
 		"NumPon":       options.Olt.PonPorts,
 		"NumOnuPerPon": options.Olt.OnusPonPort,
 		"NumUni":       options.Olt.UniPorts,
@@ -136,6 +138,7 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 			oltLogger.Debugf("Changing OLT OperState from %s to %s", e.Src, e.Dst)
 		}),
 		NumNni:              int(options.Olt.NniPorts),
+		NniSpeed:            options.Olt.NniSpeed,
 		NumPon:              int(options.Olt.PonPorts),
 		NumOnuPerPon:        int(options.Olt.OnusPonPort),
 		NumUni:              int(options.Olt.UniPorts),
@@ -634,6 +637,7 @@ func (o *OltDevice) sendNniIndication(msg types.NniIndicationMessage, stream ope
 		Type:      nni.Type,
 		IntfId:    nni.ID,
 		OperState: nni.OperState.Current(),
+		Speed:     o.NniSpeed,
 	}}
 
 	if err := stream.Send(&openolt.Indication{Data: operData}); err != nil {
@@ -645,6 +649,7 @@ func (o *OltDevice) sendNniIndication(msg types.NniIndicationMessage, stream ope
 		"Type":      nni.Type,
 		"IntfId":    nni.ID,
 		"OperState": nni.OperState.Current(),
+		"Speed":     o.NniSpeed,
 	}).Debug("Sent Indication_IntfOperInd for NNI")
 }
 

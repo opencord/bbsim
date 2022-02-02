@@ -86,6 +86,7 @@ type OltConfig struct {
 	DeviceSerialNumber string `yaml:"device_serial_number"`
 	PonPorts           uint32 `yaml:"pon_ports"`
 	NniPorts           uint32 `yaml:"nni_ports"`
+	NniSpeed           uint32 `yaml:"nni_speed"`
 	OnusPonPort        uint32 `yaml:"onus_per_port"`
 	Technology         string `yaml:"technology"`
 	ID                 int    `yaml:"id"`
@@ -230,6 +231,7 @@ func readCliParams() *GlobalConfig {
 
 	olt_id := flag.Int("olt_id", conf.Olt.ID, "OLT device ID")
 	nni := flag.Int("nni", int(conf.Olt.NniPorts), "Number of NNI ports per OLT device to be emulated")
+	nni_speed := flag.Uint("nni_speed", uint(conf.Olt.NniSpeed), "Reported speed of the NNI ports in Mbps")
 	pon := flag.Int("pon", int(conf.Olt.PonPorts), "Number of PON ports per OLT device to be emulated")
 	onu := flag.Int("onu", int(conf.Olt.OnusPonPort), "Number of ONU devices per PON port to be emulated")
 	uni := flag.Int("uni", int(conf.Olt.UniPorts), "Number of Ethernet UNI Ports per ONU device to be emulated")
@@ -262,6 +264,7 @@ func readCliParams() *GlobalConfig {
 
 	conf.Olt.ID = int(*olt_id)
 	conf.Olt.NniPorts = uint32(*nni)
+	conf.Olt.NniSpeed = uint32(*nni_speed)
 	conf.Olt.PonPorts = uint32(*pon)
 	conf.Olt.UniPorts = uint32(*uni)
 	conf.Olt.PotsPorts = uint32(*pots)
@@ -334,6 +337,7 @@ func getDefaultOps() *GlobalConfig {
 			DeviceSerialNumber: "BBSM00000001",
 			PonPorts:           1,
 			NniPorts:           1,
+			NniSpeed:           10000, //Mbps
 			OnusPonPort:        1,
 			Technology:         "XGS-PON",
 			ID:                 0,
