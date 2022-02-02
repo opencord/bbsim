@@ -51,19 +51,10 @@ var oltLogger = log.WithFields(log.Fields{
 })
 
 const (
-	onuIdStart = 1
-	// Least pon port on the real OLTs we test with today have 16 ports (not including the pluggable OLTs).
-	// Given that we have to support 512 ONUs per OLT, we have to have up to 32 ONU per PON (could be less
-	// on a higher density port OLT).
-	// We pass just enough limits here to ensure the resource pool is as
-	// compact as possible on the etcd to reduce storage.
-	onuIdEnd            = onuIdStart + 31
+	onuIdStart          = 1
 	allocIdStart        = 1024
-	allocIdPerOnu       = 4
-	allocIdEnd          = allocIdStart + (onuIdEnd-onuIdStart+1)*allocIdPerOnu // up to 4 alloc-id per ONU
 	gemPortIdPerAllocId = 8
 	gemportIdStart      = 1024
-	gemportIdEnd        = gemportIdStart + (onuIdEnd-onuIdStart+1)*allocIdPerOnu*gemPortIdPerAllocId // up to 8 gemport-id per tcont/alloc-id
 	// The flow ids are no more necessary by the adapter, but still need to pass something dummy. Pass a very small valid range.
 	flowIdStart = 1
 	flowIdEnd   = flowIdStart + 1
@@ -104,6 +95,12 @@ type OltDevice struct {
 
 	OpenoltStream openolt.Openolt_EnableIndicationServer
 	enablePerf    bool
+
+	// resource ranges (only the ones that depends on the topology size)
+	onuIdEnd      uint32
+	allocIdPerOnu uint32
+	allocIdEnd    uint32
+	gemportIdEnd  uint32
 
 	// Allocated Resources
 	// this data are to verify that the openolt adapter does not duplicate resources
@@ -155,6 +152,12 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		GemPortIDs:          make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool),
 		OmciResponseRate:    options.Olt.OmciResponseRate,
 	}
+
+	// create the resource ranges based on the configuration
+	olt.onuIdEnd = onuIdStart + (options.Olt.OnusPonPort - 1)                                               // we need one ONU ID available per ONU, but the smaller the range the smaller the pool created in the openolt adapter
+	olt.allocIdPerOnu = uint32(olt.NumUni * len(common.Services))                                           // 1 allocId per Service * UNI
+	olt.allocIdEnd = allocIdStart + (options.Olt.OnusPonPort * olt.allocIdPerOnu)                           // 1 allocId per Service * UNI * ONU
+	olt.gemportIdEnd = gemportIdStart + (options.Olt.OnusPonPort * olt.allocIdPerOnu * gemPortIdPerAllocId) // up to 8 gemport-id per tcont/alloc-id
 
 	if val, ok := ControlledActivationModes[options.BBSim.ControlledActivation]; ok {
 		olt.ControlledActivation = val
@@ -1263,11 +1266,11 @@ func (o *OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.Dev
 		Technology:          common.Config.Olt.Technology,
 		PonPorts:            uint32(o.NumPon),
 		OnuIdStart:          onuIdStart,
-		OnuIdEnd:            onuIdEnd,
+		OnuIdEnd:            o.onuIdEnd,
 		AllocIdStart:        allocIdStart,
-		AllocIdEnd:          allocIdEnd,
+		AllocIdEnd:          o.allocIdEnd,
 		GemportIdStart:      gemportIdStart,
-		GemportIdEnd:        gemportIdEnd,
+		GemportIdEnd:        o.gemportIdEnd,
 		FlowIdStart:         flowIdStart,
 		FlowIdEnd:           flowIdEnd,
 		DeviceSerialNumber:  o.SerialNumber,
@@ -1282,19 +1285,19 @@ func (o *OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.Dev
 						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_ONU_ID,
 						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
 						Start:   onuIdStart,
-						End:     onuIdEnd,
+						End:     o.onuIdEnd,
 					},
 					{
 						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_ALLOC_ID,
 						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
 						Start:   allocIdStart,
-						End:     allocIdEnd,
+						End:     o.allocIdEnd,
 					},
 					{
 						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_GEMPORT_ID,
 						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
 						Start:   gemportIdStart,
-						End:     gemportIdEnd,
+						End:     o.gemportIdEnd,
 					},
 					{
 						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_FLOW_ID,
