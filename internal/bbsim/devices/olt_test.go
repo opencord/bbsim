@@ -174,6 +174,40 @@ func TestCreateOLT(t *testing.T) {
 	assert.Equal(t, olt.Pons[1].Onus[1].ID, uint32(2))
 }
 
+func TestGetDeviceInfo(t *testing.T) {
+
+	var onusPerPon uint32 = 4
+
+	common.Services = []common.ServiceYaml{
+		{Name: "hsia", CTag: 900, CTagAllocation: common.TagAllocationUnique.String(), STag: 900, STagAllocation: common.TagAllocationShared.String(), NeedsEapol: true, NeedsDhcp: true, NeedsIgmp: true},
+	}
+
+	common.Config = &common.GlobalConfig{
+		Olt: common.OltConfig{
+			ID:          1,
+			PonPorts:    2,
+			OnusPonPort: onusPerPon,
+			UniPorts:    4,
+		},
+	}
+
+	olt := CreateOLT(*common.Config, common.Services, true)
+
+	res, err := olt.GetDeviceInfo(context.Background(), &openolt.Empty{})
+
+	assert.NoError(t, err, "GetDeviceInfo returned error")
+
+	fmt.Println(res)
+	fmt.Println(res.OnuIdEnd - res.OnuIdStart + 1)
+
+	assert.Equal(t, onuIdStart+(onusPerPon-1), res.OnuIdEnd)
+	assert.Equal(t, onuIdStart+(onusPerPon-1), res.Ranges[0].Pools[0].End)
+	assert.Equal(t, onusPerPon, res.OnuIdEnd-res.OnuIdStart+1, "The ONU ID range size is different that the number of ONUs per PON")
+
+	assert.Equal(t, uint32(allocIdStart+(olt.NumOnuPerPon*olt.NumUni*len(common.Services))), res.AllocIdEnd)
+	assert.Equal(t, uint32(gemportIdStart+(olt.NumOnuPerPon*olt.NumUni*len(common.Services))*gemPortIdPerAllocId), res.GemportIdEnd)
+}
+
 func Test_Olt_FindOnuBySn_Success(t *testing.T) {
 
 	numPon := 4
