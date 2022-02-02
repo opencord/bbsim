@@ -20,11 +20,12 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"net"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	log "github.com/sirupsen/logrus"
-	"net"
 )
 
 type DHCPServerIf interface {
@@ -167,7 +168,7 @@ func (s *DHCPServer) getDefaultDhcpServerOptions(hostname []byte, option82 []byt
 // get a Discover packet an return a valid Offer
 func (s *DHCPServer) handleDiscover(pkt gopacket.Packet) (gopacket.Packet, error) {
 
-	sTag, cTag, err := packetHandlers.GetTagsFromPacket(pkt)
+	oTag, iTag, err := packetHandlers.GetTagsFromPacket(pkt)
 	if err != nil {
 		return nil, err
 	}
@@ -193,8 +194,8 @@ func (s *DHCPServer) handleDiscover(pkt gopacket.Packet) (gopacket.Packet, error
 	}
 
 	dhcpLogger.WithFields(log.Fields{
-		"sTag":      sTag,
-		"cTag":      cTag,
+		"oTag":      oTag,
+		"iTag":      iTag,
 		"clientMac": clientMac,
 		"txId":      txId,
 		"hostname":  string(hostname),
@@ -224,15 +225,22 @@ func (s *DHCPServer) handleDiscover(pkt gopacket.Packet) (gopacket.Packet, error
 		return nil, err
 	}
 
-	taggedResponsePkt, err := packetHandlers.PushDoubleTag(int(sTag), int(cTag), responsePkt, 0)
+	var taggedResponsePkt gopacket.Packet
+	if iTag != 0 { //Double tagged
+		taggedResponsePkt, err = packetHandlers.PushDoubleTag(int(oTag), int(iTag), responsePkt, 0)
+	} else { //Single tagged
+		taggedResponsePkt, err = packetHandlers.PushSingleTag(int(oTag), responsePkt, 0)
+	}
+
 	if err != nil {
 		return nil, err
 	}
+
 	return taggedResponsePkt, nil
 }
 
 func (s *DHCPServer) handleRequest(pkt gopacket.Packet) (gopacket.Packet, error) {
-	sTag, cTag, err := packetHandlers.GetTagsFromPacket(pkt)
+	oTag, iTag, err := packetHandlers.GetTagsFromPacket(pkt)
 	if err != nil {
 		return nil, err
 	}
@@ -258,8 +266,8 @@ func (s *DHCPServer) handleRequest(pkt gopacket.Packet) (gopacket.Packet, error)
 	}
 
 	dhcpLogger.WithFields(log.Fields{
-		"sTag":      sTag,
-		"cTag":      cTag,
+		"oTag":      oTag,
+		"iTag":      iTag,
 		"clientMac": clientMac,
 		"txId":      txId,
 		"hostname":  string(hostname),
@@ -290,10 +298,17 @@ func (s *DHCPServer) handleRequest(pkt gopacket.Packet) (gopacket.Packet, error)
 		return nil, err
 	}
 
-	taggedResponsePkt, err := packetHandlers.PushDoubleTag(int(sTag), int(cTag), responsePkt, 0)
+	var taggedResponsePkt gopacket.Packet
+	if iTag != 0 { //Double tagged
+		taggedResponsePkt, err = packetHandlers.PushDoubleTag(int(oTag), int(iTag), responsePkt, 0)
+	} else { //Single tagged
+		taggedResponsePkt, err = packetHandlers.PushSingleTag(int(oTag), responsePkt, 0)
+	}
+
 	if err != nil {
 		return nil, err
 	}
+
 	return taggedResponsePkt, nil
 }
 

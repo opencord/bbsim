@@ -145,20 +145,26 @@ func GetPbit(pkt gopacket.Packet) (uint8, error) {
 	return dot1q.Priority, nil
 }
 
-// godet inner and outer tag from a packet
-// TODO unit test
+// get inner and outer tag from a packet
 func GetTagsFromPacket(pkt gopacket.Packet) (uint16, uint16, error) {
-	sTag, err := GetVlanTag(pkt)
+	oTag, err := GetVlanTag(pkt)
 	if err != nil {
 		return 0, 0, err
 	}
-	singleTagPkt, err := PopSingleTag(pkt)
+
+	poppedTagPkt, err := PopSingleTag(pkt)
 	if err != nil {
 		return 0, 0, err
 	}
-	cTag, err := GetVlanTag(singleTagPkt)
+
+	if dot1qLayer := poppedTagPkt.Layer(layers.LayerTypeDot1Q); dot1qLayer == nil {
+		//No other tag, the packet is single tagged
+		return oTag, 0, nil
+	}
+
+	iTag, err := GetVlanTag(poppedTagPkt)
 	if err != nil {
 		return 0, 0, err
 	}
-	return sTag, cTag, nil
+	return oTag, iTag, nil
 }
