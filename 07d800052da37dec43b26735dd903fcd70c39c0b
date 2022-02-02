@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f79aeb2f_b7a2c5f9",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-02-02T16:44:45Z",
+      "side": 1,
+      "message": "LGTM, minor suggestion",
+      "revId": "07d800052da37dec43b26735dd903fcd70c39c0b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f117c656_52ae156e",
+        "filename": "internal/common/options.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-02-02T16:44:45Z",
+      "side": 1,
+      "message": "I\u0027d set this to te actual minimum of the OLTs we work wit, which is 10GB",
+      "range": {
+        "startLine": 340,
+        "startChar": 23,
+        "endLine": 340,
+        "endChar": 27
+      },
+      "revId": "07d800052da37dec43b26735dd903fcd70c39c0b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
