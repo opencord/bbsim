@@ -109,7 +109,9 @@ type SadisUniTag struct {
 	DownstreamBandwidthProfile string `json:"downstreamBandwidthProfile,omitempty"`
 	IsDhcpRequired             bool   `json:"isDhcpRequired,omitempty"`
 	IsIgmpRequired             bool   `json:"isIgmpRequired,omitempty"`
+	IsPPPoERequired            bool   `json:"isPppoeRequired,omitempty"`
 	ConfiguredMacAddress       string `json:"configuredMacAddress,omitempty"`
+	EnableMacLearning          bool   `json:"enableMacLearning,omitempty"`
 	UsPonCTagPriority          uint8  `json:"usPonCTagPriority,omitempty"`
 	UsPonSTagPriority          uint8  `json:"usPonSTagPriority,omitempty"`
 	DsPonCTagPriority          uint8  `json:"dsPonCTagPriority,omitempty"`
@@ -208,9 +210,11 @@ func GetOnuEntryV2(olt *devices.OltDevice, onu *devices.Onu, uniStr string) (*Sa
 			ServiceName:                service.Name,
 			IsIgmpRequired:             service.NeedsIgmp,
 			IsDhcpRequired:             service.NeedsDhcp,
+			IsPPPoERequired:            service.NeedsPPPoE,
 			TechnologyProfileID:        service.TechnologyProfileID,
 			UpstreamBandwidthProfile:   "User_Bandwidth1",
 			DownstreamBandwidthProfile: "User_Bandwidth2",
+			EnableMacLearning:          service.EnableMacLearning,
 			PonCTag:                    service.CTag,
 			PonSTag:                    service.STag,
 		}

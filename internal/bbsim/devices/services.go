@@ -70,9 +70,11 @@ type Service struct {
 	NeedsEapol          bool
 	NeedsDhcp           bool
 	NeedsIgmp           bool
+	NeedsPPPoE          bool
 	TechnologyProfileID int
 	UniTagMatch         int
 	ConfigureMacAddress bool
+	EnableMacLearning   bool
 	UsPonCTagPriority   uint8
 	UsPonSTagPriority   uint8
 	DsPonCTagPriority   uint8
@@ -90,8 +92,9 @@ type Service struct {
 }
 
 func NewService(id uint32, name string, hwAddress net.HardwareAddr, uni *UniPort, cTag int, sTag int,
-	needsEapol bool, needsDchp bool, needsIgmp bool, tpID int, uniTagMatch int, configMacAddress bool,
-	usPonCTagPriority uint8, usPonSTagPriority uint8, dsPonCTagPriority uint8, dsPonSTagPriority uint8) (*Service, error) {
+	needsEapol bool, needsDchp bool, needsIgmp bool, needsPPPoE bool, tpID int, uniTagMatch int, configMacAddress bool,
+	enableMacLearning bool, usPonCTagPriority uint8, usPonSTagPriority uint8, dsPonCTagPriority uint8,
+	dsPonSTagPriority uint8) (*Service, error) {
 
 	service := Service{
 		Id:                  id,
@@ -103,9 +106,11 @@ func NewService(id uint32, name string, hwAddress net.HardwareAddr, uni *UniPort
 		NeedsEapol:          needsEapol,
 		NeedsDhcp:           needsDchp,
 		NeedsIgmp:           needsIgmp,
+		NeedsPPPoE:          needsPPPoE,
 		TechnologyProfileID: tpID,
 		UniTagMatch:         uniTagMatch,
 		ConfigureMacAddress: configMacAddress,
+		EnableMacLearning:   enableMacLearning,
 		UsPonCTagPriority:   usPonCTagPriority,
 		UsPonSTagPriority:   usPonSTagPriority,
 		DsPonCTagPriority:   dsPonCTagPriority,
