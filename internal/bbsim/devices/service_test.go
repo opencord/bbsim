@@ -64,7 +64,7 @@ func createTestService(needsEapol bool, needsDchp bool) (*Service, error) {
 
 	uni := UniPort{ID: 1, Onu: onu}
 	return NewService(0, "testService", mac, &uni, 900, 900,
-		needsEapol, needsDchp, false, 64, 0, false,
+		needsEapol, needsDchp, false, false, 64, 0, false, false,
 		7, 7, 7, 7)
 }
 

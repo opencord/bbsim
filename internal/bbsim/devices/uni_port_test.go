@@ -116,6 +116,21 @@ func TestNewUniPortAtt(t *testing.T) {
 				expectedStags: map[string]int{hsia: 900, voip: 333, vod: 555},
 			},
 		},
+		{"newUniPort-tt-maclearning-pppoe",
+			args{
+				services: []common.ServiceYaml{
+					{Name: hsia, CTag: 900, CTagAllocation: common.TagAllocationUnique.String(), STag: 900, STagAllocation: common.TagAllocationShared.String(), UniTagMatch: 35, TechnologyProfileID: 64},
+					{Name: voip, CTag: 444, CTagAllocation: common.TagAllocationShared.String(), STag: 333, STagAllocation: common.TagAllocationShared.String(), UniTagMatch: 65, TechnologyProfileID: 65, EnableMacLearning: true, UsPonCTagPriority: 7, UsPonSTagPriority: 7, DsPonCTagPriority: 7, DsPonSTagPriority: 7},
+					{Name: vod, CTag: 55, CTagAllocation: common.TagAllocationShared.String(), STag: 555, STagAllocation: common.TagAllocationShared.String(), UniTagMatch: 55, TechnologyProfileID: 66, NeedsDhcp: true, NeedsIgmp: true, NeedsPPPoE: true, EnableMacLearning: true, UsPonCTagPriority: 5, UsPonSTagPriority: 5, DsPonCTagPriority: 5, DsPonSTagPriority: 5},
+				},
+				nextCtag: map[string]int{hsia: 920},
+				nextStag: map[string]int{hsia: 900},
+			},
+			wants{
+				expectedCtags: map[string]int{hsia: 921, voip: 444, vod: 55},
+				expectedStags: map[string]int{hsia: 900, voip: 333, vod: 555},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -144,9 +159,11 @@ func TestNewUniPortAtt(t *testing.T) {
 				assert.Equal(t, configuredService.NeedsEapol, service.NeedsEapol)
 				assert.Equal(t, configuredService.NeedsDhcp, service.NeedsDhcp)
 				assert.Equal(t, configuredService.NeedsIgmp, service.NeedsIgmp)
+				assert.Equal(t, configuredService.NeedsPPPoE, service.NeedsPPPoE)
 				assert.Equal(t, configuredService.UniTagMatch, service.UniTagMatch)
 				assert.Equal(t, configuredService.TechnologyProfileID, service.TechnologyProfileID)
 				assert.Equal(t, configuredService.ConfigureMacAddress, service.ConfigureMacAddress)
+				assert.Equal(t, configuredService.EnableMacLearning, service.EnableMacLearning)
 				assert.Equal(t, configuredService.UsPonCTagPriority, service.UsPonCTagPriority)
 				assert.Equal(t, configuredService.DsPonCTagPriority, service.DsPonCTagPriority)
 				assert.Equal(t, configuredService.UsPonSTagPriority, service.UsPonSTagPriority)

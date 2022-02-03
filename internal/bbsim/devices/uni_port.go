@@ -173,8 +173,9 @@ func NewUniPort(ID uint32, onu *Onu, nextCtag map[string]int, nextStag map[strin
 
 		mac := net.HardwareAddr{0x2e, byte(olt.ID), byte(onu.PonPortID), byte(onu.ID), byte(uni.ID), byte(k)}
 		service, err := NewService(uint32(k), s.Name, mac, &uni, nextCtag[s.Name], nextStag[s.Name],
-			s.NeedsEapol, s.NeedsDhcp, s.NeedsIgmp, s.TechnologyProfileID, s.UniTagMatch,
-			s.ConfigureMacAddress, s.UsPonCTagPriority, s.UsPonSTagPriority, s.DsPonCTagPriority, s.DsPonSTagPriority)
+			s.NeedsEapol, s.NeedsDhcp, s.NeedsIgmp, s.NeedsPPPoE, s.TechnologyProfileID, s.UniTagMatch,
+			s.ConfigureMacAddress, s.EnableMacLearning, s.UsPonCTagPriority, s.UsPonSTagPriority,
+			s.DsPonCTagPriority, s.DsPonSTagPriority)
 
 		if err != nil {
 			oltLogger.WithFields(log.Fields{
