@@ -1629,7 +1629,7 @@ func (o *Onu) handleOmciResponse(msg bbsim.OmciIndicationMessage, client openolt
 
 			meParams := me.ParamData{
 				EntityID:   meId.ToUint16(),
-				Attributes: me.AttributeValueMap{"AdministrativeState": 0},
+				Attributes: me.AttributeValueMap{me.PhysicalPathTerminationPointEthernetUni_AdministrativeState: 0},
 			}
 			managedEntity, omciError := me.NewPhysicalPathTerminationPointEthernetUni(meParams)
 			if omciError.GetError() != nil {

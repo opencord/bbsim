@@ -18,6 +18,7 @@ package omci
 
 import (
 	"errors"
+
 	"github.com/google/gopacket"
 	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
