@@ -99,6 +99,7 @@ mod-update: # @HELP Download the dependencies to the vendor folder
 docker-build: local-omci-lib-go local-protos# @HELP Build the BBSim docker container (contains BBSimCtl too)
 	docker build \
 	  -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} \
+	  -t hwindlass/bbsim:dmi \
 	  -f build/package/Dockerfile .
 
 docker-push: # @HELP Push the docker container to a registry

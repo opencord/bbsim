@@ -18,6 +18,7 @@ package dmiserver
 
 import (
 	"context"
+	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -68,4 +69,9 @@ func (dms *DmiAPIServer) UpdateEventsConfiguration(ctx context.Context, req *dmi
 	return &dmi.EventsConfigurationResponse{
 		Status: dmi.Status_OK_STATUS,
 	}, nil
+}
+
+// Initiates the server streaming of the events
+func (dms *DmiAPIServer) StreamEvents(req *empty.Empty, srv dmi.NativeEventsManagementService_StreamEventsServer) error {
+	return status.Errorf(codes.Unimplemented, "rpc StreamEvents not implemented")
 }
