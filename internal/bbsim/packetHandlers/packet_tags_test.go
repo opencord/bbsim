@@ -183,3 +183,43 @@ func TestPopDoubleTag(t *testing.T) {
 	assert.Equal(t, vlan, uint16(0))
 	assert.Equal(t, err.Error(), "no-dot1q-layer-in-packet")
 }
+
+func TestGetTagsFromPacket(t *testing.T) {
+	rawBytes := []byte{10, 20, 30}
+	srcMac := net.HardwareAddr{0xff, 0xff, 0xff, 0xff, byte(1), byte(1)}
+	dstMac := net.HardwareAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
+
+	ethernetLayer := &layers.Ethernet{
+		SrcMAC:       srcMac,
+		DstMAC:       dstMac,
+		EthernetType: 0x800,
+	}
+
+	buffer := gopacket.NewSerializeBuffer()
+	_ = gopacket.SerializeLayers(
+		buffer,
+		gopacket.SerializeOptions{
+			FixLengths: false,
+		},
+		ethernetLayer,
+		gopacket.Payload(rawBytes),
+	)
+	untaggedPkt := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
+	singleTaggedPkt, err := packetHandlers.PushSingleTag(111, untaggedPkt, 0)
+	assert.NilError(t, err)
+	doubleTaggedPkt, err := packetHandlers.PushDoubleTag(111, 222, untaggedPkt, 0)
+	assert.NilError(t, err)
+
+	_, _, err = packetHandlers.GetTagsFromPacket(untaggedPkt)
+	assert.Equal(t, err.Error(), "no-dot1q-layer-in-packet")
+
+	oTag, iTag, err := packetHandlers.GetTagsFromPacket(singleTaggedPkt)
+	assert.NilError(t, err)
+	assert.Equal(t, uint16(111), oTag)
+	assert.Equal(t, uint16(0), iTag)
+
+	oTag, iTag, err = packetHandlers.GetTagsFromPacket(doubleTaggedPkt)
+	assert.NilError(t, err)
+	assert.Equal(t, uint16(111), oTag)
+	assert.Equal(t, uint16(222), iTag)
+}
