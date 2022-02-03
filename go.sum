@@ -85,8 +85,8 @@ github.com/olekukonko/tablewriter v0.0.4 h1:vHD/YYe1Wolo78koG299f7V/VAS08c6IpCLn
 github.com/olekukonko/tablewriter v0.0.4/go.mod h1:zq6QwlOf5SlnkVbMSr5EoBv3636FWnp+qbPhuoO21uA=
 github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4 h1:Odib2px8tyALzdbyztAAqdxmpmQ/pJahJ7uz8kN/rvk=
 github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4/go.mod h1:/+3S0pwQUy7HeKnH0KfKp5W6hmh/LdZzuZTNT/m7vA4=
-github.com/opencord/device-management-interface v0.11.0 h1:hoKjrkQWPr0IFXWn6HbGdV1Bk5v0gijM7P4VjUJvNh8=
-github.com/opencord/device-management-interface v0.11.0/go.mod h1:G1owSqGBGaqllrwtjxfLTsy9EDsGhdhmqkJM3XOnPD0=
+github.com/opencord/device-management-interface v1.2.1 h1:ur7l70Le6Xzemb7Y/2wkO7u9jA26bLnB4R0+5SIoy+I=
+github.com/opencord/device-management-interface v1.2.1/go.mod h1:G1owSqGBGaqllrwtjxfLTsy9EDsGhdhmqkJM3XOnPD0=
 github.com/opencord/omci-lib-go/v2 v2.1.2 h1:IgwSGEtM8zf/o8wrDLdY+q0WshDYwRwMGYeL35gMqVQ=
 github.com/opencord/omci-lib-go/v2 v2.1.2/go.mod h1:o1S/jhDLHNikFU7uG2TR5UOM5KmKlqwLlVncXi0FBYQ=
 github.com/opencord/voltha-protos/v5 v5.1.2 h1:biyhoK+5JBcpT3HvUBb1xzN5cAKA0xXU/hLbtzuR9xI=

@@ -8,6 +8,8 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -771,6 +773,29 @@ type NativeSoftwareManagementServiceServer interface {
 	UpdateStartupConfiguration(*ConfigRequest, NativeSoftwareManagementService_UpdateStartupConfigurationServer) error
 	// This API can be used to retrieve information about the current startup configuration that a device is using
 	GetStartupConfigurationInfo(context.Context, *StartupConfigInfoRequest) (*StartupConfigInfoResponse, error)
+}
+
+// UnimplementedNativeSoftwareManagementServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedNativeSoftwareManagementServiceServer struct {
+}
+
+func (*UnimplementedNativeSoftwareManagementServiceServer) GetSoftwareVersion(ctx context.Context, req *HardwareID) (*GetSoftwareVersionInformationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSoftwareVersion not implemented")
+}
+func (*UnimplementedNativeSoftwareManagementServiceServer) DownloadImage(req *DownloadImageRequest, srv NativeSoftwareManagementService_DownloadImageServer) error {
+	return status.Errorf(codes.Unimplemented, "method DownloadImage not implemented")
+}
+func (*UnimplementedNativeSoftwareManagementServiceServer) ActivateImage(req *HardwareID, srv NativeSoftwareManagementService_ActivateImageServer) error {
+	return status.Errorf(codes.Unimplemented, "method ActivateImage not implemented")
+}
+func (*UnimplementedNativeSoftwareManagementServiceServer) RevertToStandbyImage(req *HardwareID, srv NativeSoftwareManagementService_RevertToStandbyImageServer) error {
+	return status.Errorf(codes.Unimplemented, "method RevertToStandbyImage not implemented")
+}
+func (*UnimplementedNativeSoftwareManagementServiceServer) UpdateStartupConfiguration(req *ConfigRequest, srv NativeSoftwareManagementService_UpdateStartupConfigurationServer) error {
+	return status.Errorf(codes.Unimplemented, "method UpdateStartupConfiguration not implemented")
+}
+func (*UnimplementedNativeSoftwareManagementServiceServer) GetStartupConfigurationInfo(ctx context.Context, req *StartupConfigInfoRequest) (*StartupConfigInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStartupConfigurationInfo not implemented")
 }
 
 func RegisterNativeSoftwareManagementServiceServer(s *grpc.Server, srv NativeSoftwareManagementServiceServer) {
