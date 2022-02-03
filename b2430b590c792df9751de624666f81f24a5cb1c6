@@ -22,6 +22,30 @@
       },
       "revId": "b2430b590c792df9751de624666f81f24a5cb1c6",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3c2d393c_65fddc4a",
+        "filename": "internal/common/omci/set_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-02-03T13:11:52Z",
+      "side": 1,
+      "message": "Fixed this and similar occurrences that I didn\u0027t find before",
+      "parentUuid": "e7d455cc_ac3ee8bd",
+      "range": {
+        "startLine": 52,
+        "startChar": 46,
+        "endLine": 52,
+        "endChar": 65
+      },
+      "revId": "b2430b590c792df9751de624666f81f24a5cb1c6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
