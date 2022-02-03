@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "c122484a_cdda5dd1",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-02-03T10:00:58Z",
+      "side": 1,
+      "message": "please release a new version in the VERSION file, best to do it given the change in the library. ",
+      "revId": "af12ce71b3aeab310bdfda9d6d85c9d2c912efcb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "aa644eab_132ce241",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 682,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-02-03T10:00:58Z",
+      "side": 1,
+      "message": "please put a comment in here explaining why these are not constants as we discussed.",
+      "revId": "af12ce71b3aeab310bdfda9d6d85c9d2c912efcb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
