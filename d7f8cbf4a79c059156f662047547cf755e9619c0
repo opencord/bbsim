@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e659e186_29fe54dc",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-02-03T00:42:37Z",
+      "side": 1,
+      "message": "Why 10?",
+      "revId": "d7f8cbf4a79c059156f662047547cf755e9619c0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a49c40bb_22924f5b",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-02-03T00:42:37Z",
+      "side": 1,
+      "message": "Is this limit enough? What is the max multi uni tests we do? If we limit to max of 2 UNIs then this is enough for all workflows. If increase the number of enabled and service provisioned uni ports, this may need tuning again.",
+      "range": {
+        "startLine": 55,
+        "startChar": 23,
+        "endLine": 55,
+        "endChar": 24
+      },
+      "revId": "d7f8cbf4a79c059156f662047547cf755e9619c0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
