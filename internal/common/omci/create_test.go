@@ -17,11 +17,12 @@
 package omci
 
 import (
+	"testing"
+
 	"github.com/google/gopacket"
 	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
 	"gotest.tools/assert"
-	"testing"
 )
 
 func omciToCreateResponse(t *testing.T, omciPkt *gopacket.Packet) *omci.CreateResponse {
@@ -54,14 +55,14 @@ func TestCreateResponse(t *testing.T) {
 			EntityInstance: 12,
 		},
 		Attributes: me.AttributeValueMap{
-			"PortId":                              0,
-			"TContPointer":                        0,
-			"Direction":                           0,
-			"TrafficManagementPointerForUpstream": 0,
-			"TrafficDescriptorProfilePointerForUpstream":   0,
-			"PriorityQueuePointerForDownStream":            0,
-			"TrafficDescriptorProfilePointerForDownstream": 0,
-			"EncryptionKeyRing":                            0,
+			me.GemPortNetworkCtp_PortId:                                       0,
+			me.GemPortNetworkCtp_TContPointer:                                 0,
+			me.GemPortNetworkCtp_Direction:                                    0,
+			me.GemPortNetworkCtp_TrafficManagementPointerForUpstream:          0,
+			me.GemPortNetworkCtp_TrafficDescriptorProfilePointerForUpstream:   0,
+			me.GemPortNetworkCtp_PriorityQueuePointerForDownStream:            0,
+			me.GemPortNetworkCtp_TrafficDescriptorProfilePointerForDownstream: 0,
+			me.GemPortNetworkCtp_EncryptionKeyRing:                            0,
 		},
 	}
 	omciPkt, err := Serialize(omci.CreateRequestType, omciReq, 66)

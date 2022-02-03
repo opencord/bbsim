@@ -1,13 +1,13 @@
 /*
  * Copyright (c) 2018 - present.  Boling Consulting Solutions (bcsw.net)
  * Copyright 2020-present Open Networking Foundation
-
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
-
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
-
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,6 +35,9 @@ import (
 	mapset "github.com/deckarep/golang-set"
 	"github.com/google/gopacket"
 )
+
+// ManagedEntityID is a string constant that can be used for the 16-bit Entity ID
+const ManagedEntityID = "ManagedEntityId"
 
 // Attribute types
 type AttributeType uint8
@@ -377,7 +380,8 @@ func (attr *AttributeDefinition) tableAttributeDecode(data []byte, df gopacket.D
 	// either Read and/or Write, never Set-by-Create
 	switch msgType {
 	default:
-		return nil, fmt.Errorf("unsupported Message Type '%v' for table serialization", msgType)
+		return nil, fmt.Errorf("unsupported Message Type '%v/0x%02x' for table decode",
+			MsgType(msgType&MsgTypeMask), msgType)
 
 	case byte(Get) | AK: // Get Response
 		// Size
@@ -434,7 +438,8 @@ func (attr *AttributeDefinition) tableAttributeSerializeTo(value interface{}, b 
 	// either Read and/or Write, never Set-by-Create
 	switch msgType {
 	default:
-		return 0, fmt.Errorf("unsupported Message Type '%v' for table serialization", msgType)
+		return 0, fmt.Errorf("unsupported Message Type '%v/0x%02x' for table serialization",
+			MsgType(msgType&MsgTypeMask), msgType)
 
 	case byte(Get) | AK: // Get Response
 		// Size
