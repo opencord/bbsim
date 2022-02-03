@@ -122,6 +122,30 @@
       },
       "revId": "d7f8cbf4a79c059156f662047547cf755e9619c0",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0e5e67af_f95ab2a1",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-02-03T22:34:45Z",
+      "side": 1,
+      "message": "better to fix it once and for all :)",
+      "parentUuid": "e5600b8a_1b9ef32d",
+      "range": {
+        "startLine": 55,
+        "startChar": 23,
+        "endLine": 55,
+        "endChar": 24
+      },
+      "revId": "d7f8cbf4a79c059156f662047547cf755e9619c0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
