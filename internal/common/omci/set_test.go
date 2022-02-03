@@ -17,10 +17,11 @@
 package omci
 
 import (
+	"testing"
+
 	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestSetRequest(t *testing.T) {
@@ -30,7 +31,7 @@ func TestSetRequest(t *testing.T) {
 	meParams := me.ParamData{
 		EntityID: meId.ToUint16(),
 		Attributes: me.AttributeValueMap{
-			"AdministrativeState": 1,
+			me.UniG_AdministrativeState: 1,
 		},
 	}
 	meInstance, omciError := me.NewPhysicalPathTerminationPointEthernetUni(meParams)
@@ -48,6 +49,6 @@ func TestSetRequest(t *testing.T) {
 	msgObj, _ := ParseSetRequest(omciPkt)
 
 	assert.Equal(t, meId.ToUint16(), msgObj.EntityInstance)
-	assert.Equal(t, uint8(1), msgObj.Attributes["AdministrativeState"])
+	assert.Equal(t, uint8(1), msgObj.Attributes[me.UniG_AdministrativeState])
 
 }

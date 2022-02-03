@@ -19,13 +19,14 @@ package omci
 import (
 	"encoding/hex"
 	"fmt"
+	"reflect"
+	"testing"
+
 	"github.com/google/gopacket"
 	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"gotest.tools/assert"
-	"reflect"
-	"testing"
 )
 
 func omciBytesToMsg(t *testing.T, data []byte) (*omci.OMCI, *gopacket.Packet) {
@@ -203,7 +204,7 @@ func TestCreateOnugResponse(t *testing.T) {
 	getResponseLayer := omciToGetResponse(t, omciPkt)
 
 	assert.Equal(t, getResponseLayer.Result, me.Success)
-	snBytes := (getResponseLayer.Attributes["SerialNumber"]).([]byte)
+	snBytes := (getResponseLayer.Attributes[me.OnuG_SerialNumber]).([]byte)
 	snVendorPart := fmt.Sprintf("%s", snBytes[:4])
 	snNumberPart := hex.EncodeToString(snBytes[4:])
 	serialNumber := snVendorPart + snNumberPart

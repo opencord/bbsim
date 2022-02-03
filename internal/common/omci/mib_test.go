@@ -17,11 +17,12 @@
 package omci
 
 import (
+	"testing"
+
 	"github.com/google/gopacket"
 	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
 	"gotest.tools/assert"
-	"testing"
 )
 
 // used to verify that the first message in the MIB Sync (OnuData)
@@ -90,17 +91,17 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 	mibDb.items = append(mibDb.items, MibDbEntry{
 		me.OnuDataClassID,
 		onuDataEntityId,
-		me.AttributeValueMap{"MibDataSync": 0},
+		me.AttributeValueMap{me.OnuData_MibDataSync: 0},
 	})
 
 	mibDb.items = append(mibDb.items, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
-			"Type":          ethernetUnitType,
-			"NumberOfPorts": uniPortCount,
-			"SerialNumber":  ToOctets("BBSM-Circuit-Pack", 20),
-			"Version":       ToOctets("v0.0.1", 20),
+			me.CircuitPack_Type:          ethernetUnitType,
+			me.CircuitPack_NumberOfPorts: uniPortCount,
+			me.CircuitPack_SerialNumber:  ToOctets("BBSM-Circuit-Pack", 20),
+			me.CircuitPack_Version:       ToOctets("v0.0.1", 20),
 		},
 	})
 
@@ -108,22 +109,22 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 		me.AniGClassID,
 		anigEntityId,
 		me.AttributeValueMap{
-			"Arc":                         0,
-			"ArcInterval":                 0,
-			"Deprecated":                  0,
-			"GemBlockLength":              48,
-			"LowerOpticalThreshold":       255,
-			"LowerTransmitPowerThreshold": 129,
-			"OnuResponseTime":             0,
-			"OpticalSignalLevel":          57428,
-			"PiggybackDbaReporting":       0,
-			"SignalDegradeThreshold":      9,
-			"SignalFailThreshold":         5,
-			"SrIndication":                1,
-			"TotalTcontNumber":            8,
-			"TransmitOpticalLevel":        3171,
-			"UpperOpticalThreshold":       255,
-			"UpperTransmitPowerThreshold": 129,
+			me.AniG_Arc:                         0,
+			me.AniG_ArcInterval:                 0,
+			me.AniG_Deprecated:                  0,
+			me.AniG_GemBlockLength:              48,
+			me.AniG_LowerOpticalThreshold:       255,
+			me.AniG_LowerTransmitPowerThreshold: 129,
+			me.AniG_OnuResponseTime:             0,
+			me.AniG_OpticalSignalLevel:          57428,
+			me.AniG_PiggybackDbaReporting:       0,
+			me.AniG_SignalDegradeThreshold:      9,
+			me.AniG_SignalFailThreshold:         5,
+			me.AniG_SrIndication:                1,
+			me.AniG_TotalTcontNumber:            8,
+			me.AniG_TransmitOpticalLevel:        3171,
+			me.AniG_UpperOpticalThreshold:       255,
+			me.AniG_UpperTransmitPowerThreshold: 129,
 		},
 	})
 
@@ -131,15 +132,15 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 		me.Onu2GClassID,
 		onu2gEntityId,
 		me.AttributeValueMap{
-			"ConnectivityCapability":                      127,
-			"CurrentConnectivityMode":                     0,
-			"Deprecated":                                  1,
-			"PriorityQueueScaleFactor":                    1,
-			"QualityOfServiceQosConfigurationFlexibility": 63,
-			"Sysuptime":                                   0,
-			"TotalGemPortIdNumber":                        8,
-			"TotalPriorityQueueNumber":                    64,
-			"TotalTrafficSchedulerNumber":                 8,
+			me.Onu2G_ConnectivityCapability:                      127,
+			me.Onu2G_CurrentConnectivityMode:                     0,
+			me.Onu2G_Deprecated:                                  1,
+			me.Onu2G_PriorityQueueScaleFactor:                    1,
+			me.Onu2G_QualityOfServiceQosConfigurationFlexibility: 63,
+			me.Onu2G_Sysuptime:                                   0,
+			me.Onu2G_TotalGemPortIdNumber:                        8,
+			me.Onu2G_TotalPriorityQueueNumber:                    64,
+			me.Onu2G_TotalTrafficSchedulerNumber:                 8,
 		},
 	})
 
@@ -149,13 +150,13 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 		want mibExpected
 	}{
 		{"mibUploadNext-0", createTestMibUploadNextArgs(t, 1, 0),
-			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 1, entityID: onuDataEntityId.ToUint16(), entityClass: me.OnuDataClassID, attributes: map[string]interface{}{"MibDataSync": MDS}}},
+			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 1, entityID: onuDataEntityId.ToUint16(), entityClass: me.OnuDataClassID, attributes: map[string]interface{}{me.OnuData_MibDataSync: MDS}}},
 		{"mibUploadNext-1", createTestMibUploadNextArgs(t, 2, 1),
-			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 2, entityID: circuitPackEntityID.ToUint16(), entityClass: me.CircuitPackClassID, attributes: map[string]interface{}{"Type": uint8(47), "NumberOfPorts": uint8(4)}}},
+			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 2, entityID: circuitPackEntityID.ToUint16(), entityClass: me.CircuitPackClassID, attributes: map[string]interface{}{me.CircuitPack_Type: uint8(47), me.CircuitPack_NumberOfPorts: uint8(4)}}},
 		{"mibUploadNext-2", createTestMibUploadNextArgs(t, 3, 2),
-			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 3, entityID: anigEntityId.ToUint16(), entityClass: me.AniGClassID, attributes: map[string]interface{}{"GemBlockLength": uint16(48)}}},
+			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 3, entityID: anigEntityId.ToUint16(), entityClass: me.AniGClassID, attributes: map[string]interface{}{me.AniG_GemBlockLength: uint16(48)}}},
 		{"mibUploadNext-3", createTestMibUploadNextArgs(t, 4, 3),
-			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 4, entityID: onuDataEntityId.ToUint16(), entityClass: me.Onu2GClassID, attributes: map[string]interface{}{"TotalPriorityQueueNumber": uint16(64)}}},
+			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 4, entityID: onuDataEntityId.ToUint16(), entityClass: me.Onu2GClassID, attributes: map[string]interface{}{me.Onu2G_TotalPriorityQueueNumber: uint16(64)}}},
 	}
 
 	for _, tt := range tests {

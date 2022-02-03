@@ -832,7 +832,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 				success = false
 			} else {
 				// 1 locks the UNI, 0 unlocks it
-				adminState := msgObj.Attributes["AdministrativeState"].(uint8)
+				adminState := msgObj.Attributes[me.PhysicalPathTerminationPointEthernetUni_AdministrativeState].(uint8)
 				var err error
 				if adminState == 1 {
 					err = uni.Disable()
@@ -859,7 +859,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 				success = false
 			} else {
 				// 1 locks the UNI, 0 unlocks it
-				adminState := msgObj.Attributes["AdministrativeState"].(uint8)
+				adminState := msgObj.Attributes[me.PhysicalPathTerminationPointPotsUni_AdministrativeState].(uint8)
 				var err error
 				if adminState == 1 {
 					err = pots.Disable()
@@ -878,7 +878,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 				}
 			}
 		case me.OnuGClassID:
-			o.AdminLockState = msgObj.Attributes["AdministrativeState"].(uint8)
+			o.AdminLockState = msgObj.Attributes[me.OnuG_AdministrativeState].(uint8)
 			onuLogger.WithFields(log.Fields{
 				"IntfId":         o.PonPortID,
 				"OnuId":          o.ID,
@@ -886,8 +886,8 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 				"AdminLockState": o.AdminLockState,
 			}).Debug("set-onu-admin-lock-state")
 		case me.TContClassID:
-			allocId := msgObj.Attributes["AllocId"].(uint16)
-			entityID := msgObj.Attributes["ManagedEntityId"].(uint16)
+			allocId := msgObj.Attributes[me.TCont_AllocId].(uint16)
+			entityID := msgObj.Attributes[me.ManagedEntityID].(uint16)
 
 			// if the AllocId is 255 (0xFF) or 65535 (0xFFFF) it means we are removing it,
 			// otherwise we are adding it
@@ -1629,7 +1629,7 @@ func (o *Onu) handleOmciResponse(msg bbsim.OmciIndicationMessage, client openolt
 
 			meParams := me.ParamData{
 				EntityID:   meId.ToUint16(),
-				Attributes: me.AttributeValueMap{"AdministrativeState": 0},
+				Attributes: me.AttributeValueMap{me.PhysicalPathTerminationPointEthernetUni_AdministrativeState: 0},
 			}
 			managedEntity, omciError := me.NewPhysicalPathTerminationPointEthernetUni(meParams)
 			if omciError.GetError() != nil {

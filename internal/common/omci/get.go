@@ -126,21 +126,21 @@ func createOnu2gResponse(attributeMask uint16, entityID uint16) *omci.GetRespons
 	managedEntity, meErr := me.NewOnu2G(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
-			"ManagedEntityId": entityID,
-			"EquipmentId":     ToOctets("12345123451234512345", 20),
-			"OpticalNetworkUnitManagementAndControlChannelOmccVersion": 180,
-			"VendorProductCode":                           0,
-			"SecurityCapability":                          1,
-			"SecurityMode":                                1,
-			"TotalPriorityQueueNumber":                    1,
-			"TotalTrafficSchedulerNumber":                 1,
-			"Deprecated":                                  1,
-			"TotalGemPortIdNumber":                        32,
-			"Sysuptime":                                   319389947, // NOTE need to be smarter?
-			"ConnectivityCapability":                      127,
-			"CurrentConnectivityMode":                     5,
-			"QualityOfServiceQosConfigurationFlexibility": 48,
-			"PriorityQueueScaleFactor":                    1,
+			me.ManagedEntityID:   entityID,
+			me.Onu2G_EquipmentId: ToOctets("12345123451234512345", 20),
+			me.Onu2G_OpticalNetworkUnitManagementAndControlChannelOmccVersion: 180,
+			me.Onu2G_VendorProductCode:                                        0,
+			me.Onu2G_SecurityCapability:                                       1,
+			me.Onu2G_SecurityMode:                                             1,
+			me.Onu2G_TotalPriorityQueueNumber:                                 1,
+			me.Onu2G_TotalTrafficSchedulerNumber:                              1,
+			me.Onu2G_Deprecated:                                               1,
+			me.Onu2G_TotalGemPortIdNumber:                                     32,
+			me.Onu2G_Sysuptime:                                                319389947, // NOTE need to be smarter?
+			me.Onu2G_ConnectivityCapability:                                   127,
+			me.Onu2G_CurrentConnectivityMode:                                  5,
+			me.Onu2G_QualityOfServiceQosConfigurationFlexibility:              48,
+			me.Onu2G_PriorityQueueScaleFactor:                                 1,
 		},
 	})
 
@@ -164,20 +164,20 @@ func createOnugResponse(attributeMask uint16, entityID uint16, onuSn *openolt.Se
 	managedEntity, meErr := me.NewOnuG(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
-			"ManagedEntityId":         entityID,
-			"VendorId":                ToOctets("BBSM", 4),
-			"Version":                 ToOctets("v0.0.1", 14),
-			"SerialNumber":            append(onuSn.VendorId, onuSn.VendorSpecific...),
-			"TrafficManagementOption": 0,
-			"Deprecated":              0,
-			"BatteryBackup":           0,
-			"AdministrativeState":     0,
-			"OperationalState":        0,
-			"OnuSurvivalTime":         10,
-			"LogicalOnuId":            ToOctets("BBSM", 24),
-			"LogicalPassword":         ToOctets("BBSM", 12),
-			"CredentialsStatus":       0,
-			"ExtendedTcLayerOptions":  0,
+			me.ManagedEntityID:              entityID,
+			me.OnuG_VendorId:                ToOctets("BBSM", 4),
+			me.OnuG_Version:                 ToOctets("v0.0.1", 14),
+			me.OnuG_SerialNumber:            append(onuSn.VendorId, onuSn.VendorSpecific...),
+			me.OnuG_TrafficManagementOption: 0,
+			me.OnuG_Deprecated:              0,
+			me.OnuG_BatteryBackup:           0,
+			me.OnuG_AdministrativeState:     0,
+			me.OnuG_OperationalState:        0,
+			me.OnuG_OnuSurvivalTime:         10,
+			me.OnuG_LogicalOnuId:            ToOctets("BBSM", 24),
+			me.OnuG_LogicalPassword:         ToOctets("BBSM", 12),
+			me.OnuG_CredentialsStatus:       0,
+			me.OnuG_ExtendedTcLayerOptions:  0,
 		},
 	})
 
@@ -246,13 +246,13 @@ func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16, ac
 			EntityInstance: entityInstance,
 		},
 		Attributes: me.AttributeValueMap{
-			"ManagedEntityId": 0,
-			"Version":         ToOctets(version, 14),
-			"IsCommitted":     committed,
-			"IsActive":        active,
-			"IsValid":         1,
-			"ProductCode":     ToOctets("BBSIM-ONU", 25),
-			"ImageHash":       imageHash,
+			me.ManagedEntityID:           0,
+			me.SoftwareImage_Version:     ToOctets(version, 14),
+			me.SoftwareImage_IsCommitted: committed,
+			me.SoftwareImage_IsActive:    active,
+			me.SoftwareImage_IsValid:     1,
+			me.SoftwareImage_ProductCode: ToOctets("BBSIM-ONU", 25),
+			me.SoftwareImage_ImageHash:   imageHash,
 		},
 		Result:        me.Success,
 		AttributeMask: attributeMask,
@@ -275,8 +275,8 @@ func createIpHostResponse(attributeMask uint16, entityInstance uint16) *omci.Get
 			EntityInstance: entityInstance,
 		},
 		Attributes: me.AttributeValueMap{
-			"ManagedEntityId": 0,
-			"MacAddress":      ToOctets("aabbcc", 6),
+			me.ManagedEntityID:             0,
+			me.IpHostConfigData_MacAddress: ToOctets("aabbcc", 6),
 		},
 		Result:        me.Success,
 		AttributeMask: attributeMask,
@@ -290,15 +290,15 @@ func createVoipConfigDataResponse(attributeMask uint16, entityInstance uint16) *
 			EntityInstance: entityInstance,
 		},
 		Attributes: me.AttributeValueMap{
-			"ManagedEntityId":                   0,
-			"AvailableSignallingProtocols":      1,
-			"SignallingProtocolUsed":            1,
-			"AvailableVoipConfigurationMethods": 1,
-			"VoipConfigurationMethodUsed":       1,
-			"VoipConfigurationAddressPointer":   0xFFFF,
-			"VoipConfigurationState":            0,
-			"RetrieveProfile":                   0,
-			"ProfileVersion":                    0,
+			me.ManagedEntityID: 0,
+			me.VoipConfigData_AvailableSignallingProtocols:      1,
+			me.VoipConfigData_SignallingProtocolUsed:            1,
+			me.VoipConfigData_AvailableVoipConfigurationMethods: 1,
+			me.VoipConfigData_VoipConfigurationMethodUsed:       1,
+			me.VoipConfigData_VoipConfigurationAddressPointer:   0xFFFF,
+			me.VoipConfigData_VoipConfigurationState:            0,
+			me.VoipConfigData_RetrieveProfile:                   0,
+			me.VoipConfigData_ProfileVersion:                    0,
 		},
 		Result:        me.Success,
 		AttributeMask: attributeMask,
@@ -314,12 +314,12 @@ func createUnigResponse(attributeMask uint16, entityID uint16, onuDown bool) *om
 	managedEntity, meErr := me.NewUniG(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
-			"ManagedEntityId":             entityID,
-			"Deprecated":                  0,
-			"AdministrativeState":         omciAdminState,
-			"ManagementCapability":        0,
-			"NonOmciManagementIdentifier": 1,
-			"RelayAgentOptions":           1,
+			me.ManagedEntityID:                  entityID,
+			me.UniG_Deprecated:                  0,
+			me.UniG_AdministrativeState:         omciAdminState,
+			me.UniG_ManagementCapability:        0,
+			me.UniG_NonOmciManagementIdentifier: 1,
+			me.UniG_RelayAgentOptions:           1,
 		},
 	})
 
@@ -350,22 +350,22 @@ func createPptpEthernetResponse(attributeMask uint16, entityID uint16, onuDown b
 	managedEntity, meErr := me.NewPhysicalPathTerminationPointEthernetUni(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
-			"ManagedEntityId":               entityID,
-			"ExpectedType":                  0,
-			"SensedType":                    0,
-			"AutoDetectionConfiguration":    0,
-			"EthernetLoopbackConfiguration": 0,
-			"AdministrativeState":           onuAdminState,
-			"OperationalState":              onuOperState,
-			"ConfigurationInd":              0,
-			"MaxFrameSize":                  0,
-			"DteOrDceInd":                   0,
-			"PauseTime":                     0,
-			"BridgedOrIpInd":                0,
-			"Arc":                           0,
-			"ArcInterval":                   0,
-			"PppoeFilter":                   0,
-			"PowerControl":                  0,
+			me.ManagedEntityID: entityID,
+			me.PhysicalPathTerminationPointEthernetUni_ExpectedType:                  0,
+			me.PhysicalPathTerminationPointEthernetUni_SensedType:                    0,
+			me.PhysicalPathTerminationPointEthernetUni_AutoDetectionConfiguration:    0,
+			me.PhysicalPathTerminationPointEthernetUni_EthernetLoopbackConfiguration: 0,
+			me.PhysicalPathTerminationPointEthernetUni_AdministrativeState:           onuAdminState,
+			me.PhysicalPathTerminationPointEthernetUni_OperationalState:              onuOperState,
+			me.PhysicalPathTerminationPointEthernetUni_ConfigurationInd:              0,
+			me.PhysicalPathTerminationPointEthernetUni_MaxFrameSize:                  0,
+			me.PhysicalPathTerminationPointEthernetUni_DteOrDceInd:                   0,
+			me.PhysicalPathTerminationPointEthernetUni_PauseTime:                     0,
+			me.PhysicalPathTerminationPointEthernetUni_BridgedOrIpInd:                0,
+			me.PhysicalPathTerminationPointEthernetUni_Arc:                           0,
+			me.PhysicalPathTerminationPointEthernetUni_ArcInterval:                   0,
+			me.PhysicalPathTerminationPointEthernetUni_PppoeFilter:                   0,
+			me.PhysicalPathTerminationPointEthernetUni_PowerControl:                  0,
 		},
 	})
 
@@ -396,20 +396,20 @@ func createPptpPotsResponse(attributeMask uint16, entityID uint16, onuDown bool)
 	managedEntity, meErr := me.NewPhysicalPathTerminationPointPotsUni(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
-			"ManagedEntityId":     entityID,
-			"AdministrativeState": onuAdminState,
-			"Deprecated":          0,
-			"Arc":                 0,
-			"ArcInterval":         0,
-			"Impedance":           0,
-			"TransmissionPath":    0,
-			"RxGain":              0,
-			"TxGain":              0,
-			"OperationalState":    onuOperState,
-			"HookState":           0,
-			"PotsHoldoverTime":    0,
-			"NominalFeedVoltage":  0,
-			"LossOfSoftswitch":    0,
+			me.ManagedEntityID: entityID,
+			me.PhysicalPathTerminationPointPotsUni_AdministrativeState: onuAdminState,
+			me.PhysicalPathTerminationPointPotsUni_Deprecated:          0,
+			me.PhysicalPathTerminationPointPotsUni_Arc:                 0,
+			me.PhysicalPathTerminationPointPotsUni_ArcInterval:         0,
+			me.PhysicalPathTerminationPointPotsUni_Impedance:           0,
+			me.PhysicalPathTerminationPointPotsUni_TransmissionPath:    0,
+			me.PhysicalPathTerminationPointPotsUni_RxGain:              0,
+			me.PhysicalPathTerminationPointPotsUni_TxGain:              0,
+			me.PhysicalPathTerminationPointPotsUni_OperationalState:    onuOperState,
+			me.PhysicalPathTerminationPointPotsUni_HookState:           0,
+			me.PhysicalPathTerminationPointPotsUni_PotsHoldoverTime:    0,
+			me.PhysicalPathTerminationPointPotsUni_NominalFeedVoltage:  0,
+			me.PhysicalPathTerminationPointPotsUni_LossOfSoftswitch:    0,
 		},
 	})
 
@@ -433,23 +433,23 @@ func createEthernetFramePerformanceMonitoringHistoryDataUpstreamResponse(attribu
 	managedEntity, meErr := me.NewEthernetFramePerformanceMonitoringHistoryDataUpstream(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
-			"ManagedEntityId":         entityID,
-			"IntervalEndTime":         0, // This ideally should increment by 1 every collection interval, but staying 0 for simulation is Ok for now.
-			"ThresholdData12Id":       0,
-			"DropEvents":              rand.Intn(100),
-			"Octets":                  rand.Intn(100),
-			"Packets":                 rand.Intn(100),
-			"BroadcastPackets":        rand.Intn(100),
-			"MulticastPackets":        rand.Intn(100),
-			"CrcErroredPackets":       rand.Intn(100),
-			"UndersizePackets":        rand.Intn(100),
-			"OversizePackets":         rand.Intn(100),
-			"Packets64Octets":         rand.Intn(100),
-			"Packets65To127Octets":    rand.Intn(100),
-			"Packets128To255Octets":   rand.Intn(100),
-			"Packets256To511Octets":   rand.Intn(100),
-			"Packets512To1023Octets":  rand.Intn(100),
-			"Packets1024To1518Octets": rand.Intn(100),
+			me.ManagedEntityID: entityID,
+			me.EthernetFramePerformanceMonitoringHistoryDataUpstream_IntervalEndTime:         0, // This ideally should increment by 1 every collection interval, but staying 0 for simulation is Ok for now.
+			me.EthernetFramePerformanceMonitoringHistoryDataUpstream_ThresholdData12Id:       0,
+			me.EthernetFramePerformanceMonitoringHistoryDataUpstream_DropEvents:              rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataUpstream_Octets:                  rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataUpstream_Packets:                 rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataUpstream_BroadcastPackets:        rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataUpstream_MulticastPackets:        rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataUpstream_CrcErroredPackets:       rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataUpstream_UndersizePackets:        rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataUpstream_OversizePackets:         rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataUpstream_Packets64Octets:         rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataUpstream_Packets65To127Octets:    rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataUpstream_Packets128To255Octets:   rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataUpstream_Packets256To511Octets:   rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataUpstream_Packets512To1023Octets:  rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataUpstream_Packets1024To1518Octets: rand.Intn(100),
 		},
 	})
 
@@ -473,23 +473,23 @@ func createEthernetFramePerformanceMonitoringHistoryDataDownstreamResponse(attri
 	managedEntity, meErr := me.NewEthernetFramePerformanceMonitoringHistoryDataDownstream(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
-			"ManagedEntityId":         entityID,
-			"IntervalEndTime":         0, // This ideally should increment by 1 every collection interval, but staying 0 for simulation is Ok for now.
-			"ThresholdData12Id":       0,
-			"DropEvents":              rand.Intn(100),
-			"Octets":                  rand.Intn(100),
-			"Packets":                 rand.Intn(100),
-			"BroadcastPackets":        rand.Intn(100),
-			"MulticastPackets":        rand.Intn(100),
-			"CrcErroredPackets":       rand.Intn(100),
-			"UndersizePackets":        rand.Intn(100),
-			"OversizePackets":         rand.Intn(100),
-			"Packets64Octets":         rand.Intn(100),
-			"Packets65To127Octets":    rand.Intn(100),
-			"Packets128To255Octets":   rand.Intn(100),
-			"Packets256To511Octets":   rand.Intn(100),
-			"Packets512To1023Octets":  rand.Intn(100),
-			"Packets1024To1518Octets": rand.Intn(100),
+			me.ManagedEntityID: entityID,
+			me.EthernetFramePerformanceMonitoringHistoryDataDownstream_IntervalEndTime:         0, // This ideally should increment by 1 every collection interval, but staying 0 for simulation is Ok for now.
+			me.EthernetFramePerformanceMonitoringHistoryDataDownstream_ThresholdData12Id:       0,
+			me.EthernetFramePerformanceMonitoringHistoryDataDownstream_DropEvents:              rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataDownstream_Octets:                  rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataDownstream_Packets:                 rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataDownstream_BroadcastPackets:        rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataDownstream_MulticastPackets:        rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataDownstream_CrcErroredPackets:       rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataDownstream_UndersizePackets:        rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataDownstream_OversizePackets:         rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataDownstream_Packets64Octets:         rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataDownstream_Packets65To127Octets:    rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataDownstream_Packets128To255Octets:   rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataDownstream_Packets256To511Octets:   rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataDownstream_Packets512To1023Octets:  rand.Intn(100),
+			me.EthernetFramePerformanceMonitoringHistoryDataDownstream_Packets1024To1518Octets: rand.Intn(100),
 		},
 	})
 
@@ -513,23 +513,23 @@ func createEthernetPerformanceMonitoringHistoryDataResponse(attributeMask uint16
 	managedEntity, meErr := me.NewEthernetPerformanceMonitoringHistoryData(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
-			"ManagedEntityId":                 entityID,
-			"IntervalEndTime":                 0, // This ideally should increment by 1 every collection interval, but staying 0 for simulation is Ok for now.
-			"ThresholdData12Id":               0,
-			"FcsErrors":                       rand.Intn(100),
-			"ExcessiveCollisionCounter":       rand.Intn(100),
-			"LateCollisionCounter":            rand.Intn(100),
-			"FramesTooLong":                   rand.Intn(100),
-			"BufferOverflowsOnReceive":        rand.Intn(100),
-			"BufferOverflowsOnTransmit":       rand.Intn(100),
-			"SingleCollisionFrameCounter":     rand.Intn(100),
-			"MultipleCollisionsFrameCounter":  rand.Intn(100),
-			"SqeCounter":                      rand.Intn(100),
-			"DeferredTransmissionCounter":     rand.Intn(100),
-			"InternalMacTransmitErrorCounter": rand.Intn(100),
-			"CarrierSenseErrorCounter":        rand.Intn(100),
-			"AlignmentErrorCounter":           rand.Intn(100),
-			"InternalMacReceiveErrorCounter":  rand.Intn(100),
+			me.ManagedEntityID: entityID,
+			me.EthernetPerformanceMonitoringHistoryData_IntervalEndTime:                 0, // This ideally should increment by 1 every collection interval, but staying 0 for simulation is Ok for now.
+			me.EthernetPerformanceMonitoringHistoryData_ThresholdData12Id:               0,
+			me.EthernetPerformanceMonitoringHistoryData_FcsErrors:                       rand.Intn(100),
+			me.EthernetPerformanceMonitoringHistoryData_ExcessiveCollisionCounter:       rand.Intn(100),
+			me.EthernetPerformanceMonitoringHistoryData_LateCollisionCounter:            rand.Intn(100),
+			me.EthernetPerformanceMonitoringHistoryData_FramesTooLong:                   rand.Intn(100),
+			me.EthernetPerformanceMonitoringHistoryData_BufferOverflowsOnReceive:        rand.Intn(100),
+			me.EthernetPerformanceMonitoringHistoryData_BufferOverflowsOnTransmit:       rand.Intn(100),
+			me.EthernetPerformanceMonitoringHistoryData_SingleCollisionFrameCounter:     rand.Intn(100),
+			me.EthernetPerformanceMonitoringHistoryData_MultipleCollisionsFrameCounter:  rand.Intn(100),
+			me.EthernetPerformanceMonitoringHistoryData_SqeCounter:                      rand.Intn(100),
+			me.EthernetPerformanceMonitoringHistoryData_DeferredTransmissionCounter:     rand.Intn(100),
+			me.EthernetPerformanceMonitoringHistoryData_InternalMacTransmitErrorCounter: rand.Intn(100),
+			me.EthernetPerformanceMonitoringHistoryData_CarrierSenseErrorCounter:        rand.Intn(100),
+			me.EthernetPerformanceMonitoringHistoryData_AlignmentErrorCounter:           rand.Intn(100),
+			me.EthernetPerformanceMonitoringHistoryData_InternalMacReceiveErrorCounter:  rand.Intn(100),
 		},
 	})
 
@@ -553,14 +553,14 @@ func createFecPerformanceMonitoringHistoryDataResponse(attributeMask uint16, ent
 	managedEntity, meErr := me.NewFecPerformanceMonitoringHistoryData(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
-			"ManagedEntityId":        entityID,
-			"IntervalEndTime":        0, // This ideally should increment by 1 every collection interval, but staying 0 for simulation is Ok for now.
-			"ThresholdData12Id":      0,
-			"CorrectedBytes":         rand.Intn(100),
-			"CorrectedCodeWords":     rand.Intn(100),
-			"UncorrectableCodeWords": rand.Intn(100),
-			"TotalCodeWords":         rand.Intn(100),
-			"FecSeconds":             rand.Intn(100),
+			me.ManagedEntityID: entityID,
+			me.FecPerformanceMonitoringHistoryData_IntervalEndTime:        0, // This ideally should increment by 1 every collection interval, but staying 0 for simulation is Ok for now.
+			me.FecPerformanceMonitoringHistoryData_ThresholdData12Id:      0,
+			me.FecPerformanceMonitoringHistoryData_CorrectedBytes:         rand.Intn(100),
+			me.FecPerformanceMonitoringHistoryData_CorrectedCodeWords:     rand.Intn(100),
+			me.FecPerformanceMonitoringHistoryData_UncorrectableCodeWords: rand.Intn(100),
+			me.FecPerformanceMonitoringHistoryData_TotalCodeWords:         rand.Intn(100),
+			me.FecPerformanceMonitoringHistoryData_FecSeconds:             rand.Intn(100),
 		},
 	})
 
@@ -587,14 +587,14 @@ func createGemPortNetworkCtpPerformanceMonitoringHistoryData(attributeMask uint1
 	managedEntity, meErr := me.NewGemPortNetworkCtpPerformanceMonitoringHistoryData(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
-			"ManagedEntityId":         entityID,
-			"IntervalEndTime":         0, // This ideally should increment by 1 every collection interval, but staying 0 for simulation is Ok for now.
-			"ThresholdData12Id":       0,
-			"TransmittedGemFrames":    rand.Intn(100),
-			"ReceivedGemFrames":       rand.Intn(100),
-			"ReceivedPayloadBytes":    rand.Intn(100),
-			"TransmittedPayloadBytes": rand.Intn(100),
-			"EncryptionKeyErrors":     rand.Intn(100),
+			me.ManagedEntityID: entityID,
+			me.GemPortNetworkCtpPerformanceMonitoringHistoryData_IntervalEndTime:         0, // This ideally should increment by 1 every collection interval, but staying 0 for simulation is Ok for now.
+			me.GemPortNetworkCtpPerformanceMonitoringHistoryData_ThresholdData12Id:       0,
+			me.GemPortNetworkCtpPerformanceMonitoringHistoryData_TransmittedGemFrames:    rand.Intn(100),
+			me.GemPortNetworkCtpPerformanceMonitoringHistoryData_ReceivedGemFrames:       rand.Intn(100),
+			me.GemPortNetworkCtpPerformanceMonitoringHistoryData_ReceivedPayloadBytes:    rand.Intn(100),
+			me.GemPortNetworkCtpPerformanceMonitoringHistoryData_TransmittedPayloadBytes: rand.Intn(100),
+			me.GemPortNetworkCtpPerformanceMonitoringHistoryData_EncryptionKeyErrors:     rand.Intn(100),
 		},
 	})
 
@@ -618,8 +618,8 @@ func createOnuDataResponse(attributeMask uint16, entityID uint16, mds uint8) *om
 	managedEntity, meErr := me.NewOnuData(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
-			"ManagedEntityId": entityID,
-			"MibDataSync":     mds,
+			me.ManagedEntityID:     entityID,
+			me.OnuData_MibDataSync: mds,
 		},
 	})
 
@@ -643,23 +643,23 @@ func createAnigResponse(attributeMask uint16, entityID uint16) *omci.GetResponse
 	managedEntity, meErr := me.NewAniG(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
-			"ManagedEntityId":             entityID,
-			"SrIndication":                0,
-			"TotalTcontNumber":            0,
-			"GemBlockLength":              0,
-			"PiggybackDbaReporting":       0,
-			"Deprecated":                  0,
-			"SignalFailThreshold":         0,
-			"SignalDegradeThreshold":      0,
-			"Arc":                         0,
-			"ArcInterval":                 0,
-			"OpticalSignalLevel":          rand.Intn(16000), // generate some random power level than defaulting to 0
-			"LowerOpticalThreshold":       0,
-			"UpperOpticalThreshold":       0,
-			"OnuResponseTime":             0,
-			"TransmitOpticalLevel":        rand.Intn(16000), // generate some random power level than defaulting to 0
-			"LowerTransmitPowerThreshold": 0,
-			"UpperTransmitPowerThreshold": 0,
+			me.ManagedEntityID:                  entityID,
+			me.AniG_SrIndication:                0,
+			me.AniG_TotalTcontNumber:            0,
+			me.AniG_GemBlockLength:              0,
+			me.AniG_PiggybackDbaReporting:       0,
+			me.AniG_Deprecated:                  0,
+			me.AniG_SignalFailThreshold:         0,
+			me.AniG_SignalDegradeThreshold:      0,
+			me.AniG_Arc:                         0,
+			me.AniG_ArcInterval:                 0,
+			me.AniG_OpticalSignalLevel:          rand.Intn(16000), // generate some random power level than defaulting to 0
+			me.AniG_LowerOpticalThreshold:       0,
+			me.AniG_UpperOpticalThreshold:       0,
+			me.AniG_OnuResponseTime:             0,
+			me.AniG_TransmitOpticalLevel:        rand.Intn(16000), // generate some random power level than defaulting to 0
+			me.AniG_LowerTransmitPowerThreshold: 0,
+			me.AniG_UpperTransmitPowerThreshold: 0,
 		},
 	})
 
@@ -685,8 +685,12 @@ func createEthernetFrameExtendedPmGetResponse(meClass me.ClassID, attributeMask 
 	if meClass != me.EthernetFrameExtendedPmClassID {
 		callback = me.NewEthernetFrameExtendedPm64Bit
 	}
+
+	//The names of these attributes are left as strings
+	//rather than constants of a particular ME because
+	//they can be used with both the MEs in the lines above
 	attr := me.AttributeValueMap{
-		"ManagedEntityId":        entityID,
+		me.ManagedEntityID:       entityID,
 		"DropEvents":             100,
 		"Octets":                 101,
 		"Frames":                 102,

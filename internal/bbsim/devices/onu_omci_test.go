@@ -30,14 +30,14 @@ import (
 )
 
 var mockAttr = me.AttributeValueMap{
-	"PortId":                              0,
-	"TContPointer":                        0,
-	"Direction":                           0,
-	"TrafficManagementPointerForUpstream": 0,
-	"TrafficDescriptorProfilePointerForUpstream":   0,
-	"PriorityQueuePointerForDownStream":            0,
-	"TrafficDescriptorProfilePointerForDownstream": 0,
-	"EncryptionKeyRing":                            0,
+	me.GemPortNetworkCtp_PortId:                                       0,
+	me.GemPortNetworkCtp_TContPointer:                                 0,
+	me.GemPortNetworkCtp_Direction:                                    0,
+	me.GemPortNetworkCtp_TrafficManagementPointerForUpstream:          0,
+	me.GemPortNetworkCtp_TrafficDescriptorProfilePointerForUpstream:   0,
+	me.GemPortNetworkCtp_PriorityQueuePointerForDownStream:            0,
+	me.GemPortNetworkCtp_TrafficDescriptorProfilePointerForDownstream: 0,
+	me.GemPortNetworkCtp_EncryptionKeyRing:                            0,
 }
 
 func makeOmciCreateRequest(t *testing.T) []byte {
