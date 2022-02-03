@@ -555,10 +555,15 @@ func (dms *DmiAPIServer) GetManagedDevices(context.Context, *empty.Empty) (*dmi.
 	retResponse := dmi.ManagedDevicesResponse{}
 	//If our uuid is empty, we return empty list; else we fill details and return
 	if dms.uuid != "" {
-		root := dmi.ModifiableComponent{
-			Name: dms.deviceName,
-			Uri: &dmi.Uri{
-				Uri: dms.ipAddress,
+		root := dmi.ManagedDeviceInfo{
+			Info: &dmi.ModifiableComponent{
+				Name: dms.deviceName,
+				Uri: &dmi.Uri{
+					Uri: dms.ipAddress,
+				},
+			},
+			DeviceUuid: &dmi.Uuid{
+				Uuid: dms.uuid,
 			},
 		}
 
@@ -598,4 +603,14 @@ func (dms *DmiAPIServer) GetLoggableEntities(context.Context, *dmi.GetLoggableEn
 		},
 		LogLevels: []*dmi.EntitiesLogLevel{},
 	}, nil
+}
+
+// Performs the heartbeat check
+func (dms *DmiAPIServer) HeartbeatCheck(context.Context, *empty.Empty) (*dmi.Heartbeat, error) {
+	return nil, status.Errorf(codes.Unimplemented, "rpc HeartbeatCheck not implemented")
+}
+
+// Performs the reboot of the device
+func (dms *DmiAPIServer) RebootDevice(context.Context, *dmi.RebootDeviceRequest) (*dmi.RebootDeviceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "rpc RebootDevice not implemented")
 }
