@@ -135,11 +135,13 @@ type ServiceYaml struct {
 	NeedsEapol          bool   `yaml:"needs_eapol"`
 	NeedsDhcp           bool   `yaml:"needs_dhcp"`
 	NeedsIgmp           bool   `yaml:"needs_igmp"`
+	NeedsPPPoE          bool   `yaml:"needs_pppoe"`
 	CTagAllocation      string `yaml:"c_tag_allocation"`
 	STagAllocation      string `yaml:"s_tag_allocation"`
 	TechnologyProfileID int    `yaml:"tp_id"`
 	UniTagMatch         int    `yaml:"uni_tag_match"`
 	ConfigureMacAddress bool   `yaml:"configure_mac_address"`
+	EnableMacLearning   bool   `yaml:"enable_mac_learning"`
 	UsPonCTagPriority   uint8  `yaml:"us_pon_c_tag_priority"`
 	UsPonSTagPriority   uint8  `yaml:"us_pon_s_tag_priority"`
 	DsPonCTagPriority   uint8  `yaml:"ds_pon_c_tag_priority"`
