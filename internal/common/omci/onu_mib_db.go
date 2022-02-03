@@ -102,7 +102,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int) (*MibDb, err
 	mibDb.items = append(mibDb.items, MibDbEntry{
 		me.OnuDataClassID,
 		EntityID{0x00, 0x00},
-		me.AttributeValueMap{"MibDataSync": 0}, // FIXME this needs to be parametrized before sending the response
+		me.AttributeValueMap{me.OnuData_MibDataSync: 0}, // FIXME this needs to be parametrized before sending the response
 	})
 
 	// then we report the CardHolder
@@ -121,38 +121,38 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int) (*MibDb, err
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
-			"Type":          xgsPonUnitType,
-			"NumberOfPorts": 1, // NOTE is this the ANI port? must be
-			"SerialNumber":  ToOctets("BBSM-Circuit-Pack-ani", 20),
-			"Version":       ToOctets("v0.0.1", 20),
+			me.CircuitPack_Type:          xgsPonUnitType,
+			me.CircuitPack_NumberOfPorts: 1, // NOTE is this the ANI port? must be
+			me.CircuitPack_SerialNumber:  ToOctets("BBSM-Circuit-Pack-ani", 20),
+			me.CircuitPack_Version:       ToOctets("v0.0.1", 20),
 		},
 	})
 	mibDb.items = append(mibDb.items, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
-			"VendorId":            ToOctets("ONF", 4),
-			"AdministrativeState": 0,
-			"OperationalState":    0,
-			"BridgedOrIpInd":      0,
+			me.CircuitPack_VendorId:            ToOctets("ONF", 4),
+			me.CircuitPack_AdministrativeState: 0,
+			me.CircuitPack_OperationalState:    0,
+			me.CircuitPack_BridgedOrIpInd:      0,
 		},
 	})
 	mibDb.items = append(mibDb.items, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
-			"EquipmentId":                 ToOctets("BBSM-Circuit-Pack", 20),
-			"CardConfiguration":           0,
-			"TotalTContBufferNumber":      8,
-			"TotalPriorityQueueNumber":    8,
-			"TotalTrafficSchedulerNumber": 0,
+			me.CircuitPack_EquipmentId:                 ToOctets("BBSM-Circuit-Pack", 20),
+			me.CircuitPack_CardConfiguration:           0,
+			me.CircuitPack_TotalTContBufferNumber:      8,
+			me.CircuitPack_TotalPriorityQueueNumber:    8,
+			me.CircuitPack_TotalTrafficSchedulerNumber: 0,
 		},
 	})
 	mibDb.items = append(mibDb.items, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
-			"PowerShedOverride": uint32(0),
+			me.CircuitPack_PowerShedOverride: uint32(0),
 		},
 	})
 
@@ -161,22 +161,22 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int) (*MibDb, err
 		me.AniGClassID,
 		EntityID{tcontSlotId, aniGId},
 		me.AttributeValueMap{
-			"Arc":                         0,
-			"ArcInterval":                 0,
-			"Deprecated":                  0,
-			"GemBlockLength":              48,
-			"LowerOpticalThreshold":       255,
-			"LowerTransmitPowerThreshold": 129,
-			"OnuResponseTime":             0,
-			"OpticalSignalLevel":          57428,
-			"PiggybackDbaReporting":       0,
-			"SignalDegradeThreshold":      9,
-			"SignalFailThreshold":         5,
-			"SrIndication":                1,
-			"TotalTcontNumber":            8,
-			"TransmitOpticalLevel":        3171,
-			"UpperOpticalThreshold":       255,
-			"UpperTransmitPowerThreshold": 129,
+			me.AniG_Arc:                         0,
+			me.AniG_ArcInterval:                 0,
+			me.AniG_Deprecated:                  0,
+			me.AniG_GemBlockLength:              48,
+			me.AniG_LowerOpticalThreshold:       255,
+			me.AniG_LowerTransmitPowerThreshold: 129,
+			me.AniG_OnuResponseTime:             0,
+			me.AniG_OpticalSignalLevel:          57428,
+			me.AniG_PiggybackDbaReporting:       0,
+			me.AniG_SignalDegradeThreshold:      9,
+			me.AniG_SignalFailThreshold:         5,
+			me.AniG_SrIndication:                1,
+			me.AniG_TotalTcontNumber:            8,
+			me.AniG_TransmitOpticalLevel:        3171,
+			me.AniG_UpperOpticalThreshold:       255,
+			me.AniG_UpperTransmitPowerThreshold: 129,
 		},
 	})
 
@@ -186,38 +186,38 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int) (*MibDb, err
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
-			"Type":          ethernetUnitType,
-			"NumberOfPorts": ethUniPortCount,
-			"SerialNumber":  ToOctets("BBSM-Circuit-Pack", 20),
-			"Version":       ToOctets("v0.0.1", 20),
+			me.CircuitPack_Type:          ethernetUnitType,
+			me.CircuitPack_NumberOfPorts: ethUniPortCount,
+			me.CircuitPack_SerialNumber:  ToOctets("BBSM-Circuit-Pack", 20),
+			me.CircuitPack_Version:       ToOctets("v0.0.1", 20),
 		},
 	})
 	mibDb.items = append(mibDb.items, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
-			"VendorId":            ToOctets("ONF", 4),
-			"AdministrativeState": 0,
-			"OperationalState":    0,
-			"BridgedOrIpInd":      0,
+			me.CircuitPack_VendorId:            ToOctets("ONF", 4),
+			me.CircuitPack_AdministrativeState: 0,
+			me.CircuitPack_OperationalState:    0,
+			me.CircuitPack_BridgedOrIpInd:      0,
 		},
 	})
 	mibDb.items = append(mibDb.items, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
-			"EquipmentId":                 ToOctets("BBSM-Circuit-Pack", 20),
-			"CardConfiguration":           0,
-			"TotalTContBufferNumber":      8,
-			"TotalPriorityQueueNumber":    8,
-			"TotalTrafficSchedulerNumber": 16,
+			me.CircuitPack_EquipmentId:                 ToOctets("BBSM-Circuit-Pack", 20),
+			me.CircuitPack_CardConfiguration:           0,
+			me.CircuitPack_TotalTContBufferNumber:      8,
+			me.CircuitPack_TotalPriorityQueueNumber:    8,
+			me.CircuitPack_TotalTrafficSchedulerNumber: 16,
 		},
 	})
 	mibDb.items = append(mibDb.items, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
-			"PowerShedOverride": uint32(0),
+			me.CircuitPack_PowerShedOverride: uint32(0),
 		},
 	})
 
@@ -228,38 +228,38 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int) (*MibDb, err
 			me.CircuitPackClassID,
 			circuitPackEntityID,
 			me.AttributeValueMap{
-				"Type":          potsUnitType,
-				"NumberOfPorts": potsUniPortCount,
-				"SerialNumber":  ToOctets("BBSM-Circuit-Pack", 20),
-				"Version":       ToOctets("v0.0.1", 20),
+				me.CircuitPack_Type:          potsUnitType,
+				me.CircuitPack_NumberOfPorts: potsUniPortCount,
+				me.CircuitPack_SerialNumber:  ToOctets("BBSM-Circuit-Pack", 20),
+				me.CircuitPack_Version:       ToOctets("v0.0.1", 20),
 			},
 		})
 		mibDb.items = append(mibDb.items, MibDbEntry{
 			me.CircuitPackClassID,
 			circuitPackEntityID,
 			me.AttributeValueMap{
-				"VendorId":            ToOctets("ONF", 4),
-				"AdministrativeState": 0,
-				"OperationalState":    0,
-				"BridgedOrIpInd":      0,
+				me.CircuitPack_VendorId:            ToOctets("ONF", 4),
+				me.CircuitPack_AdministrativeState: 0,
+				me.CircuitPack_OperationalState:    0,
+				me.CircuitPack_BridgedOrIpInd:      0,
 			},
 		})
 		mibDb.items = append(mibDb.items, MibDbEntry{
 			me.CircuitPackClassID,
 			circuitPackEntityID,
 			me.AttributeValueMap{
-				"EquipmentId":                 ToOctets("BBSM-Circuit-Pack", 20),
-				"CardConfiguration":           0,
-				"TotalTContBufferNumber":      8,
-				"TotalPriorityQueueNumber":    8,
-				"TotalTrafficSchedulerNumber": 16,
+				me.CircuitPack_EquipmentId:                 ToOctets("BBSM-Circuit-Pack", 20),
+				me.CircuitPack_CardConfiguration:           0,
+				me.CircuitPack_TotalTContBufferNumber:      8,
+				me.CircuitPack_TotalPriorityQueueNumber:    8,
+				me.CircuitPack_TotalTrafficSchedulerNumber: 16,
 			},
 		})
 		mibDb.items = append(mibDb.items, MibDbEntry{
 			me.CircuitPackClassID,
 			circuitPackEntityID,
 			me.AttributeValueMap{
-				"PowerShedOverride": uint32(0),
+				me.CircuitPack_PowerShedOverride: uint32(0),
 			},
 		})
 	}
@@ -277,21 +277,21 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int) (*MibDb, err
 				me.PhysicalPathTerminationPointEthernetUniClassID,
 				uniEntityId,
 				me.AttributeValueMap{
-					"ExpectedType":                  0,
-					"SensedType":                    ethernetUnitType,
-					"AutoDetectionConfiguration":    0,
-					"EthernetLoopbackConfiguration": 0,
-					"AdministrativeState":           0,
-					"OperationalState":              0,
-					"ConfigurationInd":              3,
-					"MaxFrameSize":                  1518,
-					"DteOrDceInd":                   0,
-					"PauseTime":                     0,
-					"BridgedOrIpInd":                2,
-					"Arc":                           0,
-					"ArcInterval":                   0,
-					"PppoeFilter":                   0,
-					"PowerControl":                  0,
+					me.PhysicalPathTerminationPointEthernetUni_ExpectedType:                  0,
+					me.PhysicalPathTerminationPointEthernetUni_SensedType:                    ethernetUnitType,
+					me.PhysicalPathTerminationPointEthernetUni_AutoDetectionConfiguration:    0,
+					me.PhysicalPathTerminationPointEthernetUni_EthernetLoopbackConfiguration: 0,
+					me.PhysicalPathTerminationPointEthernetUni_AdministrativeState:           0,
+					me.PhysicalPathTerminationPointEthernetUni_OperationalState:              0,
+					me.PhysicalPathTerminationPointEthernetUni_ConfigurationInd:              3,
+					me.PhysicalPathTerminationPointEthernetUni_MaxFrameSize:                  1518,
+					me.PhysicalPathTerminationPointEthernetUni_DteOrDceInd:                   0,
+					me.PhysicalPathTerminationPointEthernetUni_PauseTime:                     0,
+					me.PhysicalPathTerminationPointEthernetUni_BridgedOrIpInd:                2,
+					me.PhysicalPathTerminationPointEthernetUni_Arc:                           0,
+					me.PhysicalPathTerminationPointEthernetUni_ArcInterval:                   0,
+					me.PhysicalPathTerminationPointEthernetUni_PppoeFilter:                   0,
+					me.PhysicalPathTerminationPointEthernetUni_PowerControl:                  0,
 				},
 			})
 		} else {
@@ -300,19 +300,19 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int) (*MibDb, err
 				me.PhysicalPathTerminationPointPotsUniClassID,
 				uniEntityId,
 				me.AttributeValueMap{
-					"AdministrativeState": 0,
-					"Deprecated":          0,
-					"Arc":                 0,
-					"ArcInterval":         0,
-					"Impedance":           0,
-					"TransmissionPath":    0,
-					"RxGain":              0,
-					"TxGain":              0,
-					"OperationalState":    0,
-					"HookState":           0,
-					"PotsHoldoverTime":    0,
-					"NominalFeedVoltage":  0,
-					"LossOfSoftswitch":    0,
+					me.PhysicalPathTerminationPointPotsUni_AdministrativeState: 0,
+					me.PhysicalPathTerminationPointPotsUni_Deprecated:          0,
+					me.PhysicalPathTerminationPointPotsUni_Arc:                 0,
+					me.PhysicalPathTerminationPointPotsUni_ArcInterval:         0,
+					me.PhysicalPathTerminationPointPotsUni_Impedance:           0,
+					me.PhysicalPathTerminationPointPotsUni_TransmissionPath:    0,
+					me.PhysicalPathTerminationPointPotsUni_RxGain:              0,
+					me.PhysicalPathTerminationPointPotsUni_TxGain:              0,
+					me.PhysicalPathTerminationPointPotsUni_OperationalState:    0,
+					me.PhysicalPathTerminationPointPotsUni_HookState:           0,
+					me.PhysicalPathTerminationPointPotsUni_PotsHoldoverTime:    0,
+					me.PhysicalPathTerminationPointPotsUni_NominalFeedVoltage:  0,
+					me.PhysicalPathTerminationPointPotsUni_LossOfSoftswitch:    0,
 				},
 			})
 		}
@@ -321,11 +321,11 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int) (*MibDb, err
 			me.UniGClassID,
 			uniEntityId,
 			me.AttributeValueMap{
-				"AdministrativeState":         0,
-				"Deprecated":                  0,
-				"ManagementCapability":        0,
-				"NonOmciManagementIdentifier": 0,
-				"RelayAgentOptions":           0,
+				me.UniG_AdministrativeState:         0,
+				me.UniG_Deprecated:                  0,
+				me.UniG_ManagementCapability:        0,
+				me.UniG_NonOmciManagementIdentifier: 0,
+				me.UniG_RelayAgentOptions:           0,
 			},
 		})
 
@@ -349,18 +349,18 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int) (*MibDb, err
 				me.PriorityQueueClassID,
 				queueEntityId, //was not reported in the original implementation
 				me.AttributeValueMap{
-					"QueueConfigurationOption":                            0,
-					"MaximumQueueSize":                                    100,
-					"AllocatedQueueSize":                                  100,
-					"DiscardBlockCounterResetInterval":                    0,
-					"ThresholdValueForDiscardedBlocksDueToBufferOverflow": 0,
-					"RelatedPort":                                         relatedPort.ToUint32(),
-					"TrafficSchedulerPointer":                             0, //it was hardcoded to 0x0108 in the current implementation
-					"Weight":                                              1,
-					"BackPressureOperation":                               1,
-					"BackPressureTime":                                    0,
-					"BackPressureOccurQueueThreshold":                     0,
-					"BackPressureClearQueueThreshold":                     0,
+					me.PriorityQueue_QueueConfigurationOption:                            0,
+					me.PriorityQueue_MaximumQueueSize:                                    100,
+					me.PriorityQueue_AllocatedQueueSize:                                  100,
+					me.PriorityQueue_DiscardBlockCounterResetInterval:                    0,
+					me.PriorityQueue_ThresholdValueForDiscardedBlocksDueToBufferOverflow: 0,
+					me.PriorityQueue_RelatedPort:                                         relatedPort.ToUint32(),
+					me.PriorityQueue_TrafficSchedulerPointer:                             0, //it was hardcoded to 0x0108 in the current implementation
+					me.PriorityQueue_Weight:                                              1,
+					me.PriorityQueue_BackPressureOperation:                               1,
+					me.PriorityQueue_BackPressureTime:                                    0,
+					me.PriorityQueue_BackPressureOccurQueueThreshold:                     0,
+					me.PriorityQueue_BackPressureClearQueueThreshold:                     0,
 				},
 			})
 		}
@@ -374,7 +374,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int) (*MibDb, err
 			me.TContClassID,
 			tcontEntityId,
 			me.AttributeValueMap{
-				"AllocId": 65535,
+				me.TCont_AllocId: 65535,
 			},
 		})
 
@@ -383,10 +383,10 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int) (*MibDb, err
 			me.TrafficSchedulerClassID,
 			tsEntityId, //was not reported in the original implementation
 			me.AttributeValueMap{
-				"TContPointer":            tcontEntityId.ToUint16(), // was hardcoded to a non-existing t-cont
-				"TrafficSchedulerPointer": 0,
-				"Policy":                  02,
-				"PriorityWeight":          0,
+				me.TrafficScheduler_TContPointer:            tcontEntityId.ToUint16(), // was hardcoded to a non-existing t-cont
+				me.TrafficScheduler_TrafficSchedulerPointer: 0,
+				me.TrafficScheduler_Policy:                  02,
+				me.TrafficScheduler_PriorityWeight:          0,
 			},
 		})
 
@@ -410,18 +410,18 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int) (*MibDb, err
 				me.PriorityQueueClassID,
 				queueEntityId, //was not reported in the original implementation
 				me.AttributeValueMap{
-					"QueueConfigurationOption":                            0,
-					"MaximumQueueSize":                                    100,
-					"AllocatedQueueSize":                                  100,
-					"DiscardBlockCounterResetInterval":                    0,
-					"ThresholdValueForDiscardedBlocksDueToBufferOverflow": 0,
-					"RelatedPort":                                         relatedPort.ToUint32(),
-					"TrafficSchedulerPointer":                             tsEntityId.ToUint16(), //it was hardcoded to 0x0108 in the current implementation
-					"Weight":                                              1,
-					"BackPressureOperation":                               1,
-					"BackPressureTime":                                    0,
-					"BackPressureOccurQueueThreshold":                     0,
-					"BackPressureClearQueueThreshold":                     0,
+					me.PriorityQueue_QueueConfigurationOption:                            0,
+					me.PriorityQueue_MaximumQueueSize:                                    100,
+					me.PriorityQueue_AllocatedQueueSize:                                  100,
+					me.PriorityQueue_DiscardBlockCounterResetInterval:                    0,
+					me.PriorityQueue_ThresholdValueForDiscardedBlocksDueToBufferOverflow: 0,
+					me.PriorityQueue_RelatedPort:                                         relatedPort.ToUint32(),
+					me.PriorityQueue_TrafficSchedulerPointer:                             tsEntityId.ToUint16(), //it was hardcoded to 0x0108 in the current implementation
+					me.PriorityQueue_Weight:                                              1,
+					me.PriorityQueue_BackPressureOperation:                               1,
+					me.PriorityQueue_BackPressureTime:                                    0,
+					me.PriorityQueue_BackPressureOccurQueueThreshold:                     0,
+					me.PriorityQueue_BackPressureClearQueueThreshold:                     0,
 				},
 			})
 		}
@@ -432,15 +432,15 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int) (*MibDb, err
 		me.Onu2GClassID,
 		EntityID{0x00, 0x00},
 		me.AttributeValueMap{
-			"ConnectivityCapability":                      127,
-			"CurrentConnectivityMode":                     0,
-			"Deprecated":                                  1,
-			"PriorityQueueScaleFactor":                    1,
-			"QualityOfServiceQosConfigurationFlexibility": 63,
-			"Sysuptime":                                   0,
-			"TotalGemPortIdNumber":                        8,
-			"TotalPriorityQueueNumber":                    64,
-			"TotalTrafficSchedulerNumber":                 8,
+			me.Onu2G_ConnectivityCapability:                      127,
+			me.Onu2G_CurrentConnectivityMode:                     0,
+			me.Onu2G_Deprecated:                                  1,
+			me.Onu2G_PriorityQueueScaleFactor:                    1,
+			me.Onu2G_QualityOfServiceQosConfigurationFlexibility: 63,
+			me.Onu2G_Sysuptime:                                   0,
+			me.Onu2G_TotalGemPortIdNumber:                        8,
+			me.Onu2G_TotalPriorityQueueNumber:                    64,
+			me.Onu2G_TotalTrafficSchedulerNumber:                 8,
 		},
 	})
 
