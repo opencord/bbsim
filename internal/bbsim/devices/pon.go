@@ -30,11 +30,6 @@ var ponLogger = log.WithFields(log.Fields{
 	"module": "PON",
 })
 
-type AllocIDKey struct {
-	OnuSn   *openolt.SerialNumber
-	AllocID uint16
-}
-
 type PonPort struct {
 	// BBSIM Internals
 	ID            uint32
@@ -55,7 +50,7 @@ type PonPort struct {
 	allocatedGemPortsLock sync.RWMutex
 	AllocatedOnuIds       map[uint32]*openolt.SerialNumber
 	allocatedOnuIdsLock   sync.RWMutex
-	AllocatedAllocIds     map[uint16]*AllocIDKey // key is TCONT entity ID
+	AllocatedAllocIds     map[uint16]*openolt.SerialNumber
 	allocatedAllocIdsLock sync.RWMutex
 }
 
@@ -70,7 +65,7 @@ func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
 		Onus:              []*Onu{},
 		AllocatedGemPorts: make(map[uint16]*openolt.SerialNumber),
 		AllocatedOnuIds:   make(map[uint32]*openolt.SerialNumber),
-		AllocatedAllocIds: make(map[uint16]*AllocIDKey),
+		AllocatedAllocIds: make(map[uint16]*openolt.SerialNumber),
 	}
 
 	ponPort.InternalState = fsm.NewFSM(
@@ -296,26 +291,20 @@ func (p *PonPort) isGemPortAllocated(gemPortId uint16) (bool, *openolt.SerialNum
 }
 
 // storeAllocId adds the Id to the ONU Ids already allocated to this PON port
-func (p *PonPort) storeAllocId(entityID uint16, allocId uint16, onuSn *openolt.SerialNumber) {
+func (p *PonPort) storeAllocId(allocId uint16, onuSn *openolt.SerialNumber) {
 	p.allocatedAllocIdsLock.Lock()
 	defer p.allocatedAllocIdsLock.Unlock()
-	p.AllocatedAllocIds[entityID] = &AllocIDKey{AllocID: allocId, OnuSn: onuSn}
+	p.AllocatedAllocIds[allocId] = onuSn
 }
 
 // removeAllocId removes the AllocId from the allocated resources
-func (p *PonPort) removeAllocId(entityID uint16) {
+// this is done via SN as the AllocId is not remove but set to a default value
+func (p *PonPort) removeAllocId(onuSn *openolt.SerialNumber) {
 	p.allocatedAllocIdsLock.Lock()
 	defer p.allocatedAllocIdsLock.Unlock()
-	delete(p.AllocatedAllocIds, entityID)
-}
-
-// removeAllocIdsForOnuSn removes the all AllocIds for the given onu serial number
-func (p *PonPort) removeAllocIdsForOnuSn(onuSn *openolt.SerialNumber) {
-	p.allocatedAllocIdsLock.Lock()
-	defer p.allocatedAllocIdsLock.Unlock()
-	for id, allocObj := range p.AllocatedAllocIds {
-		if onuSn == allocObj.OnuSn {
-			delete(p.AllocatedAllocIds, id)
+	for allocId, sn := range p.AllocatedAllocIds {
+		if sn == onuSn {
+			delete(p.AllocatedAllocIds, allocId)
 		}
 	}
 }
@@ -323,16 +312,16 @@ func (p *PonPort) removeAllocIdsForOnuSn(onuSn *openolt.SerialNumber) {
 func (p *PonPort) removeAllAllocIds() {
 	p.allocatedAllocIdsLock.Lock()
 	defer p.allocatedAllocIdsLock.Unlock()
-	p.AllocatedAllocIds = make(map[uint16]*AllocIDKey)
+	p.AllocatedAllocIds = make(map[uint16]*openolt.SerialNumber)
 }
 
 // isAllocIdAllocated returns whether this AllocId is already in use on this PON
-func (p *PonPort) isAllocIdAllocated(entityID uint16) (bool, *AllocIDKey) {
+func (p *PonPort) isAllocIdAllocated(allocId uint16) (bool, *openolt.SerialNumber) {
 	p.allocatedAllocIdsLock.RLock()
 	defer p.allocatedAllocIdsLock.RUnlock()
 
-	if _, ok := p.AllocatedAllocIds[entityID]; ok {
-		return true, p.AllocatedAllocIds[entityID]
+	if _, ok := p.AllocatedAllocIds[allocId]; ok {
+		return true, p.AllocatedAllocIds[allocId]
 	}
 	return false, nil
 }
