@@ -153,7 +153,8 @@ func createMockOnu(id uint32, ponPortId uint32) *Onu {
 		PonPortID: ponPortId,
 		PonPort: &PonPort{
 			AllocatedGemPorts: make(map[uint16]*openolt.SerialNumber),
-			AllocatedAllocIds: make(map[uint16]*openolt.SerialNumber),
+			AllocatedAllocIds: make(map[AllocIDKey]*AllocIDVal),
+			allocIDToEntityID: make(map[uint16]uint16),
 			Olt:               &OltDevice{},
 		},
 		OmciResponseRate: 10,

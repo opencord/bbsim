@@ -382,7 +382,7 @@ func (o *Onu) cleanupOnuState() {
 	// clean the ONU state
 	o.Flows = []FlowKey{}
 	o.PonPort.removeOnuId(o.ID)
-	o.PonPort.removeAllocId(o.SerialNumber)
+	o.PonPort.removeAllocIdsForOnuSn(o.SerialNumber)
 	o.PonPort.removeGemPortBySn(o.SerialNumber)
 
 	o.onuAlarmsInfoLock.Lock()
@@ -807,7 +807,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			o.MibDataSync = 0
 
 			// if the MIB reset is successful then remove all the stored AllocIds and GemPorts
-			o.PonPort.removeAllocId(o.SerialNumber)
+			o.PonPort.removeAllocIdsForOnuSn(o.SerialNumber)
 			o.PonPort.removeGemPortBySn(o.SerialNumber)
 		}
 	case omci.MibUploadRequestType:
@@ -887,6 +887,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			}).Debug("set-onu-admin-lock-state")
 		case me.TContClassID:
 			allocId := msgObj.Attributes[me.TCont_AllocId].(uint16)
+			entityID := msgObj.Attributes["ManagedEntityId"].(uint16)
 
 			// if the AllocId is 255 (0xFF) or 65535 (0xFFFF) it means we are removing it,
 			// otherwise we are adding it
@@ -898,15 +899,15 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 					"AllocId":      allocId,
 					"SerialNumber": o.Sn(),
 				}).Trace("freeing-alloc-id-via-omci")
-				o.PonPort.removeAllocId(o.SerialNumber)
+				o.PonPort.removeAllocId(o.PonPortID, o.ID, entityID)
 			} else {
-				if used, sn := o.PonPort.isAllocIdAllocated(allocId); used {
+				if used, allocObj := o.PonPort.isAllocIdAllocated(o.PonPortID, o.ID, entityID); used {
 					onuLogger.WithFields(log.Fields{
 						"IntfId":       o.PonPortID,
 						"OnuId":        o.ID,
 						"AllocId":      allocId,
 						"SerialNumber": o.Sn(),
-					}).Errorf("allocid-already-allocated-to-onu-with-sn-%s", common.OnuSnToString(sn))
+					}).Errorf("allocid-already-allocated-to-onu-with-sn-%s", common.OnuSnToString(allocObj.OnuSn))
 					success = false
 				} else {
 					onuLogger.WithFields(log.Fields{
@@ -916,7 +917,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 						"AllocId":      allocId,
 						"SerialNumber": o.Sn(),
 					}).Trace("storing-alloc-id-via-omci")
-					o.PonPort.storeAllocId(allocId, o.SerialNumber)
+					o.PonPort.storeAllocId(o.PonPortID, o.ID, entityID, allocId, o.SerialNumber)
 				}
 			}
 		case me.EthernetFrameExtendedPmClassID,
