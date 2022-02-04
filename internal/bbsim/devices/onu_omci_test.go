@@ -284,7 +284,7 @@ func Test_MibDataSyncReset(t *testing.T) {
 
 	// create a GemPort and an AllocId for this ONU
 	onu.PonPort.storeGemPort(1024, onu.SerialNumber)
-	onu.PonPort.storeAllocId(1024, onu.SerialNumber)
+	onu.PonPort.storeAllocId(1024, 1024, 0x8001, 1024, onu.SerialNumber)
 
 	// send a MibReset
 	err := onu.handleOmciRequest(makeOmciMessage(t, onu, makeOmciMibResetRequest(t)), stream)
@@ -325,7 +325,7 @@ func Test_MibDataSyncInvalidation(t *testing.T) {
 
 	// the MDS has to be between 1 and 255, since 0 is valid for a reset
 	assert.Assert(t, onu.MibDataSync > 0)
-	assert.Assert(t, onu.MibDataSync <= 255)
+	// assert.Assert(t, onu.MibDataSync <= 255) // This is always true since 'MibDataSync' is uint8
 }
 
 func Test_GemPortValidation(t *testing.T) {

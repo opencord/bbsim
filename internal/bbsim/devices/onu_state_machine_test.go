@@ -50,7 +50,7 @@ func Test_Onu_StateMachine_disable(t *testing.T) {
 	}
 	onu.onuAlarmsInfo[key] = omcilib.OnuAlarmInfo{SequenceNo: 1, AlarmBitMap: [28]byte{}}
 	onu.PonPort.storeOnuId(onu.ID, onu.SerialNumber)
-	onu.PonPort.storeAllocId(1, onu.SerialNumber)
+	onu.PonPort.storeAllocId(1, 1024, 0x8001, 1024, onu.SerialNumber)
 	onu.PonPort.storeGemPort(1, onu.SerialNumber)
 
 	_ = onu.InternalState.Event(OnuTxDisable)
