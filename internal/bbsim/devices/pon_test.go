@@ -128,24 +128,24 @@ func Test_isGemPortAllocated(t *testing.T) {
 // the allocId is never removed, is always set to either 255 or 65535
 func Test_removeAllocId(t *testing.T) {
 
-	const (
-		allocId1 = 1024
-		allocId2 = 1025
-	)
+	const entityID1 uint16 = 1024
+	const entityID2 uint16 = 1025
+	const allocId1 uint16 = 1024
+	const allocId2 uint16 = 1025
 
 	pon := &PonPort{
-		AllocatedAllocIds: make(map[uint16]*openolt.SerialNumber),
+		AllocatedAllocIds: make(map[AllocIDKey]*AllocIDVal),
 	}
 
-	pon.AllocatedAllocIds[allocId1] = sn1
-	pon.AllocatedAllocIds[allocId2] = sn2
+	pon.AllocatedAllocIds[AllocIDKey{0, 1, entityID1}] = &AllocIDVal{sn1, allocId1}
+	pon.AllocatedAllocIds[AllocIDKey{1, 1, entityID2}] = &AllocIDVal{sn2, allocId2}
 
 	assert.Equal(t, len(pon.AllocatedAllocIds), 2)
 
-	pon.removeAllocId(sn1)
+	pon.removeAllocId(0, 1, entityID1)
 
 	assert.Equal(t, len(pon.AllocatedAllocIds), 1)
-	assert.Nil(t, pon.AllocatedAllocIds[allocId1])
-	assert.Equal(t, pon.AllocatedAllocIds[allocId2], sn2)
-
+	assert.NotContains(t, pon.AllocatedAllocIds, AllocIDKey{0, 1, entityID1})
+	assert.Contains(t, pon.AllocatedAllocIds, AllocIDKey{1, 1, entityID2})
+	assert.Equal(t, pon.AllocatedAllocIds[AllocIDKey{1, 1, entityID2}].OnuSn, sn2)
 }
