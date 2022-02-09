@@ -19,16 +19,17 @@ package commands
 
 import (
 	"context"
+	"os"
+
 	"github.com/jessevdk/go-flags"
 	pb "github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
 	"github.com/opencord/cordctl/pkg/format"
 	log "github.com/sirupsen/logrus"
-	"os"
 )
 
 const (
-	DEFAULT_SERVICE_HEADER_FORMAT = "table{{ .OnuSn }}\t{{ .UniId }}\t{{ .InternalState }}\t{{ .Name }}\t{{ .HwAddress }}\t{{ .STag }}\t{{ .CTag }}\t{{ .NeedsEapol }}\t{{ .NeedsDhcp }}\t{{ .NeedsIgmp }}\t{{ .GemPort }}\t{{ .EapolState }}\t{{ .DhcpState }}\t{{ .IGMPState }}"
+	DEFAULT_SERVICE_HEADER_FORMAT = "table{{ .OnuSn }}\t{{ .UniId }}\t{{ .InternalState }}\t{{ .Name }}\t{{ .HwAddress }}\t{{ .STag }}\t{{ .UsSTagPriority }}\t{{ .DsSTagPriority }}\t{{ .CTag }}\t{{ .UsCTagPriority }}\t{{ .DsCTagPriority }}\t{{ .UniTagMatch }}\t{{ .NeedsEapol }}\t{{ .NeedsDhcp }}\t{{ .NeedsIgmp }}\t{{ .NeedsPPPoE }}\t{{ .ConfigureMacAddress }}\t{{ .EnableMacLearning }}\t{{ .GemPort }}\t{{ .EapolState }}\t{{ .DhcpState }}\t{{ .IGMPState }}"
 )
 
 type ServiceList struct{}

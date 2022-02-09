@@ -123,6 +123,14 @@ message Service {
     string InternalState = 12;
     string IGMPState = 13;
     uint32 UniId = 14;
+    int32 UniTagMatch = 15;
+    uint32 UsCTagPriority = 16; //Upstream
+    uint32 UsSTagPriority = 17; //Upstream
+    uint32 DsCTagPriority = 18; //Downstream
+    uint32 DsSTagPriority = 19; //Downstream
+    bool NeedsPPPoE = 20;
+    bool ConfigureMacAddress = 21;
+    bool EnableMacLearning = 22;
 }
 
 message ONUTrafficSchedulers {
