@@ -569,6 +569,7 @@ func (dms *DmiAPIServer) GetManagedDevices(context.Context, *empty.Empty) (*dmi.
 
 		retResponse.Devices = append(retResponse.Devices, &root)
 	}
+	retResponse.Status = dmi.Status_OK_STATUS
 
 	return &retResponse, nil
 }
