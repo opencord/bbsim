@@ -98,28 +98,29 @@ type OltConfig struct {
 }
 
 type BBSimConfig struct {
-	ConfigFile             string
-	ServiceConfigFile      string
-	DhcpRetry              bool    `yaml:"dhcp_retry"`
-	AuthRetry              bool    `yaml:"auth_retry"`
-	LogLevel               string  `yaml:"log_level"`
-	LogCaller              bool    `yaml:"log_caller"`
-	Delay                  int     `yaml:"delay"`
-	CpuProfile             *string `yaml:"cpu_profile"`
-	OpenOltAddress         string  `yaml:"openolt_address"`
-	ApiAddress             string  `yaml:"api_address"`
-	RestApiAddress         string  `yaml:"rest_api_address"`
-	LegacyApiAddress       string  `yaml:"legacy_api_address"`
-	LegacyRestApiAddress   string  `yaml:"legacy_rest_api_address"`
-	SadisRestAddress       string  `yaml:"sadis_rest_address"`
-	SadisServer            bool    `yaml:"sadis_server"`
-	KafkaAddress           string  `yaml:"kafka_address"`
-	Events                 bool    `yaml:"enable_events"`
-	ControlledActivation   string  `yaml:"controlled_activation"`
-	EnablePerf             bool    `yaml:"enable_perf"`
-	KafkaEventTopic        string  `yaml:"kafka_event_topic"`
-	DmiServerAddress       string  `yaml:"dmi_server_address"`
-	BandwidthProfileFormat string  `yaml:"bp_format"`
+	ConfigFile                  string
+	ServiceConfigFile           string
+	DhcpRetry                   bool    `yaml:"dhcp_retry"`
+	AuthRetry                   bool    `yaml:"auth_retry"`
+	LogLevel                    string  `yaml:"log_level"`
+	LogCaller                   bool    `yaml:"log_caller"`
+	Delay                       int     `yaml:"delay"`
+	CpuProfile                  *string `yaml:"cpu_profile"`
+	OpenOltAddress              string  `yaml:"openolt_address"`
+	ApiAddress                  string  `yaml:"api_address"`
+	RestApiAddress              string  `yaml:"rest_api_address"`
+	LegacyApiAddress            string  `yaml:"legacy_api_address"`
+	LegacyRestApiAddress        string  `yaml:"legacy_rest_api_address"`
+	SadisRestAddress            string  `yaml:"sadis_rest_address"`
+	SadisServer                 bool    `yaml:"sadis_server"`
+	KafkaAddress                string  `yaml:"kafka_address"`
+	Events                      bool    `yaml:"enable_events"`
+	ControlledActivation        string  `yaml:"controlled_activation"`
+	EnablePerf                  bool    `yaml:"enable_perf"`
+	KafkaEventTopic             string  `yaml:"kafka_event_topic"`
+	DmiServerAddress            string  `yaml:"dmi_server_address"`
+	BandwidthProfileFormat      string  `yaml:"bp_format"`
+	InjectOmciUnknownAttributes bool  `yaml:"inject_omci_unknown_attributes"`
 }
 
 type BBRConfig struct {
@@ -261,6 +262,7 @@ func readCliParams() *GlobalConfig {
 	kafkaEventTopic := flag.String("kafkaEventTopic", conf.BBSim.KafkaEventTopic, "Ability to configure the topic on which BBSim publishes events on Kafka")
 	dhcpRetry := flag.Bool("dhcpRetry", conf.BBSim.DhcpRetry, "Set this flag if BBSim should retry DHCP upon failure until success")
 	authRetry := flag.Bool("authRetry", conf.BBSim.AuthRetry, "Set this flag if BBSim should retry EAPOL (Authentication) upon failure until success")
+	injectOmciUnknownAttributes := flag.Bool("injectOmciUnknownAttributes", conf.BBSim.InjectOmciUnknownAttributes, "Generate a MibDB packet with Unknown Attributes")
 
 	flag.Parse()
 
@@ -290,6 +292,7 @@ func readCliParams() *GlobalConfig {
 	conf.BBSim.AuthRetry = *authRetry
 	conf.BBSim.DhcpRetry = *dhcpRetry
 	conf.BBSim.DmiServerAddress = *dmi_server_address
+	conf.BBSim.InjectOmciUnknownAttributes = *injectOmciUnknownAttributes
 
 	// update device id if not set
 	if conf.Olt.DeviceId == "" {
@@ -330,6 +333,7 @@ func getDefaultOps() *GlobalConfig {
 			AuthRetry:              false,
 			DmiServerAddress:       ":50075",
 			BandwidthProfileFormat: BP_FORMAT_MEF,
+			InjectOmciUnknownAttributes: false, // TODO default to FALSE
 		},
 		OltConfig{
 			Vendor:             "BBSim",
