@@ -17,6 +17,7 @@
 package omci
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/google/gopacket"
@@ -92,6 +93,7 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 		me.OnuDataClassID,
 		onuDataEntityId,
 		me.AttributeValueMap{me.OnuData_MibDataSync: 0},
+		nil,
 	})
 
 	mibDb.items = append(mibDb.items, MibDbEntry{
@@ -103,6 +105,7 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 			me.CircuitPack_SerialNumber:  ToOctets("BBSM-Circuit-Pack", 20),
 			me.CircuitPack_Version:       ToOctets("v0.0.1", 20),
 		},
+		nil,
 	})
 
 	mibDb.items = append(mibDb.items, MibDbEntry{
@@ -126,6 +129,7 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 			me.AniG_UpperOpticalThreshold:       255,
 			me.AniG_UpperTransmitPowerThreshold: 129,
 		},
+		nil,
 	})
 
 	mibDb.items = append(mibDb.items, MibDbEntry{
@@ -142,6 +146,17 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 			me.Onu2G_TotalPriorityQueueNumber:                    64,
 			me.Onu2G_TotalTrafficSchedulerNumber:                 8,
 		},
+		nil,
+	})
+
+	// create an entry with UnkownAttributes set
+	var customPktTxId uint16 = 5
+	customPkt := []byte{0, byte(customPktTxId), 46, 10, 0, 2, 0, 0, 0, 37, 0, 1, 128, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 0, 0, 0, 40, 40, 206, 0, 226}
+	mibDb.items = append(mibDb.items, MibDbEntry{
+		me.ClassID(37),
+		nil,
+		me.AttributeValueMap{},
+		customPkt,
 	})
 
 	tests := []struct {
@@ -157,6 +172,8 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 3, entityID: anigEntityId.ToUint16(), entityClass: me.AniGClassID, attributes: map[string]interface{}{me.AniG_GemBlockLength: uint16(48)}}},
 		{"mibUploadNext-3", createTestMibUploadNextArgs(t, 4, 3),
 			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 4, entityID: onuDataEntityId.ToUint16(), entityClass: me.Onu2GClassID, attributes: map[string]interface{}{me.Onu2G_TotalPriorityQueueNumber: uint16(64)}}},
+		{"mibUploadNext-unknown-attrs", createTestMibUploadNextArgs(t, 5, 4),
+			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: customPktTxId, entityID: 1, entityClass: me.ClassID(37), attributes: map[string]interface{}{"UnknownAttr_1": []uint8{1}}}},
 	}
 
 	for _, tt := range tests {
@@ -182,7 +199,15 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 			for k, v := range tt.want.attributes {
 				attr, err := msgObj.ReportedME.GetAttribute(k)
 				assert.NilError(t, err)
-				assert.Equal(t, attr, v)
+				if isSlice(attr) {
+					expected := v.([]uint8)
+					data := attr.([]uint8)
+					for i, val := range data {
+						assert.Equal(t, expected[i], val)
+					}
+				} else {
+					assert.Equal(t, attr, v)
+				}
 			}
 		})
 	}
@@ -191,4 +216,8 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 	args := createTestMibUploadNextArgs(t, 1, 20)
 	_, err := CreateMibUploadNextResponse(args.omciPkt, args.omciMsg, MDS, &mibDb)
 	assert.Error(t, err, "mibdb-does-not-contain-item")
+}
+
+func isSlice(v interface{}) bool {
+	return reflect.TypeOf(v).Kind() == reflect.Slice
 }

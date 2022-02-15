@@ -106,6 +106,9 @@ func CreateMibUploadResponse(tid uint16, numberOfCommands uint16) ([]byte, error
 		},
 		NumberOfCommands: numberOfCommands,
 	}
+
+	omciLogger.WithFields(log.Fields{"NumberOfCommands": numberOfCommands}).Debug("mib-upload-response")
+
 	pkt, err := Serialize(omci.MibUploadResponseType, request, tid)
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
@@ -175,6 +178,18 @@ func CreateMibUploadNextResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, md
 		return nil, fmt.Errorf("mibdb-does-not-contain-item")
 	}
 	currentEntry := mibDb.items[int(msgObj.CommandSequenceNumber)]
+
+	// if packet is set then we don't need to serialize the packet, it's already done
+	if currentEntry.packet != nil {
+		log.WithFields(log.Fields{
+			"CommandSequenceNumber": msgObj.CommandSequenceNumber,
+			"MibDbNumberOfCommands": mibDb.NumberOfCommands,
+			"packet": currentEntry.packet,
+			"request-txid": omciMsg.TransactionID,
+		}).Info("sending-custom-packet")
+		return currentEntry.packet, nil
+	}
+
 	reportedMe, meErr := me.LoadManagedEntityDefinition(currentEntry.classId, me.ParamData{
 		EntityID:   currentEntry.entityId.ToUint16(),
 		Attributes: currentEntry.params,
