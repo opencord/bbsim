@@ -20,15 +20,20 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
-
+	"github.com/google/gopacket"
 	"github.com/opencord/bbsim/internal/common"
+	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
 )
 
+// MibDbEntry contains all the information needed to build a
+// MibUploadNextResponse packet.
+// if Packet has a value all the other fields are ignored and the packet is sent as is.
 type MibDbEntry struct {
 	classId  me.ClassID
 	entityId EntityID
 	params   me.AttributeValueMap
+	packet   []byte
 }
 
 type MibDb struct {
@@ -105,6 +110,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 		me.OnuDataClassID,
 		EntityID{0x00, 0x00},
 		me.AttributeValueMap{me.OnuData_MibDataSync: 0}, // FIXME this needs to be parametrized before sending the response
+		nil,
 	})
 
 	// then we report the CardHolder
@@ -137,6 +143,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			me.CircuitPack_SerialNumber:  ToOctets("BBSM-Circuit-Pack-ani", 20),
 			me.CircuitPack_Version:       ToOctets("v0.0.1", 20),
 		},
+		nil,
 	})
 	mibDb.items = append(mibDb.items, MibDbEntry{
 		me.CircuitPackClassID,
@@ -147,6 +154,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			me.CircuitPack_OperationalState:    0,
 			me.CircuitPack_BridgedOrIpInd:      0,
 		},
+		nil,
 	})
 	mibDb.items = append(mibDb.items, MibDbEntry{
 		me.CircuitPackClassID,
@@ -158,6 +166,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			me.CircuitPack_TotalPriorityQueueNumber:    8,
 			me.CircuitPack_TotalTrafficSchedulerNumber: 0,
 		},
+		nil,
 	})
 	mibDb.items = append(mibDb.items, MibDbEntry{
 		me.CircuitPackClassID,
@@ -165,6 +174,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 		me.AttributeValueMap{
 			me.CircuitPack_PowerShedOverride: uint32(0),
 		},
+		nil,
 	})
 
 	// ANI-G
@@ -189,6 +199,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			me.AniG_UpperOpticalThreshold:       255,
 			me.AniG_UpperTransmitPowerThreshold: 129,
 		},
+		nil,
 	})
 
 	// circuitPack Ethernet
@@ -202,6 +213,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			me.CircuitPack_SerialNumber:  ToOctets("BBSM-Circuit-Pack", 20),
 			me.CircuitPack_Version:       ToOctets("v0.0.1", 20),
 		},
+		nil,
 	})
 	mibDb.items = append(mibDb.items, MibDbEntry{
 		me.CircuitPackClassID,
@@ -212,6 +224,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			me.CircuitPack_OperationalState:    0,
 			me.CircuitPack_BridgedOrIpInd:      0,
 		},
+		nil,
 	})
 	mibDb.items = append(mibDb.items, MibDbEntry{
 		me.CircuitPackClassID,
@@ -223,6 +236,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			me.CircuitPack_TotalPriorityQueueNumber:    8,
 			me.CircuitPack_TotalTrafficSchedulerNumber: 16,
 		},
+		nil,
 	})
 	mibDb.items = append(mibDb.items, MibDbEntry{
 		me.CircuitPackClassID,
@@ -230,6 +244,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 		me.AttributeValueMap{
 			me.CircuitPack_PowerShedOverride: uint32(0),
 		},
+		nil,
 	})
 
 	if potsUniPortCount > 0 {
@@ -244,6 +259,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 				me.CircuitPack_SerialNumber:  ToOctets("BBSM-Circuit-Pack", 20),
 				me.CircuitPack_Version:       ToOctets("v0.0.1", 20),
 			},
+			nil,
 		})
 		mibDb.items = append(mibDb.items, MibDbEntry{
 			me.CircuitPackClassID,
@@ -254,6 +270,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 				me.CircuitPack_OperationalState:    0,
 				me.CircuitPack_BridgedOrIpInd:      0,
 			},
+			nil,
 		})
 		mibDb.items = append(mibDb.items, MibDbEntry{
 			me.CircuitPackClassID,
@@ -265,6 +282,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 				me.CircuitPack_TotalPriorityQueueNumber:    8,
 				me.CircuitPack_TotalTrafficSchedulerNumber: 16,
 			},
+			nil,
 		})
 		mibDb.items = append(mibDb.items, MibDbEntry{
 			me.CircuitPackClassID,
@@ -272,6 +290,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			me.AttributeValueMap{
 				me.CircuitPack_PowerShedOverride: uint32(0),
 			},
+			nil,
 		})
 	}
 
@@ -304,6 +323,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 					me.PhysicalPathTerminationPointEthernetUni_PppoeFilter:                   0,
 					me.PhysicalPathTerminationPointEthernetUni_PowerControl:                  0,
 				},
+				nil,
 			})
 		} else {
 			// the remaining ones are pots UNIs, the same is done in onu.go
@@ -325,6 +345,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 					me.PhysicalPathTerminationPointPotsUni_NominalFeedVoltage:  0,
 					me.PhysicalPathTerminationPointPotsUni_LossOfSoftswitch:    0,
 				},
+				nil,
 			})
 		}
 
@@ -338,6 +359,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 				me.UniG_NonOmciManagementIdentifier: 0,
 				me.UniG_RelayAgentOptions:           0,
 			},
+			nil,
 		})
 
 		// Downstream Queues (related to PPTP)
@@ -351,6 +373,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 				me.PriorityQueueClassID,
 				queueEntityId, //was not reported in the original implementation
 				me.AttributeValueMap{},
+				nil,
 			})
 
 			// then we report it with the required attributes
@@ -373,6 +396,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 					me.PriorityQueue_BackPressureOccurQueueThreshold:                     0,
 					me.PriorityQueue_BackPressureClearQueueThreshold:                     0,
 				},
+				nil,
 			})
 		}
 	}
@@ -387,6 +411,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			me.AttributeValueMap{
 				me.TCont_AllocId: 65535,
 			},
+			nil,
 		})
 
 		tsEntityId := EntityID{cardHolderSlotID, byte(i)}
@@ -399,6 +424,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 				me.TrafficScheduler_Policy:                  02,
 				me.TrafficScheduler_PriorityWeight:          0,
 			},
+			nil,
 		})
 
 		for j := 1; j <= upstreamPriorityQueues; j++ {
@@ -412,6 +438,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 				me.PriorityQueueClassID,
 				queueEntityId, //was not reported in the original implementation
 				me.AttributeValueMap{},
+				nil,
 			})
 
 			// then we report it with the required attributes
@@ -434,6 +461,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 					me.PriorityQueue_BackPressureOccurQueueThreshold:                     0,
 					me.PriorityQueue_BackPressureClearQueueThreshold:                     0,
 				},
+				nil,
 			})
 		}
 	}
@@ -453,7 +481,40 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			me.Onu2G_TotalPriorityQueueNumber:                    64,
 			me.Onu2G_TotalTrafficSchedulerNumber:                 8,
 		},
+		nil,
 	})
+
+	if common.Config.BBSim.InjectOmciUnknownAttributes {
+		// NOTE the TxID is actually replaced
+		// by SetTxIdInEncodedPacket in CreateMibUploadNextResponse
+		txId := uint16(33066)
+
+		b := make([]byte, 4)
+		binary.BigEndian.PutUint16(b, txId)
+		b[2] = byte(omci.MibUploadNextResponseType)
+		b[3] = byte(omci.BaselineIdent)
+		omciHdr := hex.EncodeToString(b)
+
+		//omciHdr := "00032e0a"
+		msgHdr := "00020000"
+		reportedMeHdr := "002500018000"
+		attr := "0102030405060708090A0B0C0D0E0F101112131415161718191A"
+		trailer := "0000002828ce00e2"
+		msg := omciHdr + msgHdr + reportedMeHdr + attr + trailer
+		data, err := hex.DecodeString(msg)
+		if err != nil {
+			omciLogger.Fatal("cannot-create-custom-packet")
+		}
+
+		packet := gopacket.NewPacket(data, omci.LayerTypeOMCI, gopacket.Lazy)
+
+		mibDb.items = append(mibDb.items, MibDbEntry{
+			me.ClassID(37), // G.988 "Intentionally left blank"
+			nil,
+			me.AttributeValueMap{},
+			packet.Data(),
+		})
+	}
 
 	mibDb.NumberOfCommands = uint16(len(mibDb.items))
 

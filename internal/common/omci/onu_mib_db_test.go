@@ -17,9 +17,11 @@
 package omci
 
 import (
+	"fmt"
+	"github.com/google/gopacket"
+	"github.com/opencord/bbsim/internal/common"
 	"testing"
 
-	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
 	"github.com/stretchr/testify/assert"
@@ -56,6 +58,11 @@ func TestEntityID_Equals(t *testing.T) {
 }
 
 func Test_GenerateMibDatabase(t *testing.T) {
+	common.Config = &common.GlobalConfig{
+		BBSim: common.BBSimConfig{
+			InjectOmciUnknownAttributes: false,
+		},
+	}
 	const uniPortCount = 4
 	mibDb, err := GenerateMibDatabase(uniPortCount, 0, common.XGSPON)
 
@@ -93,6 +100,11 @@ func Test_GenerateMibDatabase(t *testing.T) {
 }
 
 func Test_GenerateMibDatabase_withPots(t *testing.T) {
+	common.Config = &common.GlobalConfig{
+		BBSim: common.BBSimConfig{
+			InjectOmciUnknownAttributes: false,
+		},
+	}
 	const uniPortCount = 4
 	const potsPortCount = 1
 	mibDb, err := GenerateMibDatabase(uniPortCount, potsPortCount, common.XGSPON)
@@ -128,4 +140,39 @@ func Test_GenerateMibDatabase_withPots(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
+}
+
+func Test_GenerateMibDatabase_withUnkownAttrs(t *testing.T) {
+
+	common.Config = &common.GlobalConfig{
+		BBSim: common.BBSimConfig{
+			InjectOmciUnknownAttributes: true,
+		},
+	}
+
+	const uniPortCount = 4
+	const baseMibEntries = 291                    // see Test_GenerateMibDatabase for breakdown
+	const expectedMibEntries = baseMibEntries + 1 // expecting one hardcoded packet
+	mibDb, err := GenerateMibDatabase(uniPortCount, 0, common.XGSPON)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, mibDb)
+	assert.Equal(t, expectedMibEntries, int(mibDb.NumberOfCommands))
+
+	entry := mibDb.items[expectedMibEntries-1] // select the last entry, it's the hardcoded packet
+	fmt.Println(entry.packet)
+	assert.NotNil(t, entry)
+	assert.Equal(t, me.ClassID(37), entry.classId)
+	assert.Nil(t, entry.entityId)
+	assert.Equal(t, 0, len(entry.params))
+	assert.NotNil(t, entry.packet)
+
+	// check that we're generating a valid OMCI payload
+	packet := gopacket.NewPacket(entry.packet, omci.LayerTypeOMCI, gopacket.Lazy)
+	omciLayer := packet.Layer(omci.LayerTypeOMCI)
+	assert.NotNil(t, omciLayer)
+	omciMsg, ok := omciLayer.(*omci.OMCI)
+	assert.True(t, ok)
+	assert.Equal(t, omci.MibUploadNextResponseType, omciMsg.MessageType)
+	assert.Equal(t, uint16(33066), omciMsg.TransactionID)
 }
