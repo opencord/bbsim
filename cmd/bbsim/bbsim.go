@@ -146,21 +146,22 @@ func main() {
 	}
 
 	log.WithFields(log.Fields{
-		"OltID":                common.Config.Olt.ID,
-		"NumNniPerOlt":         common.Config.Olt.NniPorts,
-		"NumPonPerOlt":         common.Config.Olt.PonPorts,
-		"NumOnuPerPon":         common.Config.Olt.OnusPonPort,
-		"PonConfiguration":     *common.PonsConfig,
-		"TotalOnus":            common.Config.Olt.PonPorts * common.Config.Olt.OnusPonPort,
-		"Delay":                common.Config.BBSim.Delay,
-		"Events":               common.Config.BBSim.Events,
-		"KafkaEventTopic":      common.Config.BBSim.KafkaEventTopic,
-		"ControlledActivation": common.Config.BBSim.ControlledActivation,
-		"EnablePerf":           common.Config.BBSim.EnablePerf,
-		"DhcpRetry":            common.Config.BBSim.DhcpRetry,
-		"AuthRetry":            common.Config.BBSim.AuthRetry,
-		"OltRebootDelay":       common.Config.Olt.OltRebootDelay,
-		"OmciResponseRate":     common.Config.Olt.OmciResponseRate,
+		"OltID":                       common.Config.Olt.ID,
+		"NumNniPerOlt":                common.Config.Olt.NniPorts,
+		"NumPonPerOlt":                common.Config.Olt.PonPorts,
+		"NumOnuPerPon":                common.Config.Olt.OnusPonPort,
+		"PonConfiguration":            *common.PonsConfig,
+		"TotalOnus":                   common.Config.Olt.PonPorts * common.Config.Olt.OnusPonPort,
+		"Delay":                       common.Config.BBSim.Delay,
+		"Events":                      common.Config.BBSim.Events,
+		"KafkaEventTopic":             common.Config.BBSim.KafkaEventTopic,
+		"ControlledActivation":        common.Config.BBSim.ControlledActivation,
+		"EnablePerf":                  common.Config.BBSim.EnablePerf,
+		"DhcpRetry":                   common.Config.BBSim.DhcpRetry,
+		"AuthRetry":                   common.Config.BBSim.AuthRetry,
+		"OltRebootDelay":              common.Config.Olt.OltRebootDelay,
+		"OmciResponseRate":            common.Config.Olt.OmciResponseRate,
+		"injectOmciUnknownAttributes": common.Config.BBSim.InjectOmciUnknownAttributes,
 	}).Info("BroadBand Simulator is on")
 
 	// control channels, they are only closed when the goroutine needs to be terminated

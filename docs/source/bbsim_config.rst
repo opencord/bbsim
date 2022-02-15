@@ -33,6 +33,8 @@ the list via ``./bbsim --help``
            Enable sending BBSim events on configured kafka server
      -enableperf
            Setting this flag will cause BBSim to not store data like traffic schedulers, flows of ONUs etc..
+     -injectOmciUnknownAttributes
+           Generate a MibDB packet with Unknown Attributes
      -kafkaAddress string
            IP:Port for kafka (default ":9092")
      -kafkaEventTopic string
