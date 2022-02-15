@@ -16,6 +16,23 @@
       "message": "recheck",
       "revId": "67e9e4c46fd00fa7b152905dc37571cf6b94f2df",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f0281df1_9966c48e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-02-15T19:30:23Z",
+      "side": 1,
+      "message": "verified here: https://jenkins.opencord.org/view/VOLTHA-2.X-Tests/job/periodic-voltha-test-bbsim/1201/",
+      "revId": "67e9e4c46fd00fa7b152905dc37571cf6b94f2df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
