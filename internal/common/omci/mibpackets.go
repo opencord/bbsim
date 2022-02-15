@@ -17,6 +17,7 @@
 package omci
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"github.com/google/gopacket"
@@ -45,6 +46,15 @@ func Serialize(msgType omci.MessageType, request gopacket.SerializableLayer, tid
 		return nil, err
 	}
 	return buffer.Bytes(), nil
+}
+
+func SetTxIdInEncodedPacket(packet []byte, txId uint16) []byte {
+	valid := packet[2:]
+
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, txId)
+
+	return append(b, valid...)
 }
 
 func CreateMibResetRequest(tid uint16) ([]byte, error) {
@@ -106,6 +116,9 @@ func CreateMibUploadResponse(tid uint16, numberOfCommands uint16) ([]byte, error
 		},
 		NumberOfCommands: numberOfCommands,
 	}
+
+	omciLogger.WithFields(log.Fields{"NumberOfCommands": numberOfCommands}).Debug("mib-upload-response")
+
 	pkt, err := Serialize(omci.MibUploadResponseType, request, tid)
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
@@ -175,6 +188,22 @@ func CreateMibUploadNextResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, md
 		return nil, fmt.Errorf("mibdb-does-not-contain-item")
 	}
 	currentEntry := mibDb.items[int(msgObj.CommandSequenceNumber)]
+
+	// if packet is set then we don't need to serialize the packet, it's already done
+	if currentEntry.packet != nil {
+		omciLogger.WithFields(log.Fields{
+			"CommandSequenceNumber": msgObj.CommandSequenceNumber,
+			"MibDbNumberOfCommands": mibDb.NumberOfCommands,
+			"packet":                currentEntry.packet,
+			"request-txid":          omciMsg.TransactionID,
+		}).Info("sending-custom-packet")
+
+		// NOTE we need to replace the first two bytes of the packet with the correct transactionId
+		pkt := SetTxIdInEncodedPacket(currentEntry.packet, omciMsg.TransactionID)
+
+		return pkt, nil
+	}
+
 	reportedMe, meErr := me.LoadManagedEntityDefinition(currentEntry.classId, me.ParamData{
 		EntityID:   currentEntry.entityId.ToUint16(),
 		Attributes: currentEntry.params,
