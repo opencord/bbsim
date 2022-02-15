@@ -58,6 +58,18 @@ const (
 	// The flow ids are no more necessary by the adapter, but still need to pass something dummy. Pass a very small valid range.
 	flowIdStart = 1
 	flowIdEnd   = flowIdStart + 1
+
+	//InternalState FSM states and transitions
+	OltInternalStateCreated     = "created"
+	OltInternalStateInitialized = "initialized"
+	OltInternalStateEnabled     = "enabled"
+	OltInternalStateDisabled    = "disabled"
+	OltInternalStateDeleted     = "deleted"
+
+	OltInternalTxInitialize = "initialize"
+	OltInternalTxEnable     = "enable"
+	OltInternalTxDisable    = "disable"
+	OltInternalTxDelete     = "delete"
 )
 
 type OltDevice struct {
@@ -170,20 +182,20 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 	// OLT State machine
 	// NOTE do we need 2 state machines for the OLT? (InternalState and OperState)
 	olt.InternalState = fsm.NewFSM(
-		"created",
+		OltInternalStateCreated,
 		fsm.Events{
-			{Name: "initialize", Src: []string{"created", "deleted"}, Dst: "initialized"},
-			{Name: "enable", Src: []string{"initialized", "disabled"}, Dst: "enabled"},
-			{Name: "disable", Src: []string{"enabled"}, Dst: "disabled"},
+			{Name: OltInternalTxInitialize, Src: []string{OltInternalStateCreated, OltInternalStateDeleted}, Dst: OltInternalStateInitialized},
+			{Name: OltInternalTxEnable, Src: []string{OltInternalStateInitialized, OltInternalStateDisabled}, Dst: OltInternalStateEnabled},
+			{Name: OltInternalTxDisable, Src: []string{OltInternalStateEnabled}, Dst: OltInternalStateDisabled},
 			// delete event in enabled state below is for reboot OLT case.
-			{Name: "delete", Src: []string{"disabled", "enabled"}, Dst: "deleted"},
+			{Name: OltInternalTxDelete, Src: []string{OltInternalStateDisabled, OltInternalStateEnabled}, Dst: OltInternalStateDeleted},
 		},
 		fsm.Callbacks{
 			"enter_state": func(e *fsm.Event) {
 				oltLogger.Debugf("Changing OLT InternalState from %s to %s", e.Src, e.Dst)
 			},
-			"enter_initialized": func(e *fsm.Event) { olt.InitOlt() },
-			"enter_deleted": func(e *fsm.Event) {
+			fmt.Sprintf("enter_%s", OltInternalStateInitialized): func(e *fsm.Event) { olt.InitOlt() },
+			fmt.Sprintf("enter_%s", OltInternalStateDeleted): func(e *fsm.Event) {
 				// remove all the resource allocations
 				olt.clearAllResources()
 			},
@@ -224,7 +236,7 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 	}
 
 	if !isMock {
-		if err := olt.InternalState.Event("initialize"); err != nil {
+		if err := olt.InternalState.Event(OltInternalTxInitialize); err != nil {
 			log.Errorf("Error initializing OLT: %v", err)
 			return nil
 		}
@@ -276,7 +288,7 @@ func (o *OltDevice) RestartOLT() error {
 		"oltId": o.ID,
 	}).Infof("Simulating OLT restart... (%ds)", rebootDelay)
 
-	if o.InternalState.Is("enabled") {
+	if o.InternalState.Is(OltInternalStateEnabled) {
 		oltLogger.WithFields(log.Fields{
 			"oltId": o.ID,
 		}).Info("This is an OLT soft reboot")
@@ -284,7 +296,7 @@ func (o *OltDevice) RestartOLT() error {
 	}
 
 	// transition internal state to deleted
-	if err := o.InternalState.Event("delete"); err != nil {
+	if err := o.InternalState.Event(OltInternalTxDelete); err != nil {
 		oltLogger.WithFields(log.Fields{
 			"oltId": o.ID,
 		}).Errorf("Error deleting OLT: %v", err)
@@ -326,10 +338,13 @@ func (o *OltDevice) RestartOLT() error {
 	// terminate the OLT's processOltMessages go routine
 	close(o.channel)
 
+	//Prevents Enable to progress before the reboot is completed (VOL-4616)
+	o.Lock()
 	o.enableContextCancel()
 	time.Sleep(time.Duration(rebootDelay) * time.Second)
+	o.Unlock()
 
-	if err := o.InternalState.Event("initialize"); err != nil {
+	if err := o.InternalState.Event(OltInternalTxInitialize); err != nil {
 		oltLogger.WithFields(log.Fields{
 			"oltId": o.ID,
 		}).Errorf("Error initializing OLT: %v", err)
@@ -387,8 +402,18 @@ func (o *OltDevice) StopOltServer() {
 // Device Methods
 
 // Enable implements the OpenOLT EnableIndicationServer functionality
-func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) {
+func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error {
 	oltLogger.Debug("Enable OLT called")
+
+	if o.InternalState.Is(OltInternalStateDeleted) {
+		err := fmt.Errorf("Cannot enable OLT while it is rebooting")
+		oltLogger.WithFields(log.Fields{
+			"oltId":         o.SerialNumber,
+			"internalState": o.InternalState.Current(),
+		}).Error(err)
+		return err
+	}
+
 	rebootFlag := false
 
 	// If enabled has already been called then an enabled context has
@@ -486,6 +511,8 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) {
 	oltLogger.WithFields(log.Fields{
 		"stream": stream,
 	}).Debug("OpenOLT Stream closed")
+
+	return nil
 }
 
 func (o *OltDevice) periodicPortStats(ctx context.Context, wg *sync.WaitGroup, stream openolt.Openolt_EnableIndicationServer) {
@@ -696,7 +723,7 @@ func (o *OltDevice) sendPonIndication(ponPortID uint32) {
 }
 
 func (o *OltDevice) sendPortStatsIndication(stats *openolt.PortStatistics, portID uint32, portType string, stream openolt.Openolt_EnableIndicationServer) {
-	if o.InternalState.Current() == "enabled" {
+	if o.InternalState.Current() == OltInternalStateEnabled {
 		oltLogger.WithFields(log.Fields{
 			"Type":   portType,
 			"IntfId": portID,
@@ -749,10 +776,10 @@ loop:
 			case types.OltIndication:
 				msg, _ := message.Data.(types.OltIndicationMessage)
 				if msg.OperState == types.UP {
-					_ = o.InternalState.Event("enable")
+					_ = o.InternalState.Event(OltInternalTxEnable)
 					_ = o.OperState.Event("enable")
 				} else if msg.OperState == types.DOWN {
-					_ = o.InternalState.Event("disable")
+					_ = o.InternalState.Event(OltInternalTxDisable)
 					_ = o.OperState.Event("disable")
 				}
 				o.sendOltIndication(msg, stream)
@@ -919,7 +946,7 @@ func (o *OltDevice) DeleteOnu(_ context.Context, onu *openolt.Onu) (*openolt.Emp
 	}
 
 	// ONU Re-Discovery
-	if o.InternalState.Current() == "enabled" && pon.InternalState.Current() == "enabled" {
+	if o.InternalState.Current() == OltInternalStateEnabled && pon.InternalState.Current() == "enabled" {
 		go _onu.ReDiscoverOnu()
 	}
 
@@ -994,8 +1021,7 @@ func (o *OltDevice) DisablePonIf(_ context.Context, intf *openolt.Interface) (*o
 func (o *OltDevice) EnableIndication(_ *openolt.Empty, stream openolt.Openolt_EnableIndicationServer) error {
 	oltLogger.WithField("oltId", o.ID).Info("OLT receives EnableIndication call from VOLTHA")
 	publishEvent("OLT-enable-received", -1, -1, "")
-	o.Enable(stream)
-	return nil
+	return o.Enable(stream)
 }
 
 func (o *OltDevice) EnablePonIf(_ context.Context, intf *openolt.Interface) (*openolt.Empty, error) {

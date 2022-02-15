@@ -19,9 +19,10 @@ package api
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc/status"
 	"strings"
 	"time"
+
+	"google.golang.org/grpc/status"
 
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
@@ -172,7 +173,7 @@ func (s BBSimServer) PoweronOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.R
 	res := &bbsim.Response{}
 	o := devices.GetOLT()
 
-	if err := o.InternalState.Event("initialize"); err != nil {
+	if err := o.InternalState.Event(devices.OltInternalTxInitialize); err != nil {
 		log.Errorf("Error initializing OLT: %v", err)
 		res.StatusCode = int32(codes.FailedPrecondition)
 		return res, err
@@ -186,7 +187,7 @@ func (s BBSimServer) ShutdownOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.
 	res := &bbsim.Response{}
 	o := devices.GetOLT()
 
-	if err := o.InternalState.Event("disable"); err != nil {
+	if err := o.InternalState.Event(devices.OltInternalTxDisable); err != nil {
 		log.Errorf("Error disabling OLT: %v", err)
 		res.StatusCode = int32(codes.FailedPrecondition)
 		return res, err
