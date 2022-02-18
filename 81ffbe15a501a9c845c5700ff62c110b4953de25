@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d24e0d85_f4a702a2",
+        "filename": "configs/pon-interfaces.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-02-18T15:49:55Z",
+      "side": 1,
+      "message": "remove EOL spaces",
+      "revId": "81ffbe15a501a9c845c5700ff62c110b4953de25",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "489f2b20_a8f66cd9",
+        "filename": "docs/source/bbsim_config.rst",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-02-18T15:49:55Z",
+      "side": 1,
+      "message": "pon_port_config_file",
+      "range": {
+        "startLine": 60,
+        "startChar": 6,
+        "endLine": 60,
+        "endChar": 15
+      },
+      "revId": "81ffbe15a501a9c845c5700ff62c110b4953de25",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8e0c26ac_295a72b1",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1291,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-02-18T15:49:55Z",
+      "side": 1,
+      "message": "just for clarity `range` is best here",
+      "range": {
+        "startLine": 1291,
+        "startChar": 8,
+        "endLine": 1291,
+        "endChar": 9
+      },
+      "revId": "81ffbe15a501a9c845c5700ff62c110b4953de25",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ba740d17_1127f365",
+        "filename": "internal/bbsim/devices/olt_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-02-18T15:49:55Z",
+      "side": 1,
+      "message": "you might want to expand te test a bit with some \"crazy\" ranges",
+      "revId": "81ffbe15a501a9c845c5700ff62c110b4953de25",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8f1b79a7_e547fe47",
+        "filename": "internal/common/options.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-02-18T15:49:55Z",
+      "side": 1,
+      "message": "I\u0027m not sure we want this here, it\u0027s either GPON or XGS-PON",
+      "range": {
+        "startLine": 112,
+        "startChar": 2,
+        "endLine": 112,
+        "endChar": 9
+      },
+      "revId": "81ffbe15a501a9c845c5700ff62c110b4953de25",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
