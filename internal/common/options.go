@@ -88,7 +88,6 @@ type OltConfig struct {
 	NniPorts           uint32 `yaml:"nni_ports"`
 	NniSpeed           uint32 `yaml:"nni_speed"`
 	OnusPonPort        uint32 `yaml:"onus_per_port"`
-	Technology         string `yaml:"technology"`
 	ID                 int    `yaml:"id"`
 	OltRebootDelay     int    `yaml:"reboot_delay"`
 	PortStatsInterval  int    `yaml:"port_stats_interval"`
@@ -97,9 +96,77 @@ type OltConfig struct {
 	PotsPorts          uint32 `yaml:"pots_ports"`
 }
 
+type PonPortsConfig struct {
+	Number uint32           `yaml:"num_pon_ports"`
+	Ranges []PonRangeConfig `yaml:"ranges"`
+}
+
+type IdRange struct {
+	StartId uint32 `yaml:"start"`
+	EndId   uint32 `yaml:"end"`
+}
+
+type PonTechnology int
+
+var ponTechnologyValues = []string{
+	"GPON", "XGS-PON",
+}
+
+func (t PonTechnology) String() string {
+	return ponTechnologyValues[t]
+}
+
+const (
+	GPON PonTechnology = iota
+	XGSPON
+)
+
+func PonTechnologyFromString(s string) (PonTechnology, error) {
+	for i, val := range ponTechnologyValues {
+		if val == s {
+			return PonTechnology(i), nil
+		}
+	}
+	log.WithFields(log.Fields{
+		"ValidValues": strings.Join(ponTechnologyValues[:], ", "),
+	}).Errorf("%s-is-not-a-valid-pon-technology", s)
+	return -1, fmt.Errorf("%s-is-not-a-valid-pon-technology", s)
+}
+
+//Constants for default allocation ranges
+const (
+	defaultOnuIdStart          = 1
+	defaultAllocIdStart        = 1024
+	defaultGemPortIdPerAllocId = 8
+	defaultGemportIdStart      = 1024
+)
+
+type PonRangeConfig struct {
+	PonRange     IdRange `yaml:"pon_id_range"`
+	Technology   string  `yaml:"tech"`
+	OnuRange     IdRange `yaml:"onu_id_range"`
+	AllocIdRange IdRange `yaml:"alloc_id_range"`
+	GemportRange IdRange `yaml:"gemport_id_range"`
+}
+
+func GetPonConfigById(id uint32) (*PonRangeConfig, error) {
+	if PonsConfig == nil {
+		return nil, fmt.Errorf("pons-config-nil")
+	}
+
+	for _, r := range PonsConfig.Ranges {
+		if id >= r.PonRange.StartId && id <= r.PonRange.EndId {
+			return &r, nil
+		}
+	}
+
+	return nil, fmt.Errorf("pon-config-for-id-%d-not-found", id)
+}
+
 type BBSimConfig struct {
 	ConfigFile             string
 	ServiceConfigFile      string
+	PonsConfigFile         string
 	DhcpRetry              bool    `yaml:"dhcp_retry"`
 	AuthRetry              bool    `yaml:"auth_retry"`
 	LogLevel               string  `yaml:"log_level"`
@@ -172,8 +239,9 @@ func (cfg *YamlServiceConfig) String() string {
 }
 
 var (
-	Config   *GlobalConfig
-	Services []ServiceYaml
+	Config     *GlobalConfig
+	Services   []ServiceYaml
+	PonsConfig *PonPortsConfig
 )
 
 // Load the BBSim configuration. This is a combination of CLI parameters and YAML files
@@ -221,6 +289,31 @@ func LoadConfig() {
 
 	Services = services
 
+	//A blank filename means we should fall back to bbsim defaults
+	if Config.BBSim.PonsConfigFile == "" {
+		PonsConfig, err = getDefaultPonsConfig()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Fatal("Can't load Pon interfaces defaults.")
+		}
+	} else {
+		PonsConfig, err = loadBBSimPons(Config.BBSim.PonsConfigFile)
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"file": Config.BBSim.PonsConfigFile,
+				"err":  err,
+			}).Fatal("Can't read services file")
+		}
+	}
+
+	if err := validatePonsConfig(PonsConfig); err != nil {
+		log.WithFields(log.Fields{
+			"file": Config.BBSim.PonsConfigFile,
+			"err":  err,
+		}).Fatal("Invalid Pon interfaces configuration")
+	}
 }
 
 func readCliParams() *GlobalConfig {
@@ -229,6 +322,7 @@ func readCliParams() *GlobalConfig {
 
 	configFile := flag.String("config", conf.BBSim.ConfigFile, "Configuration file path")
 	servicesFile := flag.String("services", conf.BBSim.ServiceConfigFile, "Service Configuration file path")
+	ponsFile := flag.String("pon_port_config_file", conf.BBSim.PonsConfigFile, "Pon Interfaces Configuration file path")
 	sadisBpFormat := flag.String("bp_format", conf.BBSim.BandwidthProfileFormat, "Bandwidth profile format, 'mef' or 'ietf'")
 
 	olt_id := flag.Int("olt_id", conf.Olt.ID, "OLT device ID")
@@ -275,6 +369,7 @@ func readCliParams() *GlobalConfig {
 	conf.Olt.OmciResponseRate = uint8(*omci_response_rate)
 	conf.BBSim.ConfigFile = *configFile
 	conf.BBSim.ServiceConfigFile = *servicesFile
+	conf.BBSim.PonsConfigFile = *ponsFile
 	conf.BBSim.CpuProfile = profileCpu
 	conf.BBSim.LogLevel = *logLevel
 	conf.BBSim.LogCaller = *logCaller
@@ -309,8 +404,12 @@ func getDefaultOps() *GlobalConfig {
 
 	c := &GlobalConfig{
 		BBSimConfig{
-			ConfigFile:             "configs/bbsim.yaml",
-			ServiceConfigFile:      "configs/att-services.yaml",
+			ConfigFile:        "configs/bbsim.yaml",
+			ServiceConfigFile: "configs/att-services.yaml",
+			// PonsConfigFile is left intentionally blank here
+			// to use the default values computed at runtime depending
+			// on the loaded Services
+			PonsConfigFile:         "",
 			LogLevel:               "debug",
 			LogCaller:              false,
 			Delay:                  200,
@@ -341,7 +440,6 @@ func getDefaultOps() *GlobalConfig {
 			NniPorts:           1,
 			NniSpeed:           10000, //Mbps
 			OnusPonPort:        1,
-			Technology:         "XGS-PON",
 			ID:                 0,
 			OltRebootDelay:     60,
 			PortStatsInterval:  20,
@@ -355,6 +453,35 @@ func getDefaultOps() *GlobalConfig {
 		},
 	}
 	return c
+}
+
+func getDefaultPonsConfig() (*PonPortsConfig, error) {
+
+	if Config == nil {
+		return nil, fmt.Errorf("Config is nil")
+	}
+	if Services == nil {
+		return nil, fmt.Errorf("Services is nil")
+	}
+
+	//The default should replicate the old way bbsim used to compute resource ranges based on the configuration
+	// 1 allocId per Service * UNI
+	allocIdPerOnu := uint32(Config.Olt.UniPorts * uint32(len(Services)))
+	return &PonPortsConfig{
+		Number: Config.Olt.PonPorts,
+		Ranges: []PonRangeConfig{
+			{
+				PonRange:   IdRange{0, Config.Olt.PonPorts - 1},
+				Technology: XGSPON.String(),
+				// we need one ONU ID available per ONU, but the smaller the range the smaller the pool created in the openolt adapter
+				OnuRange: IdRange{defaultOnuIdStart, defaultOnuIdStart + (Config.Olt.OnusPonPort - 1)},
+				// 1 allocId per Service * UNI * ONU
+				AllocIdRange: IdRange{defaultAllocIdStart, defaultAllocIdStart + (Config.Olt.OnusPonPort * allocIdPerOnu)},
+				// up to 8 gemport-id per tcont/alloc-id
+				GemportRange: IdRange{defaultGemportIdStart, defaultGemportIdStart + Config.Olt.OnusPonPort*allocIdPerOnu*defaultGemPortIdPerAllocId},
+			},
+		},
+	}, nil
 }
 
 // LoadBBSimConf loads the BBSim configuration from a YAML file
@@ -376,6 +503,84 @@ func loadBBSimConf(filename string) (*GlobalConfig, error) {
 	}
 
 	return yamlConfig, nil
+}
+
+// loadBBSimPons loads the configuration of PON interfaces from a YAML file
+func loadBBSimPons(filename string) (*PonPortsConfig, error) {
+	yamlPonsConfig, err := getDefaultPonsConfig()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("Can't load Pon interfaces defaults.")
+		return nil, err
+	}
+
+	yamlFile, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err":      err,
+			"filename": filename,
+		}).Error("Cannot load Pon interfaces configuration file. Using defaults.")
+		return yamlPonsConfig, nil
+	}
+
+	err = yaml.Unmarshal(yamlFile, yamlPonsConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return yamlPonsConfig, nil
+}
+
+// validatePonsConfig checks if the configuration to use for the definition of Pon interfaces is valid
+func validatePonsConfig(pons *PonPortsConfig) error {
+
+	if pons.Number == 0 {
+		return fmt.Errorf("no-pon-ports")
+	}
+
+	definedPorts := make([]int, pons.Number)
+
+	for rIndex, resRange := range pons.Ranges {
+		if _, err := PonTechnologyFromString(resRange.Technology); err != nil {
+			return err
+		}
+
+		if resRange.PonRange.EndId < resRange.PonRange.StartId {
+			return fmt.Errorf("invalid-pon-ports-limits-in-range-%d", rIndex)
+		}
+
+		//Keep track of the defined pons
+		for p := resRange.PonRange.StartId; p <= resRange.PonRange.EndId; p++ {
+			if p > uint32(len(definedPorts)-1) {
+				return fmt.Errorf("pon-port-%d-in-range-%d-but-max-is-%d", p, rIndex, pons.Number-1)
+			}
+			definedPorts[p]++
+
+			if definedPorts[p] > 1 {
+				return fmt.Errorf("pon-port-%d-has-duplicate-definition-in-range-%d", p, rIndex)
+			}
+		}
+
+		if resRange.OnuRange.EndId < resRange.OnuRange.StartId {
+			return fmt.Errorf("invalid-onus-limits-in-range-%d", rIndex)
+		}
+		if resRange.AllocIdRange.EndId < resRange.AllocIdRange.StartId {
+			return fmt.Errorf("invalid-allocid-limits-in-range-%d", rIndex)
+		}
+		if resRange.GemportRange.EndId < resRange.GemportRange.StartId {
+			return fmt.Errorf("invalid-gemport-limits-in-range-%d", rIndex)
+		}
+	}
+
+	//Check if the ranges define all the pons
+	for i, num := range definedPorts {
+		if num < 1 {
+			return fmt.Errorf("pon-port-%d-is-not-defined-in-ranges", i)
+		}
+	}
+
+	return nil
 }
 
 // LoadBBSimServices parses a file describing the services that need to be created for each UNI

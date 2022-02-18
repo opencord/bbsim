@@ -150,6 +150,7 @@ func main() {
 		"NumNniPerOlt":         common.Config.Olt.NniPorts,
 		"NumPonPerOlt":         common.Config.Olt.PonPorts,
 		"NumOnuPerPon":         common.Config.Olt.OnusPonPort,
+		"PonConfiguration":     *common.PonsConfig,
 		"TotalOnus":            common.Config.Olt.PonPorts * common.Config.Olt.OnusPonPort,
 		"Delay":                common.Config.BBSim.Delay,
 		"Events":               common.Config.BBSim.Events,

@@ -22,6 +22,7 @@ import (
 	"sync"
 
 	"github.com/looplab/fsm"
+	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	log "github.com/sirupsen/logrus"
 )
@@ -44,6 +45,7 @@ type AllocIDKey struct {
 type PonPort struct {
 	// BBSIM Internals
 	ID            uint32
+	Technology    common.PonTechnology
 	NumOnu        int
 	Onus          []*Onu
 	Olt           *OltDevice
@@ -66,11 +68,11 @@ type PonPort struct {
 }
 
 // CreatePonPort creates pon port object
-func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
-
+func CreatePonPort(olt *OltDevice, id uint32, tech common.PonTechnology) *PonPort {
 	ponPort := PonPort{
 		NumOnu:            olt.NumOnuPerPon,
 		ID:                id,
+		Technology:        tech,
 		Type:              "pon",
 		Olt:               olt,
 		Onus:              []*Onu{},

@@ -19,11 +19,12 @@ package devices
 import (
 	"context"
 	"errors"
+	"time"
+
 	bbsim_common "github.com/opencord/bbsim/internal/common"
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
 	"github.com/opencord/voltha-protos/v5/go/extension"
 	log "github.com/sirupsen/logrus"
-	"time"
 
 	"github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/v5/go/ext/config"
@@ -183,7 +184,7 @@ func createTestOnu() *Onu {
 		OmciResponseRate: 10,
 	}
 
-	pon := CreatePonPort(&olt, 1)
+	pon := CreatePonPort(&olt, 1, bbsim_common.XGSPON)
 
 	onu := CreateONU(&olt, pon, 1, time.Duration(1*time.Millisecond), nextCtag, nextStag, true)
 	// NOTE we need this in order to create the OnuChannel

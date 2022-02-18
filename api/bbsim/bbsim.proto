@@ -32,6 +32,7 @@ message PONPort {
     // these are the stored resource IDs as reported via OMCI
     repeated PonAllocatedResources AllocatedGemPorts = 6;
     repeated PonAllocatedResources AllocatedAllocIds = 7;
+    string Technology = 8;
 }
 
 message PonAllocatedResources {
