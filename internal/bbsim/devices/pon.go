@@ -22,6 +22,7 @@ import (
 	"sync"
 
 	"github.com/looplab/fsm"
+	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	log "github.com/sirupsen/logrus"
 )
@@ -44,6 +45,7 @@ type AllocIDKey struct {
 type PonPort struct {
 	// BBSIM Internals
 	ID            uint32
+	Technology    common.PonTechnology
 	NumOnu        int
 	Onus          []*Onu
 	Olt           *OltDevice
@@ -67,10 +69,26 @@ type PonPort struct {
 
 // CreatePonPort creates pon port object
 func CreatePonPort(olt *OltDevice, id uint32) *PonPort {
+	ponConf, err := common.GetPonConfigById(id)
+	if err != nil {
+		onuLogger.WithFields(log.Fields{
+			"Err":    err,
+			"IntfId": id,
+		}).Fatal("cannot-get-pon-configuration")
+	}
+
+	tech, err := common.PonTechnologyFromString(ponConf.Technology)
+	if err != nil {
+		onuLogger.WithFields(log.Fields{
+			"Err":    err,
+			"IntfId": id,
+		}).Fatal("unkown-pon-port-technology")
+	}
 
 	ponPort := PonPort{
 		NumOnu:            olt.NumOnuPerPon,
 		ID:                id,
+		Technology:        tech,
 		Type:              "pon",
 		Olt:               olt,
 		Onus:              []*Onu{},
