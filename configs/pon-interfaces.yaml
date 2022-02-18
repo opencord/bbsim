@@ -1,0 +1,17 @@
+---
+num_pon_ports: 16
+ranges:
+  -
+    pon_id_range:
+      start: 0
+      end: 15
+    tech: "XGS-PON"
+    onu_id_range:
+      start: 1
+      end: 255
+    alloc_id_range:
+      start: 256
+      end: 1024
+    gemport_id_range:
+      start: 256
+      end: 1024

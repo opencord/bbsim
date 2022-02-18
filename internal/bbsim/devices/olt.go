@@ -51,10 +51,6 @@ var oltLogger = log.WithFields(log.Fields{
 })
 
 const (
-	onuIdStart          = 1
-	allocIdStart        = 1024
-	gemPortIdPerAllocId = 8
-	gemportIdStart      = 1024
 	// The flow ids are no more necessary by the adapter, but still need to pass something dummy. Pass a very small valid range.
 	flowIdStart = 1
 	flowIdEnd   = flowIdStart + 1
@@ -108,12 +104,6 @@ type OltDevice struct {
 	OpenoltStream openolt.Openolt_EnableIndicationServer
 	enablePerf    bool
 
-	// resource ranges (only the ones that depends on the topology size)
-	onuIdEnd      uint32
-	allocIdPerOnu uint32
-	allocIdEnd    uint32
-	gemportIdEnd  uint32
-
 	// Allocated Resources
 	// this data are to verify that the openolt adapter does not duplicate resources
 	AllocIDsLock     sync.RWMutex
@@ -164,12 +154,6 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		GemPortIDs:          make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool),
 		OmciResponseRate:    options.Olt.OmciResponseRate,
 	}
-
-	// create the resource ranges based on the configuration
-	olt.onuIdEnd = onuIdStart + (options.Olt.OnusPonPort - 1)                                               // we need one ONU ID available per ONU, but the smaller the range the smaller the pool created in the openolt adapter
-	olt.allocIdPerOnu = uint32(olt.NumUni * len(common.Services))                                           // 1 allocId per Service * UNI
-	olt.allocIdEnd = allocIdStart + (options.Olt.OnusPonPort * olt.allocIdPerOnu)                           // 1 allocId per Service * UNI * ONU
-	olt.gemportIdEnd = gemportIdStart + (options.Olt.OnusPonPort * olt.allocIdPerOnu * gemPortIdPerAllocId) // up to 8 gemport-id per tcont/alloc-id
 
 	if val, ok := ControlledActivationModes[options.BBSim.ControlledActivation]; ok {
 		olt.ControlledActivation = val
@@ -1278,62 +1262,63 @@ func (o *OltDevice) GetOnuByFlowId(flowId uint64) (*Onu, error) {
 }
 
 func (o *OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.DeviceInfo, error) {
-
-	intfIDs := []uint32{}
-	for i := 0; i < o.NumPon; i++ {
-		intfIDs = append(intfIDs, uint32(i))
-	}
-
 	devinfo := &openolt.DeviceInfo{
-		Vendor:              common.Config.Olt.Vendor,
-		Model:               common.Config.Olt.Model,
-		HardwareVersion:     common.Config.Olt.HardwareVersion,
-		FirmwareVersion:     common.Config.Olt.FirmwareVersion,
-		Technology:          common.Config.Olt.Technology,
-		PonPorts:            uint32(o.NumPon),
-		OnuIdStart:          onuIdStart,
-		OnuIdEnd:            o.onuIdEnd,
-		AllocIdStart:        allocIdStart,
-		AllocIdEnd:          o.allocIdEnd,
-		GemportIdStart:      gemportIdStart,
-		GemportIdEnd:        o.gemportIdEnd,
+		Vendor:          common.Config.Olt.Vendor,
+		Model:           common.Config.Olt.Model,
+		HardwareVersion: common.Config.Olt.HardwareVersion,
+		FirmwareVersion: common.Config.Olt.FirmwareVersion,
+		PonPorts:        uint32(o.NumPon),
+		// TODO: what should we do with these? Looks like they are not used in the adapter
+		//OnuIdStart:          onuIdStart,
+		//OnuIdEnd:            o.onuIdEnd,
+		//AllocIdStart:        allocIdStart,
+		//AllocIdEnd:          o.allocIdEnd,
+		//GemportIdStart:      gemportIdStart,
+		//GemportIdEnd:        o.gemportIdEnd,
 		FlowIdStart:         flowIdStart,
 		FlowIdEnd:           flowIdEnd,
 		DeviceSerialNumber:  o.SerialNumber,
 		DeviceId:            common.Config.Olt.DeviceId,
 		PreviouslyConnected: o.PreviouslyConnected,
-		Ranges: []*openolt.DeviceInfo_DeviceResourceRanges{
-			{
-				IntfIds:    intfIDs,
-				Technology: common.Config.Olt.Technology,
-				Pools: []*openolt.DeviceInfo_DeviceResourceRanges_Pool{
-					{
-						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_ONU_ID,
-						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
-						Start:   onuIdStart,
-						End:     o.onuIdEnd,
-					},
-					{
-						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_ALLOC_ID,
-						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
-						Start:   allocIdStart,
-						End:     o.allocIdEnd,
-					},
-					{
-						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_GEMPORT_ID,
-						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
-						Start:   gemportIdStart,
-						End:     o.gemportIdEnd,
-					},
-					{
-						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_FLOW_ID,
-						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_SHARED_BY_ALL_INTF_ALL_TECH,
-						Start:   flowIdStart,
-						End:     flowIdEnd,
-					},
+		Ranges:              []*openolt.DeviceInfo_DeviceResourceRanges{},
+	}
+
+	for _, r := range common.PonsConfig.Ranges {
+		intfIDs := []uint32{}
+		for i := r.PonRange.StartId; i <= r.PonRange.EndId; i++ {
+			intfIDs = append(intfIDs, uint32(i))
+		}
+
+		devinfo.Ranges = append(devinfo.Ranges, &openolt.DeviceInfo_DeviceResourceRanges{
+			IntfIds:    intfIDs,
+			Technology: r.Technology,
+			Pools: []*openolt.DeviceInfo_DeviceResourceRanges_Pool{
+				{
+					Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_ONU_ID,
+					Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
+					Start:   r.OnuRange.StartId,
+					End:     r.OnuRange.EndId,
+				},
+				{
+					Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_ALLOC_ID,
+					Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
+					Start:   r.AllocIdRange.StartId,
+					End:     r.AllocIdRange.EndId,
+				},
+				{
+					Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_GEMPORT_ID,
+					Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
+					Start:   r.GemportRange.StartId,
+					End:     r.GemportRange.EndId,
+				},
+				{
+					Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_FLOW_ID,
+					Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_SHARED_BY_ALL_INTF_ALL_TECH,
+					Start:   flowIdStart,
+					End:     flowIdEnd,
 				},
 			},
-		},
+		})
 	}
 
 	oltLogger.WithFields(log.Fields{
