@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "332db6f4_3176eea2",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2022-02-18T17:11:41Z",
+      "side": 1,
+      "message": "The ongoing discussion below should be awaited:\nhttps://onf-community.slack.com/archives/C01D3PAU4CA/p1645203789826809?thread_ts\u003d1645144727.749299\u0026cid\u003dC01D3PAU4CA",
+      "revId": "5ff3cecdb337a13139e9a1f300f42216a5697f6d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
