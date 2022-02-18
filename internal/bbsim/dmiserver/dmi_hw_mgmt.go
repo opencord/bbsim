@@ -87,7 +87,7 @@ func (dms *DmiAPIServer) StartManagingDevice(req *dmi.ModifiableComponent, strea
 		trans := dmi.Component{
 			Name:        transName,
 			Class:       dmi.ComponentType_COMPONENT_TYPE_TRANSCEIVER,
-			Description: "XGS-PON",
+			Description: olt.Pons[i].Technology.String(),
 			Uuid: &dmi.Uuid{
 				Uuid: dms.ponTransceiverUuids[i],
 			},

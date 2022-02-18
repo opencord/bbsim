@@ -356,7 +356,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 		o.PotsPorts = append(o.PotsPorts, pots)
 	}
 
-	mibDb, err := omcilib.GenerateMibDatabase(len(o.UniPorts), len(o.PotsPorts))
+	mibDb, err := omcilib.GenerateMibDatabase(len(o.UniPorts), len(o.PotsPorts), o.PonPort.Technology)
 	if err != nil {
 		onuLogger.WithFields(log.Fields{
 			"OnuId":  o.ID,
