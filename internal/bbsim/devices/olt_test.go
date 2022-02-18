@@ -19,15 +19,16 @@ package devices
 import (
 	"context"
 	"fmt"
+	"net"
+	"sync"
+	"testing"
+
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/types"
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"github.com/stretchr/testify/assert"
-	"net"
-	"sync"
-	"testing"
 )
 
 func createMockOlt(numPon int, numOnu int, numUni int, services []ServiceIf) *OltDevice {
@@ -191,21 +192,57 @@ func TestGetDeviceInfo(t *testing.T) {
 		},
 	}
 
+	common.PonsConfig = &common.PonPortsConfig{
+		Number: 16,
+		Ranges: []common.PonRangeConfig{
+			{
+				PonRange:     common.IdRange{StartId: 0, EndId: 7},
+				Technology:   common.XGSPON.String(),
+				OnuRange:     common.IdRange{StartId: 1, EndId: 1},
+				AllocIdRange: common.IdRange{StartId: 1024, EndId: 1024 + 4},
+				GemportRange: common.IdRange{StartId: 1024, EndId: 1024 + 32},
+			},
+			{
+				PonRange:     common.IdRange{StartId: 8, EndId: 15},
+				Technology:   common.XGSPON.String(),
+				OnuRange:     common.IdRange{StartId: 1, EndId: 1},
+				AllocIdRange: common.IdRange{StartId: 1024, EndId: 1028 + 4},
+				GemportRange: common.IdRange{StartId: 1024, EndId: 1024 + 32},
+			},
+		},
+	}
+
 	olt := CreateOLT(*common.Config, common.Services, true)
 
 	res, err := olt.GetDeviceInfo(context.Background(), &openolt.Empty{})
 
 	assert.NoError(t, err, "GetDeviceInfo returned error")
 
-	fmt.Println(res)
-	fmt.Println(res.OnuIdEnd - res.OnuIdStart + 1)
+	assert.Equal(t, len(res.Ranges), len(common.PonsConfig.Ranges))
 
-	assert.Equal(t, onuIdStart+(onusPerPon-1), res.OnuIdEnd)
-	assert.Equal(t, onuIdStart+(onusPerPon-1), res.Ranges[0].Pools[0].End)
-	assert.Equal(t, onusPerPon, res.OnuIdEnd-res.OnuIdStart+1, "The ONU ID range size is different that the number of ONUs per PON")
+	for _, resRange := range res.Ranges {
+		for _, ponId := range resRange.IntfIds {
+			conf, err := common.GetPonConfigById(ponId)
+			assert.NoError(t, err, fmt.Sprintf("Cannot get pon configuration by id %d", ponId))
 
-	assert.Equal(t, uint32(allocIdStart+(olt.NumOnuPerPon*olt.NumUni*len(common.Services))), res.AllocIdEnd)
-	assert.Equal(t, uint32(gemportIdStart+(olt.NumOnuPerPon*olt.NumUni*len(common.Services))*gemPortIdPerAllocId), res.GemportIdEnd)
+			for _, pool := range resRange.Pools {
+				switch pool.Type {
+				case openolt.DeviceInfo_DeviceResourceRanges_Pool_ONU_ID:
+					assert.Equal(t, pool.Start, conf.OnuRange.StartId)
+					assert.Equal(t, pool.End, conf.OnuRange.EndId)
+				case openolt.DeviceInfo_DeviceResourceRanges_Pool_ALLOC_ID:
+					assert.Equal(t, pool.Start, conf.AllocIdRange.StartId)
+					assert.Equal(t, pool.End, conf.AllocIdRange.EndId)
+				case openolt.DeviceInfo_DeviceResourceRanges_Pool_GEMPORT_ID:
+					assert.Equal(t, pool.Start, conf.GemportRange.StartId)
+					assert.Equal(t, pool.End, conf.GemportRange.EndId)
+				}
+			}
+		}
+	}
+
+	//TODO: is this an error in general or just for the how bbsim worked?
+	// assert.Equal(t, onusPerPon, res.OnuIdEnd-res.OnuIdStart+1, "The ONU ID range size is different that the number of ONUs per PON")
 }
 
 func Test_Olt_FindOnuBySn_Success(t *testing.T) {
