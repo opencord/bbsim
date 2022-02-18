@@ -21,6 +21,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 
+	"github.com/opencord/bbsim/internal/common"
 	me "github.com/opencord/omci-lib-go/v2/generated"
 )
 
@@ -70,6 +71,7 @@ const (
 	cardHolderOnuType byte = 0x01 // ONU is a single piece of integrated equipment
 	ethernetUnitType  byte = 0x2f // Ethernet BASE-T
 	xgsPonUnitType    byte = 0xee // XG-PON10G10
+	gPonUnitType      byte = 0xf5 // GPON12441244
 	potsUnitType      byte = 0x20 // POTS
 	cardHolderSlotID  byte = 0x01
 	tcontSlotId       byte = 0x80 // why is this not the same as the cardHolderSlotID, it does not point to anything
@@ -92,7 +94,7 @@ func GenerateUniPortEntityId(id uint32) EntityID {
 
 // creates a MIB database for a ONU
 // CircuitPack and CardHolder are static, everything else can be configured
-func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int) (*MibDb, error) {
+func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology common.PonTechnology) (*MibDb, error) {
 
 	mibDb := MibDb{
 		items: []MibDbEntry{},
@@ -116,12 +118,21 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int) (*MibDb, err
 	//	},
 	//})
 
-	// circuitPack XG-PON10G10
+	// ANI circuitPack
+	var aniCPType byte
+
+	switch technology {
+	case common.XGSPON:
+		aniCPType = xgsPonUnitType
+	case common.GPON:
+		aniCPType = gPonUnitType
+	}
+
 	mibDb.items = append(mibDb.items, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
-			me.CircuitPack_Type:          xgsPonUnitType,
+			me.CircuitPack_Type:          aniCPType,
 			me.CircuitPack_NumberOfPorts: 1, // NOTE is this the ANI port? must be
 			me.CircuitPack_SerialNumber:  ToOctets("BBSM-Circuit-Pack-ani", 20),
 			me.CircuitPack_Version:       ToOctets("v0.0.1", 20),

@@ -100,6 +100,7 @@ func (s BBSimServer) GetOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Olt, 
 
 		p := bbsim.PONPort{
 			ID:                int32(pon.ID),
+			Technology:        pon.Technology.String(),
 			OperState:         pon.OperState.Current(),
 			InternalState:     pon.InternalState.Current(),
 			PacketCount:       pon.PacketCount,

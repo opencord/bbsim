@@ -79,7 +79,7 @@ github.com/opencord/device-management-interface/go/dmi
 # github.com/opencord/omci-lib-go/v2 v2.2.0
 github.com/opencord/omci-lib-go/v2
 github.com/opencord/omci-lib-go/v2/generated
-# github.com/opencord/voltha-protos/v5 v5.2.1
+# github.com/opencord/voltha-protos/v5 v5.2.3
 github.com/opencord/voltha-protos/v5/go/ext/config
 github.com/opencord/voltha-protos/v5/go/extension
 github.com/opencord/voltha-protos/v5/go/openolt
@@ -117,12 +117,12 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# google.golang.org/genproto v0.0.0-20211207154714-918901c715cf
+# google.golang.org/genproto v0.0.0-20220208230804-65c12eb4c068
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/httpbody
 google.golang.org/genproto/googleapis/rpc/status
 google.golang.org/genproto/protobuf/field_mask
-# google.golang.org/grpc v1.42.0 => google.golang.org/grpc v1.25.1
+# google.golang.org/grpc v1.44.0 => google.golang.org/grpc v1.25.1
 google.golang.org/grpc
 google.golang.org/grpc/backoff
 google.golang.org/grpc/balancer

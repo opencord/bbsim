@@ -51,14 +51,6 @@ var oltLogger = log.WithFields(log.Fields{
 })
 
 const (
-	onuIdStart          = 1
-	allocIdStart        = 1024
-	gemPortIdPerAllocId = 8
-	gemportIdStart      = 1024
-	// The flow ids are no more necessary by the adapter, but still need to pass something dummy. Pass a very small valid range.
-	flowIdStart = 1
-	flowIdEnd   = flowIdStart + 1
-
 	//InternalState FSM states and transitions
 	OltInternalStateCreated     = "created"
 	OltInternalStateInitialized = "initialized"
@@ -107,12 +99,6 @@ type OltDevice struct {
 
 	OpenoltStream openolt.Openolt_EnableIndicationServer
 	enablePerf    bool
-
-	// resource ranges (only the ones that depends on the topology size)
-	onuIdEnd      uint32
-	allocIdPerOnu uint32
-	allocIdEnd    uint32
-	gemportIdEnd  uint32
 
 	// Allocated Resources
 	// this data are to verify that the openolt adapter does not duplicate resources
@@ -165,12 +151,6 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		OmciResponseRate:    options.Olt.OmciResponseRate,
 	}
 
-	// create the resource ranges based on the configuration
-	olt.onuIdEnd = onuIdStart + (options.Olt.OnusPonPort - 1)                                               // we need one ONU ID available per ONU, but the smaller the range the smaller the pool created in the openolt adapter
-	olt.allocIdPerOnu = uint32(olt.NumUni * len(common.Services))                                           // 1 allocId per Service * UNI
-	olt.allocIdEnd = allocIdStart + (options.Olt.OnusPonPort * olt.allocIdPerOnu)                           // 1 allocId per Service * UNI * ONU
-	olt.gemportIdEnd = gemportIdStart + (options.Olt.OnusPonPort * olt.allocIdPerOnu * gemPortIdPerAllocId) // up to 8 gemport-id per tcont/alloc-id
-
 	if val, ok := ControlledActivationModes[options.BBSim.ControlledActivation]; ok {
 		olt.ControlledActivation = val
 	} else {
@@ -218,14 +198,38 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 
 	// create PON ports
 	for i := 0; i < olt.NumPon; i++ {
+		ponConf, err := common.GetPonConfigById(uint32(i))
+		if err != nil {
+			oltLogger.WithFields(log.Fields{
+				"Err":    err,
+				"IntfId": i,
+			}).Fatal("cannot-get-pon-configuration")
+		}
+
+		tech, err := common.PonTechnologyFromString(ponConf.Technology)
+		if err != nil {
+			oltLogger.WithFields(log.Fields{
+				"Err":    err,
+				"IntfId": i,
+			}).Fatal("unkown-pon-port-technology")
+		}
 
 		// initialize the resource maps for every PON Ports
 		olt.AllocIDs[uint32(i)] = make(map[uint32]map[uint32]map[int32]map[uint64]bool)
 		olt.GemPortIDs[uint32(i)] = make(map[uint32]map[uint32]map[int32]map[uint64]bool)
 
-		p := CreatePonPort(&olt, uint32(i))
+		p := CreatePonPort(&olt, uint32(i), tech)
 
 		// create ONU devices
+		if (ponConf.OnuRange.EndId - ponConf.OnuRange.StartId + 1) < uint32(olt.NumOnuPerPon) {
+			oltLogger.WithFields(log.Fields{
+				"OnuRange":     ponConf.OnuRange,
+				"RangeSize":    ponConf.OnuRange.EndId - ponConf.OnuRange.StartId + 1,
+				"NumOnuPerPon": olt.NumOnuPerPon,
+				"IntfId":       i,
+			}).Fatal("onus-per-pon-bigger-than-resource-range-size")
+		}
+
 		for j := 0; j < olt.NumOnuPerPon; j++ {
 			delay := time.Duration(olt.Delay*j) * time.Millisecond
 			o := CreateONU(&olt, p, uint32(j+1), delay, nextCtag, nextStag, isMock)
@@ -1278,62 +1282,48 @@ func (o *OltDevice) GetOnuByFlowId(flowId uint64) (*Onu, error) {
 }
 
 func (o *OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.DeviceInfo, error) {
-
-	intfIDs := []uint32{}
-	for i := 0; i < o.NumPon; i++ {
-		intfIDs = append(intfIDs, uint32(i))
-	}
-
 	devinfo := &openolt.DeviceInfo{
 		Vendor:              common.Config.Olt.Vendor,
 		Model:               common.Config.Olt.Model,
 		HardwareVersion:     common.Config.Olt.HardwareVersion,
 		FirmwareVersion:     common.Config.Olt.FirmwareVersion,
-		Technology:          common.Config.Olt.Technology,
 		PonPorts:            uint32(o.NumPon),
-		OnuIdStart:          onuIdStart,
-		OnuIdEnd:            o.onuIdEnd,
-		AllocIdStart:        allocIdStart,
-		AllocIdEnd:          o.allocIdEnd,
-		GemportIdStart:      gemportIdStart,
-		GemportIdEnd:        o.gemportIdEnd,
-		FlowIdStart:         flowIdStart,
-		FlowIdEnd:           flowIdEnd,
 		DeviceSerialNumber:  o.SerialNumber,
 		DeviceId:            common.Config.Olt.DeviceId,
 		PreviouslyConnected: o.PreviouslyConnected,
-		Ranges: []*openolt.DeviceInfo_DeviceResourceRanges{
-			{
-				IntfIds:    intfIDs,
-				Technology: common.Config.Olt.Technology,
-				Pools: []*openolt.DeviceInfo_DeviceResourceRanges_Pool{
-					{
-						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_ONU_ID,
-						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
-						Start:   onuIdStart,
-						End:     o.onuIdEnd,
-					},
-					{
-						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_ALLOC_ID,
-						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
-						Start:   allocIdStart,
-						End:     o.allocIdEnd,
-					},
-					{
-						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_GEMPORT_ID,
-						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
-						Start:   gemportIdStart,
-						End:     o.gemportIdEnd,
-					},
-					{
-						Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_FLOW_ID,
-						Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_SHARED_BY_ALL_INTF_ALL_TECH,
-						Start:   flowIdStart,
-						End:     flowIdEnd,
-					},
+		Ranges:              []*openolt.DeviceInfo_DeviceResourceRanges{},
+	}
+
+	for _, resRange := range common.PonsConfig.Ranges {
+		intfIDs := []uint32{}
+		for i := resRange.PonRange.StartId; i <= resRange.PonRange.EndId; i++ {
+			intfIDs = append(intfIDs, uint32(i))
+		}
+
+		devinfo.Ranges = append(devinfo.Ranges, &openolt.DeviceInfo_DeviceResourceRanges{
+			IntfIds:    intfIDs,
+			Technology: resRange.Technology,
+			Pools: []*openolt.DeviceInfo_DeviceResourceRanges_Pool{
+				{
+					Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_ONU_ID,
+					Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
+					Start:   resRange.OnuRange.StartId,
+					End:     resRange.OnuRange.EndId,
+				},
+				{
+					Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_ALLOC_ID,
+					Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
+					Start:   resRange.AllocIdRange.StartId,
+					End:     resRange.AllocIdRange.EndId,
+				},
+				{
+					Type:    openolt.DeviceInfo_DeviceResourceRanges_Pool_GEMPORT_ID,
+					Sharing: openolt.DeviceInfo_DeviceResourceRanges_Pool_DEDICATED_PER_INTF,
+					Start:   resRange.GemportRange.StartId,
+					End:     resRange.GemportRange.EndId,
 				},
 			},
-		},
+		})
 	}
 
 	oltLogger.WithFields(log.Fields{
@@ -1341,16 +1331,7 @@ func (o *OltDevice) GetDeviceInfo(context.Context, *openolt.Empty) (*openolt.Dev
 		"Model":               devinfo.Model,
 		"HardwareVersion":     devinfo.HardwareVersion,
 		"FirmwareVersion":     devinfo.FirmwareVersion,
-		"Technology":          devinfo.Technology,
 		"PonPorts":            devinfo.PonPorts,
-		"OnuIdStart":          devinfo.OnuIdStart,
-		"OnuIdEnd":            devinfo.OnuIdEnd,
-		"AllocIdStart":        devinfo.AllocIdStart,
-		"AllocIdEnd":          devinfo.AllocIdEnd,
-		"GemportIdStart":      devinfo.GemportIdStart,
-		"GemportIdEnd":        devinfo.GemportIdEnd,
-		"FlowIdStart":         devinfo.FlowIdStart,
-		"FlowIdEnd":           devinfo.FlowIdEnd,
 		"DeviceSerialNumber":  devinfo.DeviceSerialNumber,
 		"DeviceId":            devinfo.DeviceId,
 		"PreviouslyConnected": devinfo.PreviouslyConnected,
