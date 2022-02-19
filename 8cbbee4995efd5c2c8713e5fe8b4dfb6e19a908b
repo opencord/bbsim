@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e32a412c_fecdd21e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-02-19T02:24:35Z",
+      "side": 1,
+      "message": "This looks great !",
+      "revId": "8cbbee4995efd5c2c8713e5fe8b4dfb6e19a908b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3715761a_938dbb8a",
+        "filename": "internal/common/options.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 568,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-02-19T02:24:35Z",
+      "side": 1,
+      "message": "Should we also add another basic check here that the resource ids \u0027start\u0027/\u0027end\u0027 values are greater than 0 and \u0027end\u0027 \u003e \u0027start\u0027",
+      "revId": "8cbbee4995efd5c2c8713e5fe8b4dfb6e19a908b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
