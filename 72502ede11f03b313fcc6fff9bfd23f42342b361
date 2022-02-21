@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "38e5d4bc_32015577",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-02-21T17:35:02Z",
+      "side": 1,
+      "message": "What happens when the user requests more ONUs per PON than the size of the range?\nRight now I log an error and limit the number of created ONUs to the size of the range.\nShould it be a fatal error instead?",
+      "range": {
+        "startLine": 228,
+        "startChar": 2,
+        "endLine": 239,
+        "endChar": 40
+      },
+      "revId": "72502ede11f03b313fcc6fff9bfd23f42342b361",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e3659039_7a7806f7",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1303,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-02-21T17:35:02Z",
+      "side": 1,
+      "message": "Can someone confirm if we should deprecate this information in addition to the Technology attribute?\nIt seems to me that they refer to resource ranges as a property of the whole OLT,and to the best of my knowledge I could not find any reference to them in the adapters.",
+      "range": {
+        "startLine": 1297,
+        "startChar": 2,
+        "endLine": 1303,
+        "endChar": 40
+      },
+      "revId": "72502ede11f03b313fcc6fff9bfd23f42342b361",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
