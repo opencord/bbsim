@@ -72,6 +72,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "cbc8911a_7a8d8a04",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-02-22T19:59:29Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6a3699fa_582485d7",
+      "range": {
+        "startLine": 228,
+        "startChar": 2,
+        "endLine": 239,
+        "endChar": 40
+      },
+      "revId": "72502ede11f03b313fcc6fff9bfd23f42342b361",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "e3659039_7a7806f7",
@@ -133,6 +157,30 @@
       "side": 1,
       "message": "agreed to the cleanup of openolt.proto please Create a jira Elia.",
       "parentUuid": "e319e4ff_955b4902",
+      "range": {
+        "startLine": 1297,
+        "startChar": 2,
+        "endLine": 1303,
+        "endChar": 40
+      },
+      "revId": "72502ede11f03b313fcc6fff9bfd23f42342b361",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ab3acab3_6ff38474",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1303,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-02-22T19:59:29Z",
+      "side": 1,
+      "message": "Ack\nWe do not use this anymore. Ok to remove them.",
+      "parentUuid": "3ff00468_1033c29f",
       "range": {
         "startLine": 1297,
         "startChar": 2,
