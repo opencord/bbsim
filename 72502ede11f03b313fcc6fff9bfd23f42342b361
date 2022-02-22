@@ -26,6 +26,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "a9b9b428_9460d095",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-02-22T18:38:36Z",
+      "side": 1,
+      "message": "Yes, I believe we should terminate the app with a fatal error, otherwise we silently get a behavior different than the requested one silently.\n\nIt\u0027s exactly the same scenario I spent a day debugging a couple weeks ago (requesting 4k ONUs and getting 2048), if BBSim had crashed it would have saved some time.",
+      "parentUuid": "38e5d4bc_32015577",
+      "range": {
+        "startLine": 228,
+        "startChar": 2,
+        "endLine": 239,
+        "endChar": 40
+      },
+      "revId": "72502ede11f03b313fcc6fff9bfd23f42342b361",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "e3659039_7a7806f7",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 6
@@ -37,6 +61,30 @@
       "writtenOn": "2022-02-21T17:35:02Z",
       "side": 1,
       "message": "Can someone confirm if we should deprecate this information in addition to the Technology attribute?\nIt seems to me that they refer to resource ranges as a property of the whole OLT,and to the best of my knowledge I could not find any reference to them in the adapters.",
+      "range": {
+        "startLine": 1297,
+        "startChar": 2,
+        "endLine": 1303,
+        "endChar": 40
+      },
+      "revId": "72502ede11f03b313fcc6fff9bfd23f42342b361",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e319e4ff_955b4902",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 1303,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-02-22T18:38:36Z",
+      "side": 1,
+      "message": "@Girish would probably know best, but if they\u0027re not used I would say let\u0027s remove them. We should probably cleanup the openolt.proto as well.",
+      "parentUuid": "e3659039_7a7806f7",
       "range": {
         "startLine": 1297,
         "startChar": 2,
