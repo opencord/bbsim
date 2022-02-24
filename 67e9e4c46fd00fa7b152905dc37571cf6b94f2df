@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7176c727_8d0be36a",
+        "filename": "internal/bbsim/devices/services.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-02-24T13:04:47Z",
+      "side": 0,
+      "message": "I removed this because I think this is already implemented, since this function is only called when a DHCP flow is received",
+      "range": {
+        "startLine": 379,
+        "startChar": 1,
+        "endLine": 379,
+        "endChar": 65
+      },
+      "revId": "67e9e4c46fd00fa7b152905dc37571cf6b94f2df",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
