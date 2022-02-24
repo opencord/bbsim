@@ -183,7 +183,9 @@ func NewService(id uint32, name string, hwAddress net.HardwareAddr, uni *UniPort
 					for {
 						select {
 						case <-service.UniPort.Onu.PonPort.Olt.enableContext.Done():
-							// if the OLT is disabled, then cancel
+							serviceLogger.WithFields(log.Fields{
+								"context": service.UniPort.Onu.PonPort.Olt.enableContext,
+							}).Debug("EAPOL cancelled, OLT is disabled")
 							return
 						case <-time.After(eapolWaitTime):
 							if service.EapolState.Current() != eapol.StateResponseSuccessReceived {
@@ -237,7 +239,9 @@ func NewService(id uint32, name string, hwAddress net.HardwareAddr, uni *UniPort
 					for {
 						select {
 						case <-service.UniPort.Onu.PonPort.Olt.enableContext.Done():
-							// if the OLT is disabled, then cancel
+							serviceLogger.WithFields(log.Fields{
+								"context": service.UniPort.Onu.PonPort.Olt.enableContext,
+							}).Debug("DHCP cancelled, OLT is disabled")
 							return
 						case <-time.After(dhcpWaitTime):
 							if service.DHCPState.Current() != "dhcp_ack_received" {
@@ -331,6 +335,15 @@ func (s *Service) HandleAuth() {
 		return
 	}
 
+	serviceLogger.WithFields(log.Fields{
+		"OnuId":      s.UniPort.Onu.ID,
+		"IntfId":     s.UniPort.Onu.PonPortID,
+		"OnuSn":      s.UniPort.Onu.Sn(),
+		"PortNo":     s.UniPort.PortNo,
+		"UniId":      s.UniPort.ID,
+		"Name":       s.Name,
+		"NeedsEapol": s.NeedsEapol,
+	}).Debug("Starting EAPOL for the service")
 	if err := s.EapolState.Event(eapol.EventStartAuth); err != nil {
 		serviceLogger.WithFields(log.Fields{
 			"OnuId":  s.UniPort.Onu.ID,
@@ -376,8 +389,15 @@ func (s *Service) HandleDhcp(pbit uint8, cTag int) {
 		return
 	}
 
-	// TODO check if the DHCP flow was received before starting DHCP
-
+	serviceLogger.WithFields(log.Fields{
+		"OnuId":      s.UniPort.Onu.ID,
+		"IntfId":     s.UniPort.Onu.PonPortID,
+		"OnuSn":      s.UniPort.Onu.Sn(),
+		"PortNo":     s.UniPort.PortNo,
+		"UniId":      s.UniPort.ID,
+		"Name":       s.Name,
+		"NeedsEapol": s.NeedsEapol,
+	}).Debug("Starting DHCP for the service")
 	if err := s.DHCPState.Event("start_dhcp"); err != nil {
 		serviceLogger.WithFields(log.Fields{
 			"OnuId":  s.UniPort.Onu.ID,

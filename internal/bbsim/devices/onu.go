@@ -1397,10 +1397,27 @@ func (o *Onu) handleFlowAdd(msg bbsim.OnuFlowUpdateMessage) {
 	uni.StorePortNo(msg.Flow.PortNo)
 
 	if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeEAPOL) && msg.Flow.Classifier.OVid == 4091 {
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"OnuId":        o.ID,
+			"UniId":        msg.Flow.UniId,
+			"PortNo":       msg.Flow.PortNo,
+			"SerialNumber": o.Sn(),
+			"FlowId":       msg.Flow.FlowId,
+		}).Debug("EAPOL flow detected")
 		uni.HandleAuth()
 	} else if msg.Flow.Classifier.EthType == uint32(layers.EthernetTypeIPv4) &&
 		msg.Flow.Classifier.SrcPort == uint32(68) &&
 		msg.Flow.Classifier.DstPort == uint32(67) {
+		onuLogger.WithFields(log.Fields{
+			"IntfId":       o.PonPortID,
+			"OnuId":        o.ID,
+			"UniId":        msg.Flow.UniId,
+			"PortNo":       msg.Flow.PortNo,
+			"SerialNumber": o.Sn(),
+			"FlowId":       msg.Flow.FlowId,
+			"FlowType":     msg.Flow.FlowType,
+		}).Debug("DHCP flow detected")
 		uni.HandleDhcp(uint8(msg.Flow.Classifier.OPbits), int(msg.Flow.Classifier.OVid))
 	}
 }
