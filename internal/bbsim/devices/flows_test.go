@@ -42,6 +42,20 @@ func getTestOlt(t *testing.T, ctx context.Context, services []common.ServiceYaml
 		},
 	}
 
+	allocIdPerOnu := uint32(common.Config.Olt.UniPorts * uint32(len(common.Services)))
+	common.PonsConfig = &common.PonPortsConfig{
+		Number: common.Config.Olt.PonPorts,
+		Ranges: []common.PonRangeConfig{
+			{
+				PonRange:     common.IdRange{StartId: 0, EndId: common.Config.Olt.PonPorts - 1},
+				Technology:   common.XGSPON.String(),
+				OnuRange:     common.IdRange{StartId: 1, EndId: 1 + (common.Config.Olt.OnusPonPort - 1)},
+				AllocIdRange: common.IdRange{StartId: 1024, EndId: 1024 + (common.Config.Olt.OnusPonPort * allocIdPerOnu)},
+				GemportRange: common.IdRange{StartId: 1024, EndId: 1024 + common.Config.Olt.OnusPonPort*allocIdPerOnu*8},
+			},
+		},
+	}
+
 	olt = CreateOLT(*common.Config, common.Services, true)
 
 	stream = &mockStream{

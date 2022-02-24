@@ -19,6 +19,7 @@ package omci
 import (
 	"testing"
 
+	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
 	"github.com/stretchr/testify/assert"
@@ -56,7 +57,7 @@ func TestEntityID_Equals(t *testing.T) {
 
 func Test_GenerateMibDatabase(t *testing.T) {
 	const uniPortCount = 4
-	mibDb, err := GenerateMibDatabase(uniPortCount, 0)
+	mibDb, err := GenerateMibDatabase(uniPortCount, 0, common.XGSPON)
 
 	expectedItems := 9                     //ONU-G + 2 Circuit Packs (4 messages each)
 	expectedItems += 2 * uniPortCount      // 1 PPTP and 1 UniG per UNI
@@ -94,7 +95,7 @@ func Test_GenerateMibDatabase(t *testing.T) {
 func Test_GenerateMibDatabase_withPots(t *testing.T) {
 	const uniPortCount = 4
 	const potsPortCount = 1
-	mibDb, err := GenerateMibDatabase(uniPortCount, potsPortCount)
+	mibDb, err := GenerateMibDatabase(uniPortCount, potsPortCount, common.XGSPON)
 
 	expectedItems := 13                                      //ONU-G + 3 Circuit Packs (4 messages each)
 	expectedItems += 2 * (uniPortCount + potsPortCount)      // 1 PPTP and 1 UniG per UNI
