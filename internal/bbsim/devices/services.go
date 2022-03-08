@@ -48,12 +48,14 @@ const (
 
 	ServiceTxInitialize = "initialize"
 	ServiceTxDisable    = "disable"
+
+	fttbDpuMgmtServiceName = "DPU_MGMT_TRAFFIC"
 )
 
 type ServiceIf interface {
-	HandlePackets()                  // start listening on the PacketCh
-	HandleAuth()                     // Sends the EapoStart packet
-	HandleDhcp(pbit uint8, cTag int) // Sends the DHCPDiscover packet
+	HandlePackets()                   // start listening on the PacketCh
+	HandleAuth()                      // Sends the EapoStart packet
+	HandleDhcp(oPbit uint8, oVid int) // Sends the DHCPDiscover packet
 
 	Initialize(stream bbsimTypes.Stream)
 	UpdateStream(stream bbsimTypes.Stream)
@@ -358,20 +360,30 @@ func (s *Service) HandleAuth() {
 }
 
 // HandleDhcp is used to start DHCP for a particular Service when the corresponding flow is received
-func (s *Service) HandleDhcp(pbit uint8, cTag int) {
+func (s *Service) HandleDhcp(oPbit uint8, oVid int) {
+	var compareTag int
+	var comparePbits uint8
 
-	if s.CTag != cTag || (s.UsPonCTagPriority != pbit && pbit != 255) {
+	if s.Name == fttbDpuMgmtServiceName {
+		compareTag = s.STag
+		comparePbits = s.UsPonSTagPriority
+	} else {
+		compareTag = s.CTag
+		comparePbits = s.UsPonCTagPriority
+	}
+
+	if compareTag != oVid || (comparePbits != oPbit && oPbit != 255) {
 		serviceLogger.WithFields(log.Fields{
-			"OnuId":                     s.UniPort.Onu.ID,
-			"IntfId":                    s.UniPort.Onu.PonPortID,
-			"OnuSn":                     s.UniPort.Onu.Sn(),
-			"PortNo":                    s.UniPort.PortNo,
-			"UniId":                     s.UniPort.ID,
-			"Name":                      s.Name,
-			"Service.CTag":              s.CTag,
-			"Service.UsPonCTagPriority": s.UsPonCTagPriority,
-			"cTag":                      cTag,
-			"pbit":                      pbit,
+			"OnuId":        s.UniPort.Onu.ID,
+			"IntfId":       s.UniPort.Onu.PonPortID,
+			"OnuSn":        s.UniPort.Onu.Sn(),
+			"PortNo":       s.UniPort.PortNo,
+			"UniId":        s.UniPort.ID,
+			"Name":         s.Name,
+			"compareTag":   compareTag,
+			"comparePbits": comparePbits,
+			"oVid":         oVid,
+			"oPbit":        oPbit,
 		}).Debug("DHCP flow is not for this service, ignoring")
 		return
 	}
