@@ -322,7 +322,11 @@ func (o *OltDevice) RestartOLT() error {
 			}
 
 			for _, onu := range pon.Onus {
-				_ = onu.InternalState.Event(OnuTxDisable)
+				err := onu.InternalState.Event(OnuTxDisable)
+				oltLogger.WithFields(log.Fields{
+					"oltId": o.ID,
+					"onuId": onu.ID,
+				}).Errorf("Error disabling ONUs on OLT soft reboot: %v", err)
 			}
 		}
 	} else {
@@ -331,7 +335,11 @@ func (o *OltDevice) RestartOLT() error {
 			// ONUs are not automatically disabled when a PON goes down
 			// as it's possible that it's an admin down and in that case the ONUs need to keep their state
 			for _, onu := range pon.Onus {
-				_ = onu.InternalState.Event(OnuTxDisable)
+				err := onu.InternalState.Event(OnuTxDisable)
+				oltLogger.WithFields(log.Fields{
+					"oltId": o.ID,
+					"onuId": onu.ID,
+				}).Errorf("Error disabling ONUs on OLT reboot: %v", err)
 			}
 		}
 	}
@@ -341,6 +349,10 @@ func (o *OltDevice) RestartOLT() error {
 
 	// terminate the OLT's processOltMessages go routine
 	close(o.channel)
+
+	oltLogger.WithFields(log.Fields{
+		"oltId": o.ID,
+	}).Infof("Waiting OLT restart for... (%ds)", rebootDelay)
 
 	//Prevents Enable to progress before the reboot is completed (VOL-4616)
 	o.Lock()
@@ -400,6 +412,10 @@ func (o *OltDevice) StopOltServer() {
 		}).Warnf("Stopping OLT gRPC server")
 		o.OltServer.Stop()
 		o.OltServer = nil
+	} else {
+		oltLogger.WithFields(log.Fields{
+			"oltId": o.SerialNumber,
+		}).Warnf("OLT gRPC server is already stopped")
 	}
 }
 
