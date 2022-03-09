@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "337ecabb_187c1414",
+        "filename": "internal/bbsim/devices/services.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-03-09T17:08:53Z",
+      "side": 1,
+      "message": "we should probably replace this with the \"compareTag\" and \"comparePbit\" for easier debugging.",
+      "range": {
+        "startLine": 383,
+        "startChar": 3,
+        "endLine": 384,
+        "endChar": 52
+      },
+      "revId": "70867233f506cc00793f65a54f6ee1883e8b5736",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
