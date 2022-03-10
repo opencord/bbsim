@@ -152,6 +152,7 @@ func main() {
 		"NumOnuPerPon":                common.Config.Olt.OnusPonPort,
 		"PonConfiguration":            *common.PonsConfig,
 		"TotalOnus":                   common.Config.Olt.PonPorts * common.Config.Olt.OnusPonPort,
+		"NniDhcpTrapVid":              common.Config.Olt.NniDhcpTrapVid,
 		"Delay":                       common.Config.BBSim.Delay,
 		"Events":                      common.Config.BBSim.Events,
 		"KafkaEventTopic":             common.Config.BBSim.KafkaEventTopic,

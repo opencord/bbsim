@@ -53,6 +53,7 @@ message Olt {
     string IP = 7;
     repeated NNIPort NNIPorts = 5;
     repeated PONPort PONPorts = 6;
+    int32 NniDhcpTrapVid = 8;
 }
 
 message OltAllocatedResourceType {

@@ -90,6 +90,7 @@ type SadisOltEntry struct {
 	IPAddress          string `json:"ipAddress"`
 	NasID              string `json:"nasId"`
 	UplinkPort         int    `json:"uplinkPort"`
+	NniDhcpTrapVid     int    `json:"nniDhcpTrapVid,omitempty"`
 }
 
 type SadisOnuEntryV2 struct {
@@ -178,6 +179,7 @@ func GetOltEntry(olt *devices.OltDevice) (*SadisOltEntry, error) {
 		IPAddress:          ip,
 		NasID:              olt.SerialNumber,
 		UplinkPort:         16777216, // TODO currently assumes we only have one NNI port
+		NniDhcpTrapVid:     olt.NniDhcpTrapVid,
 	}
 	return solt, nil
 }

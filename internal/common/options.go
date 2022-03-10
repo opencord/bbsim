@@ -94,6 +94,7 @@ type OltConfig struct {
 	OmciResponseRate   uint8  `yaml:"omci_response_rate"`
 	UniPorts           uint32 `yaml:"uni_ports"`
 	PotsPorts          uint32 `yaml:"pots_ports"`
+	NniDhcpTrapVid     uint32 `yaml:"nni_dhcp_trap_vid"`
 }
 
 type PonPortsConfig struct {
@@ -333,6 +334,7 @@ func readCliParams() *GlobalConfig {
 	onu := flag.Int("onu", int(conf.Olt.OnusPonPort), "Number of ONU devices per PON port to be emulated")
 	uni := flag.Int("uni", int(conf.Olt.UniPorts), "Number of Ethernet UNI Ports per ONU device to be emulated")
 	pots := flag.Int("pots", int(conf.Olt.PotsPorts), "Number of POTS UNI Ports per ONU device to be emulated")
+	NniDchpTrapVid := flag.Int("nni_dhcp_trap_vid", int(conf.Olt.NniDhcpTrapVid), "Vlan to trap the DHCP packets on")
 
 	oltRebootDelay := flag.Int("oltRebootDelay", conf.Olt.OltRebootDelay, "Time that BBSim should before restarting after a reboot")
 	omci_response_rate := flag.Int("omci_response_rate", int(conf.Olt.OmciResponseRate), "Amount of OMCI messages to respond to")
@@ -367,6 +369,7 @@ func readCliParams() *GlobalConfig {
 	conf.Olt.UniPorts = uint32(*uni)
 	conf.Olt.PotsPorts = uint32(*pots)
 	conf.Olt.OnusPonPort = uint32(*onu)
+	conf.Olt.NniDhcpTrapVid = uint32(*NniDchpTrapVid)
 	conf.Olt.OltRebootDelay = *oltRebootDelay
 	conf.Olt.OmciResponseRate = uint8(*omci_response_rate)
 	conf.BBSim.ConfigFile = *configFile
@@ -450,6 +453,7 @@ func getDefaultOps() *GlobalConfig {
 			OmciResponseRate:   10,
 			UniPorts:           4,
 			PotsPorts:          0,
+			NniDhcpTrapVid:     0,
 		},
 		BBRConfig{
 			LogLevel:  "debug",

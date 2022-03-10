@@ -77,6 +77,7 @@ type OltDevice struct {
 	NumOnuPerPon         int
 	NumUni               int
 	NumPots              int
+	NniDhcpTrapVid       int
 	InternalState        *fsm.FSM
 	channel              chan types.Message
 	dhcpServer           dhcp.DHCPServerIf
@@ -117,13 +118,14 @@ func GetOLT() *OltDevice {
 
 func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMock bool) *OltDevice {
 	oltLogger.WithFields(log.Fields{
-		"ID":           options.Olt.ID,
-		"NumNni":       options.Olt.NniPorts,
-		"NniSpeed":     options.Olt.NniSpeed,
-		"NumPon":       options.Olt.PonPorts,
-		"NumOnuPerPon": options.Olt.OnusPonPort,
-		"NumUni":       options.Olt.UniPorts,
-		"NumPots":      options.Olt.PotsPorts,
+		"ID":             options.Olt.ID,
+		"NumNni":         options.Olt.NniPorts,
+		"NniSpeed":       options.Olt.NniSpeed,
+		"NumPon":         options.Olt.PonPorts,
+		"NumOnuPerPon":   options.Olt.OnusPonPort,
+		"NumUni":         options.Olt.UniPorts,
+		"NumPots":        options.Olt.PotsPorts,
+		"NniDhcpTrapVid": options.Olt.NniDhcpTrapVid,
 	}).Debug("CreateOLT")
 
 	olt = OltDevice{
@@ -138,6 +140,7 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		NumOnuPerPon:        int(options.Olt.OnusPonPort),
 		NumUni:              int(options.Olt.UniPorts),
 		NumPots:             int(options.Olt.PotsPorts),
+		NniDhcpTrapVid:      int(options.Olt.NniDhcpTrapVid),
 		Pons:                []*PonPort{},
 		Nnis:                []*NniPort{},
 		Delay:               options.BBSim.Delay,
