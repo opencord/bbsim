@@ -124,6 +124,7 @@ func (s BBSimServer) GetOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Olt, 
 		IP:            oltAddress,
 		NNIPorts:      nnis,
 		PONPorts:      pons,
+		NniDhcpTrapVid: int32(olt.NniDhcpTrapVid),
 	}
 	return &res, nil
 }

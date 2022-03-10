@@ -45,7 +45,10 @@ var imageRequests = 0
 // - static files for software image download
 func StartRestServer(olt *devices.OltDevice, wg *sync.WaitGroup) {
 	addr := common.Config.BBSim.SadisRestAddress
-	logger.Infof("WEBSERVER server listening on %s", addr)
+	logger.WithFields(log.Fields{
+		"olt": *olt,
+		"oltTrapVId": olt.NniDhcpTrapVid,
+	}).Infof("WEBSERVER server listening on %s", addr)
 	s := &sadis.SadisServer{
 		Olt: olt,
 	}
