@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	DEFAULT_OLT_DEVICE_HEADER_FORMAT    = "table{{ .ID }}\t{{ .SerialNumber }}\t{{ .OperState }}\t{{ .InternalState }}\t{{ .IP }}"
+	DEFAULT_OLT_DEVICE_HEADER_FORMAT    = "table{{ .ID }}\t{{ .SerialNumber }}\t{{ .OperState }}\t{{ .InternalState }}\t{{ .IP }}\t{{ .NniDhcpTrapVid }}"
 	DEFAULT_OLT_RESOURCES_HEADER_FORMAT = "table{{ .Type }}\t{{ .PonPortId }}\t{{ .OnuId }}\t{{ .PortNo }}\t{{ .ResourceId }}\t{{ .FlowId }}"
 	DEFAULT_NNI_PORT_HEADER_FORMAT      = "table{{ .ID }}\t{{ .OperState }}\t{{ .InternalState }}\t{{ .PacketCount }}"
 	DEFAULT_PON_PORT_HEADER_FORMAT      = "table{{ .ID }}\t{{ .Technology }}\t{{ .OperState }}\t{{ .InternalState }}\t{{ .PacketCount }}\t{{ .AllocatedOnuIds }}\t{{ .AllocatedGemPorts }}\t{{ .AllocatedAllocIds }}"

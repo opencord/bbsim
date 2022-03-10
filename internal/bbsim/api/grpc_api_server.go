@@ -117,13 +117,14 @@ func (s BBSimServer) GetOlt(ctx context.Context, req *bbsim.Empty) (*bbsim.Olt, 
 	}
 
 	res := bbsim.Olt{
-		ID:            int32(olt.ID),
-		SerialNumber:  olt.SerialNumber,
-		OperState:     olt.OperState.Current(),
-		InternalState: olt.InternalState.Current(),
-		IP:            oltAddress,
-		NNIPorts:      nnis,
-		PONPorts:      pons,
+		ID:             int32(olt.ID),
+		SerialNumber:   olt.SerialNumber,
+		OperState:      olt.OperState.Current(),
+		InternalState:  olt.InternalState.Current(),
+		IP:             oltAddress,
+		NNIPorts:       nnis,
+		PONPorts:       pons,
+		NniDhcpTrapVid: int32(olt.NniDhcpTrapVid),
 	}
 	return &res, nil
 }
