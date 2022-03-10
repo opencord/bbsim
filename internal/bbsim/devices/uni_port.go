@@ -18,6 +18,8 @@ package devices
 
 import (
 	"fmt"
+	"net"
+
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
@@ -25,7 +27,6 @@ import (
 	"github.com/opencord/bbsim/internal/common"
 	omcilib "github.com/opencord/bbsim/internal/common/omci"
 	log "github.com/sirupsen/logrus"
-	"net"
 )
 
 var uniLogger = log.WithFields(log.Fields{
@@ -255,9 +256,9 @@ func (u *UniPort) HandleAuth() {
 	}
 }
 
-func (u *UniPort) HandleDhcp(pbit uint8, cTag int) {
+func (u *UniPort) HandleDhcp(oPbit uint8, oVid int) {
 	for _, s := range u.Services {
-		s.HandleDhcp(pbit, cTag)
+		s.HandleDhcp(oPbit, oVid)
 	}
 }
 
