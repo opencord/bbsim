@@ -24,6 +24,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "c82442aa_0c045e2a",
+        "filename": "internal/bbsim/api/grpc_api_server.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-03-11T14:21:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "47b0bf4d_c746e589",
+      "range": {
+        "startLine": 127,
+        "startChar": 2,
+        "endLine": 127,
+        "endChar": 18
+      },
+      "revId": "c406bba405b360a2f67847e805ee21d7e0e8269a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "8fe5eea2_8a7a9741",
@@ -37,6 +61,30 @@
       "writtenOn": "2022-03-10T22:31:51Z",
       "side": 1,
       "message": "isn\u0027t this already logged as part of \"Olt\"? I\u0027d say either we log all the fields individually or we don\u0027t, but I don\u0027t think we need them in the WEBSERVER start, they are already logged as part of the configuration",
+      "range": {
+        "startLine": 50,
+        "startChar": 2,
+        "endLine": 50,
+        "endChar": 35
+      },
+      "revId": "c406bba405b360a2f67847e805ee21d7e0e8269a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f0136715_233b9448",
+        "filename": "internal/bbsim/responders/webserver/webserver.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-03-11T14:21:33Z",
+      "side": 1,
+      "message": "added it for debugging purposes, removing entirely",
+      "parentUuid": "8fe5eea2_8a7a9741",
       "range": {
         "startLine": 50,
         "startChar": 2,
