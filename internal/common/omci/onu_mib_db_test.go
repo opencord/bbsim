@@ -146,7 +146,7 @@ func Test_GenerateMibDatabase_withUnkownAttrs(t *testing.T) {
 
 	common.Config = &common.GlobalConfig{
 		BBSim: common.BBSimConfig{
-			InjectOmciUnknownAttributes: true,
+			InjectOmciUnknownMe: true,
 		},
 	}
 
