@@ -467,24 +467,42 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 	}
 
 	// ONU-2g
-	mibDb.items = append(mibDb.items, MibDbEntry{
+
+	onu2g := MibDbEntry{
 		me.Onu2GClassID,
 		EntityID{0x00, 0x00},
 		me.AttributeValueMap{
-			me.Onu2G_ConnectivityCapability:                      127,
-			me.Onu2G_CurrentConnectivityMode:                     0,
-			me.Onu2G_Deprecated:                                  1,
-			me.Onu2G_PriorityQueueScaleFactor:                    1,
-			me.Onu2G_QualityOfServiceQosConfigurationFlexibility: 63,
-			me.Onu2G_Sysuptime:                                   0,
-			me.Onu2G_TotalGemPortIdNumber:                        8,
+			//me.Onu2G_EquipmentId: 1,
+			//me.Onu2G_OpticalNetworkUnitManagementAndControlChannelOmccVersion: 2,
+			//me.Onu2G_VendorProductCode: 3,
+			//me.Onu2G_SecurityCapability: 4,
+			//me.Onu2G_SecurityMode: 5,
+
 			me.Onu2G_TotalPriorityQueueNumber:                    64,
 			me.Onu2G_TotalTrafficSchedulerNumber:                 8,
+			me.Onu2G_Deprecated:                                  1,
+			me.Onu2G_TotalGemPortIdNumber:                        8,
+			me.Onu2G_Sysuptime:                                   6,
+			me.Onu2G_ConnectivityCapability:                      127,
+			me.Onu2G_CurrentConnectivityMode:                     7,
+			me.Onu2G_QualityOfServiceQosConfigurationFlexibility: 63,
+			me.Onu2G_PriorityQueueScaleFactor:                    1,
 		},
 		nil,
-	})
+	}
 
 	if common.Config.BBSim.InjectOmciUnknownAttributes {
+		onu2g = MibDbEntry{
+			me.Onu2GClassID,
+			nil,
+			me.AttributeValueMap{},
+			[]byte{129, 41, 46, 10, 0, 2, 0, 0, 1, 1, 0, 0, 7, 253, 0, 64, 8, 1, 0, 8, 0, 0, 0, 6, 0, 127, 7, 0, 63, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 40},
+		}
+	}
+
+	mibDb.items = append(mibDb.items, onu2g)
+
+	if common.Config.BBSim.InjectOmciUnknownMe {
 		// NOTE the TxID is actually replaced
 		// by SetTxIdInEncodedPacket in CreateMibUploadNextResponse
 		txId := uint16(33066)

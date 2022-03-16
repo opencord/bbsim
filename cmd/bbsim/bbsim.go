@@ -162,6 +162,7 @@ func main() {
 		"AuthRetry":                   common.Config.BBSim.AuthRetry,
 		"OltRebootDelay":              common.Config.Olt.OltRebootDelay,
 		"OmciResponseRate":            common.Config.Olt.OmciResponseRate,
+		"injectOmciUnknownMe":         common.Config.BBSim.InjectOmciUnknownMe,
 		"injectOmciUnknownAttributes": common.Config.BBSim.InjectOmciUnknownAttributes,
 	}).Info("BroadBand Simulator is on")
 

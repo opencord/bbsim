@@ -188,6 +188,7 @@ type BBSimConfig struct {
 	KafkaEventTopic             string  `yaml:"kafka_event_topic"`
 	DmiServerAddress            string  `yaml:"dmi_server_address"`
 	BandwidthProfileFormat      string  `yaml:"bp_format"`
+	InjectOmciUnknownMe         bool    `yaml:"inject_omci_unknown_me"`
 	InjectOmciUnknownAttributes bool    `yaml:"inject_omci_unknown_attributes"`
 }
 
@@ -358,7 +359,8 @@ func readCliParams() *GlobalConfig {
 	kafkaEventTopic := flag.String("kafkaEventTopic", conf.BBSim.KafkaEventTopic, "Ability to configure the topic on which BBSim publishes events on Kafka")
 	dhcpRetry := flag.Bool("dhcpRetry", conf.BBSim.DhcpRetry, "Set this flag if BBSim should retry DHCP upon failure until success")
 	authRetry := flag.Bool("authRetry", conf.BBSim.AuthRetry, "Set this flag if BBSim should retry EAPOL (Authentication) upon failure until success")
-	injectOmciUnknownAttributes := flag.Bool("injectOmciUnknownAttributes", conf.BBSim.InjectOmciUnknownAttributes, "Generate a MibDB packet with Unknown Attributes")
+	injectOmciUnknownMe := flag.Bool("injectOmciUnknownMe", conf.BBSim.InjectOmciUnknownMe, "Generate an extra MibDB packet with ClassID 37 (Intentionally left blank)")
+	injectOmciUnknownAttributes := flag.Bool("injectOmciUnknownAttributes", conf.BBSim.InjectOmciUnknownAttributes, "Modifies the ONU2-G MibDB packet to add Unknown Attributes")
 
 	flag.Parse()
 
@@ -390,6 +392,7 @@ func readCliParams() *GlobalConfig {
 	conf.BBSim.AuthRetry = *authRetry
 	conf.BBSim.DhcpRetry = *dhcpRetry
 	conf.BBSim.DmiServerAddress = *dmi_server_address
+	conf.BBSim.InjectOmciUnknownMe = *injectOmciUnknownMe
 	conf.BBSim.InjectOmciUnknownAttributes = *injectOmciUnknownAttributes
 
 	// update device id if not set
@@ -435,6 +438,7 @@ func getDefaultOps() *GlobalConfig {
 			AuthRetry:                   false,
 			DmiServerAddress:            ":50075",
 			BandwidthProfileFormat:      BP_FORMAT_MEF,
+			InjectOmciUnknownMe:         false,
 			InjectOmciUnknownAttributes: false,
 		},
 		OltConfig{
