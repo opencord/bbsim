@@ -1,0 +1,35 @@
+# Contains a description of the services that needs to be created for each UNI and the corresponding tagging scheme
+
+# The service names used in this file are mandatory
+# for FTTB to work correctly.
+# DPU_MGMT_TRAFFIC is used in bbsim to detect when the sTag
+# must be used for DHCP packets instead of the cTag, and the
+# Olt app has custom behavior that is triggered by each of
+# these names.
+
+# DT FTTB
+workflow: dt-fttb
+  services:
+    - name: FTTB_SUBSCRIBER_TRAFFIC
+      c_tag: 101
+      c_tag_allocation: unique
+      s_tag: 3101
+      s_tag_allocation: unique
+      tp_id: 64
+    - name: DPU_ANCP_TRAFFIC
+      c_tag: 4
+      c_tag_allocation: shared
+      s_tag: 40
+      s_tag_allocation: shared
+      us_pon_s_tag_priority: 7
+      tp_id: 64
+    - name: DPU_MGMT_TRAFFIC
+      c_tag: 6
+      c_tag_allocation: shared
+      s_tag: 60
+      s_tag_allocation: shared
+      us_pon_c_tag_priority: 3
+      us_pon_s_tag_priority: 7
+      tp_id: 64
+      enable_mac_learning: true
+      needs_dhcp: true

@@ -461,7 +461,14 @@ func (s *Service) HandlePackets() {
 		if msg.Type == packetHandlers.EAPOL {
 			eapol.HandleNextPacket(msg.OnuId, msg.IntfId, s.GemPort, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.UniPort.ID, s.Id, s.UniPort.Onu.PonPort.Olt.ID, s.EapolState, msg.Packet, s.Stream, nil)
 		} else if msg.Type == packetHandlers.DHCP {
-			_ = dhcp.HandleNextPacket(s.UniPort.Onu.ID, s.UniPort.Onu.PonPortID, s.Name, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.CTag, s.GemPort, s.UniPort.ID, s.HwAddress, s.DHCPState, msg.Packet, s.UsPonCTagPriority, s.Stream)
+			tag := int(s.CTag)
+			priority := s.UsPonCTagPriority
+			if s.Name == fttbDpuMgmtServiceName {
+				tag = int(s.STag)
+				priority = s.UsPonSTagPriority
+			}
+
+			_ = dhcp.HandleNextPacket(s.UniPort.Onu.ID, s.UniPort.Onu.PonPortID, s.Name, s.UniPort.Onu.Sn(), s.UniPort.PortNo, tag, s.GemPort, s.UniPort.ID, s.HwAddress, s.DHCPState, msg.Packet, priority, s.Stream)
 		} else if msg.Type == packetHandlers.IGMP {
 			log.Warn(hex.EncodeToString(msg.Packet.Data()))
 			_ = igmp.HandleNextPacket(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.GemPort, s.HwAddress, msg.Packet, s.CTag, s.UsPonCTagPriority, s.Stream)
@@ -630,8 +637,15 @@ func (s *Service) handleDHCPStart(stream bbsimTypes.Stream) error {
 		"UniId":     s.UniPort.ID,
 	}).Debugf("HandleDHCPStart")
 
-	if err := dhcp.SendDHCPDiscovery(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.Name, int(s.CTag), s.GemPort,
-		s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.UniPort.ID, s.DHCPState, s.HwAddress, s.UsPonCTagPriority, stream); err != nil {
+	tag := int(s.CTag)
+	priority := s.UsPonCTagPriority
+	if s.Name == fttbDpuMgmtServiceName {
+		tag = int(s.STag)
+		priority = s.UsPonSTagPriority
+	}
+
+	if err := dhcp.SendDHCPDiscovery(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.Name, tag, s.GemPort,
+		s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.UniPort.ID, s.DHCPState, s.HwAddress, priority, stream); err != nil {
 		serviceLogger.WithFields(log.Fields{
 			"OnuId":     s.UniPort.Onu.ID,
 			"IntfId":    s.UniPort.Onu.PonPortID,
