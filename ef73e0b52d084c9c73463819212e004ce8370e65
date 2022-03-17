@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7184c192_62eb8427",
+        "filename": "configs/dt-fttb-services.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-03-17T15:59:05Z",
+      "side": 1,
+      "message": "we should add a note that \"DPU_MGMT_TRAFFIC\" is NOT a configurable name as it\u0027s hardcoded in https://github.com/opencord/bbsim/blob/125665cf2cb71c716b7e709b6e7e39dddfe0fce3/internal/bbsim/devices/services.go#L52 and explain that in that case the STag is used to trap DHCP packets",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 28
+      },
+      "revId": "ef73e0b52d084c9c73463819212e004ce8370e65",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
