@@ -21,6 +21,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"net"
+	"reflect"
+	"strconv"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/looplab/fsm"
@@ -28,9 +32,6 @@ import (
 	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	log "github.com/sirupsen/logrus"
-	"net"
-	"reflect"
-	"strconv"
 )
 
 var dhcpLogger = log.WithFields(log.Fields{
@@ -158,7 +159,7 @@ func createDHCPReq(intfId uint32, onuId uint32, macAddress net.HardwareAddr, off
 	return &dhcpLayer
 }
 
-func serializeDHCPPacket(cTag int, srcMac net.HardwareAddr, dhcp *layers.DHCPv4, pbit uint8) (gopacket.Packet, error) {
+func serializeDHCPPacket(tag int, srcMac net.HardwareAddr, dhcp *layers.DHCPv4, pbit uint8) (gopacket.Packet, error) {
 	buffer := gopacket.NewSerializeBuffer()
 
 	options := gopacket.SerializeOptions{
@@ -194,7 +195,7 @@ func serializeDHCPPacket(cTag int, srcMac net.HardwareAddr, dhcp *layers.DHCPv4,
 
 	untaggedPkt := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 
-	taggedPkt, err := packetHandlers.PushSingleTag(cTag, untaggedPkt, pbit)
+	taggedPkt, err := packetHandlers.PushSingleTag(tag, untaggedPkt, pbit)
 	if err != nil {
 		dhcpLogger.Error("TagPacket")
 		return nil, err
@@ -279,10 +280,10 @@ func sendDHCPPktIn(msg bbsim.ByteMsg, portNo uint32, gemPortId uint32, uniId uin
 }
 
 func sendDHCPRequest(ponPortId uint32, onuId uint32, serviceName string, serialNumber string, portNo uint32,
-	cTag int, gemPortId uint32, onuStateMachine *fsm.FSM, onuHwAddress net.HardwareAddr,
+	tag int, gemPortId uint32, onuStateMachine *fsm.FSM, onuHwAddress net.HardwareAddr,
 	offeredIp net.IP, pbit uint8, uniId uint32, stream bbsim.Stream) error {
 	dhcp := createDHCPReq(ponPortId, onuId, onuHwAddress, offeredIp, gemPortId)
-	pkt, err := serializeDHCPPacket(cTag, onuHwAddress, dhcp, pbit)
+	pkt, err := serializeDHCPPacket(tag, onuHwAddress, dhcp, pbit)
 
 	if err != nil {
 		dhcpLogger.WithFields(log.Fields{
@@ -296,8 +297,6 @@ func sendDHCPRequest(ponPortId uint32, onuId uint32, serviceName string, serialN
 		}
 		return err
 	}
-	// NOTE I don't think we need to tag the packet
-	//taggedPkt, err := packetHandlers.PushSingleTag(cTag, pkt)
 
 	msg := bbsim.ByteMsg{
 		IntfId: ponPortId,
@@ -339,12 +338,12 @@ func updateDhcpFailed(onuId uint32, ponPortId uint32, serialNumber string, onuSt
 	return nil
 }
 
-func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serviceName string, cTag int, gemPortId uint32,
+func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serviceName string, tag int, gemPortId uint32,
 	serialNumber string, portNo uint32, uniId uint32, stateMachine *fsm.FSM, onuHwAddress net.HardwareAddr,
 	pbit uint8, stream bbsim.Stream) error {
 
 	dhcp := createDHCPDisc(ponPortId, onuId, gemPortId, onuHwAddress)
-	pkt, err := serializeDHCPPacket(cTag, onuHwAddress, dhcp, pbit)
+	pkt, err := serializeDHCPPacket(tag, onuHwAddress, dhcp, pbit)
 
 	if err != nil {
 		dhcpLogger.WithFields(log.Fields{
@@ -361,8 +360,6 @@ func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serviceName string, cTag 
 		}
 		return err
 	}
-	// NOTE I don't think we need to tag the packet
-	//taggedPkt, err := packetHandlers.PushSingleTag(cTag, pkt)
 
 	msg := bbsim.ByteMsg{
 		IntfId: ponPortId,
@@ -411,7 +408,7 @@ func SendDHCPDiscovery(ponPortId uint32, onuId uint32, serviceName string, cTag 
 }
 
 func HandleNextPacket(onuId uint32, ponPortId uint32, serviceName string, serialNumber string, portNo uint32,
-	cTag int, gemPortId uint32, uniId uint32, onuHwAddress net.HardwareAddr, onuStateMachine *fsm.FSM,
+	tag int, gemPortId uint32, uniId uint32, onuHwAddress net.HardwareAddr, onuStateMachine *fsm.FSM,
 	pkt gopacket.Packet, pbit uint8, stream bbsim.Stream) error {
 
 	dhcpLayer, err := GetDhcpLayer(pkt)
@@ -450,7 +447,7 @@ func HandleNextPacket(onuId uint32, ponPortId uint32, serviceName string, serial
 	if dhcpLayer.Operation == layers.DHCPOpReply {
 		if dhcpMessageType == layers.DHCPMsgTypeOffer {
 			offeredIp := dhcpLayer.YourClientIP
-			if err := sendDHCPRequest(ponPortId, onuId, serviceName, serialNumber, portNo, cTag, gemPortId, onuStateMachine, onuHwAddress, offeredIp, pbit, uniId, stream); err != nil {
+			if err := sendDHCPRequest(ponPortId, onuId, serviceName, serialNumber, portNo, tag, gemPortId, onuStateMachine, onuHwAddress, offeredIp, pbit, uniId, stream); err != nil {
 				dhcpLogger.WithFields(log.Fields{
 					"OnuId":       onuId,
 					"IntfId":      ponPortId,
