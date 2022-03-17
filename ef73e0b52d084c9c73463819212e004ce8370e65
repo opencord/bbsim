@@ -22,6 +22,30 @@
       },
       "revId": "ef73e0b52d084c9c73463819212e004ce8370e65",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "c203f80f_b4608134",
+        "filename": "configs/dt-fttb-services.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-03-17T16:43:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7184c192_62eb8427",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 28
+      },
+      "revId": "ef73e0b52d084c9c73463819212e004ce8370e65",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
