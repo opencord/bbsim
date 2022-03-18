@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "15efdb92_fb893f47",
+        "filename": "internal/common/omci/onu_mib_db.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2022-03-18T09:07:29Z",
+      "side": 1,
+      "message": "Now if you use helm flag \"InjectOmciUnknownAttributes\" here, we would need a new helm flag for the \"UnknownME\" use case below (line 505). The suggested name was \"injectOmciUnknownMe\".",
+      "range": {
+        "startLine": 494,
+        "startChar": 24,
+        "endLine": 494,
+        "endChar": 52
+      },
+      "revId": "6a5371b651d3ed49c0f8bd85b4570d11bea316bc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
