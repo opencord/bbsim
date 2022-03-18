@@ -22,6 +22,30 @@
       },
       "revId": "6a5371b651d3ed49c0f8bd85b4570d11bea316bc",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d4de60e1_5be236ec",
+        "filename": "internal/common/omci/onu_mib_db.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-03-18T17:55:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "15efdb92_fb893f47",
+      "range": {
+        "startLine": 494,
+        "startChar": 24,
+        "endLine": 494,
+        "endChar": 52
+      },
+      "revId": "6a5371b651d3ed49c0f8bd85b4570d11bea316bc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
