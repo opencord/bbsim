@@ -42,20 +42,20 @@ Once VOLTHA is up and running, you can deploy BBSim with this command:
 
 .. code:: bash
 
-    helm install -n bbsim cord/bbsim
+    helm install -n voltha onf/bbsim --set olt_id=10
 
 If you need to specify a custom image for BBSim you can:
 
 .. code:: bash
 
-    helm install -n bbsim cord/bbsim --set images.bbsim.repository=bbsim --set images.bbsim.tag=candidate --set images.bbsim.pullPolicy=Never
+    helm install -n bbsim onf/bbsim --set images.bbsim.repository=bbsim --set images.bbsim.tag=candidate --set images.bbsim.pullPolicy=Never
 
 The BBSim installation can be customized to emulate multiple ONUs and multiple
 PON Ports:
 
 .. code:: bash
 
-    helm install -n bbsim cord/bbsim --set onu=8 --set pon=2
+    helm install -n voltha cord/bbsim --set onu=8 --set pon=2
 
 BBSim can also be configured to automatically start Authentication or DHCP:
 
