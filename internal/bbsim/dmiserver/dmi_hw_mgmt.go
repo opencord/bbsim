@@ -76,22 +76,46 @@ func (dms *DmiAPIServer) StartManagingDevice(req *dmi.ModifiableComponent, strea
 	var components []*dmi.Component
 
 	// Create and store the component for transceivers and transceiver cages
-	for i := 0; i < olt.NumPon; i++ {
-		label := fmt.Sprintf("pon-%d", olt.Pons[i].ID)
+	for i, pon := range olt.Pons {
+		label := fmt.Sprintf("pon-%d", pon.ID)
 		dms.ponTransceiverUuids[i] = getUUID(dms.deviceSerial + label)
 		dms.ponTransceiverCageUuids[i] = getUUID(dms.deviceSerial + "cage" + label)
 
 		transName := fmt.Sprintf("sfp-%d", i)
 		cageName := fmt.Sprintf("sfp-plus-transceiver-cage-pon-%d", i)
 
+		var transType dmi.TransceiverType
+		var rxWavelength, txWavelength []uint32
+		switch pon.Technology {
+		case common.GPON:
+			transType = dmi.TransceiverType_GPON
+			rxWavelength = []uint32{1490} // nanometers
+			txWavelength = []uint32{1550} // nanometers
+		case common.XGSPON:
+			transType = dmi.TransceiverType_XGSPON
+			rxWavelength = []uint32{1270} // nanometers
+			txWavelength = []uint32{1577} // nanometers
+		}
+
 		trans := dmi.Component{
 			Name:        transName,
 			Class:       dmi.ComponentType_COMPONENT_TYPE_TRANSCEIVER,
-			Description: olt.Pons[i].Technology.String(),
+			Description: pon.Technology.String(),
 			Uuid: &dmi.Uuid{
 				Uuid: dms.ponTransceiverUuids[i],
 			},
 			Parent: cageName,
+			Specific: &dmi.Component_TransceiverAttr{
+				TransceiverAttr: &dmi.TransceiverComponentsAttributes{
+					FormFactor:       dmi.TransceiverComponentsAttributes_SFP_PLUS,
+					TransType:        transType,
+					MaxDistance:      10, // kilometers (see scale below)
+					MaxDistanceScale: dmi.ValueScale_VALUE_SCALE_KILO,
+					RxWavelength:     rxWavelength,
+					TxWavelength:     txWavelength,
+					WavelengthScale:  dmi.ValueScale_VALUE_SCALE_NANO,
+				},
+			},
 		}
 
 		cage := dmi.Component{

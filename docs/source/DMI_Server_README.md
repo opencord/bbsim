@@ -36,7 +36,7 @@ $ grpcurl -plaintext -d '{"device_uuid": {"uuid": "5295a1d5-a121-372e-b8dc-6f7ed
       "name": "BBSim-BBSIM_OLT_0",
       "children": [
         {
-          "name": "cage-0",
+          "name": "sfp-plus-transceiver-cage-pon-0"
           "class": "COMPONENT_TYPE_CONTAINER",
           "description": "cage",
           "parent": "BBSim-BBSIM_OLT_0",
@@ -45,9 +45,22 @@ $ grpcurl -plaintext -d '{"device_uuid": {"uuid": "5295a1d5-a121-372e-b8dc-6f7ed
               "name": "sfp-0",
               "class": "COMPONENT_TYPE_TRANSCEIVER",
               "description": "XGS-PON",
-              "parent": "cage-0",
+              "parent": "sfp-plus-transceiver-cage-pon-0",
               "uuid": {
                 "uuid": "788ba741-507f-37b1-8e47-4a389460873b"
+              },
+             "transceiverAttr": {
+                "formFactor": "SFP_PLUS",
+                "transType": "XGSPON",
+                "maxDistance": 10,
+                "maxDistanceScale": "VALUE_SCALE_KILO",
+                "rxWavelength": [
+                  1270
+                ],
+                "txWavelength": [
+                  1577
+                ],
+                "wavelengthScale": "VALUE_SCALE_NANO"
               }
             }
           ],
@@ -159,9 +172,22 @@ $ grpcurl -plaintext -d '{"device_uuid": {"uuid": "5295a1d5-a121-372e-b8dc-6f7ed
     "name": "sfp-0",
     "class": "COMPONENT_TYPE_TRANSCEIVER",
     "description": "XGS-PON",
-    "parent": "cage-0",
+    "parent": "sfp-plus-transceiver-cage-pon-0",
     "uuid": {
       "uuid": "788ba741-507f-37b1-8e47-4a389460873b"
+    },
+    "transceiverAttr": {
+      "formFactor": "SFP_PLUS",
+      "transType": "XGSPON",
+      "maxDistance": 10,
+      "maxDistanceScale": "VALUE_SCALE_KILO",
+      "rxWavelength": [
+        1270
+      ],
+      "txWavelength": [
+        1577
+      ],
+      "wavelengthScale": "VALUE_SCALE_NANO"
     }
   }
 }
