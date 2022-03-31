@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f3a4edf9_6068570b",
+        "filename": "internal/bbsim/alarmsim/alarmsim.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-03-31T15:11:14Z",
+      "side": 1,
+      "message": "@Girish Is this the correct way to communicate the PON LOS?\n(with status that assumes values of \"on\" and \"off\")",
+      "range": {
+        "startLine": 235,
+        "startChar": 1,
+        "endLine": 245,
+        "endChar": 2
+      },
+      "revId": "c668894c1a499ce68a98bc7eb59c86eecbcf9e54",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d677ea52_7419d71f",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-03-31T15:11:14Z",
+      "side": 1,
+      "message": "@Girish Could you confirm this logic is right?",
+      "range": {
+        "startLine": 197,
+        "startChar": 1,
+        "endLine": 224,
+        "endChar": 2
+      },
+      "revId": "c668894c1a499ce68a98bc7eb59c86eecbcf9e54",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
