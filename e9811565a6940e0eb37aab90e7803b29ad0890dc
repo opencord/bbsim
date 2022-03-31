@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "bddfbb0d_8947c554",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-03-31T18:28:26Z",
+      "side": 1,
+      "message": "The BBSim side looks good to me, I\u0027ll leave someone more familiar to comment on the DMI side (which looks fine, but I\u0027m no expert)",
+      "revId": "e9811565a6940e0eb37aab90e7803b29ad0890dc",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}

@@ -26,6 +26,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "270fffe5_05e63f62",
+        "filename": "internal/bbsim/alarmsim/alarmsim.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-03-31T18:28:26Z",
+      "side": 1,
+      "message": "Looks like it\u0027s the correct way, but I would refactor the code to use this method in \"OltDevice.SetAlarm\" as well",
+      "parentUuid": "f3a4edf9_6068570b",
+      "range": {
+        "startLine": 235,
+        "startChar": 1,
+        "endLine": 245,
+        "endChar": 2
+      },
+      "revId": "c668894c1a499ce68a98bc7eb59c86eecbcf9e54",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "d677ea52_7419d71f",
         "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
         "patchSetId": 1
