@@ -63,7 +63,7 @@ func (m *DmiEvent) GetEventName() string {
 	return ""
 }
 
-type DmiCreateEventResponse struct {
+type DmiResponse struct {
 	StatusCode           int32    `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code,omitempty"`
 	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -71,68 +71,263 @@ type DmiCreateEventResponse struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *DmiCreateEventResponse) Reset()         { *m = DmiCreateEventResponse{} }
-func (m *DmiCreateEventResponse) String() string { return proto.CompactTextString(m) }
-func (*DmiCreateEventResponse) ProtoMessage()    {}
-func (*DmiCreateEventResponse) Descriptor() ([]byte, []int) {
+func (m *DmiResponse) Reset()         { *m = DmiResponse{} }
+func (m *DmiResponse) String() string { return proto.CompactTextString(m) }
+func (*DmiResponse) ProtoMessage()    {}
+func (*DmiResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_49e784b4938902cc, []int{1}
 }
 
-func (m *DmiCreateEventResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_DmiCreateEventResponse.Unmarshal(m, b)
+func (m *DmiResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DmiResponse.Unmarshal(m, b)
 }
-func (m *DmiCreateEventResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_DmiCreateEventResponse.Marshal(b, m, deterministic)
+func (m *DmiResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DmiResponse.Marshal(b, m, deterministic)
 }
-func (m *DmiCreateEventResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DmiCreateEventResponse.Merge(m, src)
+func (m *DmiResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DmiResponse.Merge(m, src)
 }
-func (m *DmiCreateEventResponse) XXX_Size() int {
-	return xxx_messageInfo_DmiCreateEventResponse.Size(m)
+func (m *DmiResponse) XXX_Size() int {
+	return xxx_messageInfo_DmiResponse.Size(m)
 }
-func (m *DmiCreateEventResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_DmiCreateEventResponse.DiscardUnknown(m)
+func (m *DmiResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DmiResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_DmiCreateEventResponse proto.InternalMessageInfo
+var xxx_messageInfo_DmiResponse proto.InternalMessageInfo
 
-func (m *DmiCreateEventResponse) GetStatusCode() int32 {
+func (m *DmiResponse) GetStatusCode() int32 {
 	if m != nil {
 		return m.StatusCode
 	}
 	return 0
 }
 
-func (m *DmiCreateEventResponse) GetMessage() string {
+func (m *DmiResponse) GetMessage() string {
 	if m != nil {
 		return m.Message
 	}
 	return ""
 }
 
+type DmiEmpty struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DmiEmpty) Reset()         { *m = DmiEmpty{} }
+func (m *DmiEmpty) String() string { return proto.CompactTextString(m) }
+func (*DmiEmpty) ProtoMessage()    {}
+func (*DmiEmpty) Descriptor() ([]byte, []int) {
+	return fileDescriptor_49e784b4938902cc, []int{2}
+}
+
+func (m *DmiEmpty) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DmiEmpty.Unmarshal(m, b)
+}
+func (m *DmiEmpty) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DmiEmpty.Marshal(b, m, deterministic)
+}
+func (m *DmiEmpty) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DmiEmpty.Merge(m, src)
+}
+func (m *DmiEmpty) XXX_Size() int {
+	return xxx_messageInfo_DmiEmpty.Size(m)
+}
+func (m *DmiEmpty) XXX_DiscardUnknown() {
+	xxx_messageInfo_DmiEmpty.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DmiEmpty proto.InternalMessageInfo
+
+type TransceiverRequest struct {
+	TransceiverId        uint32   `protobuf:"varint,1,opt,name=TransceiverId,proto3" json:"TransceiverId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *TransceiverRequest) Reset()         { *m = TransceiverRequest{} }
+func (m *TransceiverRequest) String() string { return proto.CompactTextString(m) }
+func (*TransceiverRequest) ProtoMessage()    {}
+func (*TransceiverRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_49e784b4938902cc, []int{3}
+}
+
+func (m *TransceiverRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_TransceiverRequest.Unmarshal(m, b)
+}
+func (m *TransceiverRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_TransceiverRequest.Marshal(b, m, deterministic)
+}
+func (m *TransceiverRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TransceiverRequest.Merge(m, src)
+}
+func (m *TransceiverRequest) XXX_Size() int {
+	return xxx_messageInfo_TransceiverRequest.Size(m)
+}
+func (m *TransceiverRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_TransceiverRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TransceiverRequest proto.InternalMessageInfo
+
+func (m *TransceiverRequest) GetTransceiverId() uint32 {
+	if m != nil {
+		return m.TransceiverId
+	}
+	return 0
+}
+
+type Transceiver struct {
+	ID                   uint32   `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	UUID                 string   `protobuf:"bytes,2,opt,name=UUID,proto3" json:"UUID,omitempty"`
+	Name                 string   `protobuf:"bytes,3,opt,name=Name,proto3" json:"Name,omitempty"`
+	PluggedIn            bool     `protobuf:"varint,4,opt,name=PluggedIn,proto3" json:"PluggedIn,omitempty"`
+	PonIds               []uint32 `protobuf:"varint,5,rep,packed,name=PonIds,proto3" json:"PonIds,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Transceiver) Reset()         { *m = Transceiver{} }
+func (m *Transceiver) String() string { return proto.CompactTextString(m) }
+func (*Transceiver) ProtoMessage()    {}
+func (*Transceiver) Descriptor() ([]byte, []int) {
+	return fileDescriptor_49e784b4938902cc, []int{4}
+}
+
+func (m *Transceiver) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Transceiver.Unmarshal(m, b)
+}
+func (m *Transceiver) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Transceiver.Marshal(b, m, deterministic)
+}
+func (m *Transceiver) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Transceiver.Merge(m, src)
+}
+func (m *Transceiver) XXX_Size() int {
+	return xxx_messageInfo_Transceiver.Size(m)
+}
+func (m *Transceiver) XXX_DiscardUnknown() {
+	xxx_messageInfo_Transceiver.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Transceiver proto.InternalMessageInfo
+
+func (m *Transceiver) GetID() uint32 {
+	if m != nil {
+		return m.ID
+	}
+	return 0
+}
+
+func (m *Transceiver) GetUUID() string {
+	if m != nil {
+		return m.UUID
+	}
+	return ""
+}
+
+func (m *Transceiver) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *Transceiver) GetPluggedIn() bool {
+	if m != nil {
+		return m.PluggedIn
+	}
+	return false
+}
+
+func (m *Transceiver) GetPonIds() []uint32 {
+	if m != nil {
+		return m.PonIds
+	}
+	return nil
+}
+
+type Transceivers struct {
+	Items                []*Transceiver `protobuf:"bytes,1,rep,name=Items,proto3" json:"Items,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
+}
+
+func (m *Transceivers) Reset()         { *m = Transceivers{} }
+func (m *Transceivers) String() string { return proto.CompactTextString(m) }
+func (*Transceivers) ProtoMessage()    {}
+func (*Transceivers) Descriptor() ([]byte, []int) {
+	return fileDescriptor_49e784b4938902cc, []int{5}
+}
+
+func (m *Transceivers) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Transceivers.Unmarshal(m, b)
+}
+func (m *Transceivers) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Transceivers.Marshal(b, m, deterministic)
+}
+func (m *Transceivers) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Transceivers.Merge(m, src)
+}
+func (m *Transceivers) XXX_Size() int {
+	return xxx_messageInfo_Transceivers.Size(m)
+}
+func (m *Transceivers) XXX_DiscardUnknown() {
+	xxx_messageInfo_Transceivers.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Transceivers proto.InternalMessageInfo
+
+func (m *Transceivers) GetItems() []*Transceiver {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*DmiEvent)(nil), "bbsim.DmiEvent")
-	proto.RegisterType((*DmiCreateEventResponse)(nil), "bbsim.DmiCreateEventResponse")
+	proto.RegisterType((*DmiResponse)(nil), "bbsim.DmiResponse")
+	proto.RegisterType((*DmiEmpty)(nil), "bbsim.DmiEmpty")
+	proto.RegisterType((*TransceiverRequest)(nil), "bbsim.TransceiverRequest")
+	proto.RegisterType((*Transceiver)(nil), "bbsim.Transceiver")
+	proto.RegisterType((*Transceivers)(nil), "bbsim.Transceivers")
 }
 
 func init() { proto.RegisterFile("api/bbsim/bbsim_dmi.proto", fileDescriptor_49e784b4938902cc) }
 
 var fileDescriptor_49e784b4938902cc = []byte{
-	// 216 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x90, 0x31, 0x4b, 0xc5, 0x30,
-	0x14, 0x85, 0x7d, 0xc2, 0x53, 0x7b, 0xdf, 0x20, 0x64, 0x90, 0x2a, 0x3c, 0x94, 0x8a, 0xa0, 0x4b,
-	0x0a, 0xfa, 0x03, 0x84, 0xb6, 0x6e, 0xe2, 0x50, 0x37, 0x97, 0x92, 0x34, 0x97, 0x9a, 0xe1, 0xe6,
-	0x86, 0x26, 0xf5, 0xf7, 0x8b, 0x69, 0xab, 0x0e, 0x6f, 0x09, 0xb9, 0x1f, 0x9c, 0xc3, 0xc7, 0x81,
-	0x4b, 0xe5, 0x6d, 0xa9, 0x75, 0xb0, 0x34, 0xbf, 0x9d, 0x21, 0x2b, 0xfd, 0xc8, 0x91, 0xc5, 0x36,
-	0x81, 0xe2, 0x01, 0xce, 0x1a, 0xb2, 0x2f, 0x5f, 0xe8, 0xa2, 0xd8, 0x03, 0xe0, 0xcf, 0xa7, 0x73,
-	0x8a, 0x30, 0xdf, 0xdc, 0x6c, 0xee, 0xb3, 0x36, 0x4b, 0xe4, 0x4d, 0x11, 0x16, 0xef, 0x70, 0xd1,
-	0x90, 0xad, 0x47, 0x54, 0x11, 0x53, 0xa0, 0xc5, 0xe0, 0xd9, 0x05, 0x14, 0xd7, 0xb0, 0x0b, 0x51,
-	0xc5, 0x29, 0x74, 0x3d, 0x9b, 0x39, 0xb9, 0x6d, 0x61, 0x46, 0x35, 0x1b, 0x14, 0x39, 0x9c, 0x12,
-	0x86, 0xa0, 0x06, 0xcc, 0x8f, 0x53, 0xed, 0x7a, 0x3e, 0xbe, 0x42, 0x56, 0x55, 0x8b, 0x99, 0x78,
-	0x86, 0xdd, 0xbf, 0x7a, 0x71, 0x2e, 0x93, 0xa3, 0x5c, 0x05, 0xaf, 0xf6, 0x7f, 0xe0, 0x80, 0x46,
-	0x71, 0x54, 0xdd, 0x7d, 0xdc, 0x0e, 0x36, 0x7e, 0x4e, 0x5a, 0xf6, 0x4c, 0x25, 0x7b, 0x74, 0x3d,
-	0x8f, 0x66, 0x59, 0xe0, 0x77, 0x0b, 0x7d, 0x92, 0x26, 0x78, 0xfa, 0x0e, 0x00, 0x00, 0xff, 0xff,
-	0xd2, 0x6b, 0xb3, 0x25, 0x1f, 0x01, 0x00, 0x00,
+	// 393 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x92, 0xcf, 0x6b, 0xd4, 0x40,
+	0x14, 0xc7, 0x9b, 0x6c, 0x53, 0x9b, 0x17, 0xd7, 0xe2, 0x13, 0x24, 0x2d, 0x8a, 0x61, 0x54, 0x88,
+	0x97, 0x14, 0xaa, 0x07, 0xf5, 0xb8, 0x4d, 0xd1, 0xb9, 0x68, 0x09, 0xee, 0xc5, 0xcb, 0x92, 0x1f,
+	0x8f, 0x18, 0x70, 0x66, 0x62, 0x66, 0xb2, 0x20, 0xfe, 0x05, 0xfe, 0xd7, 0x92, 0x4c, 0xd6, 0xcd,
+	0xa2, 0x9e, 0xbc, 0x0c, 0x6f, 0x3e, 0xbc, 0xdf, 0xdf, 0x07, 0xe7, 0x79, 0xdb, 0x5c, 0x16, 0x85,
+	0x6e, 0x84, 0x7d, 0x37, 0x95, 0x68, 0x92, 0xb6, 0x53, 0x46, 0xa1, 0x37, 0x02, 0xf6, 0x02, 0x4e,
+	0x53, 0xd1, 0xdc, 0x6c, 0x49, 0x1a, 0x7c, 0x0c, 0x40, 0x83, 0xb1, 0x91, 0xb9, 0xa0, 0xd0, 0x89,
+	0x9c, 0xd8, 0xcf, 0xfc, 0x91, 0x7c, 0xc8, 0x05, 0xb1, 0xf7, 0x10, 0xa4, 0xa2, 0xc9, 0x48, 0xb7,
+	0x4a, 0x6a, 0xc2, 0x27, 0x10, 0x68, 0x93, 0x9b, 0x5e, 0x6f, 0x4a, 0x55, 0x59, 0x77, 0x2f, 0x03,
+	0x8b, 0xae, 0x55, 0x45, 0x18, 0xc2, 0x1d, 0x41, 0x5a, 0xe7, 0x35, 0x85, 0xee, 0x98, 0x6b, 0xf7,
+	0x65, 0x60, 0x8b, 0x8a, 0xd6, 0x7c, 0x67, 0x6f, 0x01, 0x3f, 0x75, 0xb9, 0xd4, 0x25, 0x35, 0x5b,
+	0xea, 0x32, 0xfa, 0xd6, 0x93, 0x36, 0xf8, 0x0c, 0x96, 0x33, 0xca, 0xab, 0x31, 0xfd, 0x32, 0x3b,
+	0x84, 0xec, 0x07, 0x04, 0x33, 0x80, 0xf7, 0xc0, 0xe5, 0xe9, 0xe4, 0xe9, 0xf2, 0x14, 0x11, 0x8e,
+	0xd7, 0x6b, 0x9e, 0x4e, 0xd5, 0x47, 0x7b, 0x60, 0xc3, 0x30, 0xe1, 0xc2, 0xb2, 0xc1, 0xc6, 0x47,
+	0xe0, 0xdf, 0x7e, 0xed, 0xeb, 0x9a, 0x2a, 0x2e, 0xc3, 0xe3, 0xc8, 0x89, 0x4f, 0xb3, 0x3d, 0xc0,
+	0x87, 0x70, 0x72, 0xab, 0x24, 0xaf, 0x74, 0xe8, 0x45, 0x8b, 0x78, 0x99, 0x4d, 0x3f, 0xf6, 0x1a,
+	0xee, 0xce, 0x8a, 0x6b, 0x8c, 0xc1, 0xe3, 0x86, 0x84, 0x0e, 0x9d, 0x68, 0x11, 0x07, 0x57, 0x98,
+	0x8c, 0x0b, 0x4e, 0xe6, 0xc3, 0x59, 0x87, 0xab, 0x9f, 0x2e, 0xf8, 0xab, 0xd5, 0x24, 0x07, 0xbe,
+	0x82, 0xe0, 0xba, 0xa3, 0xdc, 0x90, 0x15, 0xe1, 0x6c, 0x8a, 0xdb, 0xa9, 0x72, 0x81, 0x7b, 0xb0,
+	0xdb, 0x3d, 0x3b, 0xc2, 0x37, 0x70, 0xf6, 0x8e, 0xcc, 0x41, 0x03, 0xf3, 0xc8, 0x61, 0xb5, 0x17,
+	0x0f, 0xfe, 0x6c, 0x41, 0xb3, 0x23, 0xbc, 0x01, 0x1c, 0xa6, 0xfb, 0xd8, 0xcf, 0xc3, 0xf1, 0xfc,
+	0x2f, 0xfd, 0x5a, 0x31, 0xfe, 0xd1, 0x41, 0x0a, 0xf7, 0x87, 0x34, 0x5c, 0xfe, 0x4f, 0x96, 0xd5,
+	0xf3, 0xcf, 0x4f, 0xeb, 0xc6, 0x7c, 0xe9, 0x8b, 0xa4, 0x54, 0xe2, 0x52, 0xb5, 0x24, 0x4b, 0xd5,
+	0x55, 0xd3, 0xcd, 0xfe, 0xbe, 0xde, 0xe2, 0x64, 0x3c, 0xda, 0x97, 0xbf, 0x02, 0x00, 0x00, 0xff,
+	0xff, 0xdf, 0x58, 0xf1, 0x88, 0xd1, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -148,7 +343,12 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type BBsimDmiClient interface {
 	// Ask the DMI Server to create an event
-	CreateEvent(ctx context.Context, in *DmiEvent, opts ...grpc.CallOption) (*DmiCreateEventResponse, error)
+	CreateEvent(ctx context.Context, in *DmiEvent, opts ...grpc.CallOption) (*DmiResponse, error)
+	GetTransceivers(ctx context.Context, in *DmiEmpty, opts ...grpc.CallOption) (*Transceivers, error)
+	// Plug out the transceiver by transceiverId
+	PlugOutTransceiver(ctx context.Context, in *TransceiverRequest, opts ...grpc.CallOption) (*DmiResponse, error)
+	// Plug in the transceiver of a PON by pon-port-ID
+	PlugInTransceiver(ctx context.Context, in *TransceiverRequest, opts ...grpc.CallOption) (*DmiResponse, error)
 }
 
 type bBsimDmiClient struct {
@@ -159,9 +359,36 @@ func NewBBsimDmiClient(cc *grpc.ClientConn) BBsimDmiClient {
 	return &bBsimDmiClient{cc}
 }
 
-func (c *bBsimDmiClient) CreateEvent(ctx context.Context, in *DmiEvent, opts ...grpc.CallOption) (*DmiCreateEventResponse, error) {
-	out := new(DmiCreateEventResponse)
+func (c *bBsimDmiClient) CreateEvent(ctx context.Context, in *DmiEvent, opts ...grpc.CallOption) (*DmiResponse, error) {
+	out := new(DmiResponse)
 	err := c.cc.Invoke(ctx, "/bbsim.BBsim_dmi/CreateEvent", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bBsimDmiClient) GetTransceivers(ctx context.Context, in *DmiEmpty, opts ...grpc.CallOption) (*Transceivers, error) {
+	out := new(Transceivers)
+	err := c.cc.Invoke(ctx, "/bbsim.BBsim_dmi/GetTransceivers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bBsimDmiClient) PlugOutTransceiver(ctx context.Context, in *TransceiverRequest, opts ...grpc.CallOption) (*DmiResponse, error) {
+	out := new(DmiResponse)
+	err := c.cc.Invoke(ctx, "/bbsim.BBsim_dmi/PlugOutTransceiver", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bBsimDmiClient) PlugInTransceiver(ctx context.Context, in *TransceiverRequest, opts ...grpc.CallOption) (*DmiResponse, error) {
+	out := new(DmiResponse)
+	err := c.cc.Invoke(ctx, "/bbsim.BBsim_dmi/PlugInTransceiver", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -171,15 +398,29 @@ func (c *bBsimDmiClient) CreateEvent(ctx context.Context, in *DmiEvent, opts ...
 // BBsimDmiServer is the server API for BBsimDmi service.
 type BBsimDmiServer interface {
 	// Ask the DMI Server to create an event
-	CreateEvent(context.Context, *DmiEvent) (*DmiCreateEventResponse, error)
+	CreateEvent(context.Context, *DmiEvent) (*DmiResponse, error)
+	GetTransceivers(context.Context, *DmiEmpty) (*Transceivers, error)
+	// Plug out the transceiver by transceiverId
+	PlugOutTransceiver(context.Context, *TransceiverRequest) (*DmiResponse, error)
+	// Plug in the transceiver of a PON by pon-port-ID
+	PlugInTransceiver(context.Context, *TransceiverRequest) (*DmiResponse, error)
 }
 
 // UnimplementedBBsimDmiServer can be embedded to have forward compatible implementations.
 type UnimplementedBBsimDmiServer struct {
 }
 
-func (*UnimplementedBBsimDmiServer) CreateEvent(ctx context.Context, req *DmiEvent) (*DmiCreateEventResponse, error) {
+func (*UnimplementedBBsimDmiServer) CreateEvent(ctx context.Context, req *DmiEvent) (*DmiResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateEvent not implemented")
+}
+func (*UnimplementedBBsimDmiServer) GetTransceivers(ctx context.Context, req *DmiEmpty) (*Transceivers, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTransceivers not implemented")
+}
+func (*UnimplementedBBsimDmiServer) PlugOutTransceiver(ctx context.Context, req *TransceiverRequest) (*DmiResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PlugOutTransceiver not implemented")
+}
+func (*UnimplementedBBsimDmiServer) PlugInTransceiver(ctx context.Context, req *TransceiverRequest) (*DmiResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PlugInTransceiver not implemented")
 }
 
 func RegisterBBsimDmiServer(s *grpc.Server, srv BBsimDmiServer) {
@@ -204,6 +445,60 @@ func _BBsimDmi_CreateEvent_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BBsimDmi_GetTransceivers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DmiEmpty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BBsimDmiServer).GetTransceivers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bbsim.BBsim_dmi/GetTransceivers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BBsimDmiServer).GetTransceivers(ctx, req.(*DmiEmpty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BBsimDmi_PlugOutTransceiver_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TransceiverRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BBsimDmiServer).PlugOutTransceiver(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bbsim.BBsim_dmi/PlugOutTransceiver",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BBsimDmiServer).PlugOutTransceiver(ctx, req.(*TransceiverRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BBsimDmi_PlugInTransceiver_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TransceiverRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BBsimDmiServer).PlugInTransceiver(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bbsim.BBsim_dmi/PlugInTransceiver",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BBsimDmiServer).PlugInTransceiver(ctx, req.(*TransceiverRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _BBsimDmi_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "bbsim.BBsim_dmi",
 	HandlerType: (*BBsimDmiServer)(nil),
@@ -211,6 +506,18 @@ var _BBsimDmi_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateEvent",
 			Handler:    _BBsimDmi_CreateEvent_Handler,
+		},
+		{
+			MethodName: "GetTransceivers",
+			Handler:    _BBsimDmi_GetTransceivers_Handler,
+		},
+		{
+			MethodName: "PlugOutTransceiver",
+			Handler:    _BBsimDmi_PlugOutTransceiver_Handler,
+		},
+		{
+			MethodName: "PlugInTransceiver",
+			Handler:    _BBsimDmi_PlugInTransceiver_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
