@@ -641,6 +641,25 @@ func (o *Onu) HandleShutdownONU() error {
 		return err
 	}
 
+	if err := o.RaiseLosAlarm(); err != nil {
+		return err
+	}
+
+	// TODO if it's the last ONU on the PON, then send a PON LOS
+
+	if err := o.InternalState.Event(OnuTxDisable); err != nil {
+		onuLogger.WithFields(log.Fields{
+			"OnuId":  o.ID,
+			"IntfId": o.PonPortID,
+			"OnuSn":  o.Sn(),
+		}).Errorf("Cannot shutdown ONU: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (o *Onu) RaiseLosAlarm() error {
 	losReq := pb.ONUAlarmRequest{
 		AlarmType:    "ONU_ALARM_LOS",
 		SerialNumber: o.Sn(),
@@ -653,20 +672,9 @@ func (o *Onu) HandleShutdownONU() error {
 			"IntfId": o.PonPortID,
 			"OnuSn":  o.Sn(),
 		}).Errorf("Cannot send LOS: %s", err.Error())
-
 		return err
 	}
 	o.SendOMCIAlarmNotificationMsg(true, losReq.AlarmType)
-	// TODO if it's the last ONU on the PON, then send a PON LOS
-
-	if err := o.InternalState.Event(OnuTxDisable); err != nil {
-		onuLogger.WithFields(log.Fields{
-			"OnuId":  o.ID,
-			"IntfId": o.PonPortID,
-			"OnuSn":  o.Sn(),
-		}).Errorf("Cannot shutdown ONU: %s", err.Error())
-		return err
-	}
 
 	return nil
 }
@@ -687,21 +695,9 @@ func (o *Onu) HandlePowerOnONU() error {
 	}
 
 	// turn off the LOS Alarm
-	losReq := pb.ONUAlarmRequest{
-		AlarmType:    "ONU_ALARM_LOS",
-		SerialNumber: o.Sn(),
-		Status:       "off",
-	}
-
-	if err := alarmsim.SimulateOnuAlarm(&losReq, o.ID, o.PonPortID, o.PonPort.Olt.channel); err != nil {
-		onuLogger.WithFields(log.Fields{
-			"OnuId":  o.ID,
-			"IntfId": o.PonPortID,
-			"OnuSn":  o.Sn(),
-		}).Errorf("Cannot send LOS: %s", err.Error())
+	if err := o.ClearLosAlarm(); err != nil {
 		return err
 	}
-	o.SendOMCIAlarmNotificationMsg(false, losReq.AlarmType)
 
 	// Send a ONU Discovery indication
 	if err := o.InternalState.Event(OnuTxDiscover); err != nil {
@@ -726,6 +722,26 @@ func (o *Onu) HandlePowerOnONU() error {
 			return err
 		}
 	}
+
+	return nil
+}
+
+func (o *Onu) ClearLosAlarm() error {
+	losReq := pb.ONUAlarmRequest{
+		AlarmType:    "ONU_ALARM_LOS",
+		SerialNumber: o.Sn(),
+		Status:       "off",
+	}
+
+	if err := alarmsim.SimulateOnuAlarm(&losReq, o.ID, o.PonPortID, o.PonPort.Olt.channel); err != nil {
+		onuLogger.WithFields(log.Fields{
+			"OnuId":  o.ID,
+			"IntfId": o.PonPortID,
+			"OnuSn":  o.Sn(),
+		}).Errorf("Cannot send LOS: %s", err.Error())
+		return err
+	}
+	o.SendOMCIAlarmNotificationMsg(false, losReq.AlarmType)
 
 	return nil
 }

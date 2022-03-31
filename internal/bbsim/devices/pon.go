@@ -22,6 +22,7 @@ import (
 	"sync"
 
 	"github.com/looplab/fsm"
+	"github.com/opencord/bbsim/internal/bbsim/alarmsim"
 	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	log "github.com/sirupsen/logrus"
@@ -344,4 +345,12 @@ func (p *PonPort) isAllocIdAllocated(ponID uint32, onuID uint32, entityID uint16
 		return true, p.AllocatedAllocIds[allocKey]
 	}
 	return false, nil
+}
+
+func (p *PonPort) RaiseLosAlarm() {
+	alarmsim.SimulatePonLos("on", p.ID, p.Olt.channel)
+}
+
+func (p *PonPort) ClearLosAlarm() {
+	alarmsim.SimulatePonLos("off", p.ID, p.Olt.channel)
 }

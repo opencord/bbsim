@@ -18,8 +18,9 @@ package alarmsim
 
 import (
 	"fmt"
-	"github.com/opencord/bbsim/internal/bbsim/types"
 	"strconv"
+
+	"github.com/opencord/bbsim/internal/bbsim/types"
 
 	"github.com/opencord/bbsim/internal/common"
 
@@ -228,4 +229,20 @@ func SimulateOnuAlarm(req *bbsim.ONUAlarmRequest, onuID uint32, ponPortID uint32
 	channel <- msg
 
 	return nil
+}
+
+func SimulatePonLos(status string, ponPortID uint32, channel chan types.Message) {
+	alarm := &openolt.AlarmIndication{
+		Data: &openolt.AlarmIndication_LosInd{LosInd: &openolt.LosIndication{
+			IntfId: ponPortID,
+			Status: status,
+		}},
+	}
+
+	msg := types.Message{
+		Type: types.AlarmIndication,
+		Data: alarm,
+	}
+
+	channel <- msg
 }

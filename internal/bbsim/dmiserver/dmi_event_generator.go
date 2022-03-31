@@ -57,6 +57,14 @@ func init() {
 		componentType: dmi.ComponentType_COMPONENT_TYPE_FAN,
 		genFunc:       noThresholdEventGenerationFunc,
 	}
+	eventGenMap[dmi.EventIds_EVENT_TRANSCEIVER_PLUG_IN] = eventGenerationUtil{
+		componentType: dmi.ComponentType_COMPONENT_TYPE_TRANSCEIVER,
+		genFunc:       noThresholdEventGenerationFunc,
+	}
+	eventGenMap[dmi.EventIds_EVENT_TRANSCEIVER_PLUG_OUT] = eventGenerationUtil{
+		componentType: dmi.ComponentType_COMPONENT_TYPE_TRANSCEIVER,
+		genFunc:       noThresholdEventGenerationFunc,
+	}
 
 	eventGenMap[dmi.EventIds_EVENT_PSU_FAILURE] = eventGenerationUtil{
 		componentType: dmi.ComponentType_COMPONENT_TYPE_POWER_SUPPLY,
@@ -113,6 +121,16 @@ func StartEventsGenerator(apiSrv *DmiAPIServer) {
 		EventId:      dmi.EventIds_EVENT_PSU_FAILURE,
 		IsConfigured: true,
 	}
+
+	// Add Transceiver Plug in and out event configuration
+	dmiEG.configuredEvents[dmi.EventIds_EVENT_TRANSCEIVER_PLUG_IN] = dmi.EventCfg{
+		EventId:      dmi.EventIds_EVENT_TRANSCEIVER_PLUG_IN,
+		IsConfigured: true,
+	}
+	dmiEG.configuredEvents[dmi.EventIds_EVENT_TRANSCEIVER_PLUG_OUT] = dmi.EventCfg{
+		EventId:      dmi.EventIds_EVENT_TRANSCEIVER_PLUG_OUT,
+		IsConfigured: true,
+	}
 }
 
 // get the events list
@@ -146,9 +164,7 @@ func UpdateEventConfig(newEventCfg *dmi.EventCfg) {
 // update Event MetaData
 func updateEventMetaData(c *dmi.Component, apiSrv *DmiAPIServer, evt *dmi.Event) *dmi.Event {
 	evt.EventMetadata = &dmi.EventMetaData{
-		DeviceUuid: &dmi.Uuid{
-			Uuid: apiSrv.uuid,
-		},
+		DeviceUuid:    apiSrv.uuid,
 		ComponentUuid: c.Uuid,
 		ComponentName: c.Name,
 	}
@@ -212,9 +228,9 @@ func thresholdEventGenerationFunc(eventID dmi.EventIds, cType dmi.ComponentType)
 }
 
 // CreateEvent creates and the passed event if it's valid and sends it to the msg bus
-func (dms *DmiAPIServer) CreateEvent(ctx context.Context, evt *bbsim.DmiEvent) (*bbsim.DmiCreateEventResponse, error) {
-	retFunc := func(code codes.Code, msg string) (*bbsim.DmiCreateEventResponse, error) {
-		res := &bbsim.DmiCreateEventResponse{}
+func (dms *DmiAPIServer) CreateEvent(ctx context.Context, evt *bbsim.DmiEvent) (*bbsim.DmiResponse, error) {
+	retFunc := func(code codes.Code, msg string) (*bbsim.DmiResponse, error) {
+		res := &bbsim.DmiResponse{}
 		res.StatusCode = int32(code)
 		res.Message = msg
 		return res, nil
@@ -222,7 +238,7 @@ func (dms *DmiAPIServer) CreateEvent(ctx context.Context, evt *bbsim.DmiEvent) (
 
 	if dmiEG.apiSrv == nil || dmiEG.apiSrv.root == nil || dmiEG.apiSrv.root.Children == nil {
 		// inventory might not yet be created
-		return retFunc(codes.Internal, "inventory do no exist")
+		return retFunc(codes.Internal, "Inventory does not exist")
 	}
 
 	eventID, exists := dmi.EventIds_value[evt.EventName]
