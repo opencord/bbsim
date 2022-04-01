@@ -98,7 +98,7 @@ func (dms *DmiAPIServer) UpdateStartupConfiguration(request *dmi.ConfigRequest, 
 		return status.Errorf(codes.InvalidArgument, "ConfigRequest is nil")
 	}
 
-	if request.DeviceUuid == nil || request.DeviceUuid.Uuid != dms.uuid {
+	if request.DeviceUuid == nil || request.DeviceUuid.Uuid != dms.uuid.Uuid {
 		if err := stream.Send(&dmi.ConfigResponse{
 			Status: dmi.Status_ERROR_STATUS,
 			Reason: dmi.ConfigResponse_UNKNOWN_DEVICE,
@@ -129,7 +129,7 @@ func (dms *DmiAPIServer) GetStartupConfigurationInfo(ctx context.Context, reques
 		return nil, status.Errorf(codes.InvalidArgument, "DeviceUuid is nil")
 	}
 
-	if request.DeviceUuid.Uuid != dms.uuid {
+	if request.DeviceUuid.Uuid != dms.uuid.Uuid {
 		return &dmi.StartupConfigInfoResponse{
 			Status: dmi.Status_ERROR_STATUS,
 			Reason: dmi.StartupConfigInfoResponse_UNKNOWN_DEVICE,

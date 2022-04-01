@@ -18,9 +18,11 @@ package dmiserver
 
 import (
 	"context"
+	"fmt"
 	"net"
 
 	"github.com/opencord/bbsim/api/bbsim"
+	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"github.com/opencord/bbsim/internal/common"
 	dmi "github.com/opencord/device-management-interface/go/dmi"
 	log "github.com/sirupsen/logrus"
@@ -35,19 +37,16 @@ var logger = log.WithFields(log.Fields{
 
 //DmiAPIServer has the attributes for the Server handling the Device Management Interface
 type DmiAPIServer struct {
-	deviceSerial            string
-	deviceName              string
-	ipAddress               string
-	uuid                    string
-	ponTransceiverUuids     []string
-	ponTransceiverCageUuids []string
-	root                    *dmi.Component
-	metricChannel           chan interface{}
-	eventChannel            chan interface{}
-	kafkaEndpoint           string
-	loggingEndpoint         string
-	loggingProtocol         string
-	mPublisherCancelFunc    context.CancelFunc
+	ipAddress            string
+	uuid                 *dmi.Uuid
+	root                 *dmi.Component
+	Transceivers         []*Transceiver
+	metricChannel        chan interface{}
+	eventChannel         chan interface{}
+	kafkaEndpoint        string
+	loggingEndpoint      string
+	loggingProtocol      string
+	mPublisherCancelFunc context.CancelFunc
 }
 
 var dmiServ DmiAPIServer
@@ -56,7 +55,25 @@ var dmiServ DmiAPIServer
 func StartDmiAPIServer() (*grpc.Server, error) {
 	dmiServ = DmiAPIServer{}
 
+	// Create the mapping between transceivers and PONS
+	// TODO: at the moment we create one transceiver for each PON,
+	// but in the case of COMBO PON this will not always be the case.
+	// This should be expanded to cover that scenario
+	logger.Debug("Creating transceivers from DMI")
+	dmiServ.Transceivers = []*Transceiver{}
+	for _, pon := range devices.GetOLT().Pons {
+		trans := newTransceiver(pon.ID, []*devices.PonPort{pon})
+		dmiServ.Transceivers = append(dmiServ.Transceivers, trans)
+	}
+
 	return dmiServ.newDmiAPIServer()
+}
+
+func getDmiAPIServer() (*DmiAPIServer, error) {
+	if dmiServ.root == nil {
+		return nil, fmt.Errorf("Device management not started")
+	}
+	return &dmiServ, nil
 }
 
 // newDmiAPIServer launches a new grpc server for the Device Manager Interface

@@ -23,13 +23,44 @@ message DmiEvent {
    string event_name= 1;
 }
 
-message DmiCreateEventResponse {
+message DmiResponse {
     int32 status_code = 1;
     string message = 2;
 }
 
+message DmiEmpty {
+}
+
+message TransceiverRequest {
+    uint32 TransceiverId = 1;
+}
+
+message Transceiver{
+    uint32 ID = 1;
+    string UUID = 2;
+    string Name = 3;
+    string Technology = 4;
+    bool PluggedIn = 5;
+    repeated uint32 PonIds = 6;
+}
+
+message Transceivers{
+    repeated Transceiver Items = 1;
+}
+
+
 service BBsim_dmi {
     // Ask the DMI Server to create an event
-    rpc CreateEvent (DmiEvent) returns (DmiCreateEventResponse){
+    rpc CreateEvent (DmiEvent) returns (DmiResponse){
+    }
+
+    rpc GetTransceivers (DmiEmpty) returns (Transceivers) {
+    }
+
+    // Plug out the transceiver by transceiverId
+    rpc PlugOutTransceiver (TransceiverRequest) returns (DmiResponse) {
+    }
+    // Plug in the transceiver of a PON by pon-port-ID
+    rpc PlugInTransceiver (TransceiverRequest) returns (DmiResponse) {
     }
 }

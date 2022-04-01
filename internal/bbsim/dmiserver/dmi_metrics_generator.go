@@ -238,9 +238,7 @@ func updateConfiguredMetrics(curr time.Time, typ dmi.MetricNames, old *MetricTri
 func updateMetricIDAndMetaData(id dmi.MetricNames, c *dmi.Component, apiSrv *DmiAPIServer, m *dmi.Metric) *dmi.Metric {
 	m.MetricId = id
 	m.MetricMetadata = &dmi.MetricMetaData{
-		DeviceUuid: &dmi.Uuid{
-			Uuid: apiSrv.uuid,
-		},
+		DeviceUuid:    apiSrv.uuid,
 		ComponentUuid: c.Uuid,
 		ComponentName: c.Name,
 	}
