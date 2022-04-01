@@ -96,6 +96,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "26477653_ac84aa98",
+        "filename": "internal/bbsim/alarmsim/alarmsim.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-04-01T20:11:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1ae32eec_0bbffec7",
+      "range": {
+        "startLine": 235,
+        "startChar": 1,
+        "endLine": 245,
+        "endChar": 2
+      },
+      "revId": "c668894c1a499ce68a98bc7eb59c86eecbcf9e54",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "d677ea52_7419d71f",
