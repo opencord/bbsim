@@ -29,27 +29,41 @@ $ grpcurl -plaintext -d '{"name": "SomeOlt","uri": {"uri":"XXX.YYY.ZZZ.AAA"}}' 1
 ```sh
 $ grpcurl -plaintext -d '{"device_uuid": {"uuid": "5295a1d5-a121-372e-b8dc-6f7eda83f0ba"}}' 172.17.0.2:50075 dmi.NativeHWManagementService.GetPhysicalInventory
 {
-  "status": "OK",
+  "status": "OK_STATUS",
   "inventory": {
     "lastChange": "1970-01-01T00:00:00Z",
     "root": {
-      "name": "BBSim-BBSIM_OLT_0",
+      "name": "BBSim-BBSIM_OLT_10",
       "children": [
         {
-          "name": "sfp-plus-transceiver-cage-pon-0"
+          "name": "sfp-plus-transceiver-cage-0",
           "class": "COMPONENT_TYPE_CONTAINER",
           "description": "cage",
-          "parent": "BBSim-BBSIM_OLT_0",
+          "parent": "BBSim-BBSIM_OLT_10",
           "children": [
             {
-              "name": "sfp-0",
+              "name": "sfp-plus-0",
               "class": "COMPONENT_TYPE_TRANSCEIVER",
-              "description": "XGS-PON",
-              "parent": "sfp-plus-transceiver-cage-pon-0",
+              "description": "bbsim-transceiver",
+              "parent": "sfp-plus-transceiver-cage-0",
+              "children": [
+                {
+                  "name": "pon-0",
+                  "class": "COMPONENT_TYPE_PORT",
+                  "description": "bbsim-pon-port",
+                  "parent": "sfp-plus-0",
+                  "uuid": {
+                    "uuid": "38c3cdcc-f428-370b-a08f-8c64a90552e3"
+                  },
+                  "portAttr": {
+                    "protocol": "XGSPON"
+                  }
+                }
+              ],
               "uuid": {
-                "uuid": "788ba741-507f-37b1-8e47-4a389460873b"
+                "uuid": "2d0ab069-f461-34e5-a16a-5ebb1f26b1a7"
               },
-             "transceiverAttr": {
+              "transceiverAttr": {
                 "formFactor": "SFP_PLUS",
                 "transType": "XGSPON",
                 "maxDistance": 10,
@@ -65,7 +79,7 @@ $ grpcurl -plaintext -d '{"device_uuid": {"uuid": "5295a1d5-a121-372e-b8dc-6f7ed
             }
           ],
           "uuid": {
-            "uuid": "6bfab16e-8003-3e18-9143-8933df64aa52"
+            "uuid": "2410ab0a-1f17-3326-9708-da5b62b48d85"
           }
         },
         {
@@ -78,7 +92,7 @@ $ grpcurl -plaintext -d '{"device_uuid": {"uuid": "5295a1d5-a121-372e-b8dc-6f7ed
             "uuid": "2f4b639c-80a9-340f-b8d8-4ad06580b3cf"
           },
           "state": {
-
+            
           }
         },
         {
@@ -91,7 +105,7 @@ $ grpcurl -plaintext -d '{"device_uuid": {"uuid": "5295a1d5-a121-372e-b8dc-6f7ed
             "uuid": "4fb1a981-5697-3813-955d-fbb2a2908b2f"
           },
           "state": {
-
+            
           }
         },
         {
@@ -104,7 +118,7 @@ $ grpcurl -plaintext -d '{"device_uuid": {"uuid": "5295a1d5-a121-372e-b8dc-6f7ed
             "uuid": "b1d63346-c0b9-3a29-a4e6-e047efff9ddf"
           },
           "state": {
-
+            
           }
         },
         {
@@ -117,7 +131,7 @@ $ grpcurl -plaintext -d '{"device_uuid": {"uuid": "5295a1d5-a121-372e-b8dc-6f7ed
             "uuid": "0bcbe296-9855-3218-9479-9c501073773f"
           },
           "state": {
-
+            
           }
         },
         {
@@ -130,7 +144,7 @@ $ grpcurl -plaintext -d '{"device_uuid": {"uuid": "5295a1d5-a121-372e-b8dc-6f7ed
             "uuid": "78cd16fd-73d1-3aad-8f13-644ed3101c63"
           },
           "state": {
-
+            
           }
         },
         {
@@ -143,20 +157,33 @@ $ grpcurl -plaintext -d '{"device_uuid": {"uuid": "5295a1d5-a121-372e-b8dc-6f7ed
             "uuid": "b9ada337-63a1-3991-96f5-95416dec1bf0"
           },
           "state": {
-
+            
+          }
+        },
+        {
+          "name": "Thermal/PSU/SystemPSU/0",
+          "class": "COMPONENT_TYPE_POWER_SUPPLY",
+          "description": "bbsim-psu",
+          "serialNum": "bbsim-psu-serial-0",
+          "mfgName": "bbsim-psu",
+          "uuid": {
+            "uuid": "ee5fa7a2-0707-3bfb-90dd-678b2d6711c6"
+          },
+          "state": {
+            
           }
         }
       ],
-      "serialNum": "BBSIM_OLT_0",
+      "serialNum": "BBSIM_OLT_10",
       "mfgName": "BBSim",
       "uri": {
         "uri": "XXX.YYY.ZZZ.AAA"
       },
       "uuid": {
-        "uuid": "5295a1d5-a121-372e-b8dc-6f7eda83f0ba"
+        "uuid": "895f65ab-64a3-3957-a2db-568a168faa3a"
       },
       "state": {
-
+        
       }
     }
   }
@@ -415,13 +442,13 @@ it can be configured via a config file such as:
 
 Note : For event names, refer EventIds enum in https://github.com/opencord/device-management-interface/blob/master/protos/dmi/hw_events_mgmt_service.proto .
 
-$ bsimctl dmi events raise <event_name>
+$ bbsimctl dmi events raise <event_name>
 
 ###  FAN FAILURE EVENT
 
 .. code:: bash
 ```
-$ bsimctl dmi events create EVENT_FAN_FAILURE
+$ bbsimctl dmi events create EVENT_FAN_FAILURE
 [Status: 0] DMI Event Indication Sent.
 ```
 
@@ -429,7 +456,7 @@ $ bsimctl dmi events create EVENT_FAN_FAILURE
 
 .. code:: bash
 ```
-$ bsimctl dmi events create EVENT_PSU_FAILURE
+$ bbsimctl dmi events create EVENT_PSU_FAILURE
 [Status: 0] DMI Event Indication Sent.
 ```
 
@@ -437,6 +464,32 @@ $ bsimctl dmi events create EVENT_PSU_FAILURE
 
 .. code:: bash
 ```
-$ bsimctl dmi events create EVENT_HW_DEVICE_TEMPERATURE_ABOVE_CRITICAL
+$ bbsimctl dmi events create EVENT_HW_DEVICE_TEMPERATURE_ABOVE_CRITICAL
 [Status: 0] DMI Event Indication Sent.
+```
+
+## Plug transceivers in or out
+
+Access ``bbsimctl``, as described in the previous section
+
+###  List transceivers
+.. code:: bash
+```
+$ bbsimctl dmi transceiver list
+ID    UUID                                    NAME          TECHNOLOGY    PLUGGEDIN    PONIDS
+0     2d0ab069-f461-34e5-a16a-5ebb1f26b1a7    sfp-plus-0    XGSPON        false        [0]
+```
+
+### Plug transceiver out
+.. code:: bash
+```
+$ bbsimctl dmi transceiver plug_out 0
+[Status: 0] Plugged out transceiver 0
+```
+
+### Plug transceiver in
+.. code:: bash
+```
+$ bbsimctl dmi transceiver plug_in 0
+[Status: 0] Plugged in transceiver 0
 ```

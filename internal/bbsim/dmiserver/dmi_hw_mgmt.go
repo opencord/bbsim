@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/Shopify/sarama"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/golang/protobuf/ptypes/timestamp"
@@ -41,6 +42,46 @@ func getUUID(seed string) string {
 	return guuid.NewMD5(guuid.Nil, []byte(seed)).String()
 }
 
+func getOltName() string {
+	return fmt.Sprintf("%s-%s", common.Config.Olt.Vendor, devices.GetOLT().SerialNumber)
+}
+
+func getOltUUID() *dmi.Uuid {
+	return &dmi.Uuid{
+		Uuid: getUUID(devices.GetOLT().SerialNumber),
+	}
+}
+
+func getCageName(id uint32) string {
+	return fmt.Sprintf("sfp-plus-transceiver-cage-%d", id)
+}
+
+func getCageUUID(id uint32) *dmi.Uuid {
+	return &dmi.Uuid{
+		Uuid: getUUID(fmt.Sprintf("%s-%s", devices.GetOLT().SerialNumber, getCageName(id))),
+	}
+}
+
+func getTransceiverName(id uint32) string {
+	return fmt.Sprintf("sfp-plus-%d", id)
+}
+
+func getTransceiverUUID(id uint32) *dmi.Uuid {
+	return &dmi.Uuid{
+		Uuid: getUUID(fmt.Sprintf("%s-%s", devices.GetOLT().SerialNumber, getTransceiverName(id))),
+	}
+}
+
+func getPonName(id uint32) string {
+	return fmt.Sprintf("pon-%d", id)
+}
+
+func getPonUUID(id uint32) *dmi.Uuid {
+	return &dmi.Uuid{
+		Uuid: getUUID(fmt.Sprintf("%s-%s", devices.GetOLT().SerialNumber, getPonName(id))),
+	}
+}
+
 //StartManagingDevice establishes connection with the device and does checks to ascertain if the device with passed identity can be managed
 func (dms *DmiAPIServer) StartManagingDevice(req *dmi.ModifiableComponent, stream dmi.NativeHWManagementService_StartManagingDeviceServer) error {
 	//Get serial number and generate the UUID based on this serial number. Store this UUID in local cache
@@ -57,13 +98,9 @@ func (dms *DmiAPIServer) StartManagingDevice(req *dmi.ModifiableComponent, strea
 
 	// Uri is the IP address
 	dms.ipAddress = req.GetUri().GetUri()
-	dms.deviceSerial = olt.SerialNumber
-	dms.deviceName = fmt.Sprintf("%s-%s", common.Config.Olt.Vendor, dms.deviceSerial)
 
-	dms.uuid = getUUID(dms.deviceSerial)
-
-	dms.ponTransceiverUuids = make([]string, olt.NumPon)
-	dms.ponTransceiverCageUuids = make([]string, olt.NumPon)
+	deviceName := getOltName()
+	dms.uuid = getOltUUID()
 
 	// Start device metrics generator
 	dms.metricChannel = make(chan interface{}, kafkaChannelSize)
@@ -76,57 +113,27 @@ func (dms *DmiAPIServer) StartManagingDevice(req *dmi.ModifiableComponent, strea
 	var components []*dmi.Component
 
 	// Create and store the component for transceivers and transceiver cages
-	for i, pon := range olt.Pons {
-		label := fmt.Sprintf("pon-%d", pon.ID)
-		dms.ponTransceiverUuids[i] = getUUID(dms.deviceSerial + label)
-		dms.ponTransceiverCageUuids[i] = getUUID(dms.deviceSerial + "cage" + label)
-
-		transName := fmt.Sprintf("sfp-%d", i)
-		cageName := fmt.Sprintf("sfp-plus-transceiver-cage-pon-%d", i)
-
-		var transType dmi.TransceiverType
-		var rxWavelength, txWavelength []uint32
-		switch pon.Technology {
-		case common.GPON:
-			transType = dmi.TransceiverType_GPON
-			rxWavelength = []uint32{1490} // nanometers
-			txWavelength = []uint32{1550} // nanometers
-		case common.XGSPON:
-			transType = dmi.TransceiverType_XGSPON
-			rxWavelength = []uint32{1270} // nanometers
-			txWavelength = []uint32{1577} // nanometers
-		}
-
-		trans := dmi.Component{
-			Name:        transName,
-			Class:       dmi.ComponentType_COMPONENT_TYPE_TRANSCEIVER,
-			Description: pon.Technology.String(),
-			Uuid: &dmi.Uuid{
-				Uuid: dms.ponTransceiverUuids[i],
-			},
-			Parent: cageName,
-			Specific: &dmi.Component_TransceiverAttr{
-				TransceiverAttr: &dmi.TransceiverComponentsAttributes{
-					FormFactor:       dmi.TransceiverComponentsAttributes_SFP_PLUS,
-					TransType:        transType,
-					MaxDistance:      10, // kilometers (see scale below)
-					MaxDistanceScale: dmi.ValueScale_VALUE_SCALE_KILO,
-					RxWavelength:     rxWavelength,
-					TxWavelength:     txWavelength,
-					WavelengthScale:  dmi.ValueScale_VALUE_SCALE_NANO,
-				},
-			},
-		}
+	for _, trans := range dms.Transceivers {
+		//Make one cage for each of the transceivers
+		cageName := getCageName(trans.ID)
 
 		cage := dmi.Component{
 			Name:        cageName,
 			Class:       dmi.ComponentType_COMPONENT_TYPE_CONTAINER,
 			Description: "cage",
-			Uuid: &dmi.Uuid{
-				Uuid: dms.ponTransceiverCageUuids[i],
-			},
-			Parent:   dms.deviceName,
-			Children: []*dmi.Component{&trans},
+			Uuid:        getCageUUID(trans.ID),
+			Parent:      deviceName,
+			Children:    []*dmi.Component{},
+		}
+
+		//If the transceiver is not plugged in, only the empty cage is created
+		if trans.PluggedIn {
+			transComponent, err := createTransceiverComponent(trans, cageName)
+			if err != nil {
+				logger.Error(err)
+				continue
+			}
+			cage.Children = append(cage.Children, transComponent)
 		}
 
 		components = append(components, &cage)
@@ -150,30 +157,26 @@ func (dms *DmiAPIServer) StartManagingDevice(req *dmi.ModifiableComponent, strea
 
 	// create the root component
 	dms.root = &dmi.Component{
-		Name:         dms.deviceName,
+		Name:         deviceName,
 		Class:        0,
 		Description:  "",
 		Parent:       "",
 		ParentRelPos: 0,
 		Children:     components,
-		SerialNum:    dms.deviceSerial,
+		SerialNum:    olt.SerialNumber,
 		MfgName:      common.Config.Olt.Vendor,
 		IsFru:        false,
 		Uri: &dmi.Uri{
 			Uri: dms.ipAddress,
 		},
-		Uuid: &dmi.Uuid{
-			Uuid: dms.uuid,
-		},
+		Uuid:  dms.uuid,
 		State: &dmi.ComponentState{},
 	}
 
-	logger.Debugf("Generated UUID for the uri %s is %s", dms.ipAddress, dms.uuid)
+	logger.Debugf("Generated UUID for the uri %s is %s", dms.ipAddress, dms.uuid.Uuid)
 	response := &dmi.StartManagingDeviceResponse{
-		Status: dmi.Status_OK_STATUS,
-		DeviceUuid: &dmi.Uuid{
-			Uuid: dms.uuid,
-		},
+		Status:     dmi.Status_OK_STATUS,
+		DeviceUuid: dms.uuid,
 	}
 
 	err := stream.Send(response)
@@ -183,6 +186,90 @@ func (dms *DmiAPIServer) StartManagingDevice(req *dmi.ModifiableComponent, strea
 	}
 
 	return nil
+}
+
+func createTransceiverComponent(trans *Transceiver, cageName string) (*dmi.Component, error) {
+	portName := getPonName(trans.ID)
+
+	var rxWavelength, txWavelength []uint32
+
+	if len(trans.Pons) == 0 {
+		return nil, fmt.Errorf("No pons in list for transceiver %d", trans.ID)
+	} else if len(trans.Pons) <= 1 {
+		//Assuming a transceiver with only one PON
+		//has the technology of the PON
+
+		switch trans.Pons[0].Technology {
+		case common.GPON:
+			trans.Technology = dmi.TransceiverType_GPON
+			rxWavelength = []uint32{1490} // nanometers
+			txWavelength = []uint32{1550} // nanometers
+		case common.XGSPON:
+			trans.Technology = dmi.TransceiverType_XGSPON
+			rxWavelength = []uint32{1270} // nanometers
+			txWavelength = []uint32{1577} // nanometers
+		}
+	} else {
+		//Assuming more than one PON for the transceiver
+		//is COMBO PON
+
+		trans.Technology = dmi.TransceiverType_COMBO_GPON_XGSPON
+
+		rxWavelength = []uint32{1490, 1270} // nanometers
+		txWavelength = []uint32{1550, 1577} // nanometers
+	}
+
+	//Create all ports mapped to this transceiver
+	ports := []*dmi.Component{}
+	for _, pon := range trans.Pons {
+		var portProto dmi.PortComponentAttributes_Protocol
+
+		switch pon.Technology {
+		case common.GPON:
+			portProto = dmi.PortComponentAttributes_GPON
+		case common.XGSPON:
+			portProto = dmi.PortComponentAttributes_XGSPON
+		}
+
+		p := dmi.Component{
+			Name:        portName,
+			Class:       dmi.ComponentType_COMPONENT_TYPE_PORT,
+			Description: "bbsim-pon-port",
+			Uuid:        getPonUUID(pon.ID),
+			Parent:      trans.Name,
+			Specific: &dmi.Component_PortAttr{
+				PortAttr: &dmi.PortComponentAttributes{
+					Protocol: portProto,
+				},
+			},
+		}
+
+		ports = append(ports, &p)
+	}
+
+	transComponent := dmi.Component{
+		Name:        trans.Name,
+		Class:       dmi.ComponentType_COMPONENT_TYPE_TRANSCEIVER,
+		Description: "bbsim-transceiver",
+		Uuid: &dmi.Uuid{
+			Uuid: trans.Uuid,
+		},
+		Parent: cageName,
+		Specific: &dmi.Component_TransceiverAttr{
+			TransceiverAttr: &dmi.TransceiverComponentsAttributes{
+				FormFactor:       dmi.TransceiverComponentsAttributes_SFP_PLUS,
+				TransType:        trans.Technology,
+				MaxDistance:      10, // kilometers (see scale below)
+				MaxDistanceScale: dmi.ValueScale_VALUE_SCALE_KILO,
+				RxWavelength:     rxWavelength,
+				TxWavelength:     txWavelength,
+				WavelengthScale:  dmi.ValueScale_VALUE_SCALE_NANO,
+			},
+		},
+		Children: ports,
+	}
+
+	return &transComponent, nil
 }
 
 func createFanComponent(fanIdx int) *dmi.Component {
@@ -299,6 +386,115 @@ func createPowerSupplyComponent(psuIdx int) *dmi.Component {
 	}
 }
 
+func PlugoutTransceiverComponent(transId uint32, dms *DmiAPIServer) error {
+	if dms == nil {
+		return fmt.Errorf("Nil API server")
+	}
+
+	if dms.root == nil {
+		return fmt.Errorf("Device management not started")
+	}
+
+	trans, err := getTransceiverWithId(transId, dms)
+	if err != nil {
+		return err
+	}
+
+	if !trans.PluggedIn {
+		return fmt.Errorf("Cannot plug out transceiver with ID %d since it's not plugged in", transId)
+	}
+
+	//Find the transceiver node in the tree
+	targetUuid := getTransceiverUUID(transId)
+
+	var targetCage *dmi.Component
+	targetTransIndex := -1
+
+loop:
+	for _, rootChild := range dms.root.Children {
+		if rootChild.Uuid.Uuid == getCageUUID(transId).Uuid {
+			currentCage := rootChild
+
+			for j, cageChild := range currentCage.Children {
+				if cageChild.Uuid.Uuid == targetUuid.Uuid {
+					targetCage = currentCage
+					targetTransIndex = j
+					break loop
+				}
+			}
+		}
+	}
+
+	if targetCage == nil || targetTransIndex == -1 {
+		return fmt.Errorf("Cannot find transceiver with id %d", transId)
+	}
+
+	//Remove transceiver
+	targetCage.Children = append(targetCage.Children[:targetTransIndex], targetCage.Children[targetTransIndex+1:]...)
+	logger.WithFields(log.Fields{
+		"transId":      transId,
+		"cageName":     targetCage.Name,
+		"cageChildren": targetCage.Children,
+	}).Debug("Removed transceiver from DMI inventory")
+
+	//Change plugged-in state
+	trans.PluggedIn = false
+
+	return nil
+}
+
+func PluginTransceiverComponent(transId uint32, dms *DmiAPIServer) error {
+	if dms == nil {
+		return fmt.Errorf("Nil API server")
+	}
+
+	if dms.root == nil {
+		return fmt.Errorf("Device management not started")
+	}
+
+	trans, err := getTransceiverWithId(transId, dms)
+	if err != nil {
+		return err
+	}
+
+	if trans.PluggedIn {
+		return fmt.Errorf("Cannot plug in transceiver with ID %d since it's already plugged in", transId)
+	}
+
+	//Find transceiver node in the tree
+	var targetCage *dmi.Component
+
+	for _, rootChild := range dms.root.Children {
+		if rootChild.Uuid.Uuid == getCageUUID(transId).Uuid {
+			targetCage = rootChild
+			break
+		}
+	}
+
+	if targetCage == nil {
+		return fmt.Errorf("Cannot find cage for transceiver with id %d", transId)
+	}
+
+	//Add transceiver
+	transComponent, err := createTransceiverComponent(trans, targetCage.Name)
+	if err != nil {
+		return err
+	}
+
+	targetCage.Children = append(targetCage.Children, transComponent)
+
+	logger.WithFields(log.Fields{
+		"transId":      transId,
+		"cageName":     targetCage.Name,
+		"cageChildren": targetCage.Children,
+	}).Debug("Added transceiver to DMI inventory")
+
+	//Change plugged-in state
+	trans.PluggedIn = true
+
+	return nil
+}
+
 //StopManagingDevice stops management of a device and cleans up any context and caches for that device
 func (dms *DmiAPIServer) StopManagingDevice(ctx context.Context, req *dmi.StopManagingDeviceRequest) (*dmi.StopManagingDeviceResponse, error) {
 	logger.Debugf("StopManagingDevice API invoked")
@@ -318,15 +514,14 @@ func (dms *DmiAPIServer) StopManagingDevice(ctx context.Context, req *dmi.StopMa
 		dms.mPublisherCancelFunc()
 	}
 
-	dms.deviceName = ""
 	dms.kafkaEndpoint = ""
 	dms.ipAddress = ""
-	dms.deviceSerial = ""
-	dms.ponTransceiverUuids = nil
-	dms.ponTransceiverCageUuids = nil
-	dms.uuid = ""
+	dms.uuid = nil
 	dms.root = nil
 	dms.metricChannel = nil
+
+	//Don't clear the Transceivers, so that they will survive
+	//new StartManagingDevice calls
 
 	logger.Infof("Stopped managing the device")
 	return &dmi.StopManagingDeviceResponse{Status: dmi.Status_OK_STATUS}, nil
@@ -348,8 +543,8 @@ func (dms *DmiAPIServer) GetPhysicalInventory(req *dmi.PhysicalInventoryRequest,
 		return nil
 	}
 
-	if req.DeviceUuid.Uuid != dms.uuid {
-		logger.Errorf("Requested uuid =%s, uuid of existing device = %s", req.DeviceUuid.Uuid, dms.uuid)
+	if req.DeviceUuid.Uuid != dms.uuid.Uuid {
+		logger.Errorf("Requested uuid =%s, uuid of existing device = %s", req.DeviceUuid.Uuid, dms.uuid.Uuid)
 		// Wrong uuid, return error
 		errResponse := &dmi.PhysicalInventoryResponse{
 			Status:    dmi.Status_ERROR_STATUS,
@@ -490,7 +685,7 @@ func (dms *DmiAPIServer) SetLoggingEndpoint(_ context.Context, request *dmi.SetL
 	if request.LoggingProtocol == "" {
 		return errRetFunc(dmi.Status_ERROR_STATUS, dmi.SetRemoteEndpointResponse_LOGGING_ENDPOINT_PROTOCOL_ERROR)
 	}
-	if request.DeviceUuid == nil || request.DeviceUuid.Uuid != dms.uuid {
+	if request.DeviceUuid == nil || request.DeviceUuid.Uuid != dms.uuid.Uuid {
 		return errRetFunc(dmi.Status_ERROR_STATUS, dmi.SetRemoteEndpointResponse_UNKNOWN_DEVICE)
 	}
 
@@ -511,7 +706,7 @@ func (dms *DmiAPIServer) GetLoggingEndpoint(_ context.Context, request *dmi.Hard
 			Reason: dmi.GetLoggingEndpointResponse_UNKNOWN_DEVICE,
 		}, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
-	if request.Uuid.Uuid != dms.uuid {
+	if request.Uuid.Uuid != dms.uuid.Uuid {
 		return &dmi.GetLoggingEndpointResponse{
 			Status: dmi.Status_ERROR_STATUS,
 			Reason: dmi.GetLoggingEndpointResponse_UNKNOWN_DEVICE,
@@ -578,17 +773,15 @@ func (dms *DmiAPIServer) GetMsgBusEndpoint(context.Context, *empty.Empty) (*dmi.
 func (dms *DmiAPIServer) GetManagedDevices(context.Context, *empty.Empty) (*dmi.ManagedDevicesResponse, error) {
 	retResponse := dmi.ManagedDevicesResponse{}
 	//If our uuid is empty, we return empty list; else we fill details and return
-	if dms.uuid != "" {
+	if dms.root != nil {
 		root := dmi.ManagedDeviceInfo{
 			Info: &dmi.ModifiableComponent{
-				Name: dms.deviceName,
+				Name: getOltName(),
 				Uri: &dmi.Uri{
 					Uri: dms.ipAddress,
 				},
 			},
-			DeviceUuid: &dmi.Uuid{
-				Uuid: dms.uuid,
-			},
+			DeviceUuid: dms.uuid,
 		}
 
 		retResponse.Devices = append(retResponse.Devices, &root)
@@ -601,32 +794,26 @@ func (dms *DmiAPIServer) GetManagedDevices(context.Context, *empty.Empty) (*dmi.
 //GetLogLevel Gets the configured log level for a certain entity on a certain device.
 func (dms *DmiAPIServer) GetLogLevel(context.Context, *dmi.GetLogLevelRequest) (*dmi.GetLogLevelResponse, error) {
 	return &dmi.GetLogLevelResponse{
-		Status: dmi.Status_OK_STATUS,
-		DeviceUuid: &dmi.Uuid{
-			Uuid: dms.uuid,
-		},
-		LogLevels: []*dmi.EntitiesLogLevel{},
+		Status:     dmi.Status_OK_STATUS,
+		DeviceUuid: dms.uuid,
+		LogLevels:  []*dmi.EntitiesLogLevel{},
 	}, nil
 }
 
 // SetLogLevel Sets the log level of the device, for each given entity to a certain level.
 func (dms *DmiAPIServer) SetLogLevel(context.Context, *dmi.SetLogLevelRequest) (*dmi.SetLogLevelResponse, error) {
 	return &dmi.SetLogLevelResponse{
-		Status: dmi.Status_OK_STATUS,
-		DeviceUuid: &dmi.Uuid{
-			Uuid: dms.uuid,
-		},
+		Status:     dmi.Status_OK_STATUS,
+		DeviceUuid: dms.uuid,
 	}, nil
 }
 
 // GetLoggableEntities Gets the entities of a device on which log can be configured.
 func (dms *DmiAPIServer) GetLoggableEntities(context.Context, *dmi.GetLoggableEntitiesRequest) (*dmi.GetLogLevelResponse, error) {
 	return &dmi.GetLogLevelResponse{
-		Status: dmi.Status_OK_STATUS,
-		DeviceUuid: &dmi.Uuid{
-			Uuid: dms.uuid,
-		},
-		LogLevels: []*dmi.EntitiesLogLevel{},
+		Status:     dmi.Status_OK_STATUS,
+		DeviceUuid: dms.uuid,
+		LogLevels:  []*dmi.EntitiesLogLevel{},
 	}, nil
 }
 
