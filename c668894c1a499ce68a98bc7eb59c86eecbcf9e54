@@ -74,6 +74,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "1ae32eec_0bbffec7",
+        "filename": "internal/bbsim/alarmsim/alarmsim.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-04-01T09:12:14Z",
+      "side": 1,
+      "message": "I completely missed SetAlarm functions for both Onu and Olt.\nI updated the code to use those, as a result my previous changes to onu.go, pon.go and alarmsim.go are not needed anymore.",
+      "parentUuid": "2e705266_3f1a22ad",
+      "range": {
+        "startLine": 235,
+        "startChar": 1,
+        "endLine": 245,
+        "endChar": 2
+      },
+      "revId": "c668894c1a499ce68a98bc7eb59c86eecbcf9e54",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "d677ea52_7419d71f",
         "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
         "patchSetId": 1
@@ -109,6 +133,30 @@
       "side": 1,
       "message": "Looks fine to me.",
       "parentUuid": "d677ea52_7419d71f",
+      "range": {
+        "startLine": 197,
+        "startChar": 1,
+        "endLine": 224,
+        "endChar": 2
+      },
+      "revId": "c668894c1a499ce68a98bc7eb59c86eecbcf9e54",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "fb927fb6_617ed458",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1000894
+      },
+      "writtenOn": "2022-04-01T09:12:14Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "885e0f64_0c421efc",
       "range": {
         "startLine": 197,
         "startChar": 1,
