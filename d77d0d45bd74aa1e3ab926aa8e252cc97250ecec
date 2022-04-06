@@ -35,6 +35,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "5c4b9ac8_1f648071",
+        "filename": "VERSION",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2022-04-06T14:04:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c15448cf_8af52af3",
+      "revId": "d77d0d45bd74aa1e3ab926aa8e252cc97250ecec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "1bf9e0cd_55225dc0",
@@ -48,6 +66,24 @@
       "writtenOn": "2022-04-06T13:12:51Z",
       "side": 1,
       "message": "why are you not using the omcilib decoding function here anymore ? is there something wrong with it ?",
+      "revId": "d77d0d45bd74aa1e3ab926aa8e252cc97250ecec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c13483bb_7521acca",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1396,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2022-04-06T14:04:18Z",
+      "side": 1,
+      "message": "The existing output has shown the byte-wise packet contents as decimal numbers with gaps between the bytes. The new compact output in hex bytes corresponds to the format used in the Onu adapter and is therefore more suitable for tracking OMCI messages across the two containers.",
+      "parentUuid": "1bf9e0cd_55225dc0",
       "revId": "d77d0d45bd74aa1e3ab926aa8e252cc97250ecec",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
@@ -71,6 +107,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "1a49772b_de891def",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1284,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2022-04-06T14:04:18Z",
+      "side": 1,
+      "message": "See previous comment.",
+      "parentUuid": "f46e211e_b3526495",
+      "revId": "d77d0d45bd74aa1e3ab926aa8e252cc97250ecec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "716ae9f4_eb23f1f0",
         "filename": "internal/common/omci/get.go",
         "patchSetId": 1
@@ -82,6 +136,30 @@
       "writtenOn": "2022-04-06T13:12:51Z",
       "side": 1,
       "message": "is this entity instance 0 correct ? seems odd to set it to 0 for all. shoudl this not be entityID ?",
+      "range": {
+        "startLine": 209,
+        "startChar": 19,
+        "endLine": 209,
+        "endChar": 29
+      },
+      "revId": "d77d0d45bd74aa1e3ab926aa8e252cc97250ecec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "874b5b2a_9872b8ef",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2022-04-06T14:04:18Z",
+      "side": 1,
+      "message": "This can be read in G.988 for MEs ONU-G and ONU2-G:\n\"Managed entity ID:\nThis attribute uniquely identifies each instance of this ME. There is only one instance, number 0. (R) (mandatory) (2 bytes)\"\nBut you are right - there is no reason not to use the given entity instance.",
+      "parentUuid": "716ae9f4_eb23f1f0",
       "range": {
         "startLine": 209,
         "startChar": 19,
