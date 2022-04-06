@@ -1,0 +1,95 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "978425d9_2006b263",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-04-06T13:12:51Z",
+      "side": 1,
+      "message": "great work Holger, looks good except a few comments. ",
+      "revId": "d77d0d45bd74aa1e3ab926aa8e252cc97250ecec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c15448cf_8af52af3",
+        "filename": "VERSION",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-04-06T13:12:51Z",
+      "side": 1,
+      "message": "please release a new version with this new support\n1.12.6 directly",
+      "revId": "d77d0d45bd74aa1e3ab926aa8e252cc97250ecec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1bf9e0cd_55225dc0",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1396,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-04-06T13:12:51Z",
+      "side": 1,
+      "message": "why are you not using the omcilib decoding function here anymore ? is there something wrong with it ?",
+      "revId": "d77d0d45bd74aa1e3ab926aa8e252cc97250ecec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f46e211e_b3526495",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1284,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-04-06T13:12:51Z",
+      "side": 1,
+      "message": "can we use the omcilib decoding/encoding ?",
+      "revId": "d77d0d45bd74aa1e3ab926aa8e252cc97250ecec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "716ae9f4_eb23f1f0",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-04-06T13:12:51Z",
+      "side": 1,
+      "message": "is this entity instance 0 correct ? seems odd to set it to 0 for all. shoudl this not be entityID ?",
+      "range": {
+        "startLine": 209,
+        "startChar": 19,
+        "endLine": 209,
+        "endChar": 29
+      },
+      "revId": "d77d0d45bd74aa1e3ab926aa8e252cc97250ecec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
