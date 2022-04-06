@@ -1281,7 +1281,7 @@ func (o *Onu) sendOmciIndication(responsePkt []byte, txId uint16, stream bbsim.S
 	onuLogger.WithFields(log.Fields{
 		"IntfId":       o.PonPortID,
 		"SerialNumber": o.Sn(),
-		"omciPacket":   indication.OmciInd.Pkt,
+		"omciPacket":   hex.EncodeToString(indication.OmciInd.Pkt),
 		"transCorrId":  txId,
 	}).Trace("omci-message-sent")
 	return nil
