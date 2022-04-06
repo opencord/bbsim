@@ -1393,7 +1393,7 @@ func (o *OltDevice) OmciMsgOut(ctx context.Context, omci_msg *openolt.OmciMsg) (
 		log.WithFields(log.Fields{
 			"IntfId":       onu.PonPortID,
 			"SerialNumber": onu.Sn(),
-			"omciPacket":   omcilib.HexDecode(omci_msg.Pkt),
+			"omciPacket":   hex.EncodeToString(omci_msg.Pkt),
 			"err":          err.Error(),
 		}).Error("cannot-parse-OMCI-packet")
 		return nil, fmt.Errorf("olt-received-malformed-omci-packet")
