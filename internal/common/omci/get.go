@@ -54,47 +54,53 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openo
 		return nil, err
 	}
 	omciLogger.WithFields(log.Fields{
+		"DeviceIdent":    omciMsg.DeviceIdentifier,
 		"EntityClass":    msgObj.EntityClass,
 		"EntityInstance": msgObj.EntityInstance,
 		"AttributeMask":  fmt.Sprintf("%x", msgObj.AttributeMask),
 	}).Trace("received-omci-get-request")
 
 	var response *omci.GetResponse
+
+	isExtended := false
+	if omciMsg.DeviceIdentifier == omci.ExtendedIdent {
+		isExtended = true
+	}
 	switch msgObj.EntityClass {
 	case me.Onu2GClassID:
-		response = createOnu2gResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+		response = createOnu2gResponse(isExtended, msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.OnuGClassID:
-		response = createOnugResponse(msgObj.AttributeMask, msgObj.EntityInstance, onuSn)
+		response = createOnugResponse(isExtended, msgObj.AttributeMask, msgObj.EntityInstance, onuSn)
 	case me.SoftwareImageClassID:
-		response = createSoftwareImageResponse(msgObj.AttributeMask, msgObj.EntityInstance,
+		response = createSoftwareImageResponse(isExtended, msgObj.AttributeMask, msgObj.EntityInstance,
 			activeImageEntityId, committedImageEntityId, standbyImageVersion, activeImageVersion, committedImageVersion)
 	case me.IpHostConfigDataClassID:
-		response = createIpHostResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+		response = createIpHostResponse(isExtended, msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.VoipConfigDataClassID:
-		response = createVoipConfigDataResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+		response = createVoipConfigDataResponse(isExtended, msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.UniGClassID:
-		response = createUnigResponse(msgObj.AttributeMask, msgObj.EntityInstance, onuDown)
+		response = createUnigResponse(isExtended, msgObj.AttributeMask, msgObj.EntityInstance, onuDown)
 	case me.PhysicalPathTerminationPointEthernetUniClassID:
-		response = createPptpEthernetResponse(msgObj.AttributeMask, msgObj.EntityInstance, onuDown)
+		response = createPptpEthernetResponse(isExtended, msgObj.AttributeMask, msgObj.EntityInstance, onuDown)
 	case me.PhysicalPathTerminationPointPotsUniClassID:
-		response = createPptpPotsResponse(msgObj.AttributeMask, msgObj.EntityInstance, onuDown)
+		response = createPptpPotsResponse(isExtended, msgObj.AttributeMask, msgObj.EntityInstance, onuDown)
 	case me.AniGClassID:
-		response = createAnigResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+		response = createAnigResponse(isExtended, msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.OnuDataClassID:
-		response = createOnuDataResponse(msgObj.AttributeMask, msgObj.EntityInstance, mds)
+		response = createOnuDataResponse(isExtended, msgObj.AttributeMask, msgObj.EntityInstance, mds)
 	case me.EthernetFramePerformanceMonitoringHistoryDataUpstreamClassID:
-		response = createEthernetFramePerformanceMonitoringHistoryDataUpstreamResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+		response = createEthernetFramePerformanceMonitoringHistoryDataUpstreamResponse(isExtended, msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.EthernetFramePerformanceMonitoringHistoryDataDownstreamClassID:
-		response = createEthernetFramePerformanceMonitoringHistoryDataDownstreamResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+		response = createEthernetFramePerformanceMonitoringHistoryDataDownstreamResponse(isExtended, msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.EthernetPerformanceMonitoringHistoryDataClassID:
-		response = createEthernetPerformanceMonitoringHistoryDataResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+		response = createEthernetPerformanceMonitoringHistoryDataResponse(isExtended, msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.FecPerformanceMonitoringHistoryDataClassID:
-		response = createFecPerformanceMonitoringHistoryDataResponse(msgObj.AttributeMask, msgObj.EntityInstance)
+		response = createFecPerformanceMonitoringHistoryDataResponse(isExtended, msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.GemPortNetworkCtpPerformanceMonitoringHistoryDataClassID:
-		response = createGemPortNetworkCtpPerformanceMonitoringHistoryData(msgObj.AttributeMask, msgObj.EntityInstance)
+		response = createGemPortNetworkCtpPerformanceMonitoringHistoryData(isExtended, msgObj.AttributeMask, msgObj.EntityInstance)
 	case me.EthernetFrameExtendedPmClassID,
 		me.EthernetFrameExtendedPm64BitClassID:
-		response = createEthernetFrameExtendedPmGetResponse(msgObj.EntityClass, msgObj.AttributeMask, msgObj.EntityInstance)
+		response = createEthernetFrameExtendedPmGetResponse(isExtended, msgObj.EntityClass, msgObj.AttributeMask, msgObj.EntityInstance)
 	default:
 		omciLogger.WithFields(log.Fields{
 			"EntityClass":    msgObj.EntityClass,
@@ -103,8 +109,16 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openo
 		}).Warnf("do-not-know-how-to-handle-get-request-for-me-class")
 		return nil, nil
 	}
+	omciLayer := &omci.OMCI{
+		TransactionID:    omciMsg.TransactionID,
+		MessageType:      omci.GetResponseType,
+		DeviceIdentifier: omciMsg.DeviceIdentifier,
+	}
+	var options gopacket.SerializeOptions
+	options.FixLengths = true
 
-	pkt, err := Serialize(omci.GetResponseType, response, omciMsg.TransactionID)
+	buffer := gopacket.NewSerializeBuffer()
+	err = gopacket.SerializeLayers(buffer, options, omciLayer, response)
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
 			"Err":  err,
@@ -112,6 +126,7 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openo
 		}).Error("cannot-Serialize-GetResponse")
 		return nil, err
 	}
+	pkt := buffer.Bytes()
 
 	log.WithFields(log.Fields{
 		"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
@@ -121,7 +136,7 @@ func CreateGetResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, onuSn *openo
 	return pkt, nil
 }
 
-func createOnu2gResponse(attributeMask uint16, entityID uint16) *omci.GetResponse {
+func createOnu2gResponse(isExtended bool, attributeMask uint16, entityID uint16) *omci.GetResponse {
 
 	managedEntity, meErr := me.NewOnu2G(me.ParamData{
 		EntityID: entityID,
@@ -151,7 +166,9 @@ func createOnu2gResponse(attributeMask uint16, entityID uint16) *omci.GetRespons
 
 	return &omci.GetResponse{
 		MeBasePacket: omci.MeBasePacket{
-			EntityClass: me.Onu2GClassID,
+			EntityClass:    me.Onu2GClassID,
+			EntityInstance: entityID,
+			Extended:       isExtended,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,
@@ -159,7 +176,7 @@ func createOnu2gResponse(attributeMask uint16, entityID uint16) *omci.GetRespons
 	}
 }
 
-func createOnugResponse(attributeMask uint16, entityID uint16, onuSn *openolt.SerialNumber) *omci.GetResponse {
+func createOnugResponse(isExtended bool, attributeMask uint16, entityID uint16, onuSn *openolt.SerialNumber) *omci.GetResponse {
 
 	managedEntity, meErr := me.NewOnuG(me.ParamData{
 		EntityID: entityID,
@@ -188,27 +205,17 @@ func createOnugResponse(attributeMask uint16, entityID uint16, onuSn *openolt.Se
 
 	return &omci.GetResponse{
 		MeBasePacket: omci.MeBasePacket{
-			EntityClass: me.OnuGClassID,
+			EntityClass:    me.OnuGClassID,
+			EntityInstance: entityID,
+			Extended:       isExtended,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,
 		Result:        me.Success,
 	}
-
-	//return &omci.GetResponse{
-	//	MeBasePacket: omci.MeBasePacket{
-	//		EntityClass:    me.OnuGClassID,
-	//		EntityInstance: entityID,
-	//	},
-	//	Attributes: me.AttributeValueMap{
-	//
-	//	},
-	//	Result:        me.Success,
-	//	AttributeMask: attributeMask,
-	//}
 }
 
-func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16, activeImageEntityId uint16,
+func createSoftwareImageResponse(isExtended bool, attributeMask uint16, entityInstance uint16, activeImageEntityId uint16,
 	committedImageEntityId uint16, standbyImageVersion string, activeImageVersion string, committedImageVersion string) *omci.GetResponse {
 
 	omciLogger.WithFields(log.Fields{
@@ -244,6 +251,7 @@ func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16, ac
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.SoftwareImageClassID,
 			EntityInstance: entityInstance,
+			Extended:       isExtended,
 		},
 		Attributes: me.AttributeValueMap{
 			me.ManagedEntityID:           0,
@@ -268,11 +276,12 @@ func createSoftwareImageResponse(attributeMask uint16, entityInstance uint16, ac
 	return res
 }
 
-func createIpHostResponse(attributeMask uint16, entityInstance uint16) *omci.GetResponse {
+func createIpHostResponse(isExtended bool, attributeMask uint16, entityInstance uint16) *omci.GetResponse {
 	return &omci.GetResponse{
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.IpHostConfigDataClassID,
 			EntityInstance: entityInstance,
+			Extended:       isExtended,
 		},
 		Attributes: me.AttributeValueMap{
 			me.ManagedEntityID:             0,
@@ -283,11 +292,12 @@ func createIpHostResponse(attributeMask uint16, entityInstance uint16) *omci.Get
 	}
 }
 
-func createVoipConfigDataResponse(attributeMask uint16, entityInstance uint16) *omci.GetResponse {
+func createVoipConfigDataResponse(isExtended bool, attributeMask uint16, entityInstance uint16) *omci.GetResponse {
 	return &omci.GetResponse{
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.VoipConfigDataClassID,
 			EntityInstance: entityInstance,
+			Extended:       isExtended,
 		},
 		Attributes: me.AttributeValueMap{
 			me.ManagedEntityID: 0,
@@ -305,7 +315,7 @@ func createVoipConfigDataResponse(attributeMask uint16, entityInstance uint16) *
 	}
 }
 
-func createUnigResponse(attributeMask uint16, entityID uint16, onuDown bool) *omci.GetResponse {
+func createUnigResponse(isExtended bool, attributeMask uint16, entityID uint16, onuDown bool) *omci.GetResponse {
 	// Valid values for uni_admin_state are 0 (unlocks) and 1 (locks)
 	omciAdminState := 1
 	if !onuDown {
@@ -332,6 +342,7 @@ func createUnigResponse(attributeMask uint16, entityID uint16, onuDown bool) *om
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.UniGClassID,
 			EntityInstance: entityID,
+			Extended:       isExtended,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,
@@ -339,7 +350,7 @@ func createUnigResponse(attributeMask uint16, entityID uint16, onuDown bool) *om
 	}
 }
 
-func createPptpEthernetResponse(attributeMask uint16, entityID uint16, onuDown bool) *omci.GetResponse {
+func createPptpEthernetResponse(isExtended bool, attributeMask uint16, entityID uint16, onuDown bool) *omci.GetResponse {
 	// Valid values for oper_state are 0 (enabled) and 1 (disabled)
 	// Valid values for uni_admin_state are 0 (unlocks) and 1 (locks)
 	onuAdminState := 1
@@ -378,6 +389,7 @@ func createPptpEthernetResponse(attributeMask uint16, entityID uint16, onuDown b
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.PhysicalPathTerminationPointEthernetUniClassID,
 			EntityInstance: entityID,
+			Extended:       isExtended,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,
@@ -385,7 +397,7 @@ func createPptpEthernetResponse(attributeMask uint16, entityID uint16, onuDown b
 	}
 }
 
-func createPptpPotsResponse(attributeMask uint16, entityID uint16, onuDown bool) *omci.GetResponse {
+func createPptpPotsResponse(isExtended bool, attributeMask uint16, entityID uint16, onuDown bool) *omci.GetResponse {
 	// Valid values for oper_state are 0 (enabled) and 1 (disabled)
 	// Valid values for uni_admin_state are 0 (unlocks) and 1 (locks)
 	onuAdminState := 1
@@ -422,6 +434,7 @@ func createPptpPotsResponse(attributeMask uint16, entityID uint16, onuDown bool)
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.PhysicalPathTerminationPointPotsUniClassID,
 			EntityInstance: entityID,
+			Extended:       isExtended,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,
@@ -429,7 +442,7 @@ func createPptpPotsResponse(attributeMask uint16, entityID uint16, onuDown bool)
 	}
 }
 
-func createEthernetFramePerformanceMonitoringHistoryDataUpstreamResponse(attributeMask uint16, entityID uint16) *omci.GetResponse {
+func createEthernetFramePerformanceMonitoringHistoryDataUpstreamResponse(isExtended bool, attributeMask uint16, entityID uint16) *omci.GetResponse {
 	managedEntity, meErr := me.NewEthernetFramePerformanceMonitoringHistoryDataUpstream(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
@@ -462,6 +475,7 @@ func createEthernetFramePerformanceMonitoringHistoryDataUpstreamResponse(attribu
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.EthernetFramePerformanceMonitoringHistoryDataUpstreamClassID,
 			EntityInstance: entityID,
+			Extended:       isExtended,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,
@@ -469,7 +483,7 @@ func createEthernetFramePerformanceMonitoringHistoryDataUpstreamResponse(attribu
 	}
 }
 
-func createEthernetFramePerformanceMonitoringHistoryDataDownstreamResponse(attributeMask uint16, entityID uint16) *omci.GetResponse {
+func createEthernetFramePerformanceMonitoringHistoryDataDownstreamResponse(isExtended bool, attributeMask uint16, entityID uint16) *omci.GetResponse {
 	managedEntity, meErr := me.NewEthernetFramePerformanceMonitoringHistoryDataDownstream(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
@@ -502,6 +516,7 @@ func createEthernetFramePerformanceMonitoringHistoryDataDownstreamResponse(attri
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.EthernetFramePerformanceMonitoringHistoryDataDownstreamClassID,
 			EntityInstance: entityID,
+			Extended:       isExtended,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,
@@ -509,7 +524,7 @@ func createEthernetFramePerformanceMonitoringHistoryDataDownstreamResponse(attri
 	}
 }
 
-func createEthernetPerformanceMonitoringHistoryDataResponse(attributeMask uint16, entityID uint16) *omci.GetResponse {
+func createEthernetPerformanceMonitoringHistoryDataResponse(isExtended bool, attributeMask uint16, entityID uint16) *omci.GetResponse {
 	managedEntity, meErr := me.NewEthernetPerformanceMonitoringHistoryData(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
@@ -542,6 +557,7 @@ func createEthernetPerformanceMonitoringHistoryDataResponse(attributeMask uint16
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.EthernetPerformanceMonitoringHistoryDataClassID,
 			EntityInstance: entityID,
+			Extended:       isExtended,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,
@@ -549,7 +565,7 @@ func createEthernetPerformanceMonitoringHistoryDataResponse(attributeMask uint16
 	}
 }
 
-func createFecPerformanceMonitoringHistoryDataResponse(attributeMask uint16, entityID uint16) *omci.GetResponse {
+func createFecPerformanceMonitoringHistoryDataResponse(isExtended bool, attributeMask uint16, entityID uint16) *omci.GetResponse {
 	managedEntity, meErr := me.NewFecPerformanceMonitoringHistoryData(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
@@ -576,6 +592,7 @@ func createFecPerformanceMonitoringHistoryDataResponse(attributeMask uint16, ent
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.FecPerformanceMonitoringHistoryDataClassID,
 			EntityInstance: entityID,
+			Extended:       isExtended,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,
@@ -583,7 +600,7 @@ func createFecPerformanceMonitoringHistoryDataResponse(attributeMask uint16, ent
 	}
 }
 
-func createGemPortNetworkCtpPerformanceMonitoringHistoryData(attributeMask uint16, entityID uint16) *omci.GetResponse {
+func createGemPortNetworkCtpPerformanceMonitoringHistoryData(isExtended bool, attributeMask uint16, entityID uint16) *omci.GetResponse {
 	managedEntity, meErr := me.NewGemPortNetworkCtpPerformanceMonitoringHistoryData(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
@@ -607,6 +624,7 @@ func createGemPortNetworkCtpPerformanceMonitoringHistoryData(attributeMask uint1
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.GemPortNetworkCtpPerformanceMonitoringHistoryDataClassID,
 			EntityInstance: entityID,
+			Extended:       isExtended,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,
@@ -614,7 +632,7 @@ func createGemPortNetworkCtpPerformanceMonitoringHistoryData(attributeMask uint1
 	}
 }
 
-func createOnuDataResponse(attributeMask uint16, entityID uint16, mds uint8) *omci.GetResponse {
+func createOnuDataResponse(isExtended bool, attributeMask uint16, entityID uint16, mds uint8) *omci.GetResponse {
 	managedEntity, meErr := me.NewOnuData(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
@@ -632,6 +650,7 @@ func createOnuDataResponse(attributeMask uint16, entityID uint16, mds uint8) *om
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.OnuDataClassID,
 			EntityInstance: entityID,
+			Extended:       isExtended,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,
@@ -639,7 +658,7 @@ func createOnuDataResponse(attributeMask uint16, entityID uint16, mds uint8) *om
 	}
 }
 
-func createAnigResponse(attributeMask uint16, entityID uint16) *omci.GetResponse {
+func createAnigResponse(isExtended bool, attributeMask uint16, entityID uint16) *omci.GetResponse {
 	managedEntity, meErr := me.NewAniG(me.ParamData{
 		EntityID: entityID,
 		Attributes: me.AttributeValueMap{
@@ -672,6 +691,7 @@ func createAnigResponse(attributeMask uint16, entityID uint16) *omci.GetResponse
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    me.AniGClassID,
 			EntityInstance: entityID,
+			Extended:       isExtended,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,
@@ -679,7 +699,7 @@ func createAnigResponse(attributeMask uint16, entityID uint16) *omci.GetResponse
 	}
 }
 
-func createEthernetFrameExtendedPmGetResponse(meClass me.ClassID, attributeMask uint16, entityID uint16) *omci.GetResponse {
+func createEthernetFrameExtendedPmGetResponse(isExtended bool, meClass me.ClassID, attributeMask uint16, entityID uint16) *omci.GetResponse {
 
 	callback := me.NewEthernetFrameExtendedPm
 	if meClass != me.EthernetFrameExtendedPmClassID {
@@ -720,6 +740,7 @@ func createEthernetFrameExtendedPmGetResponse(meClass me.ClassID, attributeMask 
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    meClass,
 			EntityInstance: entityID,
+			Extended:       isExtended,
 		},
 		Attributes:    managedEntity.GetAttributeValueMap(),
 		AttributeMask: attributeMask,

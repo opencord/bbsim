@@ -21,27 +21,43 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+
 	"github.com/google/gopacket"
 	"github.com/opencord/omci-lib-go/v2"
 	log "github.com/sirupsen/logrus"
 )
 
+const DeviceIdentifierPos = 3
+
 // ParseOpenOltOmciPacket receive an OMCI packet in the openolt format and returns
 // an OMCI Layer as per omci-lib-go
 func ParseOpenOltOmciPacket(pkt []byte) (gopacket.Packet, *omci.OMCI, error) {
 	rxMsg := HexDecode(pkt)
-
-	// NOTE this is may not be needed, VOLTHA sends the correct message
-	if len(rxMsg) >= 44 {
-		trailerLenData := rxMsg[42:44]
-		trailerLen := binary.BigEndian.Uint16(trailerLenData)
-		if trailerLen != 40 { // invalid base Format entry -> autocorrect
-			binary.BigEndian.PutUint16(rxMsg[42:44], 40)
-			omciLogger.Trace("cc-corrected-omci-message: trailer len inserted")
+	if len(rxMsg) < 10 {
+		omciLogger.WithFields(log.Fields{"Length": len(rxMsg)}).Error("received omci message is generally too small - abort")
+		return nil, nil, errors.New("received omci message is generally too small - abort")
+	}
+	if rxMsg[DeviceIdentifierPos] == byte(omci.BaselineIdent) {
+		// NOTE this is may not be needed, VOLTHA sends the correct message
+		if len(rxMsg) >= 44 {
+			trailerLenData := rxMsg[42:44]
+			trailerLen := binary.BigEndian.Uint16(trailerLenData)
+			if trailerLen != 40 { // invalid base Format entry -> autocorrect
+				binary.BigEndian.PutUint16(rxMsg[42:44], 40)
+				omciLogger.Trace("cc-corrected-omci-message: trailer len inserted")
+			}
+		} else {
+			omciLogger.WithFields(log.Fields{"Length": len(rxMsg)}).Error("received omci-message too small for OmciBaseFormat - abort")
+			return nil, nil, errors.New("received omci-message too small for OmciBaseFormat - abort")
+		}
+	} else if rxMsg[DeviceIdentifierPos] == byte(omci.ExtendedIdent) {
+		if len(rxMsg) > 1980 {
+			omciLogger.WithFields(log.Fields{"Length": len(rxMsg)}).Error("received omci-message with wrong length for OmciExtendedFormat - abort")
+			return nil, nil, errors.New("received omci-message with wrong length for OmciExtendedFormat - abort")
 		}
 	} else {
-		omciLogger.WithFields(log.Fields{"Length": len(rxMsg)}).Error("received omci-message too small for OmciBaseFormat - abort")
-		return nil, nil, errors.New("received omci-message too small for OmciBaseFormat - abort")
+		omciLogger.WithFields(log.Fields{"DeviceIdent": rxMsg[DeviceIdentifierPos]}).Error("received omci-message with wrong Device Identifier - abort")
+		return nil, nil, errors.New("received omci-message with wrong Device Identifier - abort")
 	}
 
 	packet := gopacket.NewPacket(rxMsg, omci.LayerTypeOMCI, gopacket.NoCopy)
