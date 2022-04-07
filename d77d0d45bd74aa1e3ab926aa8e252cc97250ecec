@@ -90,6 +90,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "63aaa748_08b0f441",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1396,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-04-07T12:24:10Z",
+      "side": 1,
+      "message": "shall we correct the output in imci-lib-go ? or provide a helper function ?",
+      "parentUuid": "c13483bb_7521acca",
+      "revId": "d77d0d45bd74aa1e3ab926aa8e252cc97250ecec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "f46e211e_b3526495",
         "filename": "internal/bbsim/devices/onu.go",
         "patchSetId": 1
@@ -160,6 +178,30 @@
       "side": 1,
       "message": "This can be read in G.988 for MEs ONU-G and ONU2-G:\n\"Managed entity ID:\nThis attribute uniquely identifies each instance of this ME. There is only one instance, number 0. (R) (mandatory) (2 bytes)\"\nBut you are right - there is no reason not to use the given entity instance.",
       "parentUuid": "716ae9f4_eb23f1f0",
+      "range": {
+        "startLine": 209,
+        "startChar": 19,
+        "endLine": 209,
+        "endChar": 29
+      },
+      "revId": "d77d0d45bd74aa1e3ab926aa8e252cc97250ecec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6320076f_4ffd90bf",
+        "filename": "internal/common/omci/get.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-04-07T12:24:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "874b5b2a_9872b8ef",
       "range": {
         "startLine": 209,
         "startChar": 19,
