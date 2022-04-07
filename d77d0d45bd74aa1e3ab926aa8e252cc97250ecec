@@ -108,6 +108,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "062ca83d_c3ed3666",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1396,
+      "author": {
+        "id": 1000671
+      },
+      "writtenOn": "2022-04-07T13:30:33Z",
+      "side": 1,
+      "message": "Actually function hex.EncodeToString() is doing the job we need to be done. ;-)",
+      "parentUuid": "63aaa748_08b0f441",
+      "revId": "d77d0d45bd74aa1e3ab926aa8e252cc97250ecec",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "f46e211e_b3526495",
         "filename": "internal/bbsim/devices/onu.go",
         "patchSetId": 1
