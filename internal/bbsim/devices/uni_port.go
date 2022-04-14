@@ -44,6 +44,7 @@ const (
 )
 
 type UniPortIf interface {
+	GetID() uint32
 	StorePortNo(portNo uint32)
 	UpdateStream(stream bbsimTypes.Stream)
 	Enable() error
@@ -190,6 +191,10 @@ func NewUniPort(ID uint32, onu *Onu, nextCtag map[string]int, nextStag map[strin
 	uni.PacketCh = make(chan bbsimTypes.OnuPacketMessage)
 
 	return &uni, nil
+}
+
+func (u *UniPort) GetID() uint32 {
+	return u.ID
 }
 
 func (u *UniPort) StorePortNo(portNo uint32) {

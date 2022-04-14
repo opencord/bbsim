@@ -288,12 +288,26 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 
 				// disable the UNI ports
 				for _, uni := range o.UniPorts {
-					_ = uni.Disable()
+					if err := uni.Disable(); err != nil {
+						onuLogger.WithFields(log.Fields{
+							"onuId": o.ID,
+							"OnuSn": o.Sn(),
+							"UniId": uni.GetID(),
+							"err":   err,
+						}).Error("failed-to-disable-uni-port")
+					}
 				}
 
 				// disable the POTS UNI ports
 				for _, pots := range o.PotsPorts {
-					_ = pots.Disable()
+					if err := pots.Disable(); err != nil {
+						onuLogger.WithFields(log.Fields{
+							"onuId": o.ID,
+							"OnuSn": o.Sn(),
+							"UniId": pots.GetID(),
+							"err":   err,
+						}).Error("failed-to-disable-pots-port")
+					}
 				}
 
 				// verify all the flows removes are handled and

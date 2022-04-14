@@ -38,6 +38,7 @@ const (
 )
 
 type PotsPortIf interface {
+	GetID() uint32
 	Enable() error
 	Disable() error
 }
@@ -105,20 +106,24 @@ func NewPotsPort(ID uint32, onu *Onu) (*PotsPort, error) {
 	return &pots, nil
 }
 
-func (u *PotsPort) StorePortNo(portNo uint32) {
-	u.PortNo = portNo
-	u.logger.WithFields(log.Fields{
+func (p *PotsPort) GetID() uint32 {
+	return p.ID
+}
+
+func (p *PotsPort) StorePortNo(portNo uint32) {
+	p.PortNo = portNo
+	p.logger.WithFields(log.Fields{
 		"PortNo": portNo,
 	}).Debug("logical-port-number-added-to-pots")
 }
 
-func (u *PotsPort) Enable() error {
-	return u.OperState.Event(potsTxEnable)
+func (p *PotsPort) Enable() error {
+	return p.OperState.Event(potsTxEnable)
 }
 
-func (u *PotsPort) Disable() error {
-	if u.OperState.Is(PotsStateDown) {
+func (p *PotsPort) Disable() error {
+	if p.OperState.Is(PotsStateDown) {
 		return nil
 	}
-	return u.OperState.Event(potsTxDisable)
+	return p.OperState.Event(potsTxDisable)
 }

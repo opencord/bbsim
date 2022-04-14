@@ -342,6 +342,7 @@ func (o *OltDevice) RestartOLT() error {
 				oltLogger.WithFields(log.Fields{
 					"oltId": o.ID,
 					"onuId": onu.ID,
+					"OnuSn": onu.Sn(),
 				}).Errorf("Error disabling ONUs on OLT reboot: %v", err)
 			}
 		}
