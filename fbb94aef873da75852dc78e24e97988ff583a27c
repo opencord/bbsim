@@ -16,6 +16,24 @@
       "message": "any reason why this is needed now. Just curious.",
       "revId": "fbb94aef873da75852dc78e24e97988ff583a27c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "62d3d2b5_12374032",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-04-18T17:11:38Z",
+      "side": 1,
+      "message": "This is needed to build images on an M1 mac so that they can be used on a linux box. Without this they\u0027d be built using ARM architecture.",
+      "parentUuid": "2527d099_163c4865",
+      "revId": "fbb94aef873da75852dc78e24e97988ff583a27c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
