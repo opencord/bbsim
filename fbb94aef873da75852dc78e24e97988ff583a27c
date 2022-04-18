@@ -52,6 +52,24 @@
       "parentUuid": "62d3d2b5_12374032",
       "revId": "fbb94aef873da75852dc78e24e97988ff583a27c",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d3b71428_bbd72489",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-04-18T17:31:35Z",
+      "side": 1,
+      "message": "Got it. Thanks.",
+      "parentUuid": "892928fb_968f29e3",
+      "revId": "fbb94aef873da75852dc78e24e97988ff583a27c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
