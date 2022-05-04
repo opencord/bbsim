@@ -18,8 +18,11 @@ package omci
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"strconv"
+
 	"github.com/google/gopacket"
 	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
@@ -109,23 +112,48 @@ func CreateMibUploadRequest(tid uint16) ([]byte, error) {
 	return HexEncode(pkt)
 }
 
-func CreateMibUploadResponse(tid uint16, numberOfCommands uint16) ([]byte, error) {
-	request := &omci.MibUploadResponse{
+func CreateMibUploadResponse(omciMsg *omci.OMCI, mibDb *MibDb) ([]byte, error) {
+
+	isExtended := false
+	numberOfCommands := mibDb.NumberOfBaselineCommands
+	if omciMsg.DeviceIdentifier == omci.ExtendedIdent {
+		isExtended = true
+		numberOfCommands = mibDb.NumberOfExtendedCommands
+	}
+	response := &omci.MibUploadResponse{
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass: me.OnuDataClassID,
+			Extended:    isExtended,
 		},
 		NumberOfCommands: numberOfCommands,
 	}
+	omciLogger.WithFields(log.Fields{
+		"NumberOfCommands": numberOfCommands, "isExtended": isExtended}).Debug("mib-upload-response")
 
-	omciLogger.WithFields(log.Fields{"NumberOfCommands": numberOfCommands}).Debug("mib-upload-response")
+	omciLayer := &omci.OMCI{
+		TransactionID:    omciMsg.TransactionID,
+		MessageType:      omci.MibUploadResponseType,
+		DeviceIdentifier: omciMsg.DeviceIdentifier,
+	}
+	var options gopacket.SerializeOptions
+	options.FixLengths = true
 
-	pkt, err := Serialize(omci.MibUploadResponseType, request, tid)
+	buffer := gopacket.NewSerializeBuffer()
+	err := gopacket.SerializeLayers(buffer, options, omciLayer, response)
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
-			"Err": err,
-		}).Error("Cannot Serialize MibUploadResponse")
+			"Err":  err,
+			"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
+		}).Error("cannot-Serialize-MibUploadResponse")
 		return nil, err
 	}
+	pkt := buffer.Bytes()
+
+	log.WithFields(log.Fields{
+		"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
+		"pkt":  hex.EncodeToString(pkt),
+	}).Trace("omci-mib-upload-response")
+
 	return pkt, nil
 }
 
@@ -165,7 +193,7 @@ func ParseMibUploadNextRequest(omciPkt gopacket.Packet) (*omci.MibUploadNextRequ
 	return msgObj, nil
 }
 
-func CreateMibUploadNextResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, mds uint8, mibDb *MibDb) ([]byte, error) {
+func CreateMibUploadNextResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, mibDb *MibDb) ([]byte, error) {
 
 	msgObj, err := ParseMibUploadNextRequest(omciPkt)
 	if err != nil {
@@ -180,65 +208,67 @@ func CreateMibUploadNextResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, md
 		"CommandSequenceNumber": msgObj.CommandSequenceNumber,
 	}).Trace("received-omci-mibUploadNext-request")
 
-	if msgObj.CommandSequenceNumber > mibDb.NumberOfCommands {
+	isExtended := false
+	numberOfCommands := mibDb.NumberOfBaselineCommands
+	if omciMsg.DeviceIdentifier == omci.ExtendedIdent {
+		isExtended = true
+		numberOfCommands = mibDb.NumberOfExtendedCommands
+	}
+	if msgObj.CommandSequenceNumber > numberOfCommands {
 		omciLogger.WithFields(log.Fields{
 			"CommandSequenceNumber": msgObj.CommandSequenceNumber,
-			"MibDbNumberOfCommands": mibDb.NumberOfCommands,
+			"MibDbNumberOfCommands": numberOfCommands,
 		}).Error("mibdb-does-not-contain-item")
 		return nil, fmt.Errorf("mibdb-does-not-contain-item")
 	}
-	currentEntry := mibDb.items[int(msgObj.CommandSequenceNumber)]
+	if isExtended {
+		pkt := SetTxIdInEncodedPacket(mibDb.extendedResponses[int(msgObj.CommandSequenceNumber)], omciMsg.TransactionID)
+		return pkt, nil
+	} else {
+		currentEntry := mibDb.baselineItems[int(msgObj.CommandSequenceNumber)]
 
-	// if packet is set then we don't need to serialize the packet, it's already done
-	if currentEntry.packet != nil {
+		// if packet is set then we don't need to serialize the packet, it's already done
+		if currentEntry.packet != nil {
+			omciLogger.WithFields(log.Fields{
+				"CommandSequenceNumber": msgObj.CommandSequenceNumber,
+				"MibDbNumberOfCommands": numberOfCommands,
+				"packet":                currentEntry.packet,
+				"request-txid":          omciMsg.TransactionID,
+			}).Info("sending-custom-packet")
+
+			// NOTE we need to replace the first two bytes of the packet with the correct transactionId
+			pkt := SetTxIdInEncodedPacket(currentEntry.packet, omciMsg.TransactionID)
+
+			return pkt, nil
+		}
+		reportedMe, meErr := me.LoadManagedEntityDefinition(currentEntry.classId, me.ParamData{
+			EntityID:   currentEntry.entityId.ToUint16(),
+			Attributes: currentEntry.params,
+		})
+
+		if meErr.GetError() != nil {
+			omciLogger.Errorf("Error while generating %s: %v", currentEntry.classId.String(), meErr.Error())
+		}
+		response := &omci.MibUploadNextResponse{
+			MeBasePacket: omci.MeBasePacket{
+				EntityClass: me.OnuDataClassID,
+			},
+			ReportedME: *reportedMe,
+		}
+
 		omciLogger.WithFields(log.Fields{
-			"CommandSequenceNumber": msgObj.CommandSequenceNumber,
-			"MibDbNumberOfCommands": mibDb.NumberOfCommands,
-			"packet":                currentEntry.packet,
-			"request-txid":          omciMsg.TransactionID,
-		}).Info("sending-custom-packet")
+			"reportedMe": reportedMe,
+		}).Trace("created-omci-mibUploadNext-response")
 
-		// NOTE we need to replace the first two bytes of the packet with the correct transactionId
-		pkt := SetTxIdInEncodedPacket(currentEntry.packet, omciMsg.TransactionID)
+		pkt, err := Serialize(omci.MibUploadNextResponseType, response, omciMsg.TransactionID)
+
+		if err != nil {
+			omciLogger.WithFields(log.Fields{
+				"Err": err,
+			}).Fatalf("Cannot Serialize MibUploadNextRequest")
+			return nil, err
+		}
 
 		return pkt, nil
 	}
-
-	reportedMe, meErr := me.LoadManagedEntityDefinition(currentEntry.classId, me.ParamData{
-		EntityID:   currentEntry.entityId.ToUint16(),
-		Attributes: currentEntry.params,
-	})
-
-	if meErr.GetError() != nil {
-		omciLogger.Errorf("Error while generating %s: %v", currentEntry.classId.String(), meErr.Error())
-	}
-
-	if reportedMe.GetClassID() == me.OnuDataClassID {
-		// if this is ONU-Data we need to replace the MDS
-		if err := reportedMe.SetAttribute("MibDataSync", mds); err.GetError() != nil {
-			omciLogger.Errorf("Error while setting mds in %s: %v", currentEntry.classId.String(), meErr.Error())
-		}
-	}
-
-	response := &omci.MibUploadNextResponse{
-		MeBasePacket: omci.MeBasePacket{
-			EntityClass: me.OnuDataClassID,
-		},
-		ReportedME: *reportedMe,
-	}
-
-	omciLogger.WithFields(log.Fields{
-		"reportedMe": reportedMe,
-	}).Trace("created-omci-mibUploadNext-response")
-
-	pkt, err := Serialize(omci.MibUploadNextResponseType, response, omciMsg.TransactionID)
-
-	if err != nil {
-		omciLogger.WithFields(log.Fields{
-			"Err": err,
-		}).Fatalf("Cannot Serialize MibUploadNextRequest")
-		return nil, err
-	}
-
-	return pkt, nil
 }

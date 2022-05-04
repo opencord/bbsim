@@ -27,10 +27,6 @@ import (
 	"gotest.tools/assert"
 )
 
-// used to verify that the first message in the MIB Sync (OnuData)
-// reports the correct MDS
-const MDS = uint8(128)
-
 func TestCreateMibResetResponse(t *testing.T) {
 	data, _ := CreateMibResetResponse(1)
 
@@ -96,18 +92,18 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 	// we return the corresponding entry
 	// the only exception is for OnuData in which we need to replace the MibDataSync attribute with the current value
 	mibDb := MibDb{
-		NumberOfCommands: 4,
-		items:            []MibDbEntry{},
+		NumberOfBaselineCommands: 4,
+		baselineItems:            []MibDbEntry{},
 	}
 
-	mibDb.items = append(mibDb.items, MibDbEntry{
+	mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 		me.OnuDataClassID,
 		onuDataEntityId,
 		me.AttributeValueMap{me.OnuData_MibDataSync: 0},
 		nil,
 	})
 
-	mibDb.items = append(mibDb.items, MibDbEntry{
+	mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
@@ -119,7 +115,7 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 		nil,
 	})
 
-	mibDb.items = append(mibDb.items, MibDbEntry{
+	mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 		me.AniGClassID,
 		anigEntityId,
 		me.AttributeValueMap{
@@ -143,7 +139,7 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 		nil,
 	})
 
-	mibDb.items = append(mibDb.items, MibDbEntry{
+	mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 		me.Onu2GClassID,
 		onu2gEntityId,
 		me.AttributeValueMap{
@@ -163,7 +159,7 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 	// create an entry with UnkownAttributes set
 	var customPktTxId uint16 = 5
 	customPkt := []byte{0, byte(customPktTxId), 46, 10, 0, 2, 0, 0, 0, 37, 0, 1, 128, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 0, 0, 0, 40, 40, 206, 0, 226}
-	mibDb.items = append(mibDb.items, MibDbEntry{
+	mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 		me.ClassID(37),
 		nil,
 		me.AttributeValueMap{},
@@ -176,7 +172,7 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 		want mibExpected
 	}{
 		{"mibUploadNext-0", createTestMibUploadNextArgs(t, 1, 0),
-			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 1, entityID: onuDataEntityId.ToUint16(), entityClass: me.OnuDataClassID, attributes: map[string]interface{}{me.OnuData_MibDataSync: MDS}}},
+			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 1, entityID: onuDataEntityId.ToUint16(), entityClass: me.OnuDataClassID, attributes: map[string]interface{}{me.OnuData_MibDataSync: uint8(0)}}},
 		{"mibUploadNext-1", createTestMibUploadNextArgs(t, 2, 1),
 			mibExpected{messageType: omci.MibUploadNextResponseType, transactionId: 2, entityID: circuitPackEntityID.ToUint16(), entityClass: me.CircuitPackClassID, attributes: map[string]interface{}{me.CircuitPack_Type: uint8(47), me.CircuitPack_NumberOfPorts: uint8(4)}}},
 		{"mibUploadNext-2", createTestMibUploadNextArgs(t, 3, 2),
@@ -191,7 +187,7 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			// create the packet starting from the mibUploadNextRequest
-			data, err := CreateMibUploadNextResponse(tt.args.omciPkt, tt.args.omciMsg, MDS, &mibDb)
+			data, err := CreateMibUploadNextResponse(tt.args.omciPkt, tt.args.omciMsg, &mibDb)
 			assert.NilError(t, err)
 			omciMsg, omciPkt := omciBytesToMsg(t, data)
 
@@ -225,7 +221,7 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 
 	// now try to get a non existing command from the DB anche expect an error
 	args := createTestMibUploadNextArgs(t, 1, 20)
-	_, err := CreateMibUploadNextResponse(args.omciPkt, args.omciMsg, MDS, &mibDb)
+	_, err := CreateMibUploadNextResponse(args.omciPkt, args.omciMsg, &mibDb)
 	assert.Error(t, err, "mibdb-does-not-contain-item")
 }
 

@@ -18,9 +18,10 @@ package omci
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/google/gopacket"
 	"github.com/opencord/bbsim/internal/common"
-	"testing"
 
 	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
@@ -76,10 +77,10 @@ func Test_GenerateMibDatabase(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, mibDb)
-	assert.Equal(t, expectedItems, int(mibDb.NumberOfCommands))
+	assert.Equal(t, expectedItems, int(mibDb.NumberOfBaselineCommands))
 
 	// now try to serialize all messages to check on the attributes
-	for _, entry := range mibDb.items {
+	for _, entry := range mibDb.baselineItems {
 		reportedMe, meErr := me.LoadManagedEntityDefinition(entry.classId, me.ParamData{
 			EntityID:   entry.entityId.ToUint16(),
 			Attributes: entry.params,
@@ -119,10 +120,10 @@ func Test_GenerateMibDatabase_withPots(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, mibDb)
-	assert.Equal(t, expectedItems, int(mibDb.NumberOfCommands))
+	assert.Equal(t, expectedItems, int(mibDb.NumberOfBaselineCommands))
 
 	// now try to serialize all messages to check on the attributes
-	for _, entry := range mibDb.items {
+	for _, entry := range mibDb.baselineItems {
 		reportedMe, meErr := me.LoadManagedEntityDefinition(entry.classId, me.ParamData{
 			EntityID:   entry.entityId.ToUint16(),
 			Attributes: entry.params,
@@ -157,9 +158,9 @@ func Test_GenerateMibDatabase_withUnkownAttrs(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, mibDb)
-	assert.Equal(t, expectedMibEntries, int(mibDb.NumberOfCommands))
+	assert.Equal(t, expectedMibEntries, int(mibDb.NumberOfBaselineCommands))
 
-	entry := mibDb.items[expectedMibEntries-1] // select the last entry, it's the hardcoded packet
+	entry := mibDb.baselineItems[expectedMibEntries-1] // select the last entry, it's the hardcoded packet
 	fmt.Println(entry.packet)
 	assert.NotNil(t, entry)
 	assert.Equal(t, me.ClassID(37), entry.classId)

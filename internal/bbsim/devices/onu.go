@@ -825,9 +825,9 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			o.PonPort.removeGemPortBySn(o.SerialNumber)
 		}
 	case omci.MibUploadRequestType:
-		responsePkt, _ = omcilib.CreateMibUploadResponse(msg.OmciMsg.TransactionID, o.MibDb.NumberOfCommands)
+		responsePkt, _ = omcilib.CreateMibUploadResponse(msg.OmciMsg, o.MibDb)
 	case omci.MibUploadNextRequestType:
-		responsePkt, _ = omcilib.CreateMibUploadNextResponse(msg.OmciPkt, msg.OmciMsg, o.MibDataSync, o.MibDb)
+		responsePkt, _ = omcilib.CreateMibUploadNextResponse(msg.OmciPkt, msg.OmciMsg, o.MibDb)
 	case omci.GetRequestType:
 		onuDown := o.AdminLockState == 1
 		responsePkt, _ = omcilib.CreateGetResponse(msg.OmciPkt, msg.OmciMsg, o.SerialNumber, o.MibDataSync, o.ActiveImageEntityId,
@@ -1655,7 +1655,7 @@ func (o *Onu) handleOmciResponse(msg bbsim.OmciIndicationMessage, client openolt
 		o.seqNumber++
 		// once the mibUpload is complete send a SetRequest for the PPTP to enable the UNI
 		// NOTE that in BBR we only enable the first UNI
-		if o.seqNumber == o.MibDb.NumberOfCommands {
+		if o.seqNumber == o.MibDb.NumberOfBaselineCommands {
 			meId := omcilib.GenerateUniPortEntityId(1)
 
 			meParams := me.ParamData{

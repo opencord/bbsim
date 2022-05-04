@@ -20,6 +20,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
+	"strings"
+
 	"github.com/google/gopacket"
 	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/omci-lib-go/v2"
@@ -37,11 +40,22 @@ type MibDbEntry struct {
 }
 
 type MibDb struct {
-	NumberOfCommands uint16
-	items            []MibDbEntry
+	NumberOfBaselineCommands uint16
+	NumberOfExtendedCommands uint16
+	baselineItems            []MibDbEntry
+	extendedResponses        [][]byte
 }
 
 type EntityID []byte
+
+const (
+	unknownMePktReportedMeHdr     string = "002500018000"
+	unknownMePktAttributes        string = "0102030405060708090A0B0C0D0E0F101112131415161718191A"
+	unknownAttribPktReportedMeHdr string = "0101000007FD"
+	unknownAttribPktAttributes    string = "00400801000800000006007F07003F00010001000100"
+	extRespMsgContentsLenStart           = 8
+	extRespMsgContentsLenEnd             = 10
+)
 
 func (e EntityID) ToString() string {
 	return hex.EncodeToString(e)
@@ -102,11 +116,11 @@ func GenerateUniPortEntityId(id uint32) EntityID {
 func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology common.PonTechnology) (*MibDb, error) {
 
 	mibDb := MibDb{
-		items: []MibDbEntry{},
+		baselineItems: []MibDbEntry{},
 	}
 
 	// the first element to return is the ONU-Data
-	mibDb.items = append(mibDb.items, MibDbEntry{
+	mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 		me.OnuDataClassID,
 		EntityID{0x00, 0x00},
 		me.AttributeValueMap{me.OnuData_MibDataSync: 0}, // FIXME this needs to be parametrized before sending the response
@@ -134,7 +148,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 		aniCPType = gPonUnitType
 	}
 
-	mibDb.items = append(mibDb.items, MibDbEntry{
+	mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
@@ -145,7 +159,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 		},
 		nil,
 	})
-	mibDb.items = append(mibDb.items, MibDbEntry{
+	mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
@@ -156,7 +170,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 		},
 		nil,
 	})
-	mibDb.items = append(mibDb.items, MibDbEntry{
+	mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
@@ -168,7 +182,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 		},
 		nil,
 	})
-	mibDb.items = append(mibDb.items, MibDbEntry{
+	mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
@@ -178,7 +192,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 	})
 
 	// ANI-G
-	mibDb.items = append(mibDb.items, MibDbEntry{
+	mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 		me.AniGClassID,
 		EntityID{tcontSlotId, aniGId},
 		me.AttributeValueMap{
@@ -204,7 +218,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 
 	// circuitPack Ethernet
 	// NOTE the circuit pack is divided in multiple messages as too big to fit in a single one
-	mibDb.items = append(mibDb.items, MibDbEntry{
+	mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
@@ -215,7 +229,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 		},
 		nil,
 	})
-	mibDb.items = append(mibDb.items, MibDbEntry{
+	mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
@@ -226,7 +240,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 		},
 		nil,
 	})
-	mibDb.items = append(mibDb.items, MibDbEntry{
+	mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
@@ -238,7 +252,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 		},
 		nil,
 	})
-	mibDb.items = append(mibDb.items, MibDbEntry{
+	mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 		me.CircuitPackClassID,
 		circuitPackEntityID,
 		me.AttributeValueMap{
@@ -250,7 +264,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 	if potsUniPortCount > 0 {
 		// circuitPack POTS
 		// NOTE the circuit pack is divided in multiple messages as too big to fit in a single one
-		mibDb.items = append(mibDb.items, MibDbEntry{
+		mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 			me.CircuitPackClassID,
 			circuitPackEntityID,
 			me.AttributeValueMap{
@@ -261,7 +275,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			},
 			nil,
 		})
-		mibDb.items = append(mibDb.items, MibDbEntry{
+		mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 			me.CircuitPackClassID,
 			circuitPackEntityID,
 			me.AttributeValueMap{
@@ -272,7 +286,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			},
 			nil,
 		})
-		mibDb.items = append(mibDb.items, MibDbEntry{
+		mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 			me.CircuitPackClassID,
 			circuitPackEntityID,
 			me.AttributeValueMap{
@@ -284,7 +298,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			},
 			nil,
 		})
-		mibDb.items = append(mibDb.items, MibDbEntry{
+		mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 			me.CircuitPackClassID,
 			circuitPackEntityID,
 			me.AttributeValueMap{
@@ -303,7 +317,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 
 		if i <= ethUniPortCount {
 			// first, create the correct amount of ethernet UNIs, the same is done in onu.go
-			mibDb.items = append(mibDb.items, MibDbEntry{
+			mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 				me.PhysicalPathTerminationPointEthernetUniClassID,
 				uniEntityId,
 				me.AttributeValueMap{
@@ -327,7 +341,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			})
 		} else {
 			// the remaining ones are pots UNIs, the same is done in onu.go
-			mibDb.items = append(mibDb.items, MibDbEntry{
+			mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 				me.PhysicalPathTerminationPointPotsUniClassID,
 				uniEntityId,
 				me.AttributeValueMap{
@@ -349,7 +363,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			})
 		}
 
-		mibDb.items = append(mibDb.items, MibDbEntry{
+		mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 			me.UniGClassID,
 			uniEntityId,
 			me.AttributeValueMap{
@@ -369,7 +383,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			queueEntityId := EntityID{cardHolderSlotID, byte(j)}
 
 			// we first report the PriorityQueue without any attribute
-			mibDb.items = append(mibDb.items, MibDbEntry{
+			mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 				me.PriorityQueueClassID,
 				queueEntityId, //was not reported in the original implementation
 				me.AttributeValueMap{},
@@ -379,7 +393,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			// then we report it with the required attributes
 			// In the downstream direction, the first byte is the slot number and the second byte is the port number of the queue's destination port.
 			relatedPort := append(uniEntityId, 0x00, byte(j))
-			mibDb.items = append(mibDb.items, MibDbEntry{
+			mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 				me.PriorityQueueClassID,
 				queueEntityId, //was not reported in the original implementation
 				me.AttributeValueMap{
@@ -405,7 +419,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 	for i := 1; i <= tconts; i++ {
 		tcontEntityId := EntityID{tcontSlotId, byte(i)}
 
-		mibDb.items = append(mibDb.items, MibDbEntry{
+		mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 			me.TContClassID,
 			tcontEntityId,
 			me.AttributeValueMap{
@@ -415,7 +429,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 		})
 
 		tsEntityId := EntityID{cardHolderSlotID, byte(i)}
-		mibDb.items = append(mibDb.items, MibDbEntry{
+		mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 			me.TrafficSchedulerClassID,
 			tsEntityId, //was not reported in the original implementation
 			me.AttributeValueMap{
@@ -434,7 +448,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			// EntityID = tcontSlotId + Uni EntityID (8001)
 
 			// we first report the PriorityQueue without any attribute
-			mibDb.items = append(mibDb.items, MibDbEntry{
+			mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 				me.PriorityQueueClassID,
 				queueEntityId, //was not reported in the original implementation
 				me.AttributeValueMap{},
@@ -444,7 +458,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			// then we report it with the required attributes
 			// In the upstream direction, the first 2 bytes are the ME ID of the associated T- CONT, the first byte of which is a slot number, the second byte a T-CONT number.
 			relatedPort := append(tcontEntityId, 0x00, byte(j))
-			mibDb.items = append(mibDb.items, MibDbEntry{
+			mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 				me.PriorityQueueClassID,
 				queueEntityId, //was not reported in the original implementation
 				me.AttributeValueMap{
@@ -500,7 +514,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 		}
 	}
 
-	mibDb.items = append(mibDb.items, onu2g)
+	mibDb.baselineItems = append(mibDb.baselineItems, onu2g)
 
 	if common.Config.BBSim.InjectOmciUnknownMe {
 		// NOTE the TxID is actually replaced
@@ -515,10 +529,8 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 
 		//omciHdr := "00032e0a"
 		msgHdr := "00020000"
-		reportedMeHdr := "002500018000"
-		attr := "0102030405060708090A0B0C0D0E0F101112131415161718191A"
 		trailer := "0000002828ce00e2"
-		msg := omciHdr + msgHdr + reportedMeHdr + attr + trailer
+		msg := omciHdr + msgHdr + unknownMePktReportedMeHdr + unknownMePktAttributes + trailer
 		data, err := hex.DecodeString(msg)
 		if err != nil {
 			omciLogger.Fatal("cannot-create-custom-packet")
@@ -526,7 +538,7 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 
 		packet := gopacket.NewPacket(data, omci.LayerTypeOMCI, gopacket.Lazy)
 
-		mibDb.items = append(mibDb.items, MibDbEntry{
+		mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
 			me.ClassID(37), // G.988 "Intentionally left blank"
 			nil,
 			me.AttributeValueMap{},
@@ -534,7 +546,126 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 		})
 	}
 
-	mibDb.NumberOfCommands = uint16(len(mibDb.items))
+	mibDb.NumberOfBaselineCommands = uint16(len(mibDb.baselineItems))
 
+	// Create extended MIB upload responses
+	omciLayer := &omci.OMCI{
+		TransactionID:    0xFFFF, //to be replaced later on
+		MessageType:      omci.MibUploadNextResponseType,
+		DeviceIdentifier: omci.ExtendedIdent,
+	}
+	var i uint16 = 0
+	for i < mibDb.NumberOfBaselineCommands {
+		currentEntry := mibDb.baselineItems[i]
+		for mibDb.baselineItems[i].packet != nil {
+			// Skip any entry with a predefined packet currently used for MEs with unknown ClassID or unknown attributes.
+			// This information will be added later to the last extended response packet
+			i++
+			currentEntry = mibDb.baselineItems[i]
+		}
+		reportedME, meErr := me.LoadManagedEntityDefinition(currentEntry.classId, me.ParamData{
+			EntityID:   currentEntry.entityId.ToUint16(),
+			Attributes: currentEntry.params,
+		})
+		if meErr.GetError() != nil {
+			omciLogger.Errorf("Error while generating reportedME %s: %v", currentEntry.classId.String(), meErr.Error())
+		}
+		request := &omci.MibUploadNextResponse{
+			MeBasePacket: omci.MeBasePacket{
+				EntityClass:    me.OnuDataClassID,
+				EntityInstance: uint16(0),
+				Extended:       true,
+			},
+			ReportedME:    *reportedME,
+			AdditionalMEs: make([]me.ManagedEntity, 0),
+		}
+		i++
+		var outgoingPacket []byte
+		var outgoingPacketLen = 0
+	addMeLoop:
+		for outgoingPacketLen <= omci.MaxExtendedLength-omci.MaxBaselineLength && i < mibDb.NumberOfBaselineCommands {
+			currentEntry := mibDb.baselineItems[i]
+			for mibDb.baselineItems[i].packet != nil {
+				// Skip any entry with a predefined packet currently used for MEs with unknown ClassID or unknown attributes.
+				// This information will be added later to the last extended response packet
+				i++
+				if i < mibDb.NumberOfBaselineCommands {
+					currentEntry = mibDb.baselineItems[i]
+				} else {
+					break addMeLoop
+				}
+			}
+			additionalME, meErr := me.LoadManagedEntityDefinition(currentEntry.classId, me.ParamData{
+				EntityID:   currentEntry.entityId.ToUint16(),
+				Attributes: currentEntry.params,
+			})
+			if meErr.GetError() != nil {
+				omciLogger.Errorf("Error while generating additionalME %s: %v", currentEntry.classId.String(), meErr.Error())
+			}
+			request.AdditionalMEs = append(request.AdditionalMEs, *additionalME)
+
+			var options gopacket.SerializeOptions
+			options.FixLengths = true
+
+			buffer := gopacket.NewSerializeBuffer()
+			omciErr := gopacket.SerializeLayers(buffer, options, omciLayer, request)
+			if omciErr != nil {
+				omciLogger.Errorf("Error while serializing generating additionalME %s: %v", currentEntry.classId.String(), omciErr)
+			}
+			outgoingPacket = buffer.Bytes()
+			outgoingPacketLen = len(outgoingPacket)
+			i++
+		}
+		mibDb.extendedResponses = append(mibDb.extendedResponses, outgoingPacket)
+		mibDb.NumberOfExtendedCommands = uint16(len(mibDb.extendedResponses))
+
+		outgoingPacketString := strings.ToLower(hex.EncodeToString(mibDb.extendedResponses[mibDb.NumberOfExtendedCommands-1]))
+		omciLogger.Debugf("Extended MIB upload response respNo: %d length: %d  string: %s", mibDb.NumberOfExtendedCommands, outgoingPacketLen, outgoingPacketString)
+	}
+	// Currently, there is enough space in the last extended response to add potential MEs with unknown ClassID or unknown attributes, if requested.
+	if common.Config.BBSim.InjectOmciUnknownMe {
+		var err error
+		mibDb.extendedResponses[mibDb.NumberOfExtendedCommands-1], err = AppendAdditionalMEs(mibDb.extendedResponses[mibDb.NumberOfExtendedCommands-1], unknownMePktReportedMeHdr, unknownMePktAttributes)
+		if err != nil {
+			omciLogger.Fatal(err)
+		} else {
+			outgoingPacketString := strings.ToLower(hex.EncodeToString(mibDb.extendedResponses[mibDb.NumberOfExtendedCommands-1]))
+			omciLogger.Debugf("Reponse with unknown ME added: %s", outgoingPacketString)
+		}
+	}
+	if common.Config.BBSim.InjectOmciUnknownAttributes {
+		var err error
+		mibDb.extendedResponses[mibDb.NumberOfExtendedCommands-1], err = AppendAdditionalMEs(mibDb.extendedResponses[mibDb.NumberOfExtendedCommands-1], unknownAttribPktReportedMeHdr, unknownAttribPktAttributes)
+		if err != nil {
+			omciLogger.Fatal(err)
+		} else {
+			outgoingPacketString := strings.ToLower(hex.EncodeToString(mibDb.extendedResponses[mibDb.NumberOfExtendedCommands-1]))
+			omciLogger.Debugf("Reponse with unknown attributes added: %s", outgoingPacketString)
+		}
+	}
 	return &mibDb, nil
+}
+
+func AppendAdditionalMEs(srcSlice []byte, reportedMeHdr string, attributes string) ([]byte, error) {
+	attribBytes, err := hex.DecodeString(attributes)
+	if err != nil {
+		return nil, fmt.Errorf("cannot-decode-attributes-string")
+	}
+	attribBytesLen := len(attribBytes)
+	attribBytesLenStr := fmt.Sprintf("%04X", attribBytesLen)
+	msg := attribBytesLenStr + reportedMeHdr + attributes
+	data, err := hex.DecodeString(msg)
+	if err != nil {
+		return nil, fmt.Errorf("cannot-decode-attributes")
+	}
+	dstSlice := make([]byte, len(srcSlice))
+	copy(dstSlice, srcSlice)
+	dstSlice = append(dstSlice[:], data[:]...)
+	messageContentsLen := binary.BigEndian.Uint16(dstSlice[extRespMsgContentsLenStart:extRespMsgContentsLenEnd])
+	dataLen := len(data)
+	newMessageContentsLen := messageContentsLen + uint16(dataLen)
+	newLenSlice := make([]byte, 2)
+	binary.BigEndian.PutUint16(newLenSlice, newMessageContentsLen)
+	copy(dstSlice[extRespMsgContentsLenStart:extRespMsgContentsLenEnd], newLenSlice[0:2])
+	return dstSlice, nil
 }
