@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/google/gopacket"
+	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
@@ -69,6 +70,8 @@ type getWant struct {
 
 func TestGetResponse(t *testing.T) {
 
+	common.Config = common.GetDefaultOps()
+
 	// NOTE that we're not testing the SerialNumber attribute part of the ONU-G
 	// response here as it is a special case and it requires transformation.
 	// we specifically test that in TestCreateOnugResponse
@@ -83,7 +86,7 @@ func TestGetResponse(t *testing.T) {
 	}{
 		{"getOnu2gResponse",
 			getArgs{createOnu2gResponse(false, 57344, 10), 1},
-			getWant{1, map[string]interface{}{"OpticalNetworkUnitManagementAndControlChannelOmccVersion": uint8(180)}},
+			getWant{1, map[string]interface{}{"OpticalNetworkUnitManagementAndControlChannelOmccVersion": uint8(163)}},
 		},
 		{"getOnugResponse",
 			getArgs{createOnugResponse(false, 40960, 10, sn), 1},

@@ -35,6 +35,10 @@ the list via ``./bbsim --help``
            Setting this flag will cause BBSim to not store data like traffic schedulers, flows of ONUs etc..
      -injectOmciUnknownAttributes
            Generate a MibDB packet with Unknown Attributes
+     -injectOmciUnknownMe
+           Generate a MibDB packet with Unknown Me
+     -omccVersion
+           Set OMCC version to be returned in OMCI response of ME Onu2G
      -kafkaAddress string
            IP:Port for kafka (default ":9092")
      -kafkaEventTopic string

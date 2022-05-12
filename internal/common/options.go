@@ -190,6 +190,7 @@ type BBSimConfig struct {
 	BandwidthProfileFormat      string  `yaml:"bp_format"`
 	InjectOmciUnknownMe         bool    `yaml:"inject_omci_unknown_me"`
 	InjectOmciUnknownAttributes bool    `yaml:"inject_omci_unknown_attributes"`
+	OmccVersion                 int     `yaml:"omcc_version"`
 }
 
 type BBRConfig struct {
@@ -254,7 +255,7 @@ var (
 // - we merge the configuration (CLI has priority over yaml files)
 func LoadConfig() {
 
-	Config = getDefaultOps()
+	Config = GetDefaultOps()
 
 	cliConf := readCliParams()
 
@@ -321,7 +322,7 @@ func LoadConfig() {
 
 func readCliParams() *GlobalConfig {
 
-	conf := getDefaultOps()
+	conf := GetDefaultOps()
 
 	configFile := flag.String("config", conf.BBSim.ConfigFile, "Configuration file path")
 	servicesFile := flag.String("services", conf.BBSim.ServiceConfigFile, "Service Configuration file path")
@@ -361,6 +362,7 @@ func readCliParams() *GlobalConfig {
 	authRetry := flag.Bool("authRetry", conf.BBSim.AuthRetry, "Set this flag if BBSim should retry EAPOL (Authentication) upon failure until success")
 	injectOmciUnknownMe := flag.Bool("injectOmciUnknownMe", conf.BBSim.InjectOmciUnknownMe, "Generate an extra MibDB packet with ClassID 37 (Intentionally left blank)")
 	injectOmciUnknownAttributes := flag.Bool("injectOmciUnknownAttributes", conf.BBSim.InjectOmciUnknownAttributes, "Modifies the ONU2-G MibDB packet to add Unknown Attributes")
+	omccVersion := flag.Int("omccVersion", conf.BBSim.OmccVersion, "Set OMCC version to be returned in OMCI response of ME Onu2G")
 
 	flag.Parse()
 
@@ -394,6 +396,7 @@ func readCliParams() *GlobalConfig {
 	conf.BBSim.DmiServerAddress = *dmi_server_address
 	conf.BBSim.InjectOmciUnknownMe = *injectOmciUnknownMe
 	conf.BBSim.InjectOmciUnknownAttributes = *injectOmciUnknownAttributes
+	conf.BBSim.OmccVersion = *omccVersion
 
 	// update device id if not set
 	if conf.Olt.DeviceId == "" {
@@ -409,7 +412,7 @@ func readCliParams() *GlobalConfig {
 	return conf
 }
 
-func getDefaultOps() *GlobalConfig {
+func GetDefaultOps() *GlobalConfig {
 
 	c := &GlobalConfig{
 		BBSimConfig{
@@ -440,6 +443,7 @@ func getDefaultOps() *GlobalConfig {
 			BandwidthProfileFormat:      BP_FORMAT_MEF,
 			InjectOmciUnknownMe:         false,
 			InjectOmciUnknownAttributes: false,
+			OmccVersion:                 0xA3,
 		},
 		OltConfig{
 			Vendor:             "BBSim",
@@ -498,7 +502,7 @@ func getDefaultPonsConfig() (*PonPortsConfig, error) {
 
 // LoadBBSimConf loads the BBSim configuration from a YAML file
 func loadBBSimConf(filename string) (*GlobalConfig, error) {
-	yamlConfig := getDefaultOps()
+	yamlConfig := GetDefaultOps()
 
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {

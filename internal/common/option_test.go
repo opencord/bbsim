@@ -41,7 +41,7 @@ func TestLoadBBSimServices(t *testing.T) {
 }
 
 func TestLoadPonsConfigDefaults(t *testing.T) {
-	Config = getDefaultOps()
+	Config = GetDefaultOps()
 	// The default options define 1 PON per OLT
 	// and 1 ONU per PON
 
@@ -72,7 +72,7 @@ func TestLoadPonsConfigDefaults(t *testing.T) {
 
 func TestLoadPonsConfigFile(t *testing.T) {
 
-	Config = getDefaultOps()
+	Config = GetDefaultOps()
 
 	Services = []ServiceYaml{
 		{
