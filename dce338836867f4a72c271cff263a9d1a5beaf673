@@ -16,6 +16,29 @@
       "message": "@Teo: As discussed - removed the platform line in Makefile pending your patch to make it optional. ",
       "revId": "dce338836867f4a72c271cff263a9d1a5beaf673",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "bab3bf05_29100a09",
+        "filename": "docs/source/bbsim_config.rst",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-05-12T20:39:12Z",
+      "side": 1,
+      "message": "What is the interpreted type? What is the default? That would be useful to mention here in help section as well as in the document.\nI see that is missing for quite many other options, but at least we can document for the new ones.",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 71
+      },
+      "revId": "dce338836867f4a72c271cff263a9d1a5beaf673",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
