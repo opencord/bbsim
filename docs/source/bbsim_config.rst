@@ -13,8 +13,8 @@ the list via ``./bbsim --help``
    Usage of ./bbsim:
      -api_address string
            IP address:port (default ":50070")
-     -authRetry
-           Set this flag if BBSim should retry EAPOL (Authentication) upon failure until success
+     -authRetry bool
+           Set this flag if BBSim should retry EAPOL (Authentication) upon failure until success (default false)
      -bp_format string
            Bandwidth profile format, 'mef' or 'ietf' (default "mef")
      -ca string
@@ -22,25 +22,29 @@ the list via ``./bbsim --help``
      -config string
            Configuration file path (default "configs/bbsim.yaml")
      -cpuprofile string
-           write cpu profile to file
+           write cpu profile to file (default "")
      -delay int
            The delay between ONU DISCOVERY batches in milliseconds (1 ONU per each PON PORT at a time (default 200)
-     -dhcpRetry
-           Set this flag if BBSim should retry DHCP upon failure until success
+     -dhcpRetry bool
+           Set this flag if BBSim should retry DHCP upon failure until success (default false)
      -dmi_server_address string
            IP address:port (default ":50075")
-     -enableEvents
-           Enable sending BBSim events on configured kafka server
-     -enableperf
-           Setting this flag will cause BBSim to not store data like traffic schedulers, flows of ONUs etc..
-     -injectOmciUnknownAttributes
-           Generate a MibDB packet with Unknown Attributes
+     -enableEvents bool
+           Enable sending BBSim events on configured kafka server (default false)
+     -enableperf bool
+           Setting this flag will cause BBSim to not store data like traffic schedulers, flows of ONUs etc.. (default false)
+     -injectOmciUnknownAttributes bool
+           Generate a MibDB packet with Unknown Attributes (default false)
+     -injectOmciUnknownMe bool
+           Generate a MibDB packet with Unknown Me (default false)
+     -omccVersion int
+           Set OMCC version to be returned in OMCI response of ME Onu2G (default 163 (0xA3))
      -kafkaAddress string
            IP:Port for kafka (default ":9092")
      -kafkaEventTopic string
-           Ability to configure the topic on which BBSim publishes events on Kafka
-     -logCaller
-           Whether to print the caller filename or not
+           Ability to configure the topic on which BBSim publishes events on Kafka (default "")
+     -logCaller bool
+           Whether to print the caller filename or not (default false)
      -logLevel string
            Set the log level (trace, debug, info, warn, error) (default "debug")
      -nni int
@@ -50,7 +54,7 @@ the list via ``./bbsim --help``
      -oltRebootDelay int
            Time that BBSim should before restarting after a reboot (default 60)
      -olt_id int
-           OLT device ID
+           OLT device ID (default 0)
      -omci_response_rate int
            Amount of OMCI messages to respond to (default 10)
      -onu int
@@ -60,7 +64,7 @@ the list via ``./bbsim --help``
      -pon int
            Number of PON ports per OLT device to be emulated (default 1)
      -pon_port_config_file string
-        Pon Interfaces Configuration file path
+        Pon Interfaces Configuration file path  (default "")
      -pots int
            Number of POTS UNI Ports per ONU device to be emulated (default 0)
      -rest_api_address string

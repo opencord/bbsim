@@ -164,6 +164,7 @@ func main() {
 		"OmciResponseRate":            common.Config.Olt.OmciResponseRate,
 		"injectOmciUnknownMe":         common.Config.BBSim.InjectOmciUnknownMe,
 		"injectOmciUnknownAttributes": common.Config.BBSim.InjectOmciUnknownAttributes,
+		"omccVersion":                 common.Config.BBSim.OmccVersion,
 	}).Info("BroadBand Simulator is on")
 
 	// control channels, they are only closed when the goroutine needs to be terminated

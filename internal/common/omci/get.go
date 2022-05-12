@@ -24,6 +24,7 @@ import (
 	"strconv"
 
 	"github.com/google/gopacket"
+	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
@@ -143,7 +144,7 @@ func createOnu2gResponse(isExtended bool, attributeMask uint16, entityID uint16)
 		Attributes: me.AttributeValueMap{
 			me.ManagedEntityID:   entityID,
 			me.Onu2G_EquipmentId: ToOctets("12345123451234512345", 20),
-			me.Onu2G_OpticalNetworkUnitManagementAndControlChannelOmccVersion: 180,
+			me.Onu2G_OpticalNetworkUnitManagementAndControlChannelOmccVersion: common.Config.BBSim.OmccVersion,
 			me.Onu2G_VendorProductCode:                                        0,
 			me.Onu2G_SecurityCapability:                                       1,
 			me.Onu2G_SecurityMode:                                             1,
