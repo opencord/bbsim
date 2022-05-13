@@ -52,7 +52,7 @@ const (
 	unknownMePktReportedMeHdr     string = "002500018000"
 	unknownMePktAttributes        string = "0102030405060708090A0B0C0D0E0F101112131415161718191A"
 	unknownAttribPktReportedMeHdr string = "0101000007FD"
-	unknownAttribPktAttributes    string = "00400801000800000006007F07003F00010001000100"
+	unknownAttribPktAttributes    string = "00400801000800000006007F07003F0001000100010001000000"
 	extRespMsgContentsLenStart           = 8
 	extRespMsgContentsLenEnd             = 10
 )
@@ -506,11 +506,32 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 	}
 
 	if common.Config.BBSim.InjectOmciUnknownAttributes {
+		// NOTE the TxID is actually replaced
+		// by SetTxIdInEncodedPacket in CreateMibUploadNextResponse
+		txId := uint16(33066)
+
+		b := make([]byte, 4)
+		binary.BigEndian.PutUint16(b, txId)
+		b[2] = byte(omci.MibUploadNextResponseType)
+		b[3] = byte(omci.BaselineIdent)
+		omciHdr := hex.EncodeToString(b)
+
+		//omciHdr := "00032e0a"
+		msgHdr := "00020000"
+		trailer := "0000002828ce00e2"
+
+		msg := omciHdr + msgHdr + unknownAttribPktReportedMeHdr + unknownAttribPktAttributes + trailer
+		data, err := hex.DecodeString(msg)
+		if err != nil {
+			omciLogger.Fatal("cannot-create-custom-packet")
+		}
+		packet := gopacket.NewPacket(data, omci.LayerTypeOMCI, gopacket.Lazy)
+
 		onu2g = MibDbEntry{
 			me.Onu2GClassID,
 			nil,
 			me.AttributeValueMap{},
-			[]byte{129, 41, 46, 10, 0, 2, 0, 0, 1, 1, 0, 0, 7, 253, 0, 64, 8, 1, 0, 8, 0, 0, 0, 6, 0, 127, 7, 0, 63, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 40},
+			packet.Data(),
 		}
 	}
 
