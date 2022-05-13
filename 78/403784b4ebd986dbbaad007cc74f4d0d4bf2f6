@@ -1,0 +1,9 @@
+Verified+1: Jenkins Technical User <do-not-reply@opennetworking.org>
+Code-Review+1: Torsten Thieme <torsten.thieme@adtran.com>
+Code-Review+1: Andrea Campanella <andrea.campanella@intel.com>
+Code-Review+2: Matteo Scandolo <matteo.scandolo@intel.com>
+Submitted-by: Matteo Scandolo <matteo.scandolo@intel.com>
+Submitted-at: Fri, 13 May 2022 15:17:56 +0000
+Reviewed-on: https://gerrit.opencord.org/c/bbsim/+/32493
+Project: bbsim
+Branch: refs/heads/master
