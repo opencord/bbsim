@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "4767343d_57160730",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000116
+      },
+      "writtenOn": "2022-05-13T13:17:36Z",
+      "side": 1,
+      "message": "I\u0027d like Girish or Teo to take a look as well",
+      "revId": "78403784b4ebd986dbbaad007cc74f4d0d4bf2f6",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
