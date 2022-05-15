@@ -63,6 +63,30 @@
       },
       "revId": "dce338836867f4a72c271cff263a9d1a5beaf673",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "dcc90b94_9c639ea1",
+        "filename": "docs/source/bbsim_config.rst",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000127
+      },
+      "writtenOn": "2022-05-15T18:43:39Z",
+      "side": 1,
+      "message": "THanks for taking care of this !",
+      "parentUuid": "ef58ae98_b31f7f9b",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 71
+      },
+      "revId": "dce338836867f4a72c271cff263a9d1a5beaf673",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
