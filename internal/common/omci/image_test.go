@@ -17,11 +17,12 @@
 package omci
 
 import (
+	"testing"
+
 	"github.com/google/gopacket"
 	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
 	"gotest.tools/assert"
-	"testing"
 )
 
 func omciToStartSoftwareDownloadResponse(t *testing.T, omciPkt *gopacket.Packet) *omci.StartSoftwareDownloadResponse {
@@ -89,5 +90,5 @@ func TestComputeDownloadSectionsCount(t *testing.T) {
 	pkt, _, _ := ParseOpenOltOmciPacket(omciReqPkt)
 
 	count := ComputeDownloadSectionsCount(pkt)
-	assert.Equal(t, count, 1058)
+	assert.Equal(t, count, uint32(1058))
 }

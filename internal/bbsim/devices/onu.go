@@ -121,8 +121,8 @@ type Onu struct {
 
 	// OMCI params
 	MibDataSync                   uint8
-	ImageSoftwareExpectedSections int
-	ImageSoftwareReceivedSections int
+	ImageSoftwareExpectedSections uint32
+	ImageSoftwareReceivedSections uint32
 	ActiveImageEntityId           uint16
 	CommittedImageEntityId        uint16
 	StandbyImageVersion           string

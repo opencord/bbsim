@@ -392,7 +392,7 @@ func Test_EndSoftwareDownloadRequestHandling(t *testing.T) {
 	msg := makeOmciMessage(t, onu, makeOmciEndSoftwareDownloadRequest(t, 0, uint32(imageCrc)))
 	res := onu.handleEndSoftwareDownloadRequest(msg)
 	assert.Equal(t, res, true)
-	assert.Equal(t, onu.ImageSoftwareReceivedSections, 0)
+	assert.Equal(t, onu.ImageSoftwareReceivedSections, uint32(0))
 
 	// test EndSoftwareDownloadRequest if we received less sections than expected
 	onu.ImageSoftwareExpectedSections = 2

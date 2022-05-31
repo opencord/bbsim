@@ -19,12 +19,17 @@ package omci
 import (
 	"encoding/hex"
 	"errors"
+	"strconv"
+
 	"github.com/google/gopacket"
 	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
 	log "github.com/sirupsen/logrus"
-	"math"
-	"strconv"
+)
+
+const (
+	cOmciDownloadSectionSizeBaseLine = 31   //in bytes
+	cOmciDownloadSectionSizeExtLine  = 1965 //in bytes
 )
 
 func ParseStartSoftwareDownloadRequest(omciPkt gopacket.Packet) (*omci.StartSoftwareDownloadRequest, error) {
@@ -108,15 +113,20 @@ func ParseCommitSoftwareRequest(omciPkt gopacket.Packet) (*omci.CommitSoftwareRe
 }
 
 func CreateStartSoftwareDownloadResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte, error) {
+
 	responeCode := me.Success
 	msgObj, err := ParseStartSoftwareDownloadRequest(omciPkt)
 	if err != nil {
 		responeCode = me.ProcessingError
 	}
-
+	isExtended := false
+	if omciMsg.DeviceIdentifier == omci.ExtendedIdent {
+		isExtended = true
+	}
 	omciLogger.WithFields(log.Fields{
 		"OmciMsgType":          omciMsg.MessageType,
 		"TransCorrId":          omciMsg.TransactionID,
+		"DeviceIdentifier":     omciMsg.DeviceIdentifier,
 		"EntityInstance":       msgObj.EntityInstance,
 		"WindowSize":           msgObj.WindowSize,
 		"ImageSize":            msgObj.ImageSize,
@@ -128,20 +138,31 @@ func CreateStartSoftwareDownloadResponse(omciPkt gopacket.Packet, omciMsg *omci.
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    msgObj.EntityClass,
 			EntityInstance: msgObj.EntityInstance,
+			Extended:       isExtended,
 		},
 		WindowSize:        msgObj.WindowSize,
 		Result:            responeCode,
 		NumberOfInstances: 0,                        // NOTE this can't be bigger than 0 this we can populate downloadResults
 		MeResults:         []omci.DownloadResults{}, // FIXME downloadResults is not exported
 	}
+	omciLayer := &omci.OMCI{
+		TransactionID:    omciMsg.TransactionID,
+		MessageType:      omci.StartSoftwareDownloadResponseType,
+		DeviceIdentifier: omciMsg.DeviceIdentifier,
+	}
+	var options gopacket.SerializeOptions
+	options.FixLengths = true
 
-	pkt, err := Serialize(omci.StartSoftwareDownloadResponseType, response, omciMsg.TransactionID)
+	buffer := gopacket.NewSerializeBuffer()
+	err = gopacket.SerializeLayers(buffer, options, omciLayer, response)
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
-			"Err": err,
-		}).Error("cannot-Serialize-CreateResponse")
+			"Err":  err,
+			"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
+		}).Error("cannot-Serialize-StartSoftwareDownloadResponse")
 		return nil, err
 	}
+	pkt := buffer.Bytes()
 
 	log.WithFields(log.Fields{
 		"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
@@ -158,27 +179,45 @@ func CreateDownloadSectionResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) 
 	if err != nil {
 		return nil, err
 	}
-
+	isExtended := false
+	if omciMsg.DeviceIdentifier == omci.ExtendedIdent {
+		isExtended = true
+	}
 	omciLogger.WithFields(log.Fields{
-		"OmciMsgType":    omciMsg.MessageType,
-		"TransCorrId":    omciMsg.TransactionID,
-		"EntityInstance": msgObj.EntityInstance,
-		"SectionNumber":  msgObj.SectionNumber,
+		"OmciMsgType":      omciMsg.MessageType,
+		"TransCorrId":      omciMsg.TransactionID,
+		"DeviceIdentifier": omciMsg.DeviceIdentifier,
+		"EntityInstance":   msgObj.EntityInstance,
+		"SectionNumber":    msgObj.SectionNumber,
 	}).Debug("received-download-section-request")
 
 	response := &omci.DownloadSectionResponse{
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    msgObj.EntityClass,
 			EntityInstance: msgObj.EntityInstance,
+			Extended:       isExtended,
 		},
 		Result:        me.Success,
 		SectionNumber: msgObj.SectionNumber,
 	}
+	omciLayer := &omci.OMCI{
+		TransactionID:    omciMsg.TransactionID,
+		MessageType:      omci.DownloadSectionResponseType,
+		DeviceIdentifier: omciMsg.DeviceIdentifier,
+	}
+	var options gopacket.SerializeOptions
+	options.FixLengths = true
 
-	pkt, err := Serialize(omci.DownloadSectionResponseType, response, omciMsg.TransactionID)
+	buffer := gopacket.NewSerializeBuffer()
+	err = gopacket.SerializeLayers(buffer, options, omciLayer, response)
 	if err != nil {
+		omciLogger.WithFields(log.Fields{
+			"Err":  err,
+			"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
+		}).Error("cannot-Serialize-DownloadSectionResponse")
 		return nil, err
 	}
+	pkt := buffer.Bytes()
 
 	log.WithFields(log.Fields{
 		"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
@@ -195,10 +234,14 @@ func CreateEndSoftwareDownloadResponse(omciPkt gopacket.Packet, omciMsg *omci.OM
 	if err != nil {
 		return nil, err
 	}
-
+	isExtended := false
+	if omciMsg.DeviceIdentifier == omci.ExtendedIdent {
+		isExtended = true
+	}
 	omciLogger.WithFields(log.Fields{
 		"OmciMsgType":       omciMsg.MessageType,
 		"TransCorrId":       omciMsg.TransactionID,
+		"DeviceIdentifier":  omciMsg.DeviceIdentifier,
 		"EntityInstance":    msgObj.EntityInstance,
 		"Crc32":             msgObj.CRC32,
 		"ImageSize":         msgObj.ImageSize,
@@ -210,16 +253,30 @@ func CreateEndSoftwareDownloadResponse(omciPkt gopacket.Packet, omciMsg *omci.OM
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    msgObj.EntityClass,
 			EntityInstance: msgObj.EntityInstance,
+			Extended:       isExtended,
 		},
 		Result:            status,
 		NumberOfInstances: 0, // NOTE this can't be bigger than 0 this we can populate downloadResults
 		//MeResults: []omci.downloadResults{}, // FIXME downloadResults is not exported
 	}
+	omciLayer := &omci.OMCI{
+		TransactionID:    omciMsg.TransactionID,
+		MessageType:      omci.EndSoftwareDownloadResponseType,
+		DeviceIdentifier: omciMsg.DeviceIdentifier,
+	}
+	var options gopacket.SerializeOptions
+	options.FixLengths = true
 
-	pkt, err := Serialize(omci.EndSoftwareDownloadResponseType, response, omciMsg.TransactionID)
+	buffer := gopacket.NewSerializeBuffer()
+	err = gopacket.SerializeLayers(buffer, options, omciLayer, response)
 	if err != nil {
+		omciLogger.WithFields(log.Fields{
+			"Err":  err,
+			"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
+		}).Error("cannot-Serialize-EndSoftwareDownloadResponse")
 		return nil, err
 	}
+	pkt := buffer.Bytes()
 
 	log.WithFields(log.Fields{
 		"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
@@ -236,26 +293,44 @@ func CreateActivateSoftwareResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI)
 	if err != nil {
 		return nil, err
 	}
-
+	isExtended := false
+	if omciMsg.DeviceIdentifier == omci.ExtendedIdent {
+		isExtended = true
+	}
 	omciLogger.WithFields(log.Fields{
-		"OmciMsgType":    omciMsg.MessageType,
-		"TransCorrId":    omciMsg.TransactionID,
-		"EntityInstance": msgObj.EntityInstance,
-		"ActivateFlags":  msgObj.ActivateFlags,
+		"OmciMsgType":      omciMsg.MessageType,
+		"TransCorrId":      omciMsg.TransactionID,
+		"DeviceIdentifier": omciMsg.DeviceIdentifier,
+		"EntityInstance":   msgObj.EntityInstance,
+		"ActivateFlags":    msgObj.ActivateFlags,
 	}).Debug("received-activate-software-request")
 
 	response := &omci.ActivateSoftwareResponse{
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    msgObj.EntityClass,
 			EntityInstance: msgObj.EntityInstance,
+			Extended:       isExtended,
 		},
 		Result: me.Success,
 	}
+	omciLayer := &omci.OMCI{
+		TransactionID:    omciMsg.TransactionID,
+		MessageType:      omci.ActivateSoftwareResponseType,
+		DeviceIdentifier: omciMsg.DeviceIdentifier,
+	}
+	var options gopacket.SerializeOptions
+	options.FixLengths = true
 
-	pkt, err := Serialize(omci.ActivateSoftwareResponseType, response, omciMsg.TransactionID)
+	buffer := gopacket.NewSerializeBuffer()
+	err = gopacket.SerializeLayers(buffer, options, omciLayer, response)
 	if err != nil {
+		omciLogger.WithFields(log.Fields{
+			"Err":  err,
+			"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
+		}).Error("cannot-Serialize-ActivateSoftwareResponse")
 		return nil, err
 	}
+	pkt := buffer.Bytes()
 
 	log.WithFields(log.Fields{
 		"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
@@ -272,24 +347,42 @@ func CreateCommitSoftwareResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) (
 	if err != nil {
 		return nil, err
 	}
-
+	isExtended := false
+	if omciMsg.DeviceIdentifier == omci.ExtendedIdent {
+		isExtended = true
+	}
 	omciLogger.WithFields(log.Fields{
-		"OmciMsgType":    omciMsg.MessageType,
-		"TransCorrId":    omciMsg.TransactionID,
-		"EntityInstance": msgObj.EntityInstance,
+		"OmciMsgType":      omciMsg.MessageType,
+		"TransCorrId":      omciMsg.TransactionID,
+		"DeviceIdentifier": omciMsg.DeviceIdentifier,
+		"EntityInstance":   msgObj.EntityInstance,
 	}).Debug("received-commit-software-request")
 
 	response := &omci.CommitSoftwareResponse{
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass:    msgObj.EntityClass,
 			EntityInstance: msgObj.EntityInstance,
+			Extended:       isExtended,
 		},
 	}
+	omciLayer := &omci.OMCI{
+		TransactionID:    omciMsg.TransactionID,
+		MessageType:      omci.CommitSoftwareResponseType,
+		DeviceIdentifier: omciMsg.DeviceIdentifier,
+	}
+	var options gopacket.SerializeOptions
+	options.FixLengths = true
 
-	pkt, err := Serialize(omci.CommitSoftwareResponseType, response, omciMsg.TransactionID)
+	buffer := gopacket.NewSerializeBuffer()
+	err = gopacket.SerializeLayers(buffer, options, omciLayer, response)
 	if err != nil {
+		omciLogger.WithFields(log.Fields{
+			"Err":  err,
+			"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
+		}).Error("cannot-Serialize-CommitSoftwareResponse")
 		return nil, err
 	}
+	pkt := buffer.Bytes()
 
 	log.WithFields(log.Fields{
 		"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
@@ -299,11 +392,20 @@ func CreateCommitSoftwareResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) (
 	return pkt, nil
 }
 
-func ComputeDownloadSectionsCount(pkt gopacket.Packet) int {
+func ComputeDownloadSectionsCount(pkt gopacket.Packet) uint32 {
 	msgObj, err := ParseStartSoftwareDownloadRequest(pkt)
 	if err != nil {
 		omciLogger.Error("cannot-parse-start-software-download-request")
 	}
-
-	return int(math.Ceil(float64(msgObj.ImageSize) / float64(msgObj.WindowSize)))
+	var omciDownloadSectionSize uint32
+	if msgObj.Extended {
+		omciDownloadSectionSize = cOmciDownloadSectionSizeExtLine
+	} else {
+		omciDownloadSectionSize = cOmciDownloadSectionSizeBaseLine
+	}
+	noOfSections := msgObj.ImageSize / omciDownloadSectionSize
+	if msgObj.ImageSize%omciDownloadSectionSize > 0 {
+		noOfSections++
+	}
+	return noOfSections
 }
