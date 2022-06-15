@@ -1805,7 +1805,8 @@ func (onu *Onu) DeleteFlow(key FlowKey) {
 
 func (onu *Onu) ReDiscoverOnu() {
 	// Wait for few seconds to be sure of the cleanup
-	time.Sleep(5 * time.Second)
+        // NOt sure of the sleep here, this could take lot of time if there are lot of ONUs.
+	time.Sleep(1 * time.Second)
 
 	onuLogger.WithFields(log.Fields{
 		"IntfId": onu.PonPortID,
