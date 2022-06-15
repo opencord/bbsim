@@ -56,7 +56,7 @@ func getTestOlt(t *testing.T, ctx context.Context, services []common.ServiceYaml
 		},
 	}
 
-	olt = CreateOLT(*common.Config, common.Services, true)
+	olt = CreateOLT(*common.Config, common.Services, true, uint32(time.Now().Unix()))
 
 	stream = &mockStream{
 		Calls: make(map[int]*openolt.Indication),

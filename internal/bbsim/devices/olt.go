@@ -108,6 +108,7 @@ type OltDevice struct {
 	GemPortIDsLock   sync.RWMutex
 	GemPortIDs       map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool // map[ponPortId]map[OnuId]map[PortNo]map[GemPortIDs]map[FlowId]bool
 	OmciResponseRate uint8
+	signature        uint32
 }
 
 var olt OltDevice
@@ -116,7 +117,7 @@ func GetOLT() *OltDevice {
 	return &olt
 }
 
-func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMock bool) *OltDevice {
+func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMock bool, signature uint32) *OltDevice {
 	oltLogger.WithFields(log.Fields{
 		"ID":             options.Olt.ID,
 		"NumNni":         options.Olt.NniPorts,
@@ -152,6 +153,7 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		AllocIDs:            make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool),
 		GemPortIDs:          make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool),
 		OmciResponseRate:    options.Olt.OmciResponseRate,
+		signature:           signature,
 	}
 
 	if val, ok := ControlledActivationModes[options.BBSim.ControlledActivation]; ok {
@@ -1281,7 +1283,7 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 }
 
 func (o *OltDevice) HeartbeatCheck(context.Context, *openolt.Empty) (*openolt.Heartbeat, error) {
-	res := openolt.Heartbeat{HeartbeatSignature: uint32(time.Now().Unix())}
+	res := openolt.Heartbeat{HeartbeatSignature: o.signature}
 	oltLogger.WithFields(log.Fields{
 		"signature": res.HeartbeatSignature,
 	}).Trace("HeartbeatCheck")

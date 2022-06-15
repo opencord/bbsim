@@ -22,6 +22,7 @@ import (
 	"net"
 	"sync"
 	"testing"
+        "time"
 
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/types"
@@ -126,7 +127,7 @@ func TestCreateOLT(t *testing.T) {
 		},
 	}
 
-	olt := CreateOLT(*common.Config, common.Services, true)
+	olt := CreateOLT(*common.Config, common.Services, true, uint32(time.Now().Unix()))
 
 	assert.Equal(t, len(olt.Pons), int(common.Config.Olt.PonPorts))
 
@@ -268,7 +269,7 @@ func TestGetDeviceInfo(t *testing.T) {
 		},
 	}
 
-	olt := CreateOLT(*common.Config, common.Services, true)
+	olt := CreateOLT(*common.Config, common.Services, true, uint32(time.Now().Unix()))
 
 	res, err := olt.GetDeviceInfo(context.Background(), &openolt.Empty{})
 
