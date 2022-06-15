@@ -25,6 +25,7 @@ import (
 	"runtime/pprof"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/opencord/bbsim/internal/bbsim/responders/webserver"
 
@@ -174,6 +175,7 @@ func main() {
 		*common.Config,
 		common.Services,
 		false,
+		uint32(time.Now().Unix()),
 	)
 
 	log.Debugf("Created OLT with id: %d", common.Config.Olt.ID)

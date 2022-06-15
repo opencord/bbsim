@@ -74,6 +74,7 @@ func main() {
 		*config.GlobalConfig,
 		common.Services,
 		true,
+                uint32(time.Now().Unix()),
 	)
 
 	onuIdMap := make(map[uint32]uint32, config.Olt.PonPorts)
