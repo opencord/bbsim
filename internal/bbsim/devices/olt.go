@@ -108,6 +108,7 @@ type OltDevice struct {
 	GemPortIDsLock   sync.RWMutex
 	GemPortIDs       map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool // map[ponPortId]map[OnuId]map[PortNo]map[GemPortIDs]map[FlowId]bool
 	OmciResponseRate uint8
+	signature        uint32
 }
 
 var olt OltDevice
@@ -152,6 +153,7 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		AllocIDs:            make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool),
 		GemPortIDs:          make(map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool),
 		OmciResponseRate:    options.Olt.OmciResponseRate,
+		signature:           uint32(time.Now().Unix()),
 	}
 
 	if val, ok := ControlledActivationModes[options.BBSim.ControlledActivation]; ok {
@@ -312,6 +314,7 @@ func (o *OltDevice) RestartOLT() error {
 
 	if softReboot {
 		for _, pon := range o.Pons {
+			/* No need to send pon events on olt soft reboot
 			if pon.InternalState.Current() == "enabled" {
 				// disable PONs
 				msg := types.Message{
@@ -323,7 +326,7 @@ func (o *OltDevice) RestartOLT() error {
 				}
 				o.channel <- msg
 			}
-
+			*/
 			for _, onu := range pon.Onus {
 				err := onu.InternalState.Event(OnuTxDisable)
 				oltLogger.WithFields(log.Fields{
@@ -363,6 +366,7 @@ func (o *OltDevice) RestartOLT() error {
 	o.enableContextCancel()
 	time.Sleep(time.Duration(rebootDelay) * time.Second)
 	o.Unlock()
+	o.signature = uint32(time.Now().Unix())
 
 	if err := o.InternalState.Event(OltInternalTxInitialize); err != nil {
 		oltLogger.WithFields(log.Fields{
@@ -497,6 +501,7 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error 
 			}
 			// when the enableContext was canceled the ONUs stopped listening on the channel
 			for _, onu := range pon.Onus {
+				onu.ReDiscoverOnu(true)
 				go onu.ProcessOnuMessages(o.enableContext, stream, nil)
 
 				// update the stream on all the services
@@ -961,17 +966,19 @@ func (o *OltDevice) DeleteOnu(_ context.Context, onu *openolt.Onu) (*openolt.Emp
 		}).Error("Can't find Onu")
 	}
 
-	if err := _onu.InternalState.Event(OnuTxDisable); err != nil {
-		oltLogger.WithFields(log.Fields{
-			"IntfId": _onu.PonPortID,
-			"OnuSn":  _onu.Sn(),
-			"OnuId":  _onu.ID,
-		}).Infof("Failed to transition ONU to %s state: %s", OnuStateDisabled, err.Error())
+	if _onu.InternalState.Current() != OnuStateDisabled {
+		if err := _onu.InternalState.Event(OnuTxDisable); err != nil {
+			oltLogger.WithFields(log.Fields{
+				"IntfId": _onu.PonPortID,
+				"OnuSn":  _onu.Sn(),
+				"OnuId":  _onu.ID,
+			}).Infof("Failed to transition ONU to %s state: %s", OnuStateDisabled, err.Error())
+		}
 	}
 
 	// ONU Re-Discovery
 	if o.InternalState.Current() == OltInternalStateEnabled && pon.InternalState.Current() == "enabled" {
-		go _onu.ReDiscoverOnu()
+		go _onu.ReDiscoverOnu(false)
 	}
 
 	return new(openolt.Empty), nil
@@ -1281,7 +1288,7 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 }
 
 func (o *OltDevice) HeartbeatCheck(context.Context, *openolt.Empty) (*openolt.Heartbeat, error) {
-	res := openolt.Heartbeat{HeartbeatSignature: uint32(time.Now().Unix())}
+	res := openolt.Heartbeat{HeartbeatSignature: o.signature}
 	oltLogger.WithFields(log.Fields{
 		"signature": res.HeartbeatSignature,
 	}).Trace("HeartbeatCheck")
