@@ -16,6 +16,24 @@
       "message": "Looks good to me, unit tests need to be updated:\nerrors in package:\n- /app/internal/bbsim/devices/olt_test.go:271:56: too few arguments in call to CreateOLT \n- /app/internal/bbsim/devices/olt_test.go:129:56: too few arguments in call to CreateOLT \n- /app/internal/bbsim/devices/flows_test.go:59:55: too few arguments in call to CreateOLT\n\nVERSION file needs a bump as well",
       "revId": "7c29d9ad30407f99d598b44823301702e999d449",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "cdfe8ac3_40b92f5f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2022-06-18T09:43:09Z",
+      "side": 1,
+      "message": "updated",
+      "parentUuid": "f4f1aae3_631b51fc",
+      "revId": "7c29d9ad30407f99d598b44823301702e999d449",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
