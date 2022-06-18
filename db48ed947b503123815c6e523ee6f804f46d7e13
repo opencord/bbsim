@@ -16,6 +16,23 @@
       "message": "Please check sca-result.",
       "revId": "db48ed947b503123815c6e523ee6f804f46d7e13",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a029b8f7_b23c94a0",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2022-06-18T04:39:43Z",
+      "side": 1,
+      "message": "Any specific reason why we want to pass the signature to the CreateOLT function and not let the function do the calculation and setting by itself?\n\nIf we let the CreateOLT function do it by itself, then the only changes needed in this patchset would be in this olt.go file only.",
+      "revId": "db48ed947b503123815c6e523ee6f804f46d7e13",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
