@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1181f4ac_b786fd17",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-06-22T17:49:14Z",
+      "side": 1,
+      "message": "It seems like there are some issues in the DT case during the softreboot. In the logs I found:\n```\nvoltha/bbsim0-5c9b555b89-8qhq7[bbsim]: time\u003d\"2022-06-18T10:04:11.49297837Z\" level\u003derror msg\u003d\"Error disabling ONUs on OLT soft reboot: \u003cnil\u003e\" module\u003dOLT oltId\u003d10 onuId\u003d1\n```\nAnd given the ONUs are not disabled the can\u0027t be re-enabled after reboot:\n```\nvoltha/bbsim0-5c9b555b89-8qhq7[bbsim]: time\u003d\"2022-06-18T10:08:35.762710191Z\" level\u003dinfo msg\u003d\"Failed to transition ONU to initialized state: event initialize inappropriate in current state discovered\" IntfId\u003d0 OnuId\u003d1 OnuSn\u003dBBSM000a0001\nvoltha/bbsim0-5c9b555b89-8qhq7[bbsim]: time\u003d\"2022-06-18T10:08:35.762760898Z\" level\u003dinfo msg\u003d\"Failed to transition ONU to discovered state: event discover inappropriate in current state discovered\" IntfId\u003d0 OnuId\u003d1 OnuSn\u003dBBSM000a0001\n```\n\nI manually triggered https://jenkins.opencord.org/job/verify_bbsim_sanity-test/1083/console with BBSim logs at debug level to investigate more",
+      "revId": "5720da2b574d4d8bd9853d8b063a5653d229587b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "090df8b1_247aa435",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-06-22T17:49:14Z",
+      "side": 1,
+      "message": "if this is not needed please remove the code.\nAlso if the PON event is not needed the soft-reboot case is the same as a restart, but I recall changing this behavior to fix soft-reboot issues a while ago:\nhttps://gerrit.opencord.org/c/bbsim/+/20362/1/internal/bbsim/devices/olt.go\n\nIIRC correctly VOLTHA expects the PONs port to gracefully shutdown before the OLT is removed, but it\u0027s been long enough that I don\u0027t recall the details. @Girish do you know what behavior does the OpenOLT adapter expect?",
+      "range": {
+        "startLine": 317,
+        "startChar": 3,
+        "endLine": 329,
+        "endChar": 5
+      },
+      "revId": "5720da2b574d4d8bd9853d8b063a5653d229587b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
