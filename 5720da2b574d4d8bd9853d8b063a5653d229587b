@@ -81,6 +81,30 @@
       },
       "revId": "5720da2b574d4d8bd9853d8b063a5653d229587b",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "be766298_23819382",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-06-23T17:41:17Z",
+      "side": 1,
+      "message": "This message does not translate to an LOS, it used internally in BBSim to disable the PON Ports. If we don\u0027t do that we might have issue when VOLTHA tries to re-enable them.\n\nIf it works without I\u0027m fine removing it, but at that point there\u0027s no need for the if/else as the two cases would be the same",
+      "parentUuid": "bfd78fe8_2d1b735c",
+      "range": {
+        "startLine": 317,
+        "startChar": 3,
+        "endLine": 329,
+        "endChar": 5
+      },
+      "revId": "5720da2b574d4d8bd9853d8b063a5653d229587b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }

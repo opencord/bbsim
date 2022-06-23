@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8b1df483_d44d411b",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 1808,
+      "author": {
+        "id": 1000007
+      },
+      "writtenOn": "2022-06-23T17:41:17Z",
+      "side": 1,
+      "message": "this is failing the \"sca\" test:\n\n```\n-        // NOt sure of the sleep here, this could take lot of time if there are lot of ONUs.\n+       // NOt sure of the sleep here, this could take lot of time if there are lot of ONUs.\n```",
+      "range": {
+        "startLine": 1808,
+        "startChar": 9,
+        "endLine": 1808,
+        "endChar": 19
+      },
+      "revId": "03afa9496efcb0a9bcbcf54129fd2214da429469",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
