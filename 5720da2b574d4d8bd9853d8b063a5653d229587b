@@ -18,6 +18,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "6c4c7100_78860c05",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2022-06-23T12:23:11Z",
+      "side": 1,
+      "message": "yes.. but there were no problems on ONUs coming back up",
+      "parentUuid": "1181f4ac_b786fd17",
+      "revId": "5720da2b574d4d8bd9853d8b063a5653d229587b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "090df8b1_247aa435",
@@ -31,6 +49,30 @@
       "writtenOn": "2022-06-22T17:49:14Z",
       "side": 1,
       "message": "if this is not needed please remove the code.\nAlso if the PON event is not needed the soft-reboot case is the same as a restart, but I recall changing this behavior to fix soft-reboot issues a while ago:\nhttps://gerrit.opencord.org/c/bbsim/+/20362/1/internal/bbsim/devices/olt.go\n\nIIRC correctly VOLTHA expects the PONs port to gracefully shutdown before the OLT is removed, but it\u0027s been long enough that I don\u0027t recall the details. @Girish do you know what behavior does the OpenOLT adapter expect?",
+      "range": {
+        "startLine": 317,
+        "startChar": 3,
+        "endLine": 329,
+        "endChar": 5
+      },
+      "revId": "5720da2b574d4d8bd9853d8b063a5653d229587b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "bfd78fe8_2d1b735c",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2022-06-23T12:23:11Z",
+      "side": 1,
+      "message": "softreboot does not disable the pon ports and VOLTHA too does not expect PON LOS.\nThe agent implemetation is just to shutdown on soft reboot",
+      "parentUuid": "090df8b1_247aa435",
       "range": {
         "startLine": 317,
         "startChar": 3,
