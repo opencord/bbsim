@@ -1248,7 +1248,7 @@ func (o *Onu) handleOmciRequest(msg bbsim.OmciMessage, stream openolt.Openolt_En
 			o.onuAlarmsInfo[key] = alarmInfo
 		}
 		o.onuAlarmsInfoLock.Unlock()
-		responsePkt, _ = omcilib.CreateGetAllAlarmsResponse(msg.OmciMsg.TransactionID, o.onuAlarmsInfo)
+		responsePkt, _ = omcilib.CreateGetAllAlarmsResponse(msg.OmciMsg, o.onuAlarmsInfo)
 	case omci.GetAllAlarmsNextRequestType:
 		if responsePkt, errResp = omcilib.CreateGetAllAlarmsNextResponse(msg.OmciPkt, msg.OmciMsg, o.onuAlarmsInfo); errResp != nil {
 			responsePkt = nil //Do not send any response for error case
