@@ -17,8 +17,11 @@
 package omci
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"strconv"
+
 	"github.com/google/gopacket"
 	"github.com/opencord/omci-lib-go/v2"
 	me "github.com/opencord/omci-lib-go/v2/generated"
@@ -70,36 +73,59 @@ func CreateUniStatusAlarm(raiseAlarm bool, entityId uint16, sequenceNo uint8) ([
 	return pkt, notif.AlarmBitmap
 }
 
-func CreateGetAllAlarmsResponse(tid uint16, onuAlarmDetails map[OnuAlarmInfoMapKey]OnuAlarmInfo) ([]byte, error) {
+func CreateGetAllAlarmsResponse(omciMsg *omci.OMCI, onuAlarmDetails map[OnuAlarmInfoMapKey]OnuAlarmInfo) ([]byte, error) {
 	var alarmEntityClass me.ClassID
-	var meInstance uint16
 	var noOfCommands uint16 = 0
-	alarmEntityClass = me.PhysicalPathTerminationPointEthernetUniClassID //Currently doing for PPTP classID
-	meInstance = 257
-	key := OnuAlarmInfoMapKey{
-		MeInstance: meInstance,
-		MeClassID:  alarmEntityClass,
-	}
-	if _, ok := onuAlarmDetails[key]; ok {
-		noOfCommands = 1
-	}
-	numberOfCommands := uint16(noOfCommands)
+	var isExtended bool = false
 
-	request := &omci.GetAllAlarmsResponse{
+	if omciMsg.DeviceIdentifier == omci.ExtendedIdent {
+		isExtended = true
+	}
+	alarmEntityClass = me.PhysicalPathTerminationPointEthernetUniClassID //Currently doing it for PPTP classID only
+
+	key := OnuAlarmInfoMapKey{
+		MeClassID: alarmEntityClass,
+	}
+	for i := 257; i < 261; i++ { //Currently doing it for up to four PPTP instances only
+		key.MeInstance = uint16(i)
+		if _, ok := onuAlarmDetails[key]; ok {
+			noOfCommands++
+		}
+	}
+	response := &omci.GetAllAlarmsResponse{
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass: me.OnuDataClassID,
+			Extended:    isExtended,
 		},
-		NumberOfCommands: numberOfCommands,
+		NumberOfCommands: noOfCommands,
 	}
-	pkt, err := Serialize(omci.GetAllAlarmsResponseType, request, tid)
+	omciLayer := &omci.OMCI{
+		TransactionID:    omciMsg.TransactionID,
+		MessageType:      omci.GetAllAlarmsResponseType,
+		DeviceIdentifier: omciMsg.DeviceIdentifier,
+	}
+	var options gopacket.SerializeOptions
+	options.FixLengths = true
+
+	buffer := gopacket.NewSerializeBuffer()
+	err := gopacket.SerializeLayers(buffer, options, omciLayer, response)
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
-			"Err": err,
-		}).Error("Cannot Serialize GetAllAlarmsResponse")
+			"Err":  err,
+			"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
+		}).Error("cannot-Serialize-GetAllAlarmsResponse")
 		return nil, err
 	}
+	pkt := buffer.Bytes()
+
+	log.WithFields(log.Fields{
+		"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
+		"pkt":  hex.EncodeToString(pkt),
+	}).Trace("omci-get-all-alarms-response")
+
 	return pkt, nil
 }
+
 func ParseGetAllAlarmsNextRequest(omciPkt gopacket.Packet) (*omci.GetAllAlarmsNextRequest, error) {
 	msgLayer := omciPkt.Layer(omci.LayerTypeGetAllAlarmsNextRequest)
 	if msgLayer == nil {
@@ -124,60 +150,75 @@ func CreateGetAllAlarmsNextResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI,
 		omciLogger.Error(err)
 		return nil, errors.New(err)
 	}
-
-	omciLogger.WithFields(log.Fields{
-		"EntityClass":           msgObj.EntityClass,
-		"EntityInstance":        msgObj.EntityInstance,
-		"CommandSequenceNumber": msgObj.CommandSequenceNumber,
-	}).Trace("received-omci-get-all-alarms-next-request")
-
-	var alarmEntityClass me.ClassID
-	var meInstance uint16
-	var alarmBitMap [28]byte
-
-	switch msgObj.CommandSequenceNumber {
-	case 0:
-		alarmEntityClass = me.PhysicalPathTerminationPointEthernetUniClassID
-		meInstance = 257
-		//Checking if the alarm is raised in the bitmap, we will send clear just to generate missed clear alarm and
-		// vice versa.
-		key := OnuAlarmInfoMapKey{
-			MeInstance: meInstance,
-			MeClassID:  alarmEntityClass,
-		}
-		if alarmInfo, ok := onuAlarmDetails[key]; ok {
-			alarmBitMap = alarmInfo.AlarmBitMap
-		} else {
-			return nil, fmt.Errorf("alarm-info-for-me-not-present-in-alarm-info-map")
-		}
-	default:
+	if msgObj.CommandSequenceNumber > 4 { //Currently doing it for up to four PPTP instances only
 		omciLogger.Warn("unsupported-CommandSequenceNumber-in-get-all-alarm-next", msgObj.CommandSequenceNumber)
 		return nil, fmt.Errorf("unspported-command-sequence-number-in-get-all-alarms-next")
 	}
+	var alarmEntityClass me.ClassID
+	var meInstance uint16
+	var alarmBitMap [28]byte
+	var isExtended bool
+	var additionalAlarms omci.AdditionalAlarmsData
 
+	if omciMsg.DeviceIdentifier == omci.ExtendedIdent {
+		isExtended = true
+	} else {
+		isExtended = false
+	}
+	alarmEntityClass = me.PhysicalPathTerminationPointEthernetUniClassID //Currently doing it for PPTP classID only
+
+	key := OnuAlarmInfoMapKey{
+		MeClassID: alarmEntityClass,
+	}
+	meInstance = 257 + msgObj.CommandSequenceNumber
+	key.MeInstance = meInstance
+	if alarmInfo, ok := onuAlarmDetails[key]; ok {
+		alarmBitMap = alarmInfo.AlarmBitMap
+	} else {
+		return nil, fmt.Errorf("alarm-info-for-me-not-present-in-alarm-info-map")
+	}
 	response := &omci.GetAllAlarmsNextResponse{
 		MeBasePacket: omci.MeBasePacket{
 			EntityClass: me.OnuDataClassID,
+			Extended:    isExtended,
 		},
 		AlarmEntityClass:    alarmEntityClass,
 		AlarmEntityInstance: meInstance,
 		AlarmBitMap:         alarmBitMap,
 	}
+	if isExtended && msgObj.CommandSequenceNumber == 0 {
+		for i := 258; i < 261; i++ {
+			key.MeInstance = uint16(i)
+			if addAlarmInfo, ok := onuAlarmDetails[key]; ok {
+				additionalAlarms.AlarmEntityClass = key.MeClassID
+				additionalAlarms.AlarmEntityInstance = uint16(i)
+				additionalAlarms.AlarmBitMap = addAlarmInfo.AlarmBitMap
+				response.AdditionalAlarms = append(response.AdditionalAlarms, additionalAlarms)
+			}
+		}
+	}
+	omciLayer := &omci.OMCI{
+		TransactionID:    omciMsg.TransactionID,
+		MessageType:      omci.GetAllAlarmsNextResponseType,
+		DeviceIdentifier: omciMsg.DeviceIdentifier,
+	}
+	var options gopacket.SerializeOptions
+	options.FixLengths = true
 
-	omciLogger.WithFields(log.Fields{
-		"AlarmEntityClass":    alarmEntityClass,
-		"AlarmEntityInstance": meInstance,
-		"AlarmBitMap":         alarmBitMap,
-	}).Trace("created-omci-getAllAlarmsNext-response")
-
-	pkt, err := Serialize(omci.GetAllAlarmsNextResponseType, response, omciMsg.TransactionID)
-
+	buffer := gopacket.NewSerializeBuffer()
+	err = gopacket.SerializeLayers(buffer, options, omciLayer, response)
 	if err != nil {
 		omciLogger.WithFields(log.Fields{
-			"Err": err,
-		}).Fatalf("Cannot Serialize GetAllAlarmsNextRequest")
+			"Err":  err,
+			"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
+		}).Error("cannot-Serialize-GetAllAlarmsNextResponse")
 		return nil, err
 	}
+	pkt := buffer.Bytes()
 
+	log.WithFields(log.Fields{
+		"TxID": strconv.FormatInt(int64(omciMsg.TransactionID), 16),
+		"pkt":  hex.EncodeToString(pkt),
+	}).Trace("omci-get-all-alarms-next-response")
 	return pkt, nil
 }

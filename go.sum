@@ -87,8 +87,8 @@ github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4 h1:Odib2px8tyALzd
 github.com/opencord/cordctl v0.0.0-20190909161711-01e9c1f04bf4/go.mod h1:/+3S0pwQUy7HeKnH0KfKp5W6hmh/LdZzuZTNT/m7vA4=
 github.com/opencord/device-management-interface v1.4.0 h1:hutRUn/rfYHZQr0K2i7HpZTMyMyLcGL1XdmbUrWt2kM=
 github.com/opencord/device-management-interface v1.4.0/go.mod h1:G1owSqGBGaqllrwtjxfLTsy9EDsGhdhmqkJM3XOnPD0=
-github.com/opencord/omci-lib-go/v2 v2.2.0 h1:9eawwD1+oWHTzEv9Q/JeSN12N/3YSGKoj1dr2Pm434g=
-github.com/opencord/omci-lib-go/v2 v2.2.0/go.mod h1:o1S/jhDLHNikFU7uG2TR5UOM5KmKlqwLlVncXi0FBYQ=
+github.com/opencord/omci-lib-go/v2 v2.2.1 h1:Eai3feaixdQ7ZT8zgqIa94QlJ4tfQCgL0sTM8Q6/rkI=
+github.com/opencord/omci-lib-go/v2 v2.2.1/go.mod h1:o1S/jhDLHNikFU7uG2TR5UOM5KmKlqwLlVncXi0FBYQ=
 github.com/opencord/voltha-protos/v5 v5.2.3 h1:G16GLWL3augy9GQUraePumvin4SdTZc0WZAcCuSW/BU=
 github.com/opencord/voltha-protos/v5 v5.2.3/go.mod h1:ZGcyW79kQKIo7AySo1LRu613E6uiozixrCF0yNB/4x8=
 github.com/pierrec/lz4 v2.4.1+incompatible h1:mFe7ttWaflA46Mhqh+jUfjp2qTbPYxLB2/OyBppH9dg=
