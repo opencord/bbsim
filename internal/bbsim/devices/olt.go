@@ -501,7 +501,9 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error 
 			}
 			// when the enableContext was canceled the ONUs stopped listening on the channel
 			for _, onu := range pon.Onus {
-				onu.ReDiscoverOnu(true)
+				if o.ControlledActivation != OnlyONU {
+					onu.ReDiscoverOnu(true)
+				}
 				go onu.ProcessOnuMessages(o.enableContext, stream, nil)
 
 				// update the stream on all the services
