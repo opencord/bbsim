@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "62853eb8_1a5da31b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2022-11-25T13:51:28Z",
+      "side": 1,
+      "message": "VOL-4857 - Debugging a timeout in docker image setup for bbsim.",
+      "revId": "73d357954724887c8ac9036a64de1f88a56f1a3c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
