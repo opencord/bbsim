@@ -1,4 +1,6 @@
-# Copyright 2019-present Open Networking Foundation
+# -*- makefile -*-
+# -----------------------------------------------------------------------
+# Copyright 2017-2022 Open Networking Foundation (ONF) and the ONF Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,13 +13,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# -----------------------------------------------------------------------
 
-SHELL = bash -e -o pipefail
-VERSION     ?= $(shell cat ./VERSION)
+.DEFAULT_GOAL   := help
+MAKECMDGOALS    ?= help
+
+TOP     ?= .
+MAKEDIR ?= $(TOP)/makefiles
+
+##--------------------##
+##---]  INCLUDES  [---##
+##--------------------##
+help-targets := help-all help HELP
+$(if $(filter $(help-targets),$(MAKECMDGOALS))\
+    ,$(eval include $(MAKEDIR)/help.mk))
+
+##-------------------##
+##---]  GLOBALS  [---##
+##-------------------##
+SHELL           = bash -e -o pipefail
+VERSION         ?= $(shell cat ./VERSION)
 DIFF		?= $(git diff --shortstat 2> /dev/null | tail -n1)
 GIT_STATUS	?= $(shell [ -z "$DIFF" ] && echo "Dirty" || echo "Clean")
 
-## Docker related
+## Docker related -- are these ${shell vars} or $(make macros) ?
 DOCKER_TAG  			?= ${VERSION}
 DOCKER_REPOSITORY  		?=
 DOCKER_REGISTRY 		?=
@@ -29,12 +48,15 @@ TYPE                            ?= minimal
 VOLTHA_TOOLS_VERSION ?= 2.3.1
 
 GO                = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golang go
-GO_SH             = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golang sh -c '
+GO_SH             = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golang sh -c '# fix-editor-colorization-quote(')
 GO_JUNIT_REPORT   = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app -i voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-go-junit-report go-junit-report
 GOCOVER_COBERTURA = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app/src/github.com/opencord/bbsim -i voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-gocover-cobertura gocover-cobertura
 GOLANGCI_LINT     = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golangci-lint golangci-lint
 HADOLINT          = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-hadolint hadolint
 PROTOC            = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-protoc protoc
+
+## use local vars to shorten paths
+bbsim-tag = ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG}
 
 # Public targets
 all: help
@@ -68,7 +90,7 @@ lint-mod:
 lint: lint-mod lint-dockerfile
 
 sca:
-	@rm -rf ./sca-report
+	@$(RM) -r ./sca-report
 	@mkdir -p ./sca-report
 	@echo "Running static code analysis..."
 	@${GOLANGCI_LINT} run -vv --deadline=6m --out-format junit-xml ./... | tee ./sca-report/sca-report.xml
@@ -87,10 +109,10 @@ test-unit: clean local-omci-lib-go # @HELP Execute unit tests
 	exit $$RETURN
 
 test-bbr: release-bbr docker-build # @HELP Validate that BBSim and BBR are working together
-	DOCKER_RUN_ARGS="-pon 2 -onu 2" make docker-run
+	DOCKER_RUN_ARGS="-pon 2 -onu 2" $(MAKE) docker-run
 	sleep 5
 	./$(RELEASE_DIR)/$(RELEASE_BBR_NAME)-linux-amd64 -pon 2 -onu 2 -logfile tmp.logs
-	docker rm -f bbsim
+	docker $(RM) -f bbsim
 
 mod-update: # @HELP Download the dependencies to the vendor folder
 	${GO} mod tidy
@@ -98,28 +120,43 @@ mod-update: # @HELP Download the dependencies to the vendor folder
 
 docker-build: local-omci-lib-go local-protos# @HELP Build the BBSim docker container (contains BBSimCtl too)
 	docker build \
-	  -t ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} \
+	  -t "$(bbsim-tag)" \
 	  -f build/package/Dockerfile .
 
 docker-push: # @HELP Push the docker container to a registry
-	docker push ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG}
+	docker push "$(bbsim-tag)"
 docker-kind-load:
 	@if [ "`kind get clusters | grep voltha-$(TYPE)`" = '' ]; then echo "no voltha-$(TYPE) cluster found" && exit 1; fi
-	kind load docker-image ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} --name=voltha-$(TYPE) --nodes $(shell kubectl get nodes --template='{{range .items}}{{.metadata.name}},{{end}}' | sed 's/,$$//')
+	kind load docker-image "$(bbsim-tag)" --name=voltha-$(TYPE) --nodes $(shell kubectl get nodes --template='{{range .items}}{{.metadata.name}},{{end}}' | sed 's/,$$//')
+
+## -----------------------------------------------------------------------
+## docker-run
+## -----------------------------------------------------------------------
+docker-run-cmd  = docker run
+docker-run-cmd += ${DOCKER_PORTS}
+docker-run-cmd += --privileged
+docker-run-cmd += --rm
+docker-run-cmd += --name bbsim
+docker-run-cmd += "$(bbsim-tag)" /app/bbsim
+docker-run-cmd += ${DOCKER_RUN_ARGS}
 
 docker-run: # @HELP Runs the container locally (available options: DOCKER_RUN_ARGS="-pon 2 -onu 2" make docker-run)
-	docker run -d ${DOCKER_PORTS} --privileged --rm --name bbsim ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} /app/bbsim ${DOCKER_RUN_ARGS}
+	docker ps
+	$(docker-run-cmd) --detach
 
 docker-run-dev: # @HELP Runs the container locally (intended for development purposes, not in detached mode)
-	docker run ${DOCKER_PORTS} --privileged --rm --name bbsim ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG} /app/bbsim ${DOCKER_RUN_ARGS}
+	$(docker-run-cmd)
 
+## -----------------------------------------------------------------------
+## docker-run
+## -----------------------------------------------------------------------
 .PHONY: docs docs-lint
 docs: swagger # @HELP Generate docs and opens them in the browser
-	make -C docs html
+	$(MAKE) -C docs html
 	@echo -e "\nBBSim documentation generated in file://${PWD}/docs/build/html/index.html"
 
 docs-lint:
-	make -C docs lint
+	$(MAKE) -C docs lint
 
 # Release related items
 # Generates binaries in $RELEASE_DIR with name $RELEASE_NAME-$RELEASE_OS_ARCH
@@ -159,27 +196,19 @@ release-bbsimctl:
 	      -X github.com/opencord/bbsim/internal/bbsimctl/config.GitStatus=${GIT_STATUS} \
 	      -X github.com/opencord/bbsim/internal/bbsimctl/config.Version=${VERSION}" \
 	    -o "$(RELEASE_DIR)/$(RELEASE_BBSIMCTL_NAME)-$$os_arch" ./cmd/bbsimctl; \
-	  done'
+	  done'# fix-editor-colorization-quote(')
 
 .PHONY: release release-bbr release-bbsim release-bbsimctl
 release: release-bbr release-bbsim release-bbsimctl # @HELP Creates release ready bynaries for BBSimctl and BBR artifacts
-swagger: docs/swagger/bbsim/bbsim.swagger.json docs/swagger/leagacy/bbsim.swagger.json # @HELP Generate swagger documentation for BBSim API
 
-help: # @HELP Print the command options
-	@echo
-	@echo "\033[0;31m    BroadBand Simulator (BBSim) \033[0m"
-	@echo
-	@echo Emulates the control plane of an openolt compatible device
-	@echo Useful for development and scale testing
-	@echo
-	@grep -E '^.*: .* *# *@HELP' $(MAKEFILE_LIST) \
-    | sort \
-    | awk ' \
-        BEGIN {FS = ": .* *# *@HELP"}; \
-        {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}; \
-    '
+swagger-deps += docs/swagger/bbsim/bbsim.swagger.json
+swagger-deps += docs/swagger/leagacy/bbsim.swagger.json
+.PHONY: $(swagger-deps)
+swagger: $(swagger-deps) # @HELP Generate swagger documentation for BBSim API
 
+## -----------------------------------------------------------------------
 ## Local Development Helpers
+## -----------------------------------------------------------------------
 local-omci-lib-go:
 ifdef LOCAL_OMCI_LIB_GO
 	mkdir -p vendor/github.com/opencord/omci-lib-go
@@ -188,20 +217,20 @@ endif
 
 local-protos: ## Copies a local version of the voltha-protos dependency into the vendor directory
 ifdef LOCAL_PROTOS
-	rm -rf vendor/github.com/opencord/voltha-protos/v5/go
+	$(RM) -r vendor/github.com/opencord/voltha-protos/v5/go
 	mkdir -p vendor/github.com/opencord/voltha-protos/v5/go
 	cp -r ${LOCAL_PROTOS}/go/* vendor/github.com/opencord/voltha-protos/v5/go
-	rm -rf vendor/github.com/opencord/voltha-protos/v5/go/vendor
+	$(RM) -r vendor/github.com/opencord/voltha-protos/v5/go/vendor
 endif
 
 # Internals
 
 clean:
-	@rm -f bbsim
-	@rm -f bbsimctl
-	@rm -f bbr
-	@rm -rf tools/bin
-	@rm -rf release/*
+	@$(RM) -f bbsim
+	@$(RM) -f bbsimctl
+	@$(RM) -f bbr
+	@$(RM) -r tools/bin
+	@$(RM) -r release/*
 
 build-bbr: local-omci-lib-go local-protos
 	@go build -mod vendor \
@@ -235,7 +264,7 @@ setup_tools:
 VOLTHA_PROTOS ?= $(shell ${GO} list -f '{{ .Dir }}' -m github.com/opencord/voltha-protos/v5)
 GOOGLEAPI     ?= $(shell ${GO} list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
 
-.PHONY: api/openolt/openolt.pb.go api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go docs/swagger/bbsim/bbsim.swagger.json docs/swagger/leagacy/bbsim.swagger.json
+.PHONY: api/openolt/openolt.pb.go api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go
 api/openolt/openolt.pb.go: api/openolt/openolt.proto setup_tools
 	@echo $@
 	@${PROTOC} -I. \
@@ -284,3 +313,5 @@ docs/swagger/leagacy/bbsim.swagger.json: api/legacy/bbsim.proto setup_tools
 	  -I${VOLTHA_PROTOS}/protos/ \
 	  --swagger_out=logtostderr=true,allow_delete_body=true,disable_default_errors=true:docs/swagger/ \
 	  $<
+
+# [EOF]
