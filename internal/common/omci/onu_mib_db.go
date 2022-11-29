@@ -96,7 +96,7 @@ const (
 	tcontSlotId       byte = 0x80 // why is this not the same as the cardHolderSlotID, it does not point to anything
 	aniGId            byte = 0x01
 
-	upstreamPriorityQueues   = 8  // Number of queues for each T-CONT
+	upstreamPriorityQueues   = 16 // Number of queues for each T-CONT
 	downstreamPriorityQueues = 16 // Number of queues for each PPTP
 	tconts                   = 8  // NOTE will we ever need to configure this?
 	// trafficSchedulers        = 8  // NOTE will we ever need to configure this?
