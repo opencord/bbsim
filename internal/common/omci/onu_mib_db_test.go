@@ -67,13 +67,13 @@ func Test_GenerateMibDatabase(t *testing.T) {
 	const uniPortCount = 4
 	mibDb, err := GenerateMibDatabase(uniPortCount, 0, common.XGSPON)
 
-	expectedItems := 9                     //ONU-G + 2 Circuit Packs (4 messages each)
-	expectedItems += 2 * uniPortCount      // 1 PPTP and 1 UniG per UNI
-	expectedItems += 1                     // ANI-G
-	expectedItems += 2 * tconts            // T-CONT and traffic schedulers
-	expectedItems += 1                     // ONU-2g
-	expectedItems += 2 * 8 * tconts        // 8 upstream queues for each T-CONT, and we report each queue twice
-	expectedItems += 2 * 16 * uniPortCount // 16 downstream queues for each T-CONT, and we report each queue twice
+	expectedItems := 9                                           //ONU-G + 2 Circuit Packs (4 messages each)
+	expectedItems += 2 * uniPortCount                            // 1 PPTP and 1 UniG per UNI
+	expectedItems += 1                                           // ANI-G
+	expectedItems += 2 * tconts                                  // T-CONT and traffic schedulers
+	expectedItems += 1                                           // ONU-2g
+	expectedItems += 2 * upstreamPriorityQueues * tconts         // upstream queues for each T-CONT, and we report each queue twice
+	expectedItems += 2 * downstreamPriorityQueues * uniPortCount // downstream queues for each T-CONT, and we report each queue twice
 
 	assert.NoError(t, err)
 	assert.NotNil(t, mibDb)
@@ -110,13 +110,13 @@ func Test_GenerateMibDatabase_withPots(t *testing.T) {
 	const potsPortCount = 1
 	mibDb, err := GenerateMibDatabase(uniPortCount, potsPortCount, common.XGSPON)
 
-	expectedItems := 13                                      //ONU-G + 3 Circuit Packs (4 messages each)
-	expectedItems += 2 * (uniPortCount + potsPortCount)      // 1 PPTP and 1 UniG per UNI
-	expectedItems += 1                                       // ANI-G
-	expectedItems += 2 * tconts                              // T-CONT and traffic schedulers
-	expectedItems += 1                                       // ONU-2g
-	expectedItems += 2 * 8 * tconts                          // 8 upstream queues for each T-CONT, and we report each queue twice
-	expectedItems += 2 * 16 * (uniPortCount + potsPortCount) // 16 downstream queues for each T-CONT, and we report each queue twice
+	expectedItems := 13                                                            //ONU-G + 3 Circuit Packs (4 messages each)
+	expectedItems += 2 * (uniPortCount + potsPortCount)                            // 1 PPTP and 1 UniG per UNI
+	expectedItems += 1                                                             // ANI-G
+	expectedItems += 2 * tconts                                                    // T-CONT and traffic schedulers
+	expectedItems += 1                                                             // ONU-2g
+	expectedItems += 2 * upstreamPriorityQueues * tconts                           // upstream queues for each T-CONT, and we report each queue twice
+	expectedItems += 2 * downstreamPriorityQueues * (uniPortCount + potsPortCount) // downstream queues for each T-CONT, and we report each queue twice
 
 	assert.NoError(t, err)
 	assert.NotNil(t, mibDb)
@@ -152,7 +152,7 @@ func Test_GenerateMibDatabase_withUnkownAttrs(t *testing.T) {
 	}
 
 	const uniPortCount = 4
-	const baseMibEntries = 291                    // see Test_GenerateMibDatabase for breakdown
+	const baseMibEntries = 419                    // see Test_GenerateMibDatabase for breakdown
 	const expectedMibEntries = baseMibEntries + 1 // expecting one hardcoded packet
 	mibDb, err := GenerateMibDatabase(uniPortCount, 0, common.XGSPON)
 
