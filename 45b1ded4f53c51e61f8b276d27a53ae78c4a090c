@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9277d4ba_aa1f2385",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2022-11-30T13:14:41Z",
+      "side": 1,
+      "message": "See https://gerrit.opencord.org/c/bbsim/+/33464\n\npost merge failure -- early build passed but post merge jenkins failed due to the version not being incremented.",
+      "revId": "45b1ded4f53c51e61f8b276d27a53ae78c4a090c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
