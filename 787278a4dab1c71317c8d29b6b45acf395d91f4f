@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "8a174eb9_3be97901",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2022-11-30T14:32:25Z",
+      "side": 1,
+      "message": "Debugging: un-hide release-* target commands so we can check for embedded quotes.",
+      "revId": "787278a4dab1c71317c8d29b6b45acf395d91f4f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
