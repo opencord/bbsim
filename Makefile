@@ -132,7 +132,13 @@ docker-kind-load:
 ## -----------------------------------------------------------------------
 ## docker-run
 ## -----------------------------------------------------------------------
+
+# % docker run --detach unless dev-mode
+is-docker-run := $(filter-out %-dev,$(MAKECMDGOALS))
+is-docker-run := $(findstring docker-run,$(is-docker-run))
+
 docker-run-cmd  = docker run
+$(if $(is-docker-run),$(eval docker-run-cmd += --detach))
 docker-run-cmd += ${DOCKER_PORTS}
 docker-run-cmd += --privileged
 docker-run-cmd += --rm
@@ -142,7 +148,7 @@ docker-run-cmd += ${DOCKER_RUN_ARGS}
 
 docker-run: # @HELP Runs the container locally (available options: DOCKER_RUN_ARGS="-pon 2 -onu 2" make docker-run)
 	docker ps
-	$(docker-run-cmd) --detach
+	$(docker-run-cmd)
 
 docker-run-dev: # @HELP Runs the container locally (intended for development purposes, not in detached mode)
 	$(docker-run-cmd)
