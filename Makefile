@@ -176,7 +176,7 @@ RELEASE_BBSIMCTL_NAME ?= bbsimctl
 
 release-bbr:
 	@echo "$(RELEASE_BBR_NAME)-linux-amd64"
-	@${GO} build -mod vendor \
+	${GO} build -mod vendor \
 	  -ldflags "-w -X main.buildTime=$(shell date +%Y/%m/%d-%H:%M:%S) \
 	    -X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
 	    -X main.gitStatus=${GIT_STATUS} \
@@ -185,7 +185,7 @@ release-bbr:
 
 release-bbsim:
 	@echo "$(RELEASE_BBSIM_NAME)-linux-amd64"
-	@${GO} build -mod vendor \
+	${GO} build -mod vendor \
 	  -ldflags "-w -X main.buildTime=$(shell date +%Y/%m/%d-%H:%M:%S) \
 	    -X main.commitHash=$(shell git log --pretty=format:%H -n 1) \
 	    -X main.gitStatus=${GIT_STATUS} \
@@ -193,7 +193,8 @@ release-bbsim:
 	  -o "$(RELEASE_DIR)/$(RELEASE_BBSIM_NAME)-linux-amd64" ./cmd/bbsim
 
 release-bbsimctl:
-	@${GO_SH} set -eo pipefail; \
+	@echo "** $(MAKE): processing target [$@]"
+	${GO_SH} set -eo pipefail; \
 	  for os_arch in ${RELEASE_OS_ARCH}; do \
 	    echo "$(RELEASE_BBSIMCTL_NAME)-$$os_arch"; \
 	    GOOS="$${os_arch%-*}" GOARCH="$${os_arch#*-}" go build -mod vendor \
@@ -202,7 +203,8 @@ release-bbsimctl:
 	      -X github.com/opencord/bbsim/internal/bbsimctl/config.GitStatus=${GIT_STATUS} \
 	      -X github.com/opencord/bbsim/internal/bbsimctl/config.Version=${VERSION}" \
 	    -o "$(RELEASE_DIR)/$(RELEASE_BBSIMCTL_NAME)-$$os_arch" ./cmd/bbsimctl; \
-	  done'# fix-editor-colorization-quote(')
+	  done'
+# fix-editor-colorization-quote(')
 
 .PHONY: release release-bbr release-bbsim release-bbsimctl
 release: release-bbr release-bbsim release-bbsimctl # @HELP Creates release ready bynaries for BBSimctl and BBR artifacts
