@@ -96,9 +96,9 @@ const (
 	tcontSlotId       byte = 0x80 // why is this not the same as the cardHolderSlotID, it does not point to anything
 	aniGId            byte = 0x01
 
-	upstreamPriorityQueues   = 16 // Number of queues for each T-CONT
-	downstreamPriorityQueues = 16 // Number of queues for each PPTP
-	tconts                   = 8  // NOTE will we ever need to configure this?
+	upstreamPriorityQueues   = 8 // Number of queues for each T-CONT
+	downstreamPriorityQueues = 8 // Number of queues for each PPTP
+	tconts                   = 8 // NOTE will we ever need to configure this?
 	// trafficSchedulers        = 8  // NOTE will we ever need to configure this?
 )
 
@@ -377,10 +377,10 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 		})
 
 		// Downstream Queues (related to PPTP)
-		// 16 priorities queues for each UNI Ports
-		// EntityID = cardHolderSlotID + Uni EntityID (0101)
-		for j := 1; j <= downstreamPriorityQueues; j++ {
-			queueEntityId := EntityID{cardHolderSlotID, byte(j)}
+		// downstreamPriorityQueues for each UNI Port
+		// EntityID = MSB: cardHolderSlotID, LSB: uniPortNo<<4 + prio
+		for j := 0; j < downstreamPriorityQueues; j++ {
+			queueEntityId := EntityID{cardHolderSlotID, byte(i<<4 + j)}
 
 			// we first report the PriorityQueue without any attribute
 			mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{
@@ -441,11 +441,11 @@ func GenerateMibDatabase(ethUniPortCount int, potsUniPortCount int, technology c
 			nil,
 		})
 
-		for j := 1; j <= upstreamPriorityQueues; j++ {
-			queueEntityId := EntityID{tcontSlotId, byte(j)}
+		for j := 0; j < upstreamPriorityQueues; j++ {
+			queueEntityId := EntityID{tcontSlotId, byte(i<<4 + j)}
 			// Upstream Queues (related to traffic schedulers)
-			// 8 priorities queues per TCONT
-			// EntityID = tcontSlotId + Uni EntityID (8001)
+			// upstreamPriorityQueues per TCONT
+			// EntityID = MSB: tcontSlotId, LSB: tcontNo<<4 + prio
 
 			// we first report the PriorityQueue without any attribute
 			mibDb.baselineItems = append(mibDb.baselineItems, MibDbEntry{

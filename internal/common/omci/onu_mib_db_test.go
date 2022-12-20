@@ -152,7 +152,7 @@ func Test_GenerateMibDatabase_withUnkownAttrs(t *testing.T) {
 	}
 
 	const uniPortCount = 4
-	const baseMibEntries = 419                    // see Test_GenerateMibDatabase for breakdown
+	const baseMibEntries = 227                    // see Test_GenerateMibDatabase for breakdown
 	const expectedMibEntries = baseMibEntries + 1 // expecting one hardcoded packet
 	mibDb, err := GenerateMibDatabase(uniPortCount, 0, common.XGSPON)
 
