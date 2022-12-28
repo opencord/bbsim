@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7eea2d0d_7c170572",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2022-12-28T18:18:52Z",
+      "side": 1,
+      "message": "Two problems logged by jenkins with SUCCESS reported:\n   * pip install failed for a v2 \u003c-\u003e v3 transition module.\n   * code coverage files are MIA.\n\nUnit test results were solid so accepting the patch to continue moving toward a release image.",
+      "revId": "3881b73d06e1bc82815e5bc2373348bddd73d2af",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
