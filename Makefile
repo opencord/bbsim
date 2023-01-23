@@ -222,7 +222,7 @@ $(release-deps) : release-init
 release-init:
 	@echo "** $(MAKE): processing target [$@]"
 	${GO_SH} set -eo pipefail\
-; echo "PWD: $(/bin/pwd)"\
+; echo "PWD: $$(/bin/pwd)"\
 ; mkdir -p $(RELEASE_DIR)'
 # fix-editor-colorization-quote(')
 
