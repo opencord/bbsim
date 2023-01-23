@@ -58,6 +58,9 @@ PROTOC            = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app
 ## use local vars to shorten paths
 bbsim-tag = ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG}
 
+## -----------------------------------------------------------------------
+## -----------------------------------------------------------------------
+
 # Public targets
 all: help
 
@@ -192,10 +195,10 @@ release-bbsim:
 	    -X main.version=${VERSION}" \
 	  -o "$(RELEASE_DIR)/$(RELEASE_BBSIM_NAME)-linux-amd64" ./cmd/bbsim
 
-release-bbsimctl:
+release-bbsimctl:	
 	@echo "** $(MAKE): processing target [$@]"
 	${GO_SH} set -eo pipefail; \
-	  for os_arch in ${RELEASE_OS_ARCH}; do \
+  for os_arch in ${RELEASE_OS_ARCH}; do \
 	    echo "$(RELEASE_BBSIMCTL_NAME)-$$os_arch"; \
 	    GOOS="$${os_arch%-*}" GOARCH="$${os_arch#*-}" go build -mod vendor \
 	      -ldflags "-w -X github.com/opencord/bbsim/internal/bbsimctl/config.BuildTime=$(shell date +%Y/%m/%d-%H:%M:%S) \
@@ -206,9 +209,25 @@ release-bbsimctl:
 	  done'
 # fix-editor-colorization-quote(')
 
-.PHONY: release release-bbr release-bbsim release-bbsimctl
-release: release-bbr release-bbsim release-bbsimctl # @HELP Creates release ready bynaries for BBSimctl and BBR artifacts
+## -----------------------------------------------------------------------
+## -----------------------------------------------------------------------
+release-deps += release-bbr
+release-deps += release-bbsim
+release-deps += release-bbsimctl
+.PHONY: release $(release-deps)
+release: release-init $(release-deps) # @HELP Creates release ready bynaries for BBSimctl and BBR artifacts
 
+$(release-deps) : release-init
+
+release-init:
+	@echo "** $(MAKE): processing target [$@]"
+	${GO_SH} set -eo pipefail\
+; echo "PWD: $(/bin/pwd)"\
+; mkdir -p $(RELEASE_DIR)'
+# fix-editor-colorization-quote(')
+
+## -----------------------------------------------------------------------
+## -----------------------------------------------------------------------
 swagger-deps += docs/swagger/bbsim/bbsim.swagger.json
 swagger-deps += docs/swagger/leagacy/bbsim.swagger.json
 .PHONY: $(swagger-deps)
