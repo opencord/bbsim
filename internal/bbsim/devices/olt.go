@@ -1669,7 +1669,7 @@ func (o *OltDevice) GetLogicalOnuDistance(ctx context.Context, in *openolt.Onu) 
 }
 
 func (o *OltDevice) GetPonRxPower(ctx context.Context, in *openolt.Onu) (*openolt.PonRxPowerData, error) {
-	return &openolt.PonRxPowerData{}, nil
+	return &openolt.PonRxPowerData{IntfId: in.IntfId, OnuId: in.OnuId, Status: "success", FailReason: 0, RxPowerMeanDbm: -6}, nil
 }
 
 func (o *OltDevice) GetGemPortStatistics(ctx context.Context, in *openolt.OnuPacket) (*openolt.GemPortStatistics, error) {
