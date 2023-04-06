@@ -16,6 +16,207 @@
       "message": "Hey Joey, some comments contain \u0027voltctl\u0027. That\u0027s confusing me;-)",
       "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d03ca3e4_439719fc",
+        "filename": "makefiles/lint/docker/get.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1000643
+      },
+      "writtenOn": "2023-04-06T13:52:57Z",
+      "side": 1,
+      "message": "Tailing whitespace",
+      "range": {
+        "startLine": 64,
+        "startChar": 22,
+        "endLine": 64,
+        "endChar": 23
+      },
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "87204a27_3c454b4c",
+        "filename": "makefiles/lint/license/license-check.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000643
+      },
+      "writtenOn": "2023-04-06T13:52:57Z",
+      "side": 1,
+      "message": "Tailing whitespace",
+      "range": {
+        "startLine": 33,
+        "startChar": 29,
+        "endLine": 33,
+        "endChar": 30
+      },
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "99fd2e1c_1eb91f56",
+        "filename": "makefiles/release/bbr.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000643
+      },
+      "writtenOn": "2023-04-06T13:52:57Z",
+      "side": 1,
+      "message": "Tailing whitspace",
+      "range": {
+        "startLine": 47,
+        "startChar": 6,
+        "endLine": 47,
+        "endChar": 7
+      },
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "253c04ce_2c87868b",
+        "filename": "makefiles/release/bbsim.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000643
+      },
+      "writtenOn": "2023-04-06T13:52:57Z",
+      "side": 1,
+      "message": "Tailing whitespace",
+      "range": {
+        "startLine": 47,
+        "startChar": 6,
+        "endLine": 47,
+        "endChar": 7
+      },
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c49baef4_e5488ac8",
+        "filename": "makefiles/release/bbsimctl.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000643
+      },
+      "writtenOn": "2023-04-06T13:52:57Z",
+      "side": 1,
+      "message": "Tailing whitespace",
+      "range": {
+        "startLine": 49,
+        "startChar": 6,
+        "endLine": 49,
+        "endChar": 7
+      },
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "97262334_61308290",
+        "filename": "makefiles/release/include.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000643
+      },
+      "writtenOn": "2023-04-06T13:52:57Z",
+      "side": 1,
+      "message": "Tailing whitespace",
+      "range": {
+        "startLine": 68,
+        "startChar": 6,
+        "endLine": 68,
+        "endChar": 7
+      },
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0e86f3ab_ac361a78",
+        "filename": "makefiles/release/release-build.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1000643
+      },
+      "writtenOn": "2023-04-06T13:52:57Z",
+      "side": 1,
+      "message": "Do you mean bbsim/bbsimctl?",
+      "range": {
+        "startLine": 22,
+        "startChar": 16,
+        "endLine": 22,
+        "endChar": 23
+      },
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2744e13c_f283a086",
+        "filename": "makefiles/release/release-build.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1000643
+      },
+      "writtenOn": "2023-04-06T13:52:57Z",
+      "side": 1,
+      "message": "Do you mean bbsim/bbsimctl?",
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3a54a000_7332af7b",
+        "filename": "makefiles/todo.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000643
+      },
+      "writtenOn": "2023-04-06T13:52:57Z",
+      "side": 1,
+      "message": "Do you mean bbsim/bbsimctl?",
+      "range": {
+        "startLine": 30,
+        "startChar": 15,
+        "endLine": 30,
+        "endChar": 22
+      },
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
