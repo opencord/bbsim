@@ -18,6 +18,24 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "9e664667_9e155c83",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-04-11T17:42:17Z",
+      "side": 1,
+      "message": "Whups good catch, copy-and-paste casualty to be fixed shortly.",
+      "parentUuid": "c790072b_f80e6da7",
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "d03ca3e4_439719fc",
@@ -65,6 +83,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "e721f02a_eaf03d98",
+        "filename": "makefiles/lint/docker/get.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-04-11T17:42:17Z",
+      "side": 1,
+      "message": "Should have run this earlier:\nhttps://github.com/joey-onf/onf/blob/origin/master/coding/bin/precheck.sh\n\nStray whitespace cleaned up",
+      "parentUuid": "d03ca3e4_439719fc",
+      "range": {
+        "startLine": 64,
+        "startChar": 22,
+        "endLine": 64,
+        "endChar": 23
+      },
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "87204a27_3c454b4c",
@@ -99,6 +141,30 @@
         "id": 1000643
       },
       "writtenOn": "2023-04-11T11:35:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "87204a27_3c454b4c",
+      "range": {
+        "startLine": 33,
+        "startChar": 29,
+        "endLine": 33,
+        "endChar": 30
+      },
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a1f15597_e03b037a",
+        "filename": "makefiles/lint/license/license-check.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-04-11T17:42:17Z",
       "side": 1,
       "message": "Done",
       "parentUuid": "87204a27_3c454b4c",
@@ -159,6 +225,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "b10888bc_73678c69",
+        "filename": "makefiles/release/bbr.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-04-11T17:42:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "99fd2e1c_1eb91f56",
+      "range": {
+        "startLine": 47,
+        "startChar": 6,
+        "endLine": 47,
+        "endChar": 7
+      },
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "253c04ce_2c87868b",
@@ -193,6 +283,30 @@
         "id": 1000643
       },
       "writtenOn": "2023-04-11T11:35:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "253c04ce_2c87868b",
+      "range": {
+        "startLine": 47,
+        "startChar": 6,
+        "endLine": 47,
+        "endChar": 7
+      },
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "702b8327_81543b70",
+        "filename": "makefiles/release/bbsim.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-04-11T17:42:17Z",
       "side": 1,
       "message": "Done",
       "parentUuid": "253c04ce_2c87868b",
@@ -253,6 +367,30 @@
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "b1147be1_386bfa8d",
+        "filename": "makefiles/release/bbsimctl.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-04-11T17:42:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c49baef4_e5488ac8",
+      "range": {
+        "startLine": 49,
+        "startChar": 6,
+        "endLine": 49,
+        "endChar": 7
+      },
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "97262334_61308290",
@@ -287,6 +425,30 @@
         "id": 1000643
       },
       "writtenOn": "2023-04-11T11:35:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "97262334_61308290",
+      "range": {
+        "startLine": 68,
+        "startChar": 6,
+        "endLine": 68,
+        "endChar": 7
+      },
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d2946a84_713730c8",
+        "filename": "makefiles/release/include.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-04-11T17:42:17Z",
       "side": 1,
       "message": "Done",
       "parentUuid": "97262334_61308290",
@@ -336,6 +498,30 @@
       "writtenOn": "2023-04-11T11:35:47Z",
       "side": 1,
       "message": "Done",
+      "parentUuid": "0e86f3ab_ac361a78",
+      "range": {
+        "startLine": 22,
+        "startChar": 16,
+        "endLine": 22,
+        "endChar": 23
+      },
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3cf32d37_78693547",
+        "filename": "makefiles/release/release-build.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-04-11T17:42:17Z",
+      "side": 1,
+      "message": "This file can be ignored/being removed to avoid confusion.\nrelease-build.mk was copied in from voltctl to use as a template.\n\nThere are only two lingering references to voltctl in the repository.\n\n% grep -r voltctl Makefile  makefiles/\nmakefiles/todo.mk:      @echo \"[TODO: voltctl]\"\nmakefiles/release/release-build.mk:         GOOS\u003d$${x%-*} GOARCH\u003d$${x#*-} go build -mod\u003dvendor -v $(LDFLAGS) -o \"$$OUT_PATH\" cmd/voltctl/voltctl.go; \\",
       "parentUuid": "0e86f3ab_ac361a78",
       "range": {
         "startLine": 22,
@@ -418,6 +604,30 @@
       "writtenOn": "2023-04-11T11:35:47Z",
       "side": 1,
       "message": "Done",
+      "parentUuid": "3a54a000_7332af7b",
+      "range": {
+        "startLine": 30,
+        "startChar": 15,
+        "endLine": 30,
+        "endChar": 22
+      },
+      "revId": "f80c4f553c91b6d40428972e52fead3ae66e7165",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "558b5ae5_7b4faa65",
+        "filename": "makefiles/todo.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-04-11T17:42:17Z",
+      "side": 1,
+      "message": "Updated TODO: banner and pruned voltctl content from the list.",
       "parentUuid": "3a54a000_7332af7b",
       "range": {
         "startLine": 30,
