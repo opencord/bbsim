@@ -1583,6 +1583,13 @@
             "type": "integer",
             "format": "int64"
           }
+        },
+        "gemport_to_aes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean",
+            "format": "boolean"
+          }
         }
       }
     },
