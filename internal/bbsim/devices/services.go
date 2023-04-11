@@ -471,7 +471,7 @@ func (s *Service) HandlePackets() {
 			_ = dhcp.HandleNextPacket(s.UniPort.Onu.ID, s.UniPort.Onu.PonPortID, s.Name, s.UniPort.Onu.Sn(), s.UniPort.PortNo, tag, s.GemPort, s.UniPort.ID, s.HwAddress, s.DHCPState, msg.Packet, priority, s.Stream)
 		} else if msg.Type == packetHandlers.IGMP {
 			log.Warn(hex.EncodeToString(msg.Packet.Data()))
-			_ = igmp.HandleNextPacket(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.GemPort, s.HwAddress, msg.Packet, s.CTag, s.UsPonCTagPriority, s.Stream)
+			_ = igmp.HandleNextPacket(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.UniPort.ID, s.GemPort, s.HwAddress, msg.Packet, s.CTag, s.UsPonCTagPriority, s.Stream)
 		}
 	}
 }
@@ -540,7 +540,7 @@ func (s *Service) HandleChannel() {
 				"UniId":     s.UniPort.ID,
 				"Name":      s.Name,
 			}).Debug("Received IGMPMembershipReportV2 message on ONU channel")
-			_ = igmp.SendIGMPMembershipReportV2(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
+			_ = igmp.SendIGMPMembershipReportV2(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.UniPort.ID, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
 		case bbsimTypes.IGMPLeaveGroup:
 			igmpInfo, _ := msg.Data.(bbsimTypes.IgmpMessage)
 			serviceLogger.WithFields(log.Fields{
@@ -552,7 +552,7 @@ func (s *Service) HandleChannel() {
 				"UniId":     s.UniPort.ID,
 				"Name":      s.Name,
 			}).Debug("Received IGMPLeaveGroupV2 message on ONU channel")
-			_ = igmp.SendIGMPLeaveGroupV2(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
+			_ = igmp.SendIGMPLeaveGroupV2(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.UniPort.ID, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
 		case bbsimTypes.IGMPMembershipReportV3:
 			igmpInfo, _ := msg.Data.(bbsimTypes.IgmpMessage)
 			serviceLogger.WithFields(log.Fields{
@@ -564,7 +564,7 @@ func (s *Service) HandleChannel() {
 				"UniId":     s.UniPort.ID,
 				"Name":      s.Name,
 			}).Debug("Received IGMPMembershipReportV3 message on ONU channel")
-			_ = igmp.SendIGMPMembershipReportV3(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
+			_ = igmp.SendIGMPMembershipReportV3(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.UniPort.ID, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
 
 		}
 	}
