@@ -17,9 +17,12 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
-	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
+	"fmt"
 	"net"
+	"strconv"
 	"time"
+
+	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -28,7 +31,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32,
+func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, uniId uint32,
 	gemPortId uint32, macAddress net.HardwareAddr, cTag int, pbit uint8, stream bbsim.Stream, groupAddress string) error {
 	log.WithFields(log.Fields{
 		"OnuId":        onuId,
@@ -49,6 +52,13 @@ func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, p
 		return err
 	}
 
+	// For IGMP testing, if voltha is not connected we do not have
+	// gemPortId, so set a unique gemPortId per ONU
+	if gemPortId == 0 {
+		gid, _ := strconv.ParseUint(fmt.Sprintf("%d%d", ponPortId, onuId), 10, 32)
+		gemPortId = uint32(gid)
+	}
+
 	data := &openolt.Indication_PktInd{
 		PktInd: &openolt.PacketIndication{
 			IntfType:  "pon",
@@ -57,7 +67,7 @@ func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, p
 			Pkt:       pkt,
 			PortNo:    portNo,
 			OnuId:     onuId,
-			UniId:     0, // FIXME: When multi-uni support comes in, this hardcoding has to be removed
+			UniId:     uniId,
 		},
 	}
 	//Sending IGMP packets
@@ -75,7 +85,7 @@ func SendIGMPLeaveGroupV2(ponPortId uint32, onuId uint32, serialNumber string, p
 	return nil
 }
 
-func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32,
+func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, uniId uint32,
 	gemPortId uint32, macAddress net.HardwareAddr, cTag int, pbit uint8, stream bbsim.Stream, groupAddress string) error {
 
 	igmp := createIGMPV2MembershipReportPacket(groupAddress)
@@ -91,6 +101,13 @@ func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber str
 		return err
 	}
 
+	// For IGMP testing, if voltha is not connected we do not have
+	// gemPortId, so set a unique gemPortId per ONU
+	if gemPortId == 0 {
+		gid, _ := strconv.ParseUint(fmt.Sprintf("%d%d", ponPortId, onuId), 10, 32)
+		gemPortId = uint32(gid)
+	}
+
 	data := &openolt.Indication_PktInd{
 		PktInd: &openolt.PacketIndication{
 			IntfType:  "pon",
@@ -99,7 +116,7 @@ func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber str
 			Pkt:       pkt,
 			PortNo:    portNo,
 			OnuId:     onuId,
-			UniId:     0,
+			UniId:     uniId,
 		},
 	}
 	//Sending IGMP packets
@@ -124,7 +141,7 @@ func SendIGMPMembershipReportV2(ponPortId uint32, onuId uint32, serialNumber str
 	return nil
 }
 
-func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32,
+func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, uniId uint32,
 	gemPortId uint32, macAddress net.HardwareAddr, cTag int, pbit uint8, stream bbsim.Stream, groupAddress string) error {
 
 	log.WithFields(log.Fields{
@@ -146,6 +163,13 @@ func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber str
 		return err
 	}
 
+	// For IGMP testing, if voltha is not connected we do not have
+	// gemPortId, so set a unique gemPortId per ONU
+	if gemPortId == 0 {
+		gid, _ := strconv.ParseUint(fmt.Sprintf("%d%d", ponPortId, onuId), 10, 32)
+		gemPortId = uint32(gid)
+	}
+
 	data := &openolt.Indication_PktInd{
 		PktInd: &openolt.PacketIndication{
 			IntfType:  "pon",
@@ -154,7 +178,7 @@ func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber str
 			Pkt:       pkt,
 			PortNo:    portNo,
 			OnuId:     onuId,
-			UniId:     0, // FIXME: When multi-uni support comes in, this hardcoding has to be removed
+			UniId:     uniId,
 		},
 	}
 	//Sending IGMP packets
@@ -171,7 +195,7 @@ func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber str
 	return nil
 }
 
-func HandleNextPacket(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32,
+func HandleNextPacket(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, uniId uint32,
 	gemPortId uint32, macAddress net.HardwareAddr, pkt gopacket.Packet, cTag int, pbit uint8, stream bbsim.Stream) error {
 
 	igmpLayer := pkt.Layer(layers.LayerTypeIGMP)
@@ -192,7 +216,7 @@ func HandleNextPacket(ponPortId uint32, onuId uint32, serialNumber string, portN
 	igmp := igmpLayer.(*layers.IGMPv1or2)
 
 	if igmp.Type == layers.IGMPMembershipQuery {
-		_ = SendIGMPMembershipReportV2(ponPortId, onuId, serialNumber, portNo, gemPortId, macAddress,
+		_ = SendIGMPMembershipReportV2(ponPortId, onuId, serialNumber, portNo, uniId, gemPortId, macAddress,
 			cTag, pbit, stream, igmp.GroupAddress.String())
 	}
 
@@ -269,13 +293,19 @@ func serializeIgmpPacket(intfId uint32, onuId uint32, cTag int, srcMac net.Hardw
 		EthernetType: layers.EthernetTypeIPv4,
 	}
 
+	destinationIP := igmp.GroupAddress
+	if igmp.Version == 3 && igmp.Type == layers.IGMPMembershipReportV3 {
+		//All IGMPv3-capable multicast routers
+		destinationIP = net.ParseIP("224.0.0.22")
+	}
+
 	ipLayer := &layers.IPv4{
 		Version:  4,
 		TOS:      0x10,
 		Id:       0,
 		TTL:      128,
 		SrcIP:    []byte{0, 0, 0, 0},
-		DstIP:    igmp.GroupAddress,
+		DstIP:    destinationIP,
 		Protocol: layers.IPProtocolIGMP,
 		Options:  []layers.IPv4Option{{OptionType: 148, OptionLength: 4, OptionData: make([]byte, 0)}}, //Adding router alert option
 	}

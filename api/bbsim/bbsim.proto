@@ -245,9 +245,11 @@ enum SubActionTypes {
 }
 
 message IgmpRequest {
-    ONURequest OnuReq = 1;
-    SubActionTypes SubActionVal = 2;
-    string GroupAddress = 3;
+    string OnuSerialNumber = 1;
+    int32 UniID = 2;
+    SubActionTypes SubActionVal = 3;
+    string GroupAddress = 4;
+    int32 VLAN = 5;
 }
 
 message Flows {

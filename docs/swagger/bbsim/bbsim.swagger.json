@@ -100,7 +100,7 @@
         ]
       }
     },
-    "/v1/olt/onus/{OnuReq.SerialNumber}/igmp": {
+    "/v1/olt/onus/{OnuSerialNumber}/{UniID}/igmp/{SubActionVal}/{GroupAddress}/{VLAN}": {
       "post": {
         "summary": "Change IGMP state",
         "operationId": "ChangeIgmpState",
@@ -120,12 +120,71 @@
             "type": "string"
           },
           {
-            "name": "body",
-            "in": "body",
+            "name": "SubActionVal",
+            "in": "path",
             "required": true,
+            "type": "string",
+            "enum": [
+              "JOIN",
+              "LEAVE",
+              "JOINV3"
+            ]
+          },
+          {
+            "name": "GroupAddress",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BBSim"
+        ]
+      }
+    },
+    "/v1/olt/onus/{OnuSerialNumber}/dhcp": {
+      "post": {
+        "summary": "Restart DHCP for ONU",
+        "operationId": "RestartDhcp",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/bbsimResponse"
             }
+          }
+        },
+        "parameters": [
+          {
+            "name": "OnuSerialNumber",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BBSim"
+        ]
+      }
+    },
+    "/v1/olt/onus/{OnuSerialNumber}/eapol": {
+      "post": {
+        "summary": "Restart EAPOL for ONU",
+        "operationId": "RestartEapol",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "OnuSerialNumber",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
@@ -231,56 +290,6 @@
           },
           {
             "name": "Status",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "BBSim"
-        ]
-      }
-    },
-    "/v1/olt/onus/{SerialNumber}/dhcp": {
-      "post": {
-        "summary": "Restart DHCP for ONU",
-        "operationId": "RestartDhcp",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/bbsimResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "SerialNumber",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "BBSim"
-        ]
-      }
-    },
-    "/v1/olt/onus/{SerialNumber}/eapol": {
-      "post": {
-        "summary": "Restart EAPOL for ONU",
-        "operationId": "RestartEapol",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/bbsimResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "SerialNumber",
             "in": "path",
             "required": true,
             "type": "string"
@@ -564,6 +573,28 @@
           "items": {
             "$ref": "#/definitions/bbsimService"
           }
+        },
+        "ImageSoftwareExpectedSections": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "ImageSoftwareReceivedSections": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "ActiveImageEntityId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "CommittedImageEntityId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "unis": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bbsimUNI"
+          }
         }
       }
     },
@@ -624,6 +655,58 @@
           "items": {
             "$ref": "#/definitions/bbsimPONPort"
           }
+        },
+        "NniDhcpTrapVid": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "bbsimOltAllocatedResource": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "PonPortId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "OnuId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "PortNo": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "ResourceId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "FlowId": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "bbsimOltAllocatedResourceTypeType": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "ALLOC_ID",
+        "GEM_PORT"
+      ],
+      "default": "UNKNOWN"
+    },
+    "bbsimOltAllocatedResources": {
+      "type": "object",
+      "properties": {
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bbsimOltAllocatedResource"
+          }
         }
       }
     },
@@ -636,6 +719,48 @@
         },
         "OperState": {
           "type": "string"
+        },
+        "InternalState": {
+          "type": "string"
+        },
+        "PacketCount": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "AllocatedOnuIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bbsimPonAllocatedResources"
+          },
+          "title": "ONU ID are reported by VOLTHA in the ActivateOnu call"
+        },
+        "AllocatedGemPorts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bbsimPonAllocatedResources"
+          },
+          "title": "these are the stored resource IDs as reported via OMCI"
+        },
+        "AllocatedAllocIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bbsimPonAllocatedResources"
+          }
+        },
+        "Technology": {
+          "type": "string"
+        }
+      }
+    },
+    "bbsimPonAllocatedResources": {
+      "type": "object",
+      "properties": {
+        "SerialNumber": {
+          "type": "string"
+        },
+        "Id": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -698,6 +823,42 @@
         },
         "IGMPState": {
           "type": "string"
+        },
+        "UniId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "UniTagMatch": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "UsCTagPriority": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "UsSTagPriority": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "DsCTagPriority": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "DsSTagPriority": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "NeedsPPPoE": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "ConfigureMacAddress": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "EnableMacLearning": {
+          "type": "boolean",
+          "format": "boolean"
         }
       }
     },
@@ -720,6 +881,61 @@
         "JOINV3"
       ],
       "default": "JOIN"
+    },
+    "bbsimUNI": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "OnuID": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "OnuSn": {
+          "type": "string"
+        },
+        "MeID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "OperState": {
+          "type": "string"
+        },
+        "PortNo": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "services": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bbsimService"
+          }
+        },
+        "Type": {
+          "$ref": "#/definitions/bbsimUniType"
+        }
+      }
+    },
+    "bbsimUNIs": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bbsimUNI"
+          }
+        }
+      }
+    },
+    "bbsimUniType": {
+      "type": "string",
+      "enum": [
+        "ETH",
+        "POTS"
+      ],
+      "default": "ETH"
     },
     "bbsimVersionNumber": {
       "type": "object",
@@ -948,6 +1164,13 @@
           "additionalProperties": {
             "type": "integer",
             "format": "int64"
+          }
+        },
+        "gemport_to_aes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean",
+            "format": "boolean"
           }
         }
       }

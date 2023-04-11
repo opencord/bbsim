@@ -864,7 +864,7 @@ func local_request_BBSim_GetFlows_1(ctx context.Context, marshaler runtime.Marsh
 }
 
 var (
-	filter_BBSim_ChangeIgmpState_0 = &utilities.DoubleArray{Encoding: map[string]int{"OnuReq": 0, "SerialNumber": 1, "SubActionVal": 2, "GroupAddress": 3}, Base: []int{1, 1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 2, 1, 1, 3, 4, 5}}
+	filter_BBSim_ChangeIgmpState_0 = &utilities.DoubleArray{Encoding: map[string]int{"OnuSerialNumber": 0, "SubActionVal": 1, "GroupAddress": 2}, Base: []int{1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 1, 2, 3, 4}}
 )
 
 func request_BBSim_ChangeIgmpState_0(ctx context.Context, marshaler runtime.Marshaler, client BBSimClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -879,15 +879,15 @@ func request_BBSim_ChangeIgmpState_0(ctx context.Context, marshaler runtime.Mars
 		_   = err
 	)
 
-	val, ok = pathParams["OnuReq.SerialNumber"]
+	val, ok = pathParams["OnuSerialNumber"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "OnuReq.SerialNumber")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "OnuSerialNumber")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "OnuReq.SerialNumber", val)
+	protoReq.OnuSerialNumber, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "OnuReq.SerialNumber", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "OnuSerialNumber", err)
 	}
 
 	val, ok = pathParams["SubActionVal"]
@@ -938,15 +938,15 @@ func local_request_BBSim_ChangeIgmpState_0(ctx context.Context, marshaler runtim
 		_   = err
 	)
 
-	val, ok = pathParams["OnuReq.SerialNumber"]
+	val, ok = pathParams["OnuSerialNumber"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "OnuReq.SerialNumber")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "OnuSerialNumber")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "OnuReq.SerialNumber", val)
+	protoReq.OnuSerialNumber, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "OnuReq.SerialNumber", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "OnuSerialNumber", err)
 	}
 
 	val, ok = pathParams["SubActionVal"]
@@ -1922,7 +1922,7 @@ var (
 
 	pattern_BBSim_GetFlows_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "olt", "flows"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_BBSim_ChangeIgmpState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6}, []string{"v1", "olt", "onus", "OnuReq.SerialNumber", "igmp", "SubActionVal", "GroupAddress"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_BBSim_ChangeIgmpState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6}, []string{"v1", "olt", "onus", "OnuSerialNumber", "igmp", "SubActionVal", "GroupAddress"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_BBSim_GetOnuTrafficSchedulers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "olt", "onus", "SerialNumber", "trafficschedulers"}, "", runtime.AssumeColonVerbOpt(true)))
 )

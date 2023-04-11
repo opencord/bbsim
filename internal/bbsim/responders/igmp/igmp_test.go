@@ -19,13 +19,14 @@ package igmp
 import (
 	"encoding/hex"
 	"fmt"
+	"net"
+	"testing"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
-	"net"
-	"testing"
 )
 
 type mockStream struct {
@@ -64,7 +65,7 @@ func TestHandleNextPacket(t *testing.T) {
 
 	fmt.Println(packet.Layers())
 
-	err := HandleNextPacket(0, 0, "FOO", 1, 1024, mac, packet, 55, 5, stream)
+	err := HandleNextPacket(0, 0, "FOO", 1, 1024, 0, mac, packet, 55, 5, stream)
 	assert.Nil(t, err)
 
 	assert.Equal(t, 1, stream.CallCount)

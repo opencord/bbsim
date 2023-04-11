@@ -38,8 +38,10 @@ const (
 )
 
 type OnuSnString string
+type UniId int
 type IgmpSubAction string
 type GroupAddress string
+type VLAN int
 
 const IgmpJoinKey string = "join"
 const IgmpLeaveKey string = "leave"
@@ -92,9 +94,11 @@ type ONUDhcpRestart struct {
 type ONUIgmp struct {
 	Args struct {
 		OnuSn        OnuSnString
+		UniId        UniId
 		SubAction    IgmpSubAction
 		GroupAddress GroupAddress
 	} `positional-args:"yes" required:"yes"`
+	VLAN VLAN `short:"v" long:"vlan" description:"VLAN to set"`
 }
 
 type ONUTrafficSchedulers struct {
@@ -297,10 +301,6 @@ func (options *ONUIgmp) Execute(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 
-	req := pb.ONURequest{
-		SerialNumber: string(options.Args.OnuSn),
-	}
-
 	var subActionVal pb.SubActionTypes
 	if string(options.Args.SubAction) == IgmpJoinKey {
 		subActionVal = pb.SubActionTypes_JOIN
@@ -311,18 +311,23 @@ func (options *ONUIgmp) Execute(args []string) error {
 	}
 
 	igmpReq := pb.IgmpRequest{
-		OnuReq:       &req,
-		SubActionVal: subActionVal,
-		GroupAddress: string(options.Args.GroupAddress),
+		OnuSerialNumber: string(options.Args.OnuSn),
+		UniID:           int32(options.Args.UniId),
+		SubActionVal:    subActionVal,
+		GroupAddress:    string(options.Args.GroupAddress),
+		VLAN:            int32(options.VLAN),
 	}
-	res, err := client.GetONU(ctx, igmpReq.OnuReq)
+	req := &pb.ONURequest{
+		SerialNumber: string(options.Args.OnuSn),
+	}
+	res, err := client.GetONU(ctx, req)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"SerialNumber": options.Args.OnuSn,
 		}).Errorf("Cannot not get details on ONU error: %v", err)
 	}
 	log.WithFields(log.Fields{
-		"SerialNumber": igmpReq.OnuReq.SerialNumber,
+		"SerialNumber": igmpReq.OnuSerialNumber,
 	}).Debugf("ONU has identified : %s", res)
 
 	igmpRes, igmpErr := client.ChangeIgmpState(ctx, &igmpReq)

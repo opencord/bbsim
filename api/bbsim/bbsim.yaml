@@ -57,7 +57,8 @@ http:
   - selector: bbsim.BBSim.RestartDhcp
     post: "/v1/olt/onus/{OnuSerialNumber}/dhcp"
   - selector: bbsim.BBSim.ChangeIgmpState
-    post: "/v1/olt/onus/{OnuReq.SerialNumber}/igmp/{SubActionVal}/{GroupAddress}"
+    post: "/v1/olt/onus/{OnuSerialNumber}/{UniID}/igmp/{SubActionVal}/{GroupAddress}/{VLAN}"
+
 
   - selector: bbsim.BBSim.SetOnuAlarmIndication
     post: "/v1/olt/onus/{SerialNumber}/alarms/{AlarmType}/{Status}"

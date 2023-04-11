@@ -21,11 +21,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
+	"github.com/opencord/bbsim/internal/bbsim/responders/igmp"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 )
@@ -236,19 +236,20 @@ func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest
 	res := &bbsim.Response{}
 
 	logger.WithFields(log.Fields{
-		"OnuSn":        req.OnuReq.SerialNumber,
+		"OnuSn":        req.OnuSerialNumber,
+		"UniId":        req.UniID,
 		"subAction":    req.SubActionVal,
 		"GroupAddress": req.GroupAddress,
+		"VLAN":         req.VLAN,
 	}).Info("Received igmp request for ONU")
 
 	olt := devices.GetOLT()
-	onu, err := olt.FindOnuBySn(req.OnuReq.SerialNumber)
-
+	onu, err := olt.FindOnuBySn(req.OnuSerialNumber)
 	if err != nil {
 		res.StatusCode = int32(codes.NotFound)
 		res.Message = err.Error()
 		logger.WithFields(log.Fields{
-			"OnuSn":        req.OnuReq.SerialNumber,
+			"OnuSn":        req.OnuSerialNumber,
 			"subAction":    req.SubActionVal,
 			"GroupAddress": req.GroupAddress,
 		}).Warn("ONU not found for sending igmp packet.")
@@ -264,82 +265,74 @@ func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest
 			event = "igmp_join_startv3"
 		}
 
-		errors := []string{}
-		startedOn := []string{}
-		success := true
-
-		for _, u := range onu.UniPorts {
-			uni := u.(*devices.UniPort)
-			if !uni.OperState.Is(devices.UniStateUp) {
-				// if the UNI is disabled, ignore it
-				continue
-			}
-			for _, s := range uni.Services {
-				service := s.(*devices.Service)
-				serviceKey := fmt.Sprintf("uni[%d]%s", uni.ID, service.Name)
-				if service.NeedsIgmp {
-					if !service.InternalState.Is(devices.ServiceStateInitialized) {
-						logger.WithFields(log.Fields{
-							"OnuId":   onu.ID,
-							"UniId":   uni.ID,
-							"IntfId":  onu.PonPortID,
-							"OnuSn":   onu.Sn(),
-							"Service": service.Name,
-						}).Warn("service-not-initialized-skipping-event")
-						continue
-					}
+		if int(req.UniID) >= len(onu.UniPorts) {
+			res.StatusCode = int32(codes.InvalidArgument)
+			err := fmt.Errorf("invalid uni no given")
+			return res, err
+		}
+		if req.VLAN > 0xFFF || req.VLAN < 0 {
+			res.StatusCode = int32(codes.InvalidArgument)
+			err := fmt.Errorf("invalid vlan given")
+			return res, err
+		}
+		uni := onu.UniPorts[req.UniID].(*devices.UniPort)
+		if !uni.OperState.Is(devices.UniStateUp) {
+			// if the UNI is disabled, ignore it
+			err := fmt.Errorf("given uni is currently disabled")
+			return res, err
+		}
+		for _, s := range uni.Services {
+			service := s.(*devices.Service)
+			if service.NeedsIgmp {
+				if !service.InternalState.Is(devices.ServiceStateInitialized) {
 					logger.WithFields(log.Fields{
 						"OnuId":   onu.ID,
 						"UniId":   uni.ID,
 						"IntfId":  onu.PonPortID,
 						"OnuSn":   onu.Sn(),
 						"Service": service.Name,
-						"Uni":     uni.ID,
-					}).Debugf("Sending %s event on Service %s", event, service.Name)
+					}).Trace("service-not-initialized-skipping-event")
+					continue
+				}
 
-					if err := service.IGMPState.Event(event, types.IgmpMessage{GroupAddress: req.GroupAddress}); err != nil {
-						logger.WithFields(log.Fields{
-							"OnuId":   onu.ID,
-							"UniId":   uni.ID,
-							"IntfId":  onu.PonPortID,
-							"OnuSn":   onu.Sn(),
-							"Service": service.Name,
-						}).Errorf("IGMP request failed: %s", err.Error())
-						errors = append(errors, fmt.Sprintf("%s: %s", serviceKey, err.Error()))
-						success = false
-					}
-					startedOn = append(startedOn, serviceKey)
+				ctag := service.CTag
+				if req.VLAN != 0 {
+					ctag = int(req.VLAN)
+				}
+
+				logger.WithFields(log.Fields{
+					"OnuId":   onu.ID,
+					"UniId":   uni.ID,
+					"IntfId":  onu.PonPortID,
+					"OnuSn":   onu.Sn(),
+					"Service": service.Name,
+					"Uni":     uni.ID,
+					"Vlan":    ctag,
+				}).Debugf("Sending %s event on Service %s", event, service.Name)
+
+				switch req.SubActionVal {
+				case bbsim.SubActionTypes_JOIN:
+					go func() {
+						_ = igmp.SendIGMPMembershipReportV2(service.UniPort.Onu.PonPortID, service.UniPort.Onu.ID, service.UniPort.Onu.Sn(),
+							service.UniPort.PortNo, service.UniPort.ID, service.GemPort, service.HwAddress, ctag,
+							service.UsPonCTagPriority, service.Stream, req.GroupAddress)
+					}()
+				case bbsim.SubActionTypes_LEAVE:
+					go func() {
+						_ = igmp.SendIGMPLeaveGroupV2(service.UniPort.Onu.PonPortID, service.UniPort.Onu.ID, service.UniPort.Onu.Sn(),
+							service.UniPort.PortNo, service.UniPort.ID, service.GemPort, service.HwAddress, ctag,
+							service.UsPonCTagPriority, service.Stream, req.GroupAddress)
+					}()
+				case bbsim.SubActionTypes_JOINV3:
+					go func() {
+						_ = igmp.SendIGMPMembershipReportV3(service.UniPort.Onu.PonPortID, service.UniPort.Onu.ID, service.UniPort.Onu.Sn(),
+							service.UniPort.PortNo, service.UniPort.ID, service.GemPort, service.HwAddress, ctag,
+							service.UsPonCTagPriority, service.Stream, req.GroupAddress)
+					}()
 				}
 			}
 		}
-
-		if success {
-			res.StatusCode = int32(codes.OK)
-			if len(startedOn) > 0 {
-				res.Message = fmt.Sprintf("IGMP %s sent on Services %s for ONU %s.",
-					event, fmt.Sprintf("%v", startedOn), onu.Sn())
-			} else {
-				res.Message = "No service requires IGMP"
-			}
-			logger.WithFields(log.Fields{
-				"OnuSn":        req.OnuReq.SerialNumber,
-				"subAction":    req.SubActionVal,
-				"GroupAddress": req.GroupAddress,
-				"Message":      res.Message,
-			}).Info("Processed IGMP request for ONU")
-		} else {
-			res.StatusCode = int32(codes.FailedPrecondition)
-			res.Message = fmt.Sprintf("%v", errors)
-			logger.WithFields(log.Fields{
-				"OnuSn":        req.OnuReq.SerialNumber,
-				"subAction":    req.SubActionVal,
-				"GroupAddress": req.GroupAddress,
-				"Message":      res.Message,
-			}).Error("Error while processing IGMP request for ONU")
-		}
-
 	}
-
 	return res, nil
 }
 
