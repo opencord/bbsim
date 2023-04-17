@@ -315,16 +315,7 @@ docs/swagger/leagacy/bbsim.swagger.json: api/legacy/bbsim.proto setup_tools
 ## -----------------------------------------------------------------------
 ## Intent: Helper target used to exercise release script changes
 ## -----------------------------------------------------------------------
-onf-publish-args := $(null)
-onf-publish-args += --draft
-onf-publish-args += --gen-version
-onf-publish-args += --repo-org opencord
-onf-publish-args += --repo-name bbsim
-onf-publish-args += --git-hostname github.com
-onf-publish-args += --pac $(HOME)/.ssh/github.com/pacs/onf-voltha
-# onf-publish-args += --notes-file "$(PWD)/release-notes"
-onf-publish:
-	../ci-management/jjb/shell/github-release.sh $(onf-publish-args) 2>&1 | tee $@.log
+include $(MAKEDIR)/release/onf-publish.mk
 
 $(if $(DEBUG),$(warning LEAVE))
 
