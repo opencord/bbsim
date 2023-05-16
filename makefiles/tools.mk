@@ -30,7 +30,13 @@ VOLTHA_TOOLS_VERSION ?= 2.3.1
 
 docker-run     = docker run --rm --user $$(id -u):$$(id -g)#   # Docker command stem
 docker-run-app = $(docker-run) -v ${CURDIR}:/app#              # w/filesystem mount
-is-stdin       = $(shell test -t 0 && echo "-it")
+
+## -----------------------------------------------------------------------
+## --interactive: Attach streams if running interactively (!jenkins)
+## --tty        : Attach stdout else jenkins::docker is silent.
+## -----------------------------------------------------------------------
+is-stdin       = $(shell test -t 0 && { echo '--interactive' })
+is-stdin       += --tty
 
 # Docker volume mounts: container:/app/release <=> localhost:{pwd}/release
 vee-golang     = -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg
