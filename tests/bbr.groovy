@@ -122,7 +122,7 @@
   post {
     always {
       archiveArtifacts artifacts: '*.logs'
-      step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: "joey@opennetworking.org", sendToIndividuals: false])
+      // step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: "joey@opennetworking.org", sendToIndividuals: false])
     }
     success {
       plot([
