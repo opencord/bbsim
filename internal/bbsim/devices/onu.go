@@ -508,26 +508,45 @@ loop:
 				msg, _ := message.Data.(bbsim.OnuPacketMessage)
 
 				onuLogger.WithFields(log.Fields{
-					"IntfId":  msg.IntfId,
-					"OnuId":   msg.OnuId,
-					"pktType": msg.Type,
+					"IntfId":    msg.IntfId,
+					"OnuId":     msg.OnuId,
+					"pktType":   msg.Type,
+					"OnuSn":     o.Sn(),
+					"gemportid": msg.GemPortId,
 				}).Trace("Received OnuPacketOut Message")
 
-				uni, err := o.findUniByPortNo(msg.PortNo)
-
-				if err != nil {
-					onuLogger.WithFields(log.Fields{
-						"IntfId":     msg.IntfId,
-						"OnuId":      msg.OnuId,
-						"pktType":    msg.Type,
-						"portNo":     msg.PortNo,
-						"MacAddress": msg.MacAddress,
-						"Pkt":        hex.EncodeToString(msg.Packet.Data()),
-						"OnuSn":      o.Sn(),
-					}).Error("Cannot find Uni associated with packet")
-					return
+				if msg.GemPortId == multicastGemPortId {
+					unis := o.findUniWithIgmpMembership()
+					if len(unis) == 0 {
+						onuLogger.WithFields(log.Fields{
+							"IntfId":     msg.IntfId,
+							"OnuId":      msg.OnuId,
+							"pktType":    msg.Type,
+							"portNo":     msg.PortNo,
+							"MacAddress": msg.MacAddress,
+							"Pkt":        hex.EncodeToString(msg.Packet.Data()),
+							"OnuSn":      o.Sn(),
+						}).Trace("No uni to forward msg coming to multicast gemport")
+					}
+					for _, uni := range unis {
+						uni.PacketCh <- msg
+					}
+				} else {
+					uni, err := o.findUniByPortNo(msg.PortNo)
+					if err != nil {
+						onuLogger.WithFields(log.Fields{
+							"IntfId":     msg.IntfId,
+							"OnuId":      msg.OnuId,
+							"pktType":    msg.Type,
+							"portNo":     msg.PortNo,
+							"MacAddress": msg.MacAddress,
+							"Pkt":        hex.EncodeToString(msg.Packet.Data()),
+							"OnuSn":      o.Sn(),
+						}).Error("Cannot find Uni associated with packet")
+						continue
+					}
+					uni.PacketCh <- msg
 				}
-				uni.PacketCh <- msg
 			// BBR specific messages
 			case bbsim.OnuPacketIn:
 				// NOTE we only receive BBR packets here.
@@ -1861,6 +1880,38 @@ func (onu *Onu) findUniByPortNo(portNo uint32) (*UniPort, error) {
 		}
 	}
 	return nil, fmt.Errorf("cannot-find-uni-with-port-no-%d", portNo)
+}
+
+// findUniWithIgmpMembership returns the list of UNIs which has sent any IGMP messages
+// and has any active membershipments currently
+func (onu *Onu) findUniWithIgmpMembership() []UniPort {
+	var uniPorts []UniPort
+	for _, u := range onu.UniPorts {
+		uni := u.(*UniPort)
+		if !uni.OperState.Is(UniStateUp) {
+			// if the UNI is disabled, ignore it
+			continue
+		}
+		for _, s := range uni.Services {
+			service := s.(*Service)
+			if service.NeedsIgmp {
+				if !service.InternalState.Is(ServiceStateInitialized) {
+					log.WithFields(log.Fields{
+						"OnuId":   onu.ID,
+						"UniId":   uni.ID,
+						"IntfId":  onu.PonPortID,
+						"OnuSn":   onu.Sn(),
+						"Service": service.Name,
+					}).Warn("service-not-initialized-skipping")
+					continue
+				}
+				if len(service.groupAddresses) > 0 {
+					uniPorts = append(uniPorts, *uni)
+				}
+			}
+		}
+	}
+	return uniPorts
 }
 
 func (o *Onu) SendOMCIAlarmNotificationMsg(raiseOMCIAlarm bool, alarmType string) {

@@ -196,7 +196,14 @@ func SendIGMPMembershipReportV3(ponPortId uint32, onuId uint32, serialNumber str
 }
 
 func HandleNextPacket(ponPortId uint32, onuId uint32, serialNumber string, portNo uint32, uniId uint32,
-	gemPortId uint32, macAddress net.HardwareAddr, pkt gopacket.Packet, cTag int, pbit uint8, stream bbsim.Stream) error {
+	gemPortId uint32, macAddress net.HardwareAddr, pkt gopacket.Packet, cTag int, pbit uint8, groupAddresses map[string]int, stream bbsim.Stream) error {
+
+	dot1qLayer := pkt.Layer(layers.LayerTypeDot1Q)
+	if dot1qLayer == nil {
+		log.WithFields(log.Fields{"Pkt": hex.EncodeToString(pkt.Data())}).Warnf("packet-is-not-tagged")
+		return errors.New("packet-is-not-tagged")
+	}
+	dot1q := dot1qLayer.(*layers.Dot1Q)
 
 	igmpLayer := pkt.Layer(layers.LayerTypeIGMP)
 	if igmpLayer == nil {
@@ -210,14 +217,57 @@ func HandleNextPacket(ponPortId uint32, onuId uint32, serialNumber string, portN
 	}
 
 	log.WithFields(log.Fields{
-		"Pkt": pkt.Data(),
+		"Pkt": hex.EncodeToString(pkt.Data()),
 	}).Trace("IGMP packet")
 
-	igmp := igmpLayer.(*layers.IGMPv1or2)
+	var igmp *IGMP
+	igmpv1or2, ok := igmpLayer.(*layers.IGMPv1or2)
+	if ok {
+		igmp = &IGMP{
+			Type:            igmpv1or2.Type,
+			MaxResponseTime: igmpv1or2.MaxResponseTime,
+			Checksum:        igmpv1or2.Checksum,
+			GroupAddress:    igmpv1or2.GroupAddress,
+			Version:         igmpv1or2.Version,
+		}
+	} else {
+		igmpv3, ok := igmpLayer.(*layers.IGMP)
+		if ok {
+			igmp = &IGMP{
+				Type:                    igmpv3.Type,
+				MaxResponseTime:         igmpv3.MaxResponseTime,
+				Checksum:                igmpv3.Checksum,
+				GroupAddress:            igmpv3.GroupAddress,
+				SupressRouterProcessing: igmpv3.SupressRouterProcessing,
+				RobustnessValue:         igmpv3.RobustnessValue,
+				IntervalTime:            igmpv3.IntervalTime,
+				SourceAddresses:         igmpv3.SourceAddresses,
+				NumberOfGroupRecords:    igmpv3.NumberOfGroupRecords,
+				NumberOfSources:         igmpv3.NumberOfSources,
+				GroupRecords:            igmpv3.GroupRecords,
+				Version:                 igmpv3.Version,
+			}
+		} else {
+			log.Warnf("could-not-parse-igmp-packet")
+		}
+	}
 
 	if igmp.Type == layers.IGMPMembershipQuery {
-		_ = SendIGMPMembershipReportV2(ponPortId, onuId, serialNumber, portNo, uniId, gemPortId, macAddress,
-			cTag, pbit, stream, igmp.GroupAddress.String())
+		// Send response to queries only if joined to a group
+		for groupAddr, vlan := range groupAddresses {
+			if vlan == int(dot1q.VLANIdentifier) {
+				_ = SendIGMPMembershipReportV2(ponPortId, onuId, serialNumber, portNo, uniId, gemPortId, macAddress,
+					vlan, pbit, stream, groupAddr)
+			}
+		}
+		if groupAddresses == nil {
+			log.WithFields(log.Fields{
+				"OnuId":        onuId,
+				"SerialNumber": serialNumber,
+				"PortNo":       portNo,
+				"Pkt":          hex.EncodeToString(pkt.Data()),
+			}).Trace("no-active-channels")
+		}
 	}
 
 	return nil
@@ -225,21 +275,30 @@ func HandleNextPacket(ponPortId uint32, onuId uint32, serialNumber string, portN
 
 func createIGMPV3MembershipReportPacket(groupAddress string) *IGMP {
 
-	groupRecord1 := IGMPv3GroupRecord{
-		Type:             IGMPv3GroupRecordType(IGMPIsIn),
-		AuxDataLen:       0, // this should always be 0 as per IGMPv3 spec.
-		NumberOfSources:  3,
-		MulticastAddress: net.IPv4(224, 0, 0, 22),
-		SourceAddresses:  []net.IP{net.IPv4(15, 14, 20, 24), net.IPv4(15, 14, 20, 26), net.IPv4(15, 14, 20, 25)},
-		AuxData:          0, // NOT USED
-	}
+	// groupRecord1 := IGMPv3GroupRecord{
+	// 	Type:             IGMPv3GroupRecordType(IGMPIsIn),
+	// 	AuxDataLen:       0, // this should always be 0 as per IGMPv3 spec.
+	// 	NumberOfSources:  3,
+	// 	MulticastAddress: net.IPv4(224, 0, 0, 22),
+	// 	SourceAddresses:  []net.IP{net.IPv4(15, 14, 20, 24), net.IPv4(15, 14, 20, 26), net.IPv4(15, 14, 20, 25)},
+	// 	AuxData:          0, // NOT USED
+	// }
 
-	groupRecord2 := IGMPv3GroupRecord{
-		Type:             IGMPv3GroupRecordType(IGMPIsIn),
+	// Keeping this as an example
+	// groupRecord1 := IGMPv3GroupRecord{
+	// 	Type:             IGMPv3GroupRecordType(IGMPIsIn),
+	// 	AuxDataLen:       0, // this should always be 0 as per IGMPv3 spec.
+	// 	NumberOfSources:  3,
+	// 	MulticastAddress: net.IPv4(224, 0, 0, 22),
+	// 	SourceAddresses:  []net.IP{net.IPv4(15, 14, 20, 24), net.IPv4(15, 14, 20, 26), net.IPv4(15, 14, 20, 25)},
+	// 	AuxData:          0, // NOT USED
+	// }
+
+	groupRecord := layers.IGMPv3GroupRecord{
+		Type:             layers.IGMPv3GroupRecordType(IGMPIsEx),
 		AuxDataLen:       0, // this should always be 0 as per IGMPv3 spec.
-		NumberOfSources:  2,
-		MulticastAddress: net.IPv4(224, 0, 0, 25),
-		SourceAddresses:  []net.IP{net.IPv4(15, 14, 20, 30), net.IPv4(15, 14, 20, 31)},
+		NumberOfSources:  0,
+		MulticastAddress: net.ParseIP(groupAddress),
 		AuxData:          0, // NOT USED
 	}
 
@@ -251,10 +310,9 @@ func createIGMPV3MembershipReportPacket(groupAddress string) *IGMP {
 		SupressRouterProcessing: false,
 		RobustnessValue:         0,
 		IntervalTime:            time.Duration(1),
-		SourceAddresses:         []net.IP{net.IPv4(224, 0, 0, 24)},
-		NumberOfGroupRecords:    2,
-		NumberOfSources:         1,
-		GroupRecords:            []IGMPv3GroupRecord{groupRecord1, groupRecord2},
+		NumberOfGroupRecords:    1,
+		NumberOfSources:         0,
+		GroupRecords:            []layers.IGMPv3GroupRecord{groupRecord},
 		Version:                 3,
 	}
 
@@ -339,7 +397,7 @@ type IGMP struct {
 	SourceAddresses         []net.IP
 	NumberOfGroupRecords    uint16
 	NumberOfSources         uint16
-	GroupRecords            []IGMPv3GroupRecord
+	GroupRecords            []layers.IGMPv3GroupRecord
 	Version                 uint8 // IGMP protocol version
 }
 

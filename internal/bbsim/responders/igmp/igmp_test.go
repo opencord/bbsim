@@ -65,7 +65,7 @@ func TestHandleNextPacket(t *testing.T) {
 
 	fmt.Println(packet.Layers())
 
-	err := HandleNextPacket(0, 0, "FOO", 1, 1024, 0, mac, packet, 55, 5, stream)
+	err := HandleNextPacket(0, 0, "FOO", 1, 1024, 0, mac, packet, 55, 5, nil, stream)
 	assert.Nil(t, err)
 
 	assert.Equal(t, 1, stream.CallCount)

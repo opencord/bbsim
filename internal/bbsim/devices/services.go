@@ -17,7 +17,6 @@
 package devices
 
 import (
-	"encoding/hex"
 	"fmt"
 	"net"
 	"time"
@@ -82,8 +81,12 @@ type Service struct {
 	DsPonCTagPriority   uint8
 	DsPonSTagPriority   uint8
 
+	// gem port received in flow add requests
+	GemPort uint32
+	// Multicast addresses joined with the ctag
+	groupAddresses map[string]int
+
 	// state
-	GemPort       uint32
 	InternalState *fsm.FSM
 	EapolState    *fsm.FSM
 	DHCPState     *fsm.FSM
@@ -155,6 +158,9 @@ func NewService(id uint32, name string, hwAddress net.HardwareAddr, uni *UniPort
 
 				service.PacketCh = nil
 				service.Channel = nil
+
+				service.GemPort = 0
+				service.groupAddresses = nil
 			},
 		},
 	)
@@ -470,8 +476,7 @@ func (s *Service) HandlePackets() {
 
 			_ = dhcp.HandleNextPacket(s.UniPort.Onu.ID, s.UniPort.Onu.PonPortID, s.Name, s.UniPort.Onu.Sn(), s.UniPort.PortNo, tag, s.GemPort, s.UniPort.ID, s.HwAddress, s.DHCPState, msg.Packet, priority, s.Stream)
 		} else if msg.Type == packetHandlers.IGMP {
-			log.Warn(hex.EncodeToString(msg.Packet.Data()))
-			_ = igmp.HandleNextPacket(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.UniPort.ID, s.GemPort, s.HwAddress, msg.Packet, s.CTag, s.UsPonCTagPriority, s.Stream)
+			_ = igmp.HandleNextPacket(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.UniPort.ID, s.GemPort, s.HwAddress, msg.Packet, s.CTag, s.UsPonCTagPriority, s.groupAddresses, s.Stream)
 		}
 	}
 }
@@ -529,6 +534,7 @@ func (s *Service) HandleChannel() {
 				_ = s.DHCPState.Event("dhcp_failed")
 
 			}
+		// IGMP block is not in use since the event mechanism is disable for IGMP
 		case bbsimTypes.IGMPMembershipReportV2:
 			igmpInfo, _ := msg.Data.(bbsimTypes.IgmpMessage)
 			serviceLogger.WithFields(log.Fields{
@@ -552,6 +558,7 @@ func (s *Service) HandleChannel() {
 				"UniId":     s.UniPort.ID,
 				"Name":      s.Name,
 			}).Debug("Received IGMPLeaveGroupV2 message on ONU channel")
+			s.RemoveGroupAddress(igmpInfo.GroupAddress)
 			_ = igmp.SendIGMPLeaveGroupV2(s.UniPort.Onu.PonPortID, s.UniPort.Onu.ID, s.UniPort.Onu.Sn(), s.UniPort.PortNo, s.UniPort.ID, s.GemPort, s.HwAddress, s.CTag, s.UsPonCTagPriority, s.Stream, igmpInfo.GroupAddress)
 		case bbsimTypes.IGMPMembershipReportV3:
 			igmpInfo, _ := msg.Data.(bbsimTypes.IgmpMessage)
@@ -670,4 +677,18 @@ func (s *Service) logStateChange(stateMachine string, src string, dst string) {
 		"UniId":     s.UniPort.ID,
 		"Name":      s.Name,
 	}).Debugf("Changing Service.%s InternalState from %s to %s", stateMachine, src, dst)
+}
+
+func (s *Service) AddGroupAddress(addr string, ctag int) {
+	if s.groupAddresses == nil {
+		s.groupAddresses = make(map[string]int)
+	}
+	s.groupAddresses[addr] = ctag
+}
+
+func (s *Service) RemoveGroupAddress(addr string) {
+	if s.groupAddresses == nil {
+		return
+	}
+	delete(s.groupAddresses, addr)
 }

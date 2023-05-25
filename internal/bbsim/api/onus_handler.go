@@ -231,7 +231,6 @@ func (s BBSimServer) PoweronAllONUs(context.Context, *bbsim.Empty) (*bbsim.Respo
 func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest) (*bbsim.Response, error) {
 
 	// NOTE this API will change the IGMP state for all UNIs on the requested ONU
-	// TODO a new API needs to be created to individually manage the UNIs
 
 	res := &bbsim.Response{}
 
@@ -312,18 +311,21 @@ func (s BBSimServer) ChangeIgmpState(ctx context.Context, req *bbsim.IgmpRequest
 
 				switch req.SubActionVal {
 				case bbsim.SubActionTypes_JOIN:
+					service.AddGroupAddress(req.GroupAddress, ctag)
 					go func() {
 						_ = igmp.SendIGMPMembershipReportV2(service.UniPort.Onu.PonPortID, service.UniPort.Onu.ID, service.UniPort.Onu.Sn(),
 							service.UniPort.PortNo, service.UniPort.ID, service.GemPort, service.HwAddress, ctag,
 							service.UsPonCTagPriority, service.Stream, req.GroupAddress)
 					}()
 				case bbsim.SubActionTypes_LEAVE:
+					service.RemoveGroupAddress(req.GroupAddress)
 					go func() {
 						_ = igmp.SendIGMPLeaveGroupV2(service.UniPort.Onu.PonPortID, service.UniPort.Onu.ID, service.UniPort.Onu.Sn(),
 							service.UniPort.PortNo, service.UniPort.ID, service.GemPort, service.HwAddress, ctag,
 							service.UsPonCTagPriority, service.Stream, req.GroupAddress)
 					}()
 				case bbsim.SubActionTypes_JOINV3:
+					service.AddGroupAddress(req.GroupAddress, ctag)
 					go func() {
 						_ = igmp.SendIGMPMembershipReportV3(service.UniPort.Onu.PonPortID, service.UniPort.Onu.ID, service.UniPort.Onu.Sn(),
 							service.UniPort.PortNo, service.UniPort.ID, service.GemPort, service.HwAddress, ctag,
