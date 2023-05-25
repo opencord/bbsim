@@ -19,6 +19,7 @@ package devices
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -49,6 +50,10 @@ import (
 var oltLogger = log.WithFields(log.Fields{
 	"module": "OLT",
 })
+
+const (
+	multicastGemPortId = 4069
+)
 
 const (
 	//InternalState FSM states and transitions
@@ -1439,49 +1444,64 @@ func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket)
 	pon, err := o.GetPonById(onuPkt.IntfId)
 	if err != nil {
 		oltLogger.WithFields(log.Fields{
-			"OnuId":  onuPkt.OnuId,
-			"IntfId": onuPkt.IntfId,
-			"err":    err,
+			"OnuId":     onuPkt.OnuId,
+			"IntfId":    onuPkt.IntfId,
+			"GemportId": onuPkt.GemportId,
+			"err":       err,
 		}).Error("Can't find PonPort")
 	}
-	onu, err := pon.GetOnuById(onuPkt.OnuId)
-	if err != nil {
-		oltLogger.WithFields(log.Fields{
-			"OnuId":  onuPkt.OnuId,
-			"IntfId": onuPkt.IntfId,
-			"err":    err,
-		}).Error("Can't find Onu")
-	}
 
-	oltLogger.WithFields(log.Fields{
-		"IntfId": onu.PonPortID,
-		"OnuId":  onu.ID,
-		"OnuSn":  onu.Sn(),
-		"Packet": hex.EncodeToString(onuPkt.Pkt),
-	}).Trace("Received OnuPacketOut")
+	onus := make([]*Onu, 1)
+	// If it's not addressed to multicast gem port
+	if onuPkt.GemportId != multicastGemPortId {
+		onus[0], err = pon.GetOnuById(onuPkt.OnuId)
+		if err != nil {
+			oltLogger.WithFields(log.Fields{
+				"OnuId":     onuPkt.OnuId,
+				"IntfId":    onuPkt.IntfId,
+				"GemportId": onuPkt.GemportId,
+				"err":       err,
+			}).Error("Can't find Onu")
+			return new(openolt.Empty), errors.New("cant-find-onu-by-id")
+		}
+		oltLogger.WithFields(log.Fields{
+			"IntfId":    onus[0].PonPortID,
+			"OnuId":     onus[0].ID,
+			"OnuSn":     onus[0].Sn(),
+			"GemportId": onuPkt.GemportId,
+			"Packet":    hex.EncodeToString(onuPkt.Pkt),
+		}).Trace("Received OnuPacketOut")
+	} else {
+		onus = pon.GetAllOnus()
+		oltLogger.WithFields(log.Fields{
+			"IntfId":    onuPkt.IntfId,
+			"GemportId": onuPkt.GemportId,
+			"Packet":    hex.EncodeToString(onuPkt.Pkt),
+		}).Trace("Received OnuPacketOut to multicast gem port")
+	}
 
 	rawpkt := gopacket.NewPacket(onuPkt.Pkt, layers.LayerTypeEthernet, gopacket.Default)
 
 	pktType, err := packetHandlers.GetPktType(rawpkt)
 	if err != nil {
 		onuLogger.WithFields(log.Fields{
-			"IntfId": onu.PonPortID,
-			"OnuId":  onu.ID,
-			"OnuSn":  onu.Sn(),
-			"Pkt":    hex.EncodeToString(rawpkt.Data()),
-		}).Error("Can't find pktType in packet, droppint it")
-		return new(openolt.Empty), nil
+			"IntfId":    onuPkt.IntfId,
+			"OnuId":     onuPkt.OnuId,
+			"GemportId": onuPkt.GemportId,
+			"Pkt":       hex.EncodeToString(rawpkt.Data()),
+		}).Debug("Can't find pktType in packet, dropping it")
+		return new(openolt.Empty), errors.New("malformed-packet")
 	}
 
 	pktMac, err := packetHandlers.GetDstMacAddressFromPacket(rawpkt)
 	if err != nil {
 		onuLogger.WithFields(log.Fields{
-			"IntfId": onu.PonPortID,
-			"OnuId":  onu.ID,
-			"OnuSn":  onu.Sn(),
-			"Pkt":    rawpkt.Data(),
-		}).Error("Can't find Dst MacAddress in packet, droppint it")
-		return new(openolt.Empty), nil
+			"IntfId":    onuPkt.IntfId,
+			"OnuId":     onuPkt.OnuId,
+			"GemportId": onuPkt.GemportId,
+			"Pkt":       rawpkt.Data(),
+		}).Debug("Can't find Dst MacAddress in packet, droppint it")
+		return new(openolt.Empty), errors.New("dst-mac-can-not-found-in-packet")
 	}
 
 	msg := types.Message{
@@ -1496,7 +1516,22 @@ func (o *OltDevice) OnuPacketOut(ctx context.Context, onuPkt *openolt.OnuPacket)
 		},
 	}
 
-	onu.Channel <- msg
+	for _, onu := range onus {
+		if onu.InternalState.Current() == OnuStateEnabled {
+			oltLogger.WithFields(log.Fields{
+				"IntfId": onu.PonPortID,
+				"OnuId":  onu.ID,
+				"OnuSn":  onu.Sn(),
+			}).Trace("Sending to onuchannel")
+			onu.Channel <- msg
+		} else {
+			oltLogger.WithFields(log.Fields{
+				"IntfId": onu.PonPortID,
+				"OnuId":  onu.ID,
+				"OnuSn":  onu.Sn(),
+			}).Debug("can-not-send-onu-packet-out-to-onu")
+		}
+	}
 
 	return new(openolt.Empty), nil
 }
