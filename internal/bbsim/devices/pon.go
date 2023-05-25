@@ -67,6 +67,10 @@ type PonPort struct {
 	allocatedAllocIdsLock sync.RWMutex
 }
 
+func (p *PonPort) GetAllOnus() []*Onu {
+	return p.Onus
+}
+
 // CreatePonPort creates pon port object
 func CreatePonPort(olt *OltDevice, id uint32, tech common.PonTechnology) *PonPort {
 	ponPort := PonPort{
