@@ -121,13 +121,22 @@ test: docs-lint test-unit test-bbr
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
+coverage-out := ./tests/results/go-test-coverage.out
+coverage-xml := ./tests/results/go-test-coverage.xml
+
+results-out  := ./tests/results/go-test-results.out
+results-xml  := ./tests/results/go-test-results.xml
+
 test-unit: clean local-omci-lib-go # @HELP Execute unit tests
 	@echo "Running unit tests..."
 	@mkdir -p ./tests/results
-	@${GO} test -mod=vendor -bench=. -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee ./tests/results/go-test-results.out ;\
+	@${GO} test -mod=vendor -bench=. -v \
+	  -coverprofile $(coverage-out) \
+	  -covermode count ./... \
+	  2>&1 | tee $(results-out) ;\
 	RETURN=$$? ;\
-	${GO_JUNIT_REPORT} < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml ;\
-	${GOCOVER_COBERTURA} < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml ;\
+	${GO_JUNIT_REPORT}   < $(results-out)  > $(results-xml) ;\
+	${GOCOVER_COBERTURA} < $(coverage-out) > $(coverage-xml) ;\
 	exit $$RETURN
 
 ## -----------------------------------------------------------------------
@@ -139,6 +148,12 @@ test-bbr: release-bbr docker-build # @HELP Validate that BBSim and BBR are worki
 	docker $(RM) -f bbsim
 
 ## -----------------------------------------------------------------------
+## Intgent: Update sources in the vendor/ directory.
+## Todo:
+##   o chicken-n-egg problem:
+##     - vendor/ is under revision control
+##     - go mod tidy will delete vendor
+##     - sandbox left unbuildable when mod-update target fails.
 ## -----------------------------------------------------------------------
 mod-update: # @HELP Download the dependencies to the vendor folder
 	${GO} mod tidy
@@ -237,6 +252,12 @@ clean ::
 	@$(RM) -f bbr
 	@$(RM) -r tools/bin
 	@$(RM) -r release
+
+	@$(RM) $(coverage-out)
+	@$(RM) $(coverage-xml)
+
+	@$(RM) $(results-out)
+	@$(RM) $(results-xml)
 
 sterile :: clean
 
