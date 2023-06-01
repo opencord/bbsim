@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6b26383b_d0db8232",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-06-01T21:59:48Z",
+      "side": 1,
+      "message": "Cosmetic makefile changes, transient problem affecting bbsim tests.",
+      "revId": "f99712c65ecd1c5eed92b58a1dc5ec9a2c42db6f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
