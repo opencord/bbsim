@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e14657e7_3d20db3c",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000097
+      },
+      "writtenOn": "2023-06-08T07:20:22Z",
+      "side": 1,
+      "message": "The VERSION file needs to be updated. Please bump up only the patch version.\nThe new version should be 1.15.5",
+      "revId": "637e74ee8fe511f55b07ba495f564b5a37f2b5e2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
