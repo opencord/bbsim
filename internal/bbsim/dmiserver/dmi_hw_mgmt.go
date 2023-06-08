@@ -82,7 +82,7 @@ func getPonUUID(id uint32) *dmi.Uuid {
 	}
 }
 
-//StartManagingDevice establishes connection with the device and does checks to ascertain if the device with passed identity can be managed
+// StartManagingDevice establishes connection with the device and does checks to ascertain if the device with passed identity can be managed
 func (dms *DmiAPIServer) StartManagingDevice(req *dmi.ModifiableComponent, stream dmi.NativeHWManagementService_StartManagingDeviceServer) error {
 	//Get serial number and generate the UUID based on this serial number. Store this UUID in local cache
 	logger.Debugf("StartManagingDevice() invoked with request  %+v", req)
@@ -239,7 +239,8 @@ func createTransceiverComponent(trans *Transceiver, cageName string) (*dmi.Compo
 			Parent:      trans.Name,
 			Specific: &dmi.Component_PortAttr{
 				PortAttr: &dmi.PortComponentAttributes{
-					Protocol: portProto,
+					Protocol:     portProto,
+					MappingLabel: fmt.Sprintf("pon-%d", pon.ID),
 				},
 			},
 		}
@@ -495,7 +496,7 @@ func PluginTransceiverComponent(transId uint32, dms *DmiAPIServer) error {
 	return nil
 }
 
-//StopManagingDevice stops management of a device and cleans up any context and caches for that device
+// StopManagingDevice stops management of a device and cleans up any context and caches for that device
 func (dms *DmiAPIServer) StopManagingDevice(ctx context.Context, req *dmi.StopManagingDeviceRequest) (*dmi.StopManagingDeviceResponse, error) {
 	logger.Debugf("StopManagingDevice API invoked")
 	if req == nil {
@@ -527,7 +528,7 @@ func (dms *DmiAPIServer) StopManagingDevice(ctx context.Context, req *dmi.StopMa
 	return &dmi.StopManagingDeviceResponse{Status: dmi.Status_OK_STATUS}, nil
 }
 
-//GetPhysicalInventory gets the HW inventory details of the Device
+// GetPhysicalInventory gets the HW inventory details of the Device
 func (dms *DmiAPIServer) GetPhysicalInventory(req *dmi.PhysicalInventoryRequest, stream dmi.NativeHWManagementService_GetPhysicalInventoryServer) error {
 	if req == nil || req.DeviceUuid == nil || req.DeviceUuid.Uuid == "" {
 		return status.Errorf(codes.InvalidArgument, "device-UUID missing in the request")
@@ -568,7 +569,7 @@ func (dms *DmiAPIServer) GetPhysicalInventory(req *dmi.PhysicalInventoryRequest,
 	return sendResponseBackOnStream(stream, response)
 }
 
-//Contains tells whether arr contains element.
+// Contains tells whether arr contains element.
 func Contains(arr []string, element string) bool {
 	for _, item := range arr {
 		if element == item {
@@ -637,7 +638,7 @@ func sendGetHWComponentResponse(c *dmi.Component, stream dmi.NativeHWManagementS
 	return nil
 }
 
-//GetHWComponentInfo gets the details of a particular HW component
+// GetHWComponentInfo gets the details of a particular HW component
 func (dms *DmiAPIServer) GetHWComponentInfo(req *dmi.HWComponentInfoGetRequest, stream dmi.NativeHWManagementService_GetHWComponentInfoServer) error {
 	logger.Debugf("GetHWComponentInfo() invoked with request %+v", req)
 
@@ -660,12 +661,12 @@ func (dms *DmiAPIServer) GetHWComponentInfo(req *dmi.HWComponentInfoGetRequest, 
 	return sendGetHWComponentResponse(c, stream)
 }
 
-//SetHWComponentInfo sets the permissible attributes of a HW component
+// SetHWComponentInfo sets the permissible attributes of a HW component
 func (dms *DmiAPIServer) SetHWComponentInfo(context.Context, *dmi.HWComponentInfoSetRequest) (*dmi.HWComponentInfoSetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "rpc SetHWComponentInfo not implemented")
 }
 
-//SetLoggingEndpoint sets the location to which logs need to be shipped
+// SetLoggingEndpoint sets the location to which logs need to be shipped
 func (dms *DmiAPIServer) SetLoggingEndpoint(_ context.Context, request *dmi.SetLoggingEndpointRequest) (*dmi.SetRemoteEndpointResponse, error) {
 	logger.Debugf("SetLoggingEndpoint called with request %+v", request)
 	errRetFunc := func(stat dmi.Status, reason dmi.SetRemoteEndpointResponse_Reason) (*dmi.SetRemoteEndpointResponse, error) {
@@ -697,7 +698,7 @@ func (dms *DmiAPIServer) SetLoggingEndpoint(_ context.Context, request *dmi.SetL
 	}, nil
 }
 
-//GetLoggingEndpoint gets the configured location to which the logs are being shipped
+// GetLoggingEndpoint gets the configured location to which the logs are being shipped
 func (dms *DmiAPIServer) GetLoggingEndpoint(_ context.Context, request *dmi.HardwareID) (*dmi.GetLoggingEndpointResponse, error) {
 	logger.Debugf("GetLoggingEndpoint called with request %+v", request)
 	if request == nil || request.Uuid == nil || request.Uuid.Uuid == "" {
@@ -720,7 +721,7 @@ func (dms *DmiAPIServer) GetLoggingEndpoint(_ context.Context, request *dmi.Hard
 	}, nil
 }
 
-//SetMsgBusEndpoint sets the location of the Message Bus to which events and metrics are shipped
+// SetMsgBusEndpoint sets the location of the Message Bus to which events and metrics are shipped
 func (dms *DmiAPIServer) SetMsgBusEndpoint(ctx context.Context, request *dmi.SetMsgBusEndpointRequest) (*dmi.SetRemoteEndpointResponse, error) {
 	logger.Debugf("SetMsgBusEndpoint() invoked with request: %+v and context: %v", request, ctx)
 	if request == nil || request.MsgbusEndpoint == "" {
@@ -752,7 +753,7 @@ func (dms *DmiAPIServer) SetMsgBusEndpoint(ctx context.Context, request *dmi.Set
 	return &dmi.SetRemoteEndpointResponse{Status: dmi.Status_OK_STATUS, Reason: dmi.SetRemoteEndpointResponse_UNDEFINED_REASON}, nil
 }
 
-//GetMsgBusEndpoint gets the configured location to which the events and metrics are being shipped
+// GetMsgBusEndpoint gets the configured location to which the events and metrics are being shipped
 func (dms *DmiAPIServer) GetMsgBusEndpoint(context.Context, *empty.Empty) (*dmi.GetMsgBusEndpointResponse, error) {
 	logger.Debugf("GetMsgBusEndpoint() invoked")
 	if dms.kafkaEndpoint != "" {
@@ -769,7 +770,7 @@ func (dms *DmiAPIServer) GetMsgBusEndpoint(context.Context, *empty.Empty) (*dmi.
 	}, nil
 }
 
-//GetManagedDevices returns an object containing a list of devices managed by this entity
+// GetManagedDevices returns an object containing a list of devices managed by this entity
 func (dms *DmiAPIServer) GetManagedDevices(context.Context, *empty.Empty) (*dmi.ManagedDevicesResponse, error) {
 	retResponse := dmi.ManagedDevicesResponse{}
 	//If our uuid is empty, we return empty list; else we fill details and return
@@ -791,7 +792,7 @@ func (dms *DmiAPIServer) GetManagedDevices(context.Context, *empty.Empty) (*dmi.
 	return &retResponse, nil
 }
 
-//GetLogLevel Gets the configured log level for a certain entity on a certain device.
+// GetLogLevel Gets the configured log level for a certain entity on a certain device.
 func (dms *DmiAPIServer) GetLogLevel(context.Context, *dmi.GetLogLevelRequest) (*dmi.GetLogLevelResponse, error) {
 	return &dmi.GetLogLevelResponse{
 		Status:     dmi.Status_OK_STATUS,
