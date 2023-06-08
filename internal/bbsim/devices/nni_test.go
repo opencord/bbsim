@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-//https://quii.gitbook.io/learn-go-with-tests/go-fundamentals/mocking
+// https://quii.gitbook.io/learn-go-with-tests/go-fundamentals/mocking
 package devices
 
 import (

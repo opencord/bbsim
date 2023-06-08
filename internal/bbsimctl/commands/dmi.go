@@ -102,7 +102,7 @@ func (o *DmiEventCreate) Execute(args []string) error {
 	return nil
 }
 
-//Print a list of the transceivers and their state
+// Print a list of the transceivers and their state
 func (pon *DmiTransceiversList) Execute(args []string) error {
 	client, conn := dmiEventGrpcClient()
 	defer conn.Close()
@@ -126,7 +126,7 @@ func (pon *DmiTransceiversList) Execute(args []string) error {
 	return nil
 }
 
-//Plug in the specified transceiver
+// Plug in the specified transceiver
 func (pon *DmiTransceiverPlugIn) Execute(args []string) error {
 	client, conn := dmiEventGrpcClient()
 	defer conn.Close()
@@ -148,7 +148,7 @@ func (pon *DmiTransceiverPlugIn) Execute(args []string) error {
 	return nil
 }
 
-//Plug out the specified transceiver
+// Plug out the specified transceiver
 func (pon *DmiTransceiverPlugOut) Execute(args []string) error {
 	client, conn := dmiEventGrpcClient()
 	defer conn.Close()

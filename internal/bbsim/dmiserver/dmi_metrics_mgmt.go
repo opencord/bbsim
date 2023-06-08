@@ -26,7 +26,7 @@ import (
 	dmi "github.com/opencord/device-management-interface/go/dmi"
 )
 
-//ListMetrics lists the supported metrics for the passed device.
+// ListMetrics lists the supported metrics for the passed device.
 func (dms *DmiAPIServer) ListMetrics(ctx context.Context, req *dmi.HardwareID) (*dmi.ListMetricsResponse, error) {
 	logger.Debugf("ListMetrics invoked with request %+v", req)
 	metrics := getMetricsList()
@@ -40,7 +40,7 @@ func (dms *DmiAPIServer) ListMetrics(ctx context.Context, req *dmi.HardwareID) (
 	}, nil
 }
 
-//UpdateMetricsConfiguration updates the configuration of the list of metrics in the request
+// UpdateMetricsConfiguration updates the configuration of the list of metrics in the request
 func (dms *DmiAPIServer) UpdateMetricsConfiguration(ctx context.Context, req *dmi.MetricsConfigurationRequest) (*dmi.MetricsConfigurationResponse, error) {
 	logger.Debugf("UpdateMetricConfiguration invoked with request %+v", req)
 
@@ -73,7 +73,7 @@ func (dms *DmiAPIServer) UpdateMetricsConfiguration(ctx context.Context, req *dm
 	}, nil
 }
 
-//GetMetric gets the instantenous value of a metric
+// GetMetric gets the instantenous value of a metric
 func (dms *DmiAPIServer) GetMetric(ctx context.Context, req *dmi.GetMetricRequest) (*dmi.GetMetricResponse, error) {
 	logger.Debugf("GetMetric invoked with request %+v", req)
 

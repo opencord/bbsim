@@ -24,7 +24,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-//GetSoftwareVersion gets the software version information of the Active and Standby images
+// GetSoftwareVersion gets the software version information of the Active and Standby images
 func (dms *DmiAPIServer) GetSoftwareVersion(ctx context.Context, req *dmi.HardwareID) (*dmi.GetSoftwareVersionInformationResponse, error) {
 	// TODO: Make this more interesting by taking values from BBSim if available
 	logger.Debugf("GetSoftwareVersion invoked with for device %+v", req)
@@ -44,7 +44,7 @@ func (dms *DmiAPIServer) GetSoftwareVersion(ctx context.Context, req *dmi.Hardwa
 	}, nil
 }
 
-//DownloadImage downloads and installs the image in the standby partition, returns the status/progress of the Install
+// DownloadImage downloads and installs the image in the standby partition, returns the status/progress of the Install
 func (dms *DmiAPIServer) DownloadImage(req *dmi.DownloadImageRequest, stream dmi.NativeSoftwareManagementService_DownloadImageServer) error {
 	logger.Debugf("DownloadImage invoked with request %+v", req)
 	err := stream.Send(&dmi.ImageStatus{
@@ -59,7 +59,7 @@ func (dms *DmiAPIServer) DownloadImage(req *dmi.DownloadImageRequest, stream dmi
 
 }
 
-//ActivateImage Activates and runs the OLT with the image in the standby partition
+// ActivateImage Activates and runs the OLT with the image in the standby partition
 func (dms *DmiAPIServer) ActivateImage(req *dmi.HardwareID, stream dmi.NativeSoftwareManagementService_ActivateImageServer) error {
 	logger.Debugf("ActivateImage invoked with request %+v", req)
 	err := stream.Send(&dmi.ImageStatus{
@@ -75,7 +75,7 @@ func (dms *DmiAPIServer) ActivateImage(req *dmi.HardwareID, stream dmi.NativeSof
 
 }
 
-//RevertToStandbyImage marks the image in the Standby as Active and reboots the device, so that it boots from that image which was in the standby.
+// RevertToStandbyImage marks the image in the Standby as Active and reboots the device, so that it boots from that image which was in the standby.
 func (dms *DmiAPIServer) RevertToStandbyImage(req *dmi.HardwareID, stream dmi.NativeSoftwareManagementService_RevertToStandbyImageServer) error {
 	logger.Debugf("RevertToStandbyImage invoked with request %+v", req)
 	err := stream.Send(&dmi.ImageStatus{

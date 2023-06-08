@@ -28,7 +28,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-//DmiEventsGenerator has the attributes for generating events
+// DmiEventsGenerator has the attributes for generating events
 type DmiEventsGenerator struct {
 	apiSrv           *DmiAPIServer
 	configuredEvents map[dmi.EventIds]dmi.EventCfg
@@ -85,7 +85,7 @@ func init() {
 	}
 }
 
-//StartEventsGenerator initializes the event generator
+// StartEventsGenerator initializes the event generator
 func StartEventsGenerator(apiSrv *DmiAPIServer) {
 	log.Debugf("StartEventsGenerator invoked")
 
@@ -153,7 +153,7 @@ func getEventsList() []*dmi.EventCfg {
 	return toRet
 }
 
-//UpdateEventConfig Adds/Updates the passed event configuration
+// UpdateEventConfig Adds/Updates the passed event configuration
 func UpdateEventConfig(newEventCfg *dmi.EventCfg) {
 	dmiEG.access.Lock()
 	dmiEG.configuredEvents[newEventCfg.GetEventId()] = *newEventCfg

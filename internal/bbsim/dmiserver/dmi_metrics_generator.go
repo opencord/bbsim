@@ -28,7 +28,7 @@ import (
 	dmi "github.com/opencord/device-management-interface/go/dmi"
 )
 
-//MetricGenerationFunc to generate the metrics to the kafka bus
+// MetricGenerationFunc to generate the metrics to the kafka bus
 type MetricGenerationFunc func(*dmi.Component, *DmiAPIServer) *dmi.Metric
 
 // MetricTriggerConfig is the configuration of a metric and the time at which it will be exported
@@ -37,7 +37,7 @@ type MetricTriggerConfig struct {
 	t   time.Time
 }
 
-//DmiMetricsGenerator has the attributes for generating metrics
+// DmiMetricsGenerator has the attributes for generating metrics
 type DmiMetricsGenerator struct {
 	apiSrv            *DmiAPIServer
 	configuredMetrics map[dmi.MetricNames]MetricTriggerConfig
@@ -47,7 +47,7 @@ type DmiMetricsGenerator struct {
 
 var dmiMG DmiMetricsGenerator
 
-//StartMetricGenerator starts the metric generator
+// StartMetricGenerator starts the metric generator
 func StartMetricGenerator(apiSrv *DmiAPIServer) {
 	log.Debugf("StartMetricGenerator invoked")
 	// Seed the rand for use later on
@@ -282,7 +282,7 @@ func generateRand(lValue, hValue int32) int32 {
 	return lValue + randVal
 }
 
-//UpdateMetricConfig Adds/Updates the passed metric configuration
+// UpdateMetricConfig Adds/Updates the passed metric configuration
 func UpdateMetricConfig(newCfg *dmi.MetricConfig) {
 	dmiMG.access.Lock()
 	dmiMG.configuredMetrics[newCfg.GetMetricId()] = MetricTriggerConfig{

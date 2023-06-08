@@ -1803,8 +1803,10 @@ func (onu *Onu) DeleteFlow(key FlowKey) {
 	}
 }
 
-/* when ReDiscoverOnu is called during reboot, true is passed so that there is no delay in onu discoveries
-   It is assumed that all onu resources are cleared and no sleep is required
+/*
+when ReDiscoverOnu is called during reboot, true is passed so that there is no delay in onu discoveries
+
+	It is assumed that all onu resources are cleared and no sleep is required
 */
 func (onu *Onu) ReDiscoverOnu(isReboot bool) {
 	// Wait for few seconds to be sure of the cleanup
