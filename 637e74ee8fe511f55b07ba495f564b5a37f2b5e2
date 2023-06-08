@@ -16,6 +16,24 @@
       "message": "The VERSION file needs to be updated. Please bump up only the patch version.\nThe new version should be 1.15.5",
       "revId": "637e74ee8fe511f55b07ba495f564b5a37f2b5e2",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "98213d0d_c253fab3",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000971
+      },
+      "writtenOn": "2023-06-08T07:53:35Z",
+      "side": 1,
+      "message": "Updated the VERSION file.",
+      "parentUuid": "e14657e7_3d20db3c",
+      "revId": "637e74ee8fe511f55b07ba495f564b5a37f2b5e2",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }

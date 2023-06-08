@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "705691e8_9b18f4e5",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000971
+      },
+      "writtenOn": "2023-06-08T07:53:35Z",
+      "side": 1,
+      "message": "\u003e Patch Set 1: Verified-1\n\u003e \n\u003e Build Unstable \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_unit-test/1193/ : UNSTABLE\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_licensed/1193/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_sanity-test/1158/ : SUCCESS\n\nrecheck\n",
+      "revId": "b4640eb46b66426400a7ab144cfec44f605e353a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
