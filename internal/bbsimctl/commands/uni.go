@@ -140,9 +140,9 @@ func (options *UNIGet) Execute(args []string) error {
 	return nil
 }
 
-//Get Services for specified UNI
-//First get UNIs from specified ONU SN
-//Then get Services from appropriate UNI
+// Get Services for specified UNI
+// First get UNIs from specified ONU SN
+// Then get Services from appropriate UNI
 func (options *UNIServices) Execute(args []string) error {
 	services, err := getServices(string(options.Args.OnuSn), string(options.Args.UniId))
 

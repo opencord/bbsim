@@ -25,7 +25,7 @@ import (
 	dmi "github.com/opencord/device-management-interface/go/dmi"
 )
 
-//ListEvents lists the supported events for the passed device
+// ListEvents lists the supported events for the passed device
 func (dms *DmiAPIServer) ListEvents(ctx context.Context, req *dmi.HardwareID) (*dmi.ListEventsResponse, error) {
 	logger.Debugf("ListEvents called with request %+v", req)
 	events := getEventsList()
@@ -38,7 +38,7 @@ func (dms *DmiAPIServer) ListEvents(ctx context.Context, req *dmi.HardwareID) (*
 	}, nil
 }
 
-//UpdateEventsConfiguration updates the configuration of the list of events in the request
+// UpdateEventsConfiguration updates the configuration of the list of events in the request
 func (dms *DmiAPIServer) UpdateEventsConfiguration(ctx context.Context, req *dmi.EventsConfigurationRequest) (*dmi.EventsConfigurationResponse, error) {
 	logger.Debugf("UpdateEventsConfiguration called with request %+v", req)
 

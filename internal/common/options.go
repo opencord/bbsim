@@ -134,7 +134,7 @@ func PonTechnologyFromString(s string) (PonTechnology, error) {
 	return -1, fmt.Errorf("%s-is-not-a-valid-pon-technology", s)
 }
 
-//Constants for default allocation ranges
+// Constants for default allocation ranges
 const (
 	defaultOnuIdStart          = 1
 	defaultAllocIdStart        = 1024

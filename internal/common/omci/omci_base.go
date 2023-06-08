@@ -91,7 +91,7 @@ func HexDecode(pkt []byte) []byte {
 	return p
 }
 
-//HexEncode convert binary to hex
+// HexEncode convert binary to hex
 func HexEncode(omciPkt []byte) ([]byte, error) {
 	dst := make([]byte, hex.EncodedLen(len(omciPkt)))
 	hex.Encode(dst, omciPkt)

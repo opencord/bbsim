@@ -43,7 +43,7 @@ var ControlledActivationModes = map[string]mode{
 	"both":     Both,
 }
 
-//Constants for openolt Flows
+// Constants for openolt Flows
 const (
 	flowTypeUpstream   = "upstream"
 	flowTypeDownstream = "downstream"

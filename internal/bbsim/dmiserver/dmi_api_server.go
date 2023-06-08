@@ -35,7 +35,7 @@ var logger = log.WithFields(log.Fields{
 	"module": "DmiServer",
 })
 
-//DmiAPIServer has the attributes for the Server handling the Device Management Interface
+// DmiAPIServer has the attributes for the Server handling the Device Management Interface
 type DmiAPIServer struct {
 	ipAddress            string
 	uuid                 *dmi.Uuid
@@ -51,7 +51,7 @@ type DmiAPIServer struct {
 
 var dmiServ DmiAPIServer
 
-//StartDmiAPIServer starts a new grpc server for the Device Manager Interface
+// StartDmiAPIServer starts a new grpc server for the Device Manager Interface
 func StartDmiAPIServer() (*grpc.Server, error) {
 	dmiServ = DmiAPIServer{}
 
