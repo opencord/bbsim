@@ -128,9 +128,19 @@ results-out  := ./tests/results/go-test-results.out
 results-xml  := ./tests/results/go-test-results.xml
 
 test-unit: clean local-omci-lib-go # @HELP Execute unit tests
+
+	@echo
+	@echo '** -----------------------------------------------------------------------'
+	@echo '** Target: $@'
+	@echo '** -----------------------------------------------------------------------'
+
+	@mkdir -p $(dir $(results-out))
+#	@chmod -R 777 $(dir $(results-out))
+	@find $(dir $(results-out)) -print0 | xargs -0 ls -l
+
+	@echo
 	@echo "Running unit tests..."
-	@mkdir -p ./tests/results
-	@${GO} test -mod=vendor -bench=. -v \
+	$(HIDE)${GO} test -mod=vendor -bench=. -v \
 	  -coverprofile $(coverage-out) \
 	  -covermode count ./... \
 	  2>&1 | tee $(results-out) ;\

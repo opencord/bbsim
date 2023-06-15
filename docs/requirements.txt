@@ -11,3 +11,10 @@ sphinxcontrib-blockdiag~=2.0.0
 sphinxcontrib-nwdiag~=2.0.0
 sphinxcontrib-openapi~=0.6.0
 sphinxcontrib-seqdiag~=2.0.0
+
+# ----------------------------------------------------------------
+# v3.6: error in funcparserlib setup command: use_2to3 is invalid.
+# https://funcparserlib.pirx.ru/changes/
+# funcparserlib=~0.3.5
+# ----------------------------------------------------------------
+funcparserlib~=1.0.0a0
