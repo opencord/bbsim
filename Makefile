@@ -128,15 +128,60 @@ results-out  := ./tests/results/go-test-results.out
 results-xml  := ./tests/results/go-test-results.xml
 
 test-unit: clean local-omci-lib-go # @HELP Execute unit tests
+
+	@echo
+	@echo '** -----------------------------------------------------------------------'
+	@echo '** Target: $@'
+	@echo '** -----------------------------------------------------------------------'
+
+	@mkdir -p $(dir $(results-out))
+#	@chmod -R 777 $(dir $(results-out))# dev-mode: local
+	@find $(dir $(results-out)) -print0 | xargs -0 ls -l
+
+	@echo
 	@echo "Running unit tests..."
-	@mkdir -p ./tests/results
-	@${GO} test -mod=vendor -bench=. -v \
+	@echo '-----------------------------------------------------------------------'
+	set -euo pipefail \
+	&& ${GO} test -mod=vendor -bench=. -v \
 	  -coverprofile $(coverage-out) \
 	  -covermode count ./... \
-	  2>&1 | tee $(results-out) ;\
-	RETURN=$$? ;\
-	${GO_JUNIT_REPORT}   < $(results-out)  > $(results-xml) ;\
-	${GOCOVER_COBERTURA} < $(coverage-out) > $(coverage-xml) ;\
+	  2>&1 | tee "$(results-out)"
+
+	@echo
+	@echo "Coverage report: junit"
+	@echo '-----------------------------------------------------------------------'
+	${GO_JUNIT_REPORT} < $(results-out) > $(results-xml)
+
+	@echo
+	@echo "Coverage report: Cobertura"
+	@echo '-----------------------------------------------------------------------'
+	${GOCOVER_COBERTURA} < $(coverage-out) > $(coverage-xml)
+
+	@echo
+	@echo "Coverage report directory perms:"
+	@echo '-----------------------------------------------------------------------'
+	find $(dir $(results-out)) -print0 | xargs -0 ls -l
+
+	@echo
+	@echo "Locally modified files (git status)"
+	@echo '-----------------------------------------------------------------------'
+	git status
+
+# foobar:
+#	&& RETURN=$$? \
+	&& echo "** $@ will exit with status $$(declare -p RETURN)" \
+	&& echo \
+	&& echo "Coverage report: juni" \
+	&& ${GO_JUNIT_REPORT}   < $(results-out) > $(results-xml) \
+	&& echo \
+	&& echo "Coverage report: Cobertura" \
+	&& ${GOCOVER_COBERTURA} < $(coverage-out) > $(coverage-xml) \
+	&& echo \
+	&& echo "Coverage report directory perms:" \
+	&& find $(dir $(results-out)) -print0 | xargs -0 ls -l \
+	&& echo \
+	&& echo "List locally modified files" \
+	&& git status \
 	exit $$RETURN
 
 ## -----------------------------------------------------------------------
