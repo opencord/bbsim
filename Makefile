@@ -20,13 +20,11 @@ $(if $(DEBUG),$(warning ENTER))
 .DEFAULT_GOAL   := help
 MAKECMDGOALS    ?= help
 
-TOP     ?= .
-MAKEDIR ?= $(TOP)/makefiles
-
 ##--------------------##
 ##---]  INCLUDES  [---##
 ##--------------------##
-include $(MAKEDIR)/include.mk
+include config.mk
+include makefiles/include.mk
 include $(MAKEDIR)/release/include.mk
 
 ##--------------------##
@@ -167,23 +165,6 @@ test-unit: clean local-omci-lib-go # @HELP Execute unit tests
 	@echo '-----------------------------------------------------------------------'
 	git status
 
-# foobar:
-#	&& RETURN=$$? \
-	&& echo "** $@ will exit with status $$(declare -p RETURN)" \
-	&& echo \
-	&& echo "Coverage report: juni" \
-	&& ${GO_JUNIT_REPORT}   < $(results-out) > $(results-xml) \
-	&& echo \
-	&& echo "Coverage report: Cobertura" \
-	&& ${GOCOVER_COBERTURA} < $(coverage-out) > $(coverage-xml) \
-	&& echo \
-	&& echo "Coverage report directory perms:" \
-	&& find $(dir $(results-out)) -print0 | xargs -0 ls -l \
-	&& echo \
-	&& echo "List locally modified files" \
-	&& git status \
-	exit $$RETURN
-
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
 test-bbr: release-bbr docker-build # @HELP Validate that BBSim and BBR are working together
@@ -261,7 +242,7 @@ docs: swagger # @HELP Generate docs and opens them in the browser
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
 docs-lint:
-	$(MAKE) -C docs lint
+	$(MAKE) -C docs lint-doc8
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
@@ -377,6 +358,12 @@ docs/swagger/leagacy/bbsim.swagger.json: api/legacy/bbsim.proto setup_tools
 	  -I${VOLTHA_PROTOS}/protos/ \
 	  --swagger_out=logtostderr=true,allow_delete_body=true,disable_default_errors=true:docs/swagger/ \
 	  $<
+
+## -----------------------------------------------------------------------
+## Intent:
+## -----------------------------------------------------------------------
+clean ::
+	$(RM) -r "docs/$(venv-name)"
 
 ## -----------------------------------------------------------------------
 ## Intent: Helper target used to exercise release script changes

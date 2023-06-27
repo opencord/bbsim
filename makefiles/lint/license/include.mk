@@ -1,6 +1,6 @@
 # -*- makefile -*-
 # -----------------------------------------------------------------------
-# Copyright 2022 Open Networking Foundation
+# Copyright 2022-2023 Open Networking Foundation (ONF) and the ONF Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,74 +15,23 @@
 # limitations under the License.
 # -----------------------------------------------------------------------
 
-# JSON_FILES ?= $(error JSON_FILES= is required)
+ifndef NO-LINT-LICENSE
 
-.PHONY: lint-license
+ifndef mk-include--onf-lint-license#       # one-time loader
 
-## -----------------------------------------------------------------------
-## -----------------------------------------------------------------------
-lint : lint-license
+$(if $(DEBUG),$(warning ENTER))
 
-lint-license-gargs += --recursive
+$(if $(USE_LINT_LICENSE)\
+  ,$(eval include $(ONF_MAKEDIR)/lint/license/voltha-system-tests/include.mk)\
+  ,$(eval include $(ONF_MAKEDIR)/lint/license/common.mk)\
+)
 
-# ignore: png, xlsx
-# will utf8 be excluded(?)
-lint-license-gargs += --binary-files=without-match
-lint-license-gargs += --files-without-match
+  mk-include--onf-lint-license := true
 
-# [TODO] license checking accepts either Copy or Apache.
-# [TODO] At least Copyright should be required (both?)
-lint-license-gargs += --extended-regexp
-lint-license-gargs += -e 'Copyright[[:space:]]+[[:digit:]]{4}'
-lint-license-gargs += -e 'Apache License'
+$(if $(DEBUG),$(warning LEAVE))
 
-# [TODO] --strict, --strict-dates
+endif # mk-include--onf-lint-license
 
-# Editor temp files
-lint-license-gargs += --exclude='*.~'
-lint-license-gargs += --exclude='*.swp'
-
-lint-license-gargs += --exclude-dir='.git'
-
-# TODO: Normalize into .venv for consistent filtering across projects.
-lint-license-gargs += --exclude-dir='vst_venv'
-lint-license-gargs += --exclude-dir='flog'
-
-lint-license-gargs += --exclude='*.json'
-lint-license-gargs += --exclude='*.md'
-lint-license-gargs += --exclude='*.out'
-lint-license-gargs += --exclude='*.pyc'
-lint-license-gargs += --exclude='*.xml'
-
-# [FILE(s)]
-lint-license-gargs += --exclude='VERSION'
-
-# [GIT]
-# lint-license-gargs += --exclude='.gitignore'
-# lint-license-gargs += --exclude='.gitreview'
-lint-license-gargs += --exclude='\.*'
-
-# [PYTHON]
-lint-license-gargs += --exclude='requirements.txt'
-
-# [WIP]
-lint-license-gargs += --exclude='patch'
-
-## -----------------------------------------------------------------------
-## -----------------------------------------------------------------------
-lint-license-new:
-	grep $(lint-license-gargs) $(dot)
-
-## -----------------------------------------------------------------------
-## Jenkins job checking logic.
-## -----------------------------------------------------------------------
-lint-license:
-	$(MAKEDIR)/lint/license/license-check.sh
-
-## -----------------------------------------------------------------------
-## -----------------------------------------------------------------------
-help ::
-	@echo "  lint-license         Verify sources contain a license block."
-	@echo "  lint-license-new     Grep driven replacement logic."
+endif # NO-LINT-LICENSE
 
 # [EOF]
