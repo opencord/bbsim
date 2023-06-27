@@ -28,6 +28,10 @@ help::
 todo ::
 	@echo
 	@echo "[TODO: bbsim]"
+	@echo '  update makefiles to the latest from repo:onf-make'
+	@echo '  merge hadolint targets into onf-make if not fully supported yet'
+	@echo '  merge makefiles/tools.mk into makefiles/docker'
+	@echo '  merge and replace makefiles/lint/docker/*.mk with latest repo:onf-make/'
 
 $(if $(DEBUG),$(warning LEAVE))
 

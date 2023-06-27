@@ -100,48 +100,6 @@
         ]
       }
     },
-    "/v1/olt/onus/{OnuSerialNumber}/{UniID}/igmp/{SubActionVal}/{GroupAddress}/{VLAN}": {
-      "post": {
-        "summary": "Change IGMP state",
-        "operationId": "ChangeIgmpState",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/bbsimResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "OnuReq.SerialNumber",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "SubActionVal",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "enum": [
-              "JOIN",
-              "LEAVE",
-              "JOINV3"
-            ]
-          },
-          {
-            "name": "GroupAddress",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "BBSim"
-        ]
-      }
-    },
     "/v1/olt/onus/{OnuSerialNumber}/dhcp": {
       "post": {
         "summary": "Restart DHCP for ONU",
@@ -185,6 +143,62 @@
             "in": "path",
             "required": true,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "BBSim"
+        ]
+      }
+    },
+    "/v1/olt/onus/{OnuSerialNumber}/{UniID}/igmp/{SubActionVal}/{GroupAddress}/{VLAN}": {
+      "post": {
+        "summary": "Change IGMP state",
+        "operationId": "ChangeIgmpState",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bbsimResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "OnuSerialNumber",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "UniID",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "SubActionVal",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "JOIN",
+              "LEAVE",
+              "JOINV3"
+            ]
+          },
+          {
+            "name": "GroupAddress",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "VLAN",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -595,14 +609,6 @@
           "items": {
             "$ref": "#/definitions/bbsimUNI"
           }
-        }
-      }
-    },
-    "bbsimONURequest": {
-      "type": "object",
-      "properties": {
-        "SerialNumber": {
-          "type": "string"
         }
       }
     },

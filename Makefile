@@ -20,14 +20,21 @@ $(if $(DEBUG),$(warning ENTER))
 .DEFAULT_GOAL   := help
 MAKECMDGOALS    ?= help
 
-TOP     ?= .
-MAKEDIR ?= $(TOP)/makefiles
+##-------------------##
+##---]  GLOBALS  [---##
+##-------------------##
+TOP ?=$(strip \
+  $(dir \
+    $(abspath $(lastword $(MAKEFILE_LIST)))\
+   )\
+)
 
 ##--------------------##
 ##---]  INCLUDES  [---##
 ##--------------------##
-include $(MAKEDIR)/include.mk
-include $(MAKEDIR)/release/include.mk
+include $(TOP)/config.mk
+include $(TOP)/makefiles/include.mk
+include $(ONF_MAKEDIR)/release/include.mk
 
 ##--------------------##
 ##---]  INCLUDES  [---##
@@ -88,18 +95,21 @@ lint-dockerfile:
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
 lint-mod:
+	$(call banner-enter,Target $@)
 	@echo "Running dependency check..."
 	@${GO} mod verify
 	@echo "Dependency check OK. Running vendor check..."
 	@git status > /dev/null
 	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Staged or modified files must be committed before running this test" && git status -- go.mod go.sum vendor && exit 1)
 	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files must be cleaned up before running this test" && git status -- go.mod go.sum vendor && exit 1)
-	${GO} mod tidy
-	${GO} mod vendor
+
+	$(HIDE)$(MAKE) --no-print-directory mod-update
+
 	@git status > /dev/null
 	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Modified files detected after running go mod tidy / go mod vendor" && git status -- go.mod go.sum vendor && git checkout -- go.mod go.sum vendor && exit 1)
 	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files detected after running go mod tidy / go mod vendor" && git status -- go.mod go.sum vendor && git checkout -- go.mod go.sum vendor && exit 1)
 	@echo "Vendor check OK."
+	$(call banner-enter,Target $@)
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
@@ -167,23 +177,6 @@ test-unit: clean local-omci-lib-go # @HELP Execute unit tests
 	@echo '-----------------------------------------------------------------------'
 	git status
 
-# foobar:
-#	&& RETURN=$$? \
-	&& echo "** $@ will exit with status $$(declare -p RETURN)" \
-	&& echo \
-	&& echo "Coverage report: juni" \
-	&& ${GO_JUNIT_REPORT}   < $(results-out) > $(results-xml) \
-	&& echo \
-	&& echo "Coverage report: Cobertura" \
-	&& ${GOCOVER_COBERTURA} < $(coverage-out) > $(coverage-xml) \
-	&& echo \
-	&& echo "Coverage report directory perms:" \
-	&& find $(dir $(results-out)) -print0 | xargs -0 ls -l \
-	&& echo \
-	&& echo "List locally modified files" \
-	&& git status \
-	exit $$RETURN
-
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
 test-bbr: release-bbr docker-build # @HELP Validate that BBSim and BBR are working together
@@ -191,18 +184,6 @@ test-bbr: release-bbr docker-build # @HELP Validate that BBSim and BBR are worki
 	sleep 5
 	./$(RELEASE_DIR)/$(RELEASE_BBR_NAME)-linux-amd64 -pon 2 -onu 2 -logfile tmp.logs
 	docker $(RM) -f bbsim
-
-## -----------------------------------------------------------------------
-## Intgent: Update sources in the vendor/ directory.
-## Todo:
-##   o chicken-n-egg problem:
-##     - vendor/ is under revision control
-##     - go mod tidy will delete vendor
-##     - sandbox left unbuildable when mod-update target fails.
-## -----------------------------------------------------------------------
-mod-update: # @HELP Download the dependencies to the vendor folder
-	${GO} mod tidy
-	${GO} mod vendor
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
@@ -255,13 +236,17 @@ docker-run-dev: # @HELP Runs the container locally (intended for development pur
 ## -----------------------------------------------------------------------
 .PHONY: docs docs-lint
 docs: swagger # @HELP Generate docs and opens them in the browser
-	$(MAKE) -C docs html
+
+	$(call begin-enter,Target $@)
+	-$(MAKE) -C docs html
+	$(call begin-leave,Target $@)
+
 	@echo -e "\nBBSim documentation generated in file://${PWD}/docs/build/html/index.html"
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
 docs-lint:
-	$(MAKE) -C docs lint
+	$(MAKE) -C docs lint-doc8
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
@@ -377,6 +362,12 @@ docs/swagger/leagacy/bbsim.swagger.json: api/legacy/bbsim.proto setup_tools
 	  -I${VOLTHA_PROTOS}/protos/ \
 	  --swagger_out=logtostderr=true,allow_delete_body=true,disable_default_errors=true:docs/swagger/ \
 	  $<
+
+## -----------------------------------------------------------------------
+## Intent:
+## -----------------------------------------------------------------------
+clean ::
+	$(RM) -r "docs/$(venv-name)"
 
 ## -----------------------------------------------------------------------
 ## Intent: Helper target used to exercise release script changes

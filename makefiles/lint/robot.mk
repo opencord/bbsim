@@ -30,10 +30,8 @@ LINT_ARGS ?= --verbose --configure LineTooLong:130 -e LineTooLong \
 
 lint : lint-robot
 
-lint-robot: vst_venv
-	source ./$</bin/activate \
-	    && set -u \
-	    && rflint $(LINT_ARGS) $(ROBOT_FILES)
+lint-robot: $(venv-activate-script)
+	$(activate) && rflint $(LINT_ARGS) $(ROBOT_FILES)
 
 help::
 	@echo "  lint-robot           Syntax check robot sources using rflint"
