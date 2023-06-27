@@ -13,26 +13,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# SPDX-FileCopyrightText: 2017-2023 Open Networking Foundation (ONF) and the ONF Contributors
-# SPDX-License-Identifier: Apache-2.0
 # -----------------------------------------------------------------------
 
-$(if $(DEBUG),$(warning ENTER))
+# include this makefile late so text will be displayed at the end6
 
-## -----------------------------------------------------------------------
-## -----------------------------------------------------------------------
-help::
-	@echo "  todo                       Display future enhancement list"
-
-todo ::
+help ::
 	@echo
-	@echo "[TODO: bbsim]"
-	@echo '  update makefiles to the latest from repo:onf-make'
-	@echo '  merge hadolint targets into onf-make if not fully supported yet'
-	@echo '  merge makefiles/tools.mk into makefiles/docker'
-	@echo '  merge and replace makefiles/lint/docker/*.mk with latest repo:onf-make/'
+	@echo '[CLEAN]'
+	@echo '  clean               Remove generated targets'
+	@echo '  sterile             clean + remove virtual env interpreter install'
 
-$(if $(DEBUG),$(warning LEAVE))
+help ::
+	@echo
+	@echo '[HELP]'
+	@echo '  help                Display program help'
+	@echo '  help-verbose        Display additional targets and help'
+
+## -----------------------------------------------------------------------
+# repo::voltha-docs -- patch logic not deployed everywhere.
+## -----------------------------------------------------------------------
+# help ::
+#	@echo
+#	@echo '[NOTE: python 3.10+]'
+#	@echo '  The interpreter is not yet fully supported across foreign repositories.'
+#	@echo '  While working locally, if make fails to build a target try:'
+#	@echo '      $(MAKE) $${target} NO_OTHER_REPO_DOCS=1'
 
 # [EOF]

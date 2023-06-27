@@ -15,25 +15,19 @@
 # limitations under the License.
 # -----------------------------------------------------------------------
 
-ROBOT_FILES ?= $(error ROBOT_FILES= is required)
+PYTHON_FILES ?= $(error PYTHON_FILES= is required)
 
-LINT_ARGS ?= --verbose --configure LineTooLong:130 -e LineTooLong \
-             --configure TooManyTestSteps:65 -e TooManyTestSteps \
-             --configure TooManyTestCases:50 -e TooManyTestCases \
-             --configure TooFewTestSteps:1 \
-             --configure TooFewKeywordSteps:1 \
-             --configure FileTooLong:2000 -e FileTooLong \
-             -e TrailingWhitespace
+.PHONY: lint-python
 
+lint : lint-python
 
-.PHONY: lint-robot
-
-lint : lint-robot
-
-lint-robot: $(venv-activate-script)
-	$(activate) && rflint $(LINT_ARGS) $(ROBOT_FILES)
+lint-python: vst_venv
+	-source ./$</bin/activate \
+	    && set -u \
+	    && pylint $(PYTHON_FILES) \
+	    && flake8 --max-line-length=99 --count $(PYTHON_FILE)S
 
 help::
-	@echo "  lint-robot           Syntax check robot sources using rflint"
+	@echo "  lint-python          Syntax check using pylint and flake8"
 
 # [EOF]

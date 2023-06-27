@@ -1,36 +1,30 @@
 # -*- makefile -*-
 # -----------------------------------------------------------------------
-# Copyright 2017-2023 Open Networking Foundation
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Copyright 2022-2023 Open Networking Foundation (ONF) and the ONF Contributors
+# -----------------------------------------------------------------------
+# https://gerrit.opencord.org/plugins/gitiles/onf-make
+# ONF.makefile.version = 1.1
 # -----------------------------------------------------------------------
 
-help::
+$(if $(DEBUG),$(warning ENTER))
+
+help ::
 	@echo
 	@echo "[LINT]"
-	@echo "  lint                       Static code analysis/syntax checking"
-	@echo "    LOCAL_LINT=1             Enable local linting w/o docker & jenkins overhead"
 
-include $(MAKEDIR)/lint/docker/include.mk
+include $(ONF_MAKEDIR)/lint/doc8/include.mk
+include $(ONF_MAKEDIR)/lint/docker/include.mk
+include $(ONF_MAKEDIR)/lint/groovy/include.mk
+include $(ONF_MAKEDIR)/lint/jjb.mk
+include $(ONF_MAKEDIR)/lint/json.mk
+include $(ONF_MAKEDIR)/lint/license/include.mk
+include $(ONF_MAKEDIR)/lint/makefile.mk
+include $(ONF_MAKEDIR)/lint/python/include.mk
+include $(ONF_MAKEDIR)/lint/shell.mk
+include $(ONF_MAKEDIR)/lint/yaml.mk
 
-ifdef LOCAL_LINT
-  # include $(MAKEDIR)/lint/json.mk              # venv dependency
-  # include $(MAKEDIR)/lint/golang/sca.mk
-  # include $(MAKEDIR)/lint/license/include.mk   # exclusions needed
-  # include $(MAKEDIR)/lint/python.mk
-  # include $(MAKEDIR)/lint/robot.mk             # venv dependency
-  # include $(MAKEDIR)/lint/shell.mk             # cleanup needed
-  # include $(MAKEDIR)/lint/yaml.mk              # venv needed -- alt: yamllint
-endif
+include $(ONF_MAKEDIR)/lint/help.mk
+
+$(if $(DEBUG),$(warning LEAVE))
 
 # [EOF]

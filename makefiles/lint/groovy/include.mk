@@ -14,52 +14,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # -----------------------------------------------------------------------
-# https://gerrit.opencord.org/plugins/gitiles/onf-make
-# ONF.makefile.version = 1.0
-# -----------------------------------------------------------------------
 
 ##-------------------##
 ##---]  GLOBALS  [---##
 ##-------------------##
 
-# Gather sources to check
-# TODO: implement deps, only check modified files
-shell-check-find := find .
-# vendor scripts but they really should be lintable
-shell-check-find += -name 'vendor' -prune
-shell-check-find += -o \( -name '*.sh' \)
-shell-check-find += -type f -print0
+groovy-check      := npm-groovy-lint
 
-# shell-check    := $(env-clean) pylint
-shell-check      := shellcheck
-
-shell-check-args += --check-sourced
-shell-check-args += --external-sources
+groovy-check-args := $(null)
+# groovy-check-args += --loglevel info
+# groovy-check-args += --ignorepattern
+# groovy-check-args += --verbose
 
 ##-------------------##
 ##---]  TARGETS  [---##
 ##-------------------##
-ifndef NO-LINT-SHELL
-  lint : lint-shell
+ifndef NO-LINT-GROOVY
+  lint : lint-groovy
 endif
 
 ## -----------------------------------------------------------------------
 ## Intent: Perform a lint check on command line script sources
 ## -----------------------------------------------------------------------
-lint-shell:
-	$(shell-check) -V
+lint-groovy:
+	$(groovy-check) --version
 	@echo
-	$(HIDE)$(env-clean) $(shell-check-find) \
-	    | $(xargs-n1) $(shell-check) $(shell-check-args)
+	$(HIDE)$(env-clean) find . -iname '*.groovy' -print0 \
+  | $(xargs-n1) $(groovy-check) $(groovy-check-args)
 
 ## -----------------------------------------------------------------------
 ## Intent: Display command help
 ## -----------------------------------------------------------------------
 help-summary ::
-	@echo '  lint-shell          Syntax check shell sources'
-
-# [SEE ALSO]
-# -----------------------------------------------------------------------
-#   o https://www.shellcheck.net/wiki/Directive
+	@echo '  lint-groovy          Syntax check groovy sources'
 
 # [EOF]

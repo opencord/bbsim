@@ -1,6 +1,6 @@
 # -*- makefile -*-
 # -----------------------------------------------------------------------
-# Copyright 2017-2022 Open Networking Foundation
+# Copyright 2021-2023 Open Networking Foundation (ONF) and the ONF Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,25 +15,17 @@
 # limitations under the License.
 # -----------------------------------------------------------------------
 
-ROBOT_FILES ?= $(error ROBOT_FILES= is required)
+help ::
 
-LINT_ARGS ?= --verbose --configure LineTooLong:130 -e LineTooLong \
-             --configure TooManyTestSteps:65 -e TooManyTestSteps \
-             --configure TooManyTestCases:50 -e TooManyTestCases \
-             --configure TooFewTestSteps:1 \
-             --configure TooFewKeywordSteps:1 \
-             --configure FileTooLong:2000 -e FileTooLong \
-             -e TrailingWhitespace
+# -----------------------------------------------------------------------
+# -----------------------------------------------------------------------
+help-summary ::
+	@echo '  help-lint           Display lint target help'
 
-
-.PHONY: lint-robot
-
-lint : lint-robot
-
-lint-robot: $(venv-activate-script)
-	$(activate) && rflint $(LINT_ARGS) $(ROBOT_FILES)
-
-help::
-	@echo "  lint-robot           Syntax check robot sources using rflint"
+help-simple :: help-lint
+help-lint  :
+	@echo
+	@echo "[LINT]"
+	@echo '  help-lint           Display lint target help'
 
 # [EOF]

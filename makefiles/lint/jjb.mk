@@ -1,6 +1,6 @@
 # -*- makefile -*-
 # -----------------------------------------------------------------------
-# Copyright 2022-2023 Open Networking Foundation (ONF) and the ONF Contributors
+# Copyright 2023 Open Networking Foundation (ONF) and the ONF Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,52 +14,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # -----------------------------------------------------------------------
-# https://gerrit.opencord.org/plugins/gitiles/onf-make
-# ONF.makefile.version = 1.0
-# -----------------------------------------------------------------------
 
 ##-------------------##
 ##---]  GLOBALS  [---##
 ##-------------------##
-
-# Gather sources to check
-# TODO: implement deps, only check modified files
-shell-check-find := find .
-# vendor scripts but they really should be lintable
-shell-check-find += -name 'vendor' -prune
-shell-check-find += -o \( -name '*.sh' \)
-shell-check-find += -type f -print0
-
-# shell-check    := $(env-clean) pylint
-shell-check      := shellcheck
-
-shell-check-args += --check-sourced
-shell-check-args += --external-sources
+.PHONY: lint-venv
 
 ##-------------------##
 ##---]  TARGETS  [---##
 ##-------------------##
-ifndef NO-LINT-SHELL
-  lint : lint-shell
+ifndef NO-LINT-JJB
+  lint : lint-jjb
 endif
 
 ## -----------------------------------------------------------------------
-## Intent: Perform a lint check on command line script sources
+## Intent: Construct command line for linting jenkins-job-builder config
 ## -----------------------------------------------------------------------
-lint-shell:
-	$(shell-check) -V
-	@echo
-	$(HIDE)$(env-clean) $(shell-check-find) \
-	    | $(xargs-n1) $(shell-check) $(shell-check-args)
+
+ifdef DEBUG
+  lint-jjb-args += --log_level DEBUG#         # verbosity: high
+else
+  lint-jjb-args += --log_level INFO#          # verbosity: default
+endif
+lint-jjb-args += --ignore-cache
+lint-jjb-args += test#                        # command action
+lint-jjb-args += -o archives/job-configs#     # Generated jobs written here
+lint-jjb-args += --recursive
+lint-jjb-args += --config-xml#                # JJB v3.0 write to OUTPUT/jobname/config.xml
+lint-jjb-args += jjb/#                        # JJB config sources (input)
+
+lint-jjb-deps := $(null)
+lint-jjb-deps += $(venv-activate-script) 
+lint-jjb-deps += checkout-ci-management-sub-modules
+lint-jjb: $(lint-jjb-deps)
+	$(activate) && { jenkins-jobs $(lint-jjb-args); }
 
 ## -----------------------------------------------------------------------
-## Intent: Display command help
 ## -----------------------------------------------------------------------
-help-summary ::
-	@echo '  lint-shell          Syntax check shell sources'
-
-# [SEE ALSO]
-# -----------------------------------------------------------------------
-#   o https://www.shellcheck.net/wiki/Directive
+help ::
+	@echo '  lint-jjb               Validate jjb job generation'
+ifdef VERBOSE
+	@echo '    DEBUG=1                lint-jjb --log_level=DEBUG'
+endif
 
 # [EOF]

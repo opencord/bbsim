@@ -1,6 +1,6 @@
 # -*- makefile -*-
 # -----------------------------------------------------------------------
-# Copyright 2017-2023 Open Networking Foundation
+# Copyright 2022-2023 Open Networking Foundation (ONF) and the ONF Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,24 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# SPDX-FileCopyrightText: 2017-2023 Open Networking Foundation (ONF) and the ONF Contributors
+# SPDX-FileCopyrightText: 2022-2023 Open Networking Foundation (ONF) and the ONF Contributors
 # SPDX-License-Identifier: Apache-2.0
 # -----------------------------------------------------------------------
 
 $(if $(DEBUG),$(warning ENTER))
 
 ## -----------------------------------------------------------------------
+## Intent: Remove makefile generated content
 ## -----------------------------------------------------------------------
-help::
-	@echo "  todo                       Display future enhancement list"
+.PHONY: clean
+clean ::
+	$(RM) -r $(JOBCONFIG_DIR)
 
-todo ::
+## -----------------------------------------------------------------------
+## -----------------------------------------------------------------------
+help-verbose += help-clean
+help-clean ::
 	@echo
-	@echo "[TODO: bbsim]"
-	@echo '  update makefiles to the latest from repo:onf-make'
-	@echo '  merge hadolint targets into onf-make if not fully supported yet'
-	@echo '  merge makefiles/tools.mk into makefiles/docker'
-	@echo '  merge and replace makefiles/lint/docker/*.mk with latest repo:onf-make/'
+	@echo '[MAKE: clean]'
+	@echo '  clean               Remove makefile generated content'
 
 $(if $(DEBUG),$(warning LEAVE))
 

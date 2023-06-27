@@ -1,6 +1,6 @@
 # -*- makefile -*-
 # -----------------------------------------------------------------------
-# Copyright 2017-2023 Open Networking Foundation
+# Copyright 2022-2023 Open Networking Foundation (ONF) and the ONF Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,24 +14,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# SPDX-FileCopyrightText: 2017-2023 Open Networking Foundation (ONF) and the ONF Contributors
+# SPDX-FileCopyrightText: 2022-2023 Open Networking Foundation (ONF) and the ONF Contributors
 # SPDX-License-Identifier: Apache-2.0
 # -----------------------------------------------------------------------
 
 $(if $(DEBUG),$(warning ENTER))
 
 ## -----------------------------------------------------------------------
+## Intent: Revert sandbox into a pristine checkout stage
 ## -----------------------------------------------------------------------
-help::
-	@echo "  todo                       Display future enhancement list"
+##   Note: Sterile target behavior differs from clean around handling of
+##         persistent content.  For ex removal of a python virtualenv adds
+##         extra overhead to development iteration:
+##           make clean   - preserve a virtual env
+##           make sterile - force reinstallation
+## -----------------------------------------------------------------------
+.PHONY: sterile
+sterile :: clean
 
-todo ::
+## -----------------------------------------------------------------------
+## -----------------------------------------------------------------------
+help-verbose += help-sterile
+help-sterile ::
 	@echo
-	@echo "[TODO: bbsim]"
-	@echo '  update makefiles to the latest from repo:onf-make'
-	@echo '  merge hadolint targets into onf-make if not fully supported yet'
-	@echo '  merge makefiles/tools.mk into makefiles/docker'
-	@echo '  merge and replace makefiles/lint/docker/*.mk with latest repo:onf-make/'
+	@echo '[MAKE: sterile]'
+	@echo '  sterile             make clean, also remove persistent content (~venv)'
 
 $(if $(DEBUG),$(warning LEAVE))
 

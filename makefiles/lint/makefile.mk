@@ -1,6 +1,6 @@
 # -*- makefile -*-
 # -----------------------------------------------------------------------
-# Copyright 2022-2023 Open Networking Foundation (ONF) and the ONF Contributors
+# Copyright 2017-2023 Open Networking Foundation (ONF) and the ONF Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,52 +14,52 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # -----------------------------------------------------------------------
-# https://gerrit.opencord.org/plugins/gitiles/onf-make
-# ONF.makefile.version = 1.0
-# -----------------------------------------------------------------------
 
 ##-------------------##
 ##---]  GLOBALS  [---##
 ##-------------------##
+xargs-n1-local := $(subst -t,$(null),$(xargs-n1))#   inhibit cmd display
 
 # Gather sources to check
 # TODO: implement deps, only check modified files
-shell-check-find := find .
-# vendor scripts but they really should be lintable
-shell-check-find += -name 'vendor' -prune
-shell-check-find += -o \( -name '*.sh' \)
-shell-check-find += -type f -print0
+make-check-find := find . -name 'vendor' -prune
+make-check-find += -o \( -iname makefile -o -name '*.mk' \)
+make-check-find += -type f -print0
 
-# shell-check    := $(env-clean) pylint
-shell-check      := shellcheck
+make-check      := $(MAKE)
 
-shell-check-args += --check-sourced
-shell-check-args += --external-sources
+make-check-args += --dry-run
+make-check-args += --keep-going
+make-check-args += --warn-undefined-variables
+make-check-args += --no-print-directory
+
+# Quiet internal undef vars
+make-check-args += DEBUG=
 
 ##-------------------##
 ##---]  TARGETS  [---##
 ##-------------------##
-ifndef NO-LINT-SHELL
-  lint : lint-shell
+ifndef NO-LINT-MAKEFILE
+  lint : lint-make
 endif
 
 ## -----------------------------------------------------------------------
-## Intent: Perform a lint check on command line script sources
+## Intent: Perform a lint check on makefile sources
 ## -----------------------------------------------------------------------
-lint-shell:
-	$(shell-check) -V
+lint-make-ignore += JSON_FILES=
+lint-make-ignore += YAML_FILES=
+lint-make:
 	@echo
-	$(HIDE)$(env-clean) $(shell-check-find) \
-	    | $(xargs-n1) $(shell-check) $(shell-check-args)
+	@echo "** -----------------------------------------------------------------------"
+	@echo "** Makefile syntax checking"
+	@echo "** -----------------------------------------------------------------------"
+	$(HIDE)$(env-clean) $(make-check-find) \
+	    | $(xargs-n1-local) $(make-check) $(make-check-args) $(lint-make-ignore)
 
 ## -----------------------------------------------------------------------
 ## Intent: Display command help
 ## -----------------------------------------------------------------------
 help-summary ::
-	@echo '  lint-shell          Syntax check shell sources'
-
-# [SEE ALSO]
-# -----------------------------------------------------------------------
-#   o https://www.shellcheck.net/wiki/Directive
+	@echo '  lint-make           Syntax check [Mm]akefile and *.mk'
 
 # [EOF]

@@ -17,6 +17,7 @@
 # SPDX-FileCopyrightText: 2022-2023 Open Networking Foundation (ONF) and the ONF Contributors
 # SPDX-License-Identifier: Apache-2.0
 # -----------------------------------------------------------------------
+# https://gerrit.opencord.org/plugins/gitiles/onf-make
 # ONF.makefile.version = 1.0
 # -----------------------------------------------------------------------
 
@@ -26,15 +27,26 @@ $(if $(DEBUG),$(warning ENTER))
 export dot          :=.
 export null         :=#
 export space        := $(null) $(null)
-export quote-single := $(null)'$(null)# colorization-closing-quote(')
-export quote-double := $(null)"$(null)# colorization-closing-quote(")
+export quote-single := $(null)'$(null)#'
+export quote-double := $(null)"$(null)#"
 
 # [DEBUG] make {target} HIDE=
-HIDE        ?= @
+HIDE           ?= @
 
 env-clean      ?= /usr/bin/env --ignore-environment
-xargs-n1       := xargs -0 -t -n1 --no-run-if-empty
-xargs-n1-clean := $(env-clean) $(xargs-n1)
+
+xargs-cmd       := xargs -0 -t --no-run-if-empty
+xargs-n1        := $(xargs-cmd) -n1
+xargs-n1-clean  := $(env-clean) $(xargs-n1)
+xargs-cmd-clean := $(env-clean) $(xargs-cmd)
+
+## -----------------------------------------------------------------------
+## Intent: NOP command for targets whose dependencies do all heavy lifting
+## -----------------------------------------------------------------------
+## usage: foo bar tans
+## <tab>$(nop-command)
+## -----------------------------------------------------------------------
+nop-cmd        := :
 
 ## -----------------------------------------------------------------------
 ## Default shell:

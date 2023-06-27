@@ -1,6 +1,6 @@
 # -*- makefile -*-
 # -----------------------------------------------------------------------
-# Copyright 2017-2022 Open Networking Foundation
+# Copyright 2022-2023 Open Networking Foundation (ONF) and the ONF Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,27 +13,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# SPDX-FileCopyrightText: 2022-2023 Open Networking Foundation (ONF) and the ONF Contributors
+# SPDX-License-Identifier: Apache-2.0
 # -----------------------------------------------------------------------
 
-ROBOT_FILES ?= $(error ROBOT_FILES= is required)
+$(if $(DEBUG),$(warning ENTER))
 
-LINT_ARGS ?= --verbose --configure LineTooLong:130 -e LineTooLong \
-             --configure TooManyTestSteps:65 -e TooManyTestSteps \
-             --configure TooManyTestCases:50 -e TooManyTestCases \
-             --configure TooFewTestSteps:1 \
-             --configure TooFewKeywordSteps:1 \
-             --configure FileTooLong:2000 -e FileTooLong \
-             -e TrailingWhitespace
+# usage: $(call if-not,false,5)
+if-not = $(info 1=$(1), 2=$(2), 3=$(3))\
+  $(if $(1),$(null),$(2))
 
-
-.PHONY: lint-robot
-
-lint : lint-robot
-
-lint-robot: $(venv-activate-script)
-	$(activate) && rflint $(LINT_ARGS) $(ROBOT_FILES)
-
-help::
-	@echo "  lint-robot           Syntax check robot sources using rflint"
+$(if $(DEBUG),$(warning LEAVE))
 
 # [EOF]

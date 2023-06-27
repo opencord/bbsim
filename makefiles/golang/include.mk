@@ -1,6 +1,6 @@
 # -*- makefile -*-
 # -----------------------------------------------------------------------
-# Copyright 2017-2022 Open Networking Foundation
+# Copyright 2023 Open Networking Foundation (ONF) and the ONF Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,26 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # -----------------------------------------------------------------------
+# SPDX-FileCopyrightText: 2017-2023 Open Networking Foundation (ONF) and the ONF Contributors
+# SPDX-License-Identifier: Apache-2.0
+# -----------------------------------------------------------------------
+# https://gerrit.opencord.org/plugins/gitiles/onf-make
+# ONF.makefiles.include.version = 1.1
+# -----------------------------------------------------------------------
 
-ROBOT_FILES ?= $(error ROBOT_FILES= is required)
-
-LINT_ARGS ?= --verbose --configure LineTooLong:130 -e LineTooLong \
-             --configure TooManyTestSteps:65 -e TooManyTestSteps \
-             --configure TooManyTestCases:50 -e TooManyTestCases \
-             --configure TooFewTestSteps:1 \
-             --configure TooFewKeywordSteps:1 \
-             --configure FileTooLong:2000 -e FileTooLong \
-             -e TrailingWhitespace
-
-
-.PHONY: lint-robot
-
-lint : lint-robot
-
-lint-robot: $(venv-activate-script)
-	$(activate) && rflint $(LINT_ARGS) $(ROBOT_FILES)
-
-help::
-	@echo "  lint-robot           Syntax check robot sources using rflint"
+include $(ONF_MAKEDIR)/golang/mod-update.mk
 
 # [EOF]

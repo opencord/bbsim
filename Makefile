@@ -20,14 +20,21 @@ $(if $(DEBUG),$(warning ENTER))
 .DEFAULT_GOAL   := help
 MAKECMDGOALS    ?= help
 
-TOP     ?= .
-MAKEDIR ?= $(TOP)/makefiles
+##-------------------##
+##---]  GLOBALS  [---##
+##-------------------##
+TOP ?=$(strip \
+  $(dir \
+    $(abspath $(lastword $(MAKEFILE_LIST)))\
+   )\
+)
 
 ##--------------------##
 ##---]  INCLUDES  [---##
 ##--------------------##
-include $(MAKEDIR)/include.mk
-include $(MAKEDIR)/release/include.mk
+include $(TOP)/config.mk
+include $(TOP)/makefiles/include.mk
+include $(ONF_MAKEDIR)/release/include.mk
 
 ##--------------------##
 ##---]  INCLUDES  [---##
@@ -88,32 +95,41 @@ lint-dockerfile:
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
 lint-mod:
+	$(call banner-enter,Target $@)
 	@echo "Running dependency check..."
 	@${GO} mod verify
 	@echo "Dependency check OK. Running vendor check..."
 	@git status > /dev/null
 	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Staged or modified files must be committed before running this test" && git status -- go.mod go.sum vendor && exit 1)
 	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files must be cleaned up before running this test" && git status -- go.mod go.sum vendor && exit 1)
-	${GO} mod tidy
-	${GO} mod vendor
+
+	$(HIDE)$(MAKE) --no-print-directory mod-update
+
 	@git status > /dev/null
 	@git diff-index --quiet HEAD -- go.mod go.sum vendor || (echo "ERROR: Modified files detected after running go mod tidy / go mod vendor" && git status -- go.mod go.sum vendor && git checkout -- go.mod go.sum vendor && exit 1)
 	@[[ `git ls-files --exclude-standard --others go.mod go.sum vendor` == "" ]] || (echo "ERROR: Untracked files detected after running go mod tidy / go mod vendor" && git status -- go.mod go.sum vendor && git checkout -- go.mod go.sum vendor && exit 1)
 	@echo "Vendor check OK."
+	$(call banner-enter,Target $@)
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
 lint: lint-mod lint-dockerfile
 
 ## -----------------------------------------------------------------------
+## Intent: Generate a static code analysis report
 ## -----------------------------------------------------------------------
+sca-report-dir := ./sca-report
+sca-report-xml := $(sca-report-dir)/sca-report.xml
 sca:
-	@$(RM) -r ./sca-report
-	@mkdir -p ./sca-report
+	$(call begin-enter,Target $@)
+	@$(RM) -r $(sca-report-dir)
+	@mkdir -p $(sca-report-dir)
 	@echo "Running static code analysis..."
-	@${GOLANGCI_LINT} run -vv --deadline=6m --out-format junit-xml ./... | tee ./sca-report/sca-report.xml
+	@${GOLANGCI_LINT} run -vv --deadline=6m --out-format junit-xml ./... \
+	  | tee ./sca-report/sca-report.xml
 	@echo ""
 	@echo "Static code analysis OK"
+	$(call begin-leave,Target $@)
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
@@ -129,60 +145,49 @@ results-xml  := ./tests/results/go-test-results.xml
 
 test-unit: clean local-omci-lib-go # @HELP Execute unit tests
 
-	@echo
-	@echo '** -----------------------------------------------------------------------'
-	@echo '** Target: $@'
-	@echo '** -----------------------------------------------------------------------'
+	$(call banner-enter,Target $@)
 
 	@mkdir -p $(dir $(results-out))
-#	@chmod -R 777 $(dir $(results-out))# dev-mode: local
-	@find $(dir $(results-out)) -print0 | xargs -0 ls -l
 
-	@echo
-	@echo "Running unit tests..."
-	@echo '-----------------------------------------------------------------------'
+	$(call banner,Running unit tests...)
+
+	$(if $(LOCAL_FIX_PERMS),\
+	    chmod o+w $(dir $(results-out) $(results-out)))
 	set -euo pipefail \
 	&& ${GO} test -mod=vendor -bench=. -v \
 	  -coverprofile $(coverage-out) \
 	  -covermode count ./... \
 	  2>&1 | tee "$(results-out)"
+	$(if $(LOCAL_FIX_PERMS),\
+	    chmod o-w $(dir $(results-out) $(results-out)))
 
-	@echo
-	@echo "Coverage report: junit"
-	@echo '-----------------------------------------------------------------------'
+	$(call banner,Coverage report: junit)
+	$(if $(LOCAL_FIX_PERMS),\
+	    chmod o+w $(dir $(results-xml) $(results-xml)))
 	${GO_JUNIT_REPORT} < $(results-out) > $(results-xml)
+	$(if $(LOCAL_FIX_PERMS),\
+	    chmod o-w $(dir $(results-xml) $(results-xml)))
 
-	@echo
-	@echo "Coverage report: Cobertura"
-	@echo '-----------------------------------------------------------------------'
+	$(call banner,Coverage report: Cobertura)
+	$(if $(LOCAL_FIX_PERMS),\
+	    chmod o+w $(dir $(results-xml) $(coverage-xml)))
 	${GOCOVER_COBERTURA} < $(coverage-out) > $(coverage-xml)
+	$(if $(LOCAL_FIX_PERMS),\
+	    chmod o-w $(dir $(results-xml) $(coverage-xml)))	
+
+	$(call banner,Coverage report directory perms:)
 
 	@echo
-	@echo "Coverage report directory perms:"
-	@echo '-----------------------------------------------------------------------'
-	find $(dir $(results-out)) -print0 | xargs -0 ls -l
+	@/bin/ls -ld tests tests/results
 
 	@echo
-	@echo "Locally modified files (git status)"
-	@echo '-----------------------------------------------------------------------'
+	@find $(dir $(results-out)) -print0 | xargs -0 ls -l
+        # chown -R $$(id -u):$$(id -g) $(dir $(results-xml)
+
+	$(call banner,Locally modified files: git status)
 	git status
 
-# foobar:
-#	&& RETURN=$$? \
-	&& echo "** $@ will exit with status $$(declare -p RETURN)" \
-	&& echo \
-	&& echo "Coverage report: juni" \
-	&& ${GO_JUNIT_REPORT}   < $(results-out) > $(results-xml) \
-	&& echo \
-	&& echo "Coverage report: Cobertura" \
-	&& ${GOCOVER_COBERTURA} < $(coverage-out) > $(coverage-xml) \
-	&& echo \
-	&& echo "Coverage report directory perms:" \
-	&& find $(dir $(results-out)) -print0 | xargs -0 ls -l \
-	&& echo \
-	&& echo "List locally modified files" \
-	&& git status \
-	exit $$RETURN
+	$(call banner-leave,Target $@)
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
@@ -191,18 +196,6 @@ test-bbr: release-bbr docker-build # @HELP Validate that BBSim and BBR are worki
 	sleep 5
 	./$(RELEASE_DIR)/$(RELEASE_BBR_NAME)-linux-amd64 -pon 2 -onu 2 -logfile tmp.logs
 	docker $(RM) -f bbsim
-
-## -----------------------------------------------------------------------
-## Intgent: Update sources in the vendor/ directory.
-## Todo:
-##   o chicken-n-egg problem:
-##     - vendor/ is under revision control
-##     - go mod tidy will delete vendor
-##     - sandbox left unbuildable when mod-update target fails.
-## -----------------------------------------------------------------------
-mod-update: # @HELP Download the dependencies to the vendor folder
-	${GO} mod tidy
-	${GO} mod vendor
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
@@ -255,13 +248,17 @@ docker-run-dev: # @HELP Runs the container locally (intended for development pur
 ## -----------------------------------------------------------------------
 .PHONY: docs docs-lint
 docs: swagger # @HELP Generate docs and opens them in the browser
-	$(MAKE) -C docs html
+
+	$(call begin-enter,Target $@)
+	-$(MAKE) -C docs html
+	$(call begin-leave,Target $@)
+
 	@echo -e "\nBBSim documentation generated in file://${PWD}/docs/build/html/index.html"
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
 docs-lint:
-	$(MAKE) -C docs lint
+	$(MAKE) -C docs lint-doc8
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
@@ -303,6 +300,8 @@ clean ::
 
 	@$(RM) $(results-out)
 	@$(RM) $(results-xml)
+
+	@$(RM) $(sca-report-xml)
 
 sterile :: clean
 
@@ -377,6 +376,12 @@ docs/swagger/leagacy/bbsim.swagger.json: api/legacy/bbsim.proto setup_tools
 	  -I${VOLTHA_PROTOS}/protos/ \
 	  --swagger_out=logtostderr=true,allow_delete_body=true,disable_default_errors=true:docs/swagger/ \
 	  $<
+
+## -----------------------------------------------------------------------
+## Intent:
+## -----------------------------------------------------------------------
+clean ::
+	$(RM) -r "docs/$(venv-name)"
 
 ## -----------------------------------------------------------------------
 ## Intent: Helper target used to exercise release script changes

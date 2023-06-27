@@ -39,10 +39,10 @@ release-bbr-deps :=\
 ##   o create a response file for passing docker env vars
 ##   o cross-compile: GOOS= GOARCH= go build
 ## -----------------------------------------------------------------------
-tans release-bbr: $(release-bbr-deps)
+release-bbr: $(release-bbr-deps)
 
 .PHONY: $(release-bbr-deps)
-$(release-bbr-deps):
+tans $(release-bbr-deps):
 
 	@echo
 	@echo "** -----------------------------------------------------------------------"

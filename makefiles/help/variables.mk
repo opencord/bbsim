@@ -1,6 +1,6 @@
 # -*- makefile -*-
 # -----------------------------------------------------------------------
-# Copyright 2017-2022 Open Networking Foundation
+# Copyright 2017-2023 Open Networking Foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,25 +15,22 @@
 # limitations under the License.
 # -----------------------------------------------------------------------
 
-ROBOT_FILES ?= $(error ROBOT_FILES= is required)
+# Include variables.mk after library makefiles have been included
 
-LINT_ARGS ?= --verbose --configure LineTooLong:130 -e LineTooLong \
-             --configure TooManyTestSteps:65 -e TooManyTestSteps \
-             --configure TooManyTestCases:50 -e TooManyTestCases \
-             --configure TooFewTestSteps:1 \
-             --configure TooFewKeywordSteps:1 \
-             --configure FileTooLong:2000 -e FileTooLong \
-             -e TrailingWhitespace
+ifdef VERBOSE
+  help :: help-variables
+else
+  help ::
+	@echo
+	@echo '[VARIABLES] - Conditional makefile behavior'
+	@echo '  see also: help-variables'
+endif
 
-
-.PHONY: lint-robot
-
-lint : lint-robot
-
-lint-robot: $(venv-activate-script)
-	$(activate) && rflint $(LINT_ARGS) $(ROBOT_FILES)
-
-help::
-	@echo "  lint-robot           Syntax check robot sources using rflint"
+help-variables:
+	@echo
+	@echo '[VARIABLES] - Conditional makefile behavior'
+	@echo '  NO_PATCHES=           Do not apply patches to the python virtualenv'
+	@echo '  NO_OTHER_REPO_DOCS=   No foreign repos, only apply target to local sources.'
+	@echo '  VERBOSE=              Display extended help topics'
 
 # [EOF]

@@ -17,21 +17,39 @@
 # SPDX-FileCopyrightText: 2017-2023 Open Networking Foundation (ONF) and the ONF Contributors
 # SPDX-License-Identifier: Apache-2.0
 # -----------------------------------------------------------------------
+# Usage:
+#
+# mytarget:
+#     $(call banner-enter,target $@)
+#     @echo "Hello World"
+#     $(call banner-leave,target $@)
+# -----------------------------------------------------------------------
 
 $(if $(DEBUG),$(warning ENTER))
 
-## -----------------------------------------------------------------------
-## -----------------------------------------------------------------------
-help::
-	@echo "  todo                       Display future enhancement list"
+target-banner = ** ---------------------------------------------------------------------------
 
-todo ::
-	@echo
-	@echo "[TODO: bbsim]"
-	@echo '  update makefiles to the latest from repo:onf-make'
-	@echo '  merge hadolint targets into onf-make if not fully supported yet'
-	@echo '  merge makefiles/tools.mk into makefiles/docker'
-	@echo '  merge and replace makefiles/lint/docker/*.mk with latest repo:onf-make/'
+## -----------------------------------------------------------------------
+## Intent: Return a command line able to display a banner hilighting
+##         make target processing within a logfile.
+## -----------------------------------------------------------------------
+banner-enter=\
+    @echo -e \
+    "\n"\
+    "$(target-banner)\n"\
+    "** $(MAKE) ENTER: $(1)\n"\
+    "$(target-banner)"
+
+banner-leave=\
+    @echo -e "** $(MAKE) LEAVE: $(1)"
+
+## Usage:
+##    $(call banner,(message containing multiple tokens))
+banner=\
+    @echo -e \
+    "\n"\
+    "** $(1)\n"\
+    "$(target-banner)"\
 
 $(if $(DEBUG),$(warning LEAVE))
 

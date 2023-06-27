@@ -1,6 +1,6 @@
 # -*- makefile -*-
 # -----------------------------------------------------------------------
-# Copyright 2017-2022 Open Networking Foundation
+# Copyright 2017-2023 Open Networking Foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,25 +15,25 @@
 # limitations under the License.
 # -----------------------------------------------------------------------
 
-ROBOT_FILES ?= $(error ROBOT_FILES= is required)
+$(if $(DEBUG),$(warning ENTER))
 
-LINT_ARGS ?= --verbose --configure LineTooLong:130 -e LineTooLong \
-             --configure TooManyTestSteps:65 -e TooManyTestSteps \
-             --configure TooManyTestCases:50 -e TooManyTestCases \
-             --configure TooFewTestSteps:1 \
-             --configure TooFewKeywordSteps:1 \
-             --configure FileTooLong:2000 -e FileTooLong \
-             -e TrailingWhitespace
+help ::
+	@echo
+	@echo "[LINT]"
 
+include $(ONF_MAKEDIR)/lint/doc8/include.mk
+include $(ONF_MAKEDIR)/lint/docker/include.mk
+# include $(ONF_MAKEDIR)/lint/groovy/include.mk
+# include $(ONF_MAKEDIR)/lint/jjb.mk
+# include $(ONF_MAKEDIR)/lint/json.mk
+# include $(ONF_MAKEDIR)/lint/license/include.mk
+# include $(ONF_MAKEDIR)/lint/makefile.mk
+# include $(ONF_MAKEDIR)/lint/python/include.mk
+# include $(ONF_MAKEDIR)/lint/shell.mk
+# include $(ONF_MAKEDIR)/lint/yaml.mk
 
-.PHONY: lint-robot
+include $(ONF_MAKEDIR)/lint/help.mk
 
-lint : lint-robot
-
-lint-robot: $(venv-activate-script)
-	$(activate) && rflint $(LINT_ARGS) $(ROBOT_FILES)
-
-help::
-	@echo "  lint-robot           Syntax check robot sources using rflint"
+$(if $(DEBUG),$(warning LEAVE))
 
 # [EOF]
