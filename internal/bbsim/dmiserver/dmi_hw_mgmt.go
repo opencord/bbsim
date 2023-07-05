@@ -240,6 +240,7 @@ func createTransceiverComponent(trans *Transceiver, cageName string) (*dmi.Compo
 			Specific: &dmi.Component_PortAttr{
 				PortAttr: &dmi.PortComponentAttributes{
 					Protocol: portProto,
+					MappingLabel: fmt.Sprintf("pon-%d", pon.ID),
 				},
 			},
 		}

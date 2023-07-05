@@ -1817,7 +1817,7 @@ func (onu *Onu) ReDiscoverOnu(isReboot bool) {
 		"OnuId":  onu.ID,
 		"OnuSn":  onu.Sn(),
 	}).Debug("Send ONU Re-Discovery")
-
+    if( onu.InternalState.Current()!= OnuStateDiscovered){
 	// ONU Re-Discovery
 	if err := onu.InternalState.Event(OnuTxInitialize); err != nil {
 		log.WithFields(log.Fields{
@@ -1834,6 +1834,18 @@ func (onu *Onu) ReDiscoverOnu(isReboot bool) {
 			"OnuId":  onu.ID,
 		}).Infof("Failed to transition ONU to %s state: %s", OnuStateDiscovered, err.Error())
 	}
+	} else {
+		//if onu is already discovered dont change the state ut rather fire the indication again (this case happens if voltha misses the indications)
+		msg := bbsim.Message{
+			Type: bbsim.OnuDiscIndication,
+			Data: bbsim.OnuDiscIndicationMessage{
+				OperState: bbsim.UP,
+			},
+		}
+		onu.Channel <- msg
+	}
+
+
 }
 
 // deprecated, delegate this to the uniPort
