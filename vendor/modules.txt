@@ -79,7 +79,7 @@ github.com/opencord/device-management-interface/go/dmi
 # github.com/opencord/omci-lib-go/v2 v2.2.3
 github.com/opencord/omci-lib-go/v2
 github.com/opencord/omci-lib-go/v2/generated
-# github.com/opencord/voltha-protos/v5 v5.2.3
+# github.com/opencord/voltha-protos/v5 v5.4.6
 github.com/opencord/voltha-protos/v5/go/ext/config
 github.com/opencord/voltha-protos/v5/go/extension
 github.com/opencord/voltha-protos/v5/go/openolt

@@ -1597,9 +1597,84 @@ func (o *OltDevice) CollectStatistics(context.Context, *openolt.Empty) (*openolt
 	return new(openolt.Empty), nil
 }
 
-func (o *OltDevice) GetOnuInfo(context context.Context, packet *openolt.Onu) (*openolt.OnuIndication, error) {
-	oltLogger.Error("GetOnuInfo not implemented")
-	return new(openolt.OnuIndication), nil
+func (o *OltDevice) GetOnuInfo(context context.Context, packet *openolt.Onu) (*openolt.OnuInfo, error) {
+	pon, err := o.GetPonById(packet.GetIntfId())
+	if err != nil {
+		log.WithFields(log.Fields{
+			"OnuId":  packet.GetOnuId(),
+			"IntfId": packet.GetIntfId(),
+			"err":    err,
+		}).Error("Can't find PonPort")
+		return nil, err
+	}
+	onu, _ := pon.GetOnuById(packet.GetOnuId())
+	if err != nil {
+		log.WithFields(log.Fields{
+			"OnuId":  packet.GetOnuId(),
+			"IntfId": packet.GetIntfId(),
+			"err":    err,
+		}).Error("Can't find Onu")
+		return nil, err
+	}
+
+	resp := new(openolt.OnuInfo)
+	resp.OnuId = packet.GetOnuId()
+	if onu.OperState.Current() == "up" {
+		resp.Losi = openolt.AlarmState_OFF
+		resp.Lofi = openolt.AlarmState_OFF
+		resp.Loami = openolt.AlarmState_OFF
+	} else if onu.OperState.Current() == "down" {
+		resp.Losi = openolt.AlarmState_ON
+		resp.Lofi = openolt.AlarmState_ON
+		resp.Loami = openolt.AlarmState_ON
+	}
+	if onu.InternalState.Current() == OnuStateEnabled {
+		resp.State = openolt.OnuInfo_ACTIVE
+	} else if onu.InternalState.Current() == OnuStateDisabled {
+		resp.State = openolt.OnuInfo_INACTIVE
+	} else if onu.InternalState.Current() == OnuStateCreated || (onu.InternalState.Current() == OnuStateInitialized) {
+		resp.State = openolt.OnuInfo_NOT_CONFIGURED
+	} else {
+		resp.State = openolt.OnuInfo_UNKNOWN
+	}
+	log.WithFields(log.Fields{
+		"OnuId":    packet.GetOnuId(),
+		"IntfId":   packet.GetIntfId(),
+		"response": resp,
+	}).Info("Response for onu info")
+	return resp, nil
+}
+
+func (o *OltDevice) GetPonInterfaceInfo(context context.Context, packet *openolt.Interface) (*openolt.PonIntfInfo, error) {
+	ponPort, err := o.GetPonById(packet.GetIntfId())
+	if err != nil {
+		log.WithFields(log.Fields{
+			"IntfId": packet.GetIntfId(),
+			"err":    err,
+		}).Error("Can't find PonPort")
+		return nil, err
+	}
+	resp := new(openolt.PonIntfInfo)
+	resp.IntfId = packet.GetIntfId()
+	if ponPort.OperState.Current() == "up" {
+		resp.Los = openolt.AlarmState_OFF
+	} else if ponPort.OperState.Current() == "down" {
+		resp.Los = openolt.AlarmState_ON
+	}
+	if ponPort.InternalState.Current() == "enabled" {
+		resp.State = openolt.PonIntfInfo_ACTIVE_WORKING
+	} else if ponPort.InternalState.Current() == "disabled" {
+		resp.State = openolt.PonIntfInfo_INACTIVE
+	} else if ponPort.InternalState.Current() == "created" {
+		resp.State = openolt.PonIntfInfo_ACTIVE_STANDBY
+	} else {
+		resp.State = openolt.PonIntfInfo_UNKNOWN
+	}
+	log.WithFields(log.Fields{
+		"IntfId":   packet.GetIntfId(),
+		"response": resp,
+	}).Info("Response for pon info")
+	return resp, nil
 }
 
 func (o *OltDevice) GetPonIf(context context.Context, packet *openolt.Interface) (*openolt.IntfIndication, error) {
