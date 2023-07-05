@@ -863,10 +863,6 @@ func local_request_BBSim_GetFlows_1(ctx context.Context, marshaler runtime.Marsh
 
 }
 
-var (
-	filter_BBSim_ChangeIgmpState_0 = &utilities.DoubleArray{Encoding: map[string]int{"OnuSerialNumber": 0, "SubActionVal": 1, "GroupAddress": 2}, Base: []int{1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 1, 2, 3, 4}}
-)
-
 func request_BBSim_ChangeIgmpState_0(ctx context.Context, marshaler runtime.Marshaler, client BBSimClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq IgmpRequest
 	var metadata runtime.ServerMetadata
@@ -888,6 +884,17 @@ func request_BBSim_ChangeIgmpState_0(ctx context.Context, marshaler runtime.Mars
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "OnuSerialNumber", err)
+	}
+
+	val, ok = pathParams["UniID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "UniID")
+	}
+
+	protoReq.UniID, err = runtime.Int32(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "UniID", err)
 	}
 
 	val, ok = pathParams["SubActionVal"]
@@ -914,11 +921,15 @@ func request_BBSim_ChangeIgmpState_0(ctx context.Context, marshaler runtime.Mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "GroupAddress", err)
 	}
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	val, ok = pathParams["VLAN"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "VLAN")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_BBSim_ChangeIgmpState_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.VLAN, err = runtime.Int32(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "VLAN", err)
 	}
 
 	msg, err := client.ChangeIgmpState(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -949,6 +960,17 @@ func local_request_BBSim_ChangeIgmpState_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "OnuSerialNumber", err)
 	}
 
+	val, ok = pathParams["UniID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "UniID")
+	}
+
+	protoReq.UniID, err = runtime.Int32(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "UniID", err)
+	}
+
 	val, ok = pathParams["SubActionVal"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "SubActionVal")
@@ -973,8 +995,15 @@ func local_request_BBSim_ChangeIgmpState_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "GroupAddress", err)
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_BBSim_ChangeIgmpState_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	val, ok = pathParams["VLAN"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "VLAN")
+	}
+
+	protoReq.VLAN, err = runtime.Int32(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "VLAN", err)
 	}
 
 	msg, err := server.ChangeIgmpState(ctx, &protoReq)
@@ -1922,7 +1951,7 @@ var (
 
 	pattern_BBSim_GetFlows_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "olt", "flows"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_BBSim_ChangeIgmpState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6}, []string{"v1", "olt", "onus", "OnuSerialNumber", "igmp", "SubActionVal", "GroupAddress"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_BBSim_ChangeIgmpState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 1, 0, 4, 1, 5, 7, 1, 0, 4, 1, 5, 8}, []string{"v1", "olt", "onus", "OnuSerialNumber", "UniID", "igmp", "SubActionVal", "GroupAddress", "VLAN"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_BBSim_GetOnuTrafficSchedulers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "olt", "onus", "SerialNumber", "trafficschedulers"}, "", runtime.AssumeColonVerbOpt(true)))
 )
