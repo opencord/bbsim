@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a91e07f2_a1b03a96",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-08-02T13:16:30Z",
+      "side": 0,
+      "message": "Code changes look good.\n% make lint # success reported on my laptop (w/LOCAL_FIX_PERMS\u003d1)\n\n\nCan you run gofmt on source, spacing between \u0027//\u0027 and text has changed which will cause job failures for some repository checkins:\n\n% gofmt -s -w internal/bbsim/dmiserver/dmi_hw_mgmt.go \n% git status\n\nOn branch review/abhay_kumar/pon_port_label\nYour branch is ahead of \u0027origin/master\u0027 by 1 commit.\n  (use \"git push\" to publish your local commits)\n\nChanges not staged for commit:\n  (use \"git add \u003cfile\u003e...\" to update what will be committed)\n  (use \"git restore \u003cfile\u003e...\" to discard changes in working directory)\n        modified:   internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+      "revId": "96bcf1b0c8c12c03aa4b761b05b932245990ca8a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
