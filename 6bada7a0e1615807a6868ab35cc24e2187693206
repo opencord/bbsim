@@ -33,6 +33,23 @@
       "message": "retry\n\ninstall_kind call in need of a script{} block.\nmore lint cleanups and debug statements added in bbsim-test.sh",
       "revId": "6bada7a0e1615807a6868ab35cc24e2187693206",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b5723015_16cc27f1",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-08-02T22:12:02Z",
+      "side": 1,
+      "message": "recheck\n\nLet(s) try this again but use the correct keyword replacing retry.",
+      "revId": "6bada7a0e1615807a6868ab35cc24e2187693206",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
