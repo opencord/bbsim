@@ -16,6 +16,24 @@
       "message": "Code changes look good.\n% make lint # success reported on my laptop (w/LOCAL_FIX_PERMS\u003d1)\n\n\nCan you run gofmt on source, spacing between \u0027//\u0027 and text has changed which will cause job failures for some repository checkins:\n\n% gofmt -s -w internal/bbsim/dmiserver/dmi_hw_mgmt.go \n% git status\n\nOn branch review/abhay_kumar/pon_port_label\nYour branch is ahead of \u0027origin/master\u0027 by 1 commit.\n  (use \"git push\" to publish your local commits)\n\nChanges not staged for commit:\n  (use \"git add \u003cfile\u003e...\" to update what will be committed)\n  (use \"git restore \u003cfile\u003e...\" to discard changes in working directory)\n        modified:   internal/bbsim/dmiserver/dmi_hw_mgmt.go",
       "revId": "96bcf1b0c8c12c03aa4b761b05b932245990ca8a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c4cb13d4_5bfa6f2b",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1000971
+      },
+      "writtenOn": "2023-08-03T07:02:04Z",
+      "side": 0,
+      "message": "I already ran \"gofmt -s -w internal/bbsim/dmiserver/dmi_hw_mgmt.go\" before doing the git review.\nRight now also I don\u0027t see any changes in git status.\n\nabhay@abhay-VirtualBox:~/work/go/src/bbsim$ gofmt -s -w internal/bbsim/dmiserver/dmi_hw_mgmt.go \nabhay@abhay-VirtualBox:~/work/go/src/bbsim$ git status\nOn branch pon_port_label\nnothing to commit, working tree clean",
+      "parentUuid": "a91e07f2_a1b03a96",
+      "revId": "96bcf1b0c8c12c03aa4b761b05b932245990ca8a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
