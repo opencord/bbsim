@@ -1744,7 +1744,7 @@ func (o *OltDevice) freeAllocId(flow *openolt.Flow) {
 	}
 }
 
-func (o *OltDevice) storeGemPortId(ponId uint32, onuId uint32, portNo uint32, gemId int32, flowId uint64) {
+func (o *OltDevice) storeGemPortId(ponId uint32, onuId uint32, portNo uint32, gemId int32, flowId uint64) error {
 	o.GemPortIDsLock.Lock()
 	defer o.GemPortIDsLock.Unlock()
 
@@ -1756,6 +1756,7 @@ func (o *OltDevice) storeGemPortId(ponId uint32, onuId uint32, portNo uint32, ge
 			"GemportId": gemId,
 			"FlowId":    flowId,
 		}).Error("trying-to-store-gemport-for-unknown-onu")
+		return nil
 	}
 
 	oltLogger.WithFields(log.Fields{
@@ -1773,6 +1774,8 @@ func (o *OltDevice) storeGemPortId(ponId uint32, onuId uint32, portNo uint32, ge
 		o.GemPortIDs[ponId][onuId][portNo][gemId] = make(map[uint64]bool)
 	}
 	o.GemPortIDs[ponId][onuId][portNo][gemId][flowId] = true
+
+	return nil
 }
 
 func (o *OltDevice) storeGemPortIdByFlow(flow *openolt.Flow) {
