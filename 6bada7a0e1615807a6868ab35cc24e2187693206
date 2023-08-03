@@ -50,6 +50,23 @@
       "message": "recheck\n\nLet(s) try this again but use the correct keyword replacing retry.",
       "revId": "6bada7a0e1615807a6868ab35cc24e2187693206",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9247e23e_98c7294b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-08-03T01:15:39Z",
+      "side": 1,
+      "message": "install kind logic removed as problematic.\nReplaced with a makefile target install-kind-command from repo:voltha-system-tests.\n\nInstall kail is using similar logic and that has been a known stable quantity.",
+      "revId": "6bada7a0e1615807a6868ab35cc24e2187693206",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
