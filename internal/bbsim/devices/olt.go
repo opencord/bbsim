@@ -1755,7 +1755,8 @@ func (o *OltDevice) storeGemPortId(ponId uint32, onuId uint32, portNo uint32, ge
 			"PortNo":    portNo,
 			"GemportId": gemId,
 			"FlowId":    flowId,
-		}).Error("trying-to-store-gemport-for-unknown-onu")
+		}).Error("failed-trying-to-store-gemport-for-unknown-onu")
+		return
 	}
 
 	oltLogger.WithFields(log.Fields{
