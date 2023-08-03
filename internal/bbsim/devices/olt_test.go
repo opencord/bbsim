@@ -435,7 +435,8 @@ func Test_Olt_storeGemPortId(t *testing.T) {
 		GemportId:    gem1,
 	}
 
-	olt.storeGemPortIdByFlow(flow1)
+	err := olt.storeGemPortIdByFlow(flow1)
+	assert.NoError(t, err)
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni]), 1)       // we have 1 gem port
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni][gem1]), 1) // and one flow referencing it
 
@@ -448,7 +449,8 @@ func Test_Olt_storeGemPortId(t *testing.T) {
 		GemportId:    gem1,
 	}
 
-	olt.storeGemPortIdByFlow(flow2)
+	err = olt.storeGemPortIdByFlow(flow2)
+	assert.NoError(t, err)
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni]), 1)       // we have 1 gem port
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni][gem1]), 2) // and two flows referencing it
 
@@ -461,7 +463,8 @@ func Test_Olt_storeGemPortId(t *testing.T) {
 		GemportId:    1025,
 	}
 
-	olt.storeGemPortIdByFlow(flow3)
+	err = olt.storeGemPortIdByFlow(flow3)
+	assert.NoError(t, err)
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni]), 2)       // we have 2 gem ports
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni][gem1]), 2) // two flows referencing the first one
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni][gem2]), 1) // and one flow referencing the second one
@@ -495,7 +498,8 @@ func Test_Olt_storeGemPortIdReplicatedFlow(t *testing.T) {
 		PbitToGemport: pbitToGemPortMap,
 	}
 
-	olt.storeGemPortIdByFlow(flow1)
+	err := olt.storeGemPortIdByFlow(flow1)
+	assert.NoError(t, err)
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni]), 2)       // we have 2 gem ports in the flow
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni][gem1]), 1) // and one flow referencing them
 	assert.Equal(t, len(olt.GemPortIDs[pon][onu][uni][gem2]), 1) // and one flow referencing them
@@ -616,7 +620,8 @@ func Benchmark_validateAndAddFlows(b *testing.B) {
 				FlowId:       uint64(i),
 			}
 			go func(wg *sync.WaitGroup) {
-				olt.storeGemPortIdByFlow(flow)
+				err := olt.storeGemPortIdByFlow(flow)
+				assert.NoError(b, err)
 				olt.storeAllocId(flow)
 				wg.Done()
 			}(&wg)
