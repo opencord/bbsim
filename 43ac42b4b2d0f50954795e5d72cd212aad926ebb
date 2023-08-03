@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "813b8f4e_1fe509da",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-08-03T22:46:09Z",
+      "side": 1,
+      "message": "recheck\n\nbbsim-test.groovy in a better state now, lets see how the patch fares this iteration.",
+      "revId": "43ac42b4b2d0f50954795e5d72cd212aad926ebb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
