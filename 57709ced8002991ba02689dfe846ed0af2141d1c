@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d4f411c5_377d8f61",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 10
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-08-03T22:37:28Z",
+      "side": 1,
+      "message": "recheck\n\nbbsim-test.groovy seems to be in a better state now.\nFollowing up on earlier carnage.",
+      "revId": "57709ced8002991ba02689dfe846ed0af2141d1c",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
