@@ -1180,7 +1180,9 @@ func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.E
 			return nil, err
 		}
 
-		o.storeGemPortIdByFlow(flow)
+		if err := o.storeGemPortIdByFlow(flow); err != nil {
+			return nil, err
+		}
 		o.storeAllocId(flow)
 
 		msg := types.Message{
@@ -1744,7 +1746,7 @@ func (o *OltDevice) freeAllocId(flow *openolt.Flow) {
 	}
 }
 
-func (o *OltDevice) storeGemPortId(ponId uint32, onuId uint32, portNo uint32, gemId int32, flowId uint64) {
+func (o *OltDevice) storeGemPortId(ponId uint32, onuId uint32, portNo uint32, gemId int32, flowId uint64) error {
 	o.GemPortIDsLock.Lock()
 	defer o.GemPortIDsLock.Unlock()
 
@@ -1756,6 +1758,7 @@ func (o *OltDevice) storeGemPortId(ponId uint32, onuId uint32, portNo uint32, ge
 			"GemportId": gemId,
 			"FlowId":    flowId,
 		}).Error("trying-to-store-gemport-for-unknown-onu")
+		return fmt.Errorf("failed-trying-to-store-gemport-%d-for-unknown-onu-%d-and-IntfId-%d", gemId, onuId, ponId)
 	}
 
 	oltLogger.WithFields(log.Fields{
@@ -1773,9 +1776,11 @@ func (o *OltDevice) storeGemPortId(ponId uint32, onuId uint32, portNo uint32, ge
 		o.GemPortIDs[ponId][onuId][portNo][gemId] = make(map[uint64]bool)
 	}
 	o.GemPortIDs[ponId][onuId][portNo][gemId][flowId] = true
+
+	return nil
 }
 
-func (o *OltDevice) storeGemPortIdByFlow(flow *openolt.Flow) {
+func (o *OltDevice) storeGemPortIdByFlow(flow *openolt.Flow) error {
 	oltLogger.WithFields(log.Fields{
 		"IntfId":        flow.AccessIntfId,
 		"OnuId":         flow.OnuId,
@@ -1788,11 +1793,19 @@ func (o *OltDevice) storeGemPortIdByFlow(flow *openolt.Flow) {
 
 	if flow.ReplicateFlow {
 		for _, gem := range flow.PbitToGemport {
-			o.storeGemPortId(uint32(flow.AccessIntfId), uint32(flow.OnuId), flow.PortNo, int32(gem), flow.FlowId)
+			err := o.storeGemPortId(uint32(flow.AccessIntfId), uint32(flow.OnuId), flow.PortNo, int32(gem), flow.FlowId)
+			if err != nil {
+				return err
+			}
 		}
 	} else {
-		o.storeGemPortId(uint32(flow.AccessIntfId), uint32(flow.OnuId), flow.PortNo, flow.GemportId, flow.FlowId)
+		err := o.storeGemPortId(uint32(flow.AccessIntfId), uint32(flow.OnuId), flow.PortNo, flow.GemportId, flow.FlowId)
+		if err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
 func (o *OltDevice) freeGemPortId(flow *openolt.Flow) {
