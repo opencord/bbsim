@@ -34,6 +34,23 @@
       "parentUuid": "a91e07f2_a1b03a96",
       "revId": "96bcf1b0c8c12c03aa4b761b05b932245990ca8a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d40e0daa_12a0fc05",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-08-03T13:11:22Z",
+      "side": 0,
+      "message": "Have you tried checking out a clean sandbox in case local state or an un-pushed commit may be affecting git status ?\n\nThe script down below will checkout the patch into a clean sandbox and run gofmt on source.  This is essentially what jenkins will do when the job runs.\n\n## Diffs appear due to a whitespace change in the comments:\n------------------------------------------------------------------------\n-//GetMsgBusEndpoint gets the configured location to which the events and metrics are being shipped\n+// GetMsgBusEndpoint gets the configured location to which the events and metrics are being shipped\n \n\n\n#!/bin/bash\n\nrm -fr bbsim\ngit clone ssh://gerrit.opencord.org:29418/bbsim.git\ncd bbsim\ngit review -d I12b85029565c45b7fc27a02847629ffd2fb98ca5\n\necho\necho \"status: PRE\"\necho \u0027--------------------------------------------------------\u0027\ngit status\ngofmt -s -w internal/bbsim/dmiserver/dmi_hw_mgmt.go\n\necho\necho \"status: POST\"\necho \u0027--------------------------------------------------------\u0027\ngit status\n\n\n\nCloning into \u0027bbsim\u0027...\nremote: Counting objects: 85, done\nremote: Total 8721 (delta 0), reused 8721 (delta 0)\nReceiving objects: 100% (8721/8721), 12.13 MiB | 8.00 MiB/s, done.\nResolving deltas: 100% (3021/3021), done.\nDownloading refs/changes/78/34278/6 from gerrit\nSwitched to branch \"review/abhay_kumar/pon_port_label\"\n\nstatus: PRE\n--------------------------------------------------------\nOn branch review/abhay_kumar/pon_port_label\nYour branch is ahead of \u0027origin/master\u0027 by 1 commit.\n  (use \"git push\" to publish your local commits)\n\nnothing to commit, working tree clean\n\nstatus: POST\n--------------------------------------------------------\nOn branch review/abhay_kumar/pon_port_label\nYour branch is ahead of \u0027origin/master\u0027 by 1 commit.\n  (use \"git push\" to publish your local commits)\n\nChanges not staged for commit:\n  (use \"git add \u003cfile\u003e...\" to update what will be committed)\n  (use \"git restore \u003cfile\u003e...\" to discard changes in working directory)\n        modified:   internal/bbsim/dmiserver/dmi_hw_mgmt.go   \u003c\u003c\u003c----------------**\n\nno changes added to commit (use \"git add\" and/or \"git commit -a\")",
+      "revId": "96bcf1b0c8c12c03aa4b761b05b932245990ca8a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
