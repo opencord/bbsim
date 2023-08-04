@@ -16,6 +16,23 @@
       "message": "\u003e Patch Set 6: Verified-1\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_sanity-test/1208/ : FAILURE\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_unit-test/1236/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_licensed/1236/ : SUCCESS\n\nrecheck",
       "revId": "68695377c2e5a25d9e59c1bc11f511fb3439f6ff",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "cbe7d509_f13b2ab6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 7
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000971
+      },
+      "writtenOn": "2023-08-04T03:25:45Z",
+      "side": 1,
+      "message": "\u003e Patch Set 7: Verified-1\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_sanity-test/1209/ : ABORTED\n\nrecheck",
+      "revId": "68695377c2e5a25d9e59c1bc11f511fb3439f6ff",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
