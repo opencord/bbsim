@@ -33,6 +33,23 @@
       "message": "recheck\nMore debugging printfs added for the latest err",
       "revId": "1c81ad1ff75e43c940a83287e2c9b1d06eb2e2fa",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2c05a7f2_44102819",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 8
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-08-04T18:43:44Z",
+      "side": 1,
+      "message": "recheck\n\nRun with latest debugging from:\nhttps://gerrit.opencord.org/c/ci-management/+/34490",
+      "revId": "1c81ad1ff75e43c940a83287e2c9b1d06eb2e2fa",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
