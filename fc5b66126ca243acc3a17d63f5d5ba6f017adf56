@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "c04693ee_4fc409a4",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 7
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000971
+      },
+      "writtenOn": "2023-08-04T07:48:41Z",
+      "side": 1,
+      "message": "\u003e Patch Set 7: Verified-1\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_sanity-test/1206/ : FAILURE\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_unit-test/1234/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_licensed/1234/ : SUCCESS\n\nrecheck",
+      "revId": "fc5b66126ca243acc3a17d63f5d5ba6f017adf56",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
