@@ -16,6 +16,23 @@
       "message": "\u003e Patch Set 9: Verified-1\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_sanity-test/1220/ : ABORTED\n\nrecheck",
       "revId": "7cb7c9f5305f8fa5f534f5c26f70bf4853e99bf8",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "767c87dd_4bf2c7e0",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 10
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-08-08T15:33:23Z",
+      "side": 1,
+      "message": "recheck",
+      "revId": "7cb7c9f5305f8fa5f534f5c26f70bf4853e99bf8",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
