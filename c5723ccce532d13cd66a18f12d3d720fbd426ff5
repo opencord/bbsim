@@ -16,6 +16,23 @@
       "message": "Test failure logged:\n15:08:27  \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n15:08:27  Voltha BBSimTests :: Run tests On BBSim                                       \n15:08:27  \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n15:08:28  \n15:08:28  Sadis File:None\n15:18:36  Test Perform BBSim Sanity :: Validates the BBSim Functionality for... | FAIL |\n15:18:36  Several failures occurred:\n15:18:36  \n15:18:36  1) Keyword \u0027Get ONU Port in ONOS\u0027 failed after retrying for 1 minute. The last error was: No match for BBSM000a0001-1 found\n15:18:36  \n15:18:36  2) Keyword \u0027Verify UNI Port Is Enabled\u0027 failed after retrying for 2 minutes. The last error was: \u0027\u0027 should not be empty.\n15:18:36  \n15:18:36  3) Keyword \u0027Get ONU Port in ONOS\u0027 failed after retrying for 1 minute. The last error was: No match for BBSM000a0001-1 found\n15:18:36  ------------------------------------------------------------------------------\n15:18:36  Voltha BBSimTests :: Run tests On BBSim                               | FAIL |\n15:18:36  1 critical test, 0 passed, 1 failed\n15:18:36  1 test total, 0 passed, 1 failed\n15:18:36  \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d",
       "revId": "c5723ccce532d13cd66a18f12d3d720fbd426ff5",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "4ac41903_fa861de5",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 9
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-08-08T15:33:37Z",
+      "side": 1,
+      "message": "recheck",
+      "revId": "c5723ccce532d13cd66a18f12d3d720fbd426ff5",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
