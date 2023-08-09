@@ -20,6 +20,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "71ed05dc_e8ca5450",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 1602,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-08-09T10:45:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2511724f_946b2ac3",
+      "revId": "f303153df585113c68d19b7056fa5734f69052ad",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "eda29246_21cea975",
         "filename": "internal/bbsim/devices/olt.go",
         "patchSetId": 11
@@ -31,6 +49,24 @@
       "writtenOn": "2023-08-09T09:55:28Z",
       "side": 1,
       "message": "we would need a debug or an info here",
+      "revId": "f303153df585113c68d19b7056fa5734f69052ad",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "57b9465f_4ab51a55",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 1630,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-08-09T10:45:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eda29246_21cea975",
       "revId": "f303153df585113c68d19b7056fa5734f69052ad",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
