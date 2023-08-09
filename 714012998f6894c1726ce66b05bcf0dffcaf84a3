@@ -34,6 +34,24 @@
       "parentUuid": "8c995593_8abb2fa7",
       "revId": "714012998f6894c1726ce66b05bcf0dffcaf84a3",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "35dc119c_a0eaa673",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1672,
+      "author": {
+        "id": 1000959
+      },
+      "writtenOn": "2023-08-09T10:11:16Z",
+      "side": 1,
+      "message": "I corrected it as part of the latest patch . It is resolved.",
+      "parentUuid": "c3a6c394_0b0bca6c",
+      "revId": "714012998f6894c1726ce66b05bcf0dffcaf84a3",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
