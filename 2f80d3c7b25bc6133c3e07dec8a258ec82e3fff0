@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ae8dca94_f6935f40",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 9
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-08-14T15:15:04Z",
+      "side": 1,
+      "message": "Changes LGTM:\n  o locally make lint build test all ran successfully.\n  o build did not leave any residual locally-modified source behind.\n  o Copyright notice on source updated for 2023.\n\nOnly minor nit came from syntax checking:\n  % gofmt -s -w internal/bbsim/devices/onu.go\n\n-//findUniWithIgmpMembership returns the list of UNIs which has sent any IGMP messages\n-//and has any active membershipments currently\n+// findUniWithIgmpMembership returns the list of UNIs which has sent any IGMP messages\n+// and has any active membershipments currently\n\n[crucible:I8c509ae62c237f2a67ec85313240b5ea87b2135a] go version\ngo version go1.20.6 linux/amd64\n\n",
+      "revId": "2f80d3c7b25bc6133c3e07dec8a258ec82e3fff0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
