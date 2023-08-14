@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ac0f60da_abd25033",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-08-14T14:47:05Z",
+      "side": 1,
+      "message": "bbsim testing failure source for the last job failure:\n  o https://jira.opencord.org/browse/VOL-5127",
+      "revId": "0e917c4691dc3eb4bd2094d5558011f8ebb0a8bd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
