@@ -33,6 +33,24 @@
       "message": "FYI\u003e Manually building this patch is showing locally modified files in the sandbox:\n\n[crucible:I3174846e55657db6173428ed749367de8d124c7b] go version\ngo version go1.20.6 linux/amd64\n\n[crucible:I3174846e55657db6173428ed749367de8d124c7b] git --version\ngit version 2.34.1\n\n% git clone ...\n% cd bbsim\n% git review -d I3174846e55657db6173428ed749367de8d124c7b\n\n% make build LOCAL_FIX_PERMS\u003d1\n% git status\nChanges not staged for commit:\n  (use \"git add \u003cfile\u003e...\" to update what will be committed)\n  (use \"git restore \u003cfile\u003e...\" to discard changes in working directory)\n        modified:   api/bbsim/bbsim.pb.gw.go\n\n",
       "revId": "0e917c4691dc3eb4bd2094d5558011f8ebb0a8bd",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "49b90d2d_74fce6ab",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000980
+      },
+      "writtenOn": "2023-08-15T07:02:36Z",
+      "side": 1,
+      "message": "These changes are also showing up in the master branch, including them in this PR",
+      "parentUuid": "2b445ce6_ca39e397",
+      "revId": "0e917c4691dc3eb4bd2094d5558011f8ebb0a8bd",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
