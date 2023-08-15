@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "bf90b619_e16178f1",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-08-15T12:18:07Z",
+      "side": 1,
+      "message": "Re-add jenkins +1 verify that was removed by updating the commit message.",
+      "revId": "fccca6c359c59dd704b666e4a4056e99b1ff7d23",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
