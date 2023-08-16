@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "23a2130a_234a73ee",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 10
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-08-16T12:45:36Z",
+      "side": 1,
+      "message": "Transient failures in job history for the patch:\n   https://jira.opencord.org/browse/VOL-5138\n\nThis one is very strange:\n   https://jenkins.opencord.org/job/verify_bbsim_unit-test/1211/console",
+      "revId": "53ab13c3aefd20a3f41430f9eb7b0a46972c06e0",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
