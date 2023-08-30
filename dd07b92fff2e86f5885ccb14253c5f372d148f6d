@@ -33,6 +33,23 @@
       "message": "Give me a bit, will recheck the job shortly",
       "revId": "dd07b92fff2e86f5885ccb14253c5f372d148f6d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "eabe08cd_ea14fc32",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 22
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-08-30T15:16:16Z",
+      "side": 1,
+      "message": "recheck\nAll pipeline jobs fully regenerated and latest script versions from repo:ci-managment are available.",
+      "revId": "dd07b92fff2e86f5885ccb14253c5f372d148f6d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
