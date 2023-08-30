@@ -16,6 +16,24 @@
       "message": "Could you run \"gofmt -s -w\" on the go source modified.\nTwo files are showing whitespace deltas in the comments:\n\n        modified:   internal/bbsim/devices/onu.go\n        modified:   internal/bbsim/dmiserver/dmi_hw_mgmt.go\n\n-//GetManagedDevices returns an object containing a list of devices managed by this entity\n+// GetManagedDevices returns an object containing a list of devices managed by this entity",
       "revId": "96bcf1b0c8c12c03aa4b761b05b932245990ca8a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e863c077_c01b5ee2",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2023-08-30T11:50:51Z",
+      "side": 0,
+      "message": "Done",
+      "parentUuid": "438078f5_1b87ab1e",
+      "revId": "96bcf1b0c8c12c03aa4b761b05b932245990ca8a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
