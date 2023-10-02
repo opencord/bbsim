@@ -34,6 +34,24 @@
       "parentUuid": "438078f5_1b87ab1e",
       "revId": "96bcf1b0c8c12c03aa4b761b05b932245990ca8a",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9252b458_46b19728",
+        "filename": "internal/bbsim/dmiserver/dmi_hw_mgmt.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-10-02T17:15:51Z",
+      "side": 0,
+      "message": "Done",
+      "parentUuid": "438078f5_1b87ab1e",
+      "revId": "96bcf1b0c8c12c03aa4b761b05b932245990ca8a",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
