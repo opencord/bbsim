@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "913999a3_c35e8eb3",
+        "filename": "go.mod",
+        "patchSetId": 2
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000218
+      },
+      "writtenOn": "2023-10-03T21:37:24Z",
+      "side": 1,
+      "message": "imho this should be updated to \u0027v5.4.10\u0027 instead of putting a replace line.",
+      "range": {
+        "startLine": 27,
+        "startChar": 38,
+        "endLine": 27,
+        "endChar": 44
+      },
+      "revId": "71d240e9d7aabe12c9a26e4bc0dc1ff3732ca310",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
