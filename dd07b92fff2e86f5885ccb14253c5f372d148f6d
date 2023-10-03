@@ -84,6 +84,40 @@
       "message": "\u003e Patch Set 22:\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_sanity-test/1251/ : FAILURE\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_unit-test/1273/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_licensed/1272/ : SUCCESS\n\nrecheck",
       "revId": "dd07b92fff2e86f5885ccb14253c5f372d148f6d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "69a93530_f7d316ab",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 22
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-10-03T12:24:44Z",
+      "side": 1,
+      "message": "So far local patch lint and testing ran cleanly:\n\ngit co --review I81932e4a8a1370ce83624f1deaf385c2809d568c\nmake lint LOCAL_FIX_PERMS\u003d1\nmake build\nmake test LOCAL_FIX_PERMS\u003d1  # for coverage directory reports\n\n./tests/results/:\ntotal 1052\n-rw-r--r-- 1 100999 100999 154489 Oct  3 08:20 go-test-coverage.out\n",
+      "revId": "dd07b92fff2e86f5885ccb14253c5f372d148f6d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9b6d1498_3ed12445",
+        "filename": "vendor/github.com/opencord/voltha-protos/v5/go/openolt/openolt.pb.go",
+        "patchSetId": 22
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-10-03T12:24:44Z",
+      "side": 1,
+      "message": "Can you run gofmt -s -w on the modified files ?\nA few deltas are being reported:\n\n% gofmt -s -w vendor/github.com/opencord/voltha-protos/v5/go/openolt/openolt.pb.go\n\n% git diff vendor/github.com/opencord/voltha-protos/v5/go/openolt/openolt.pb.go\n\n-//* activation fail reason.\n+// * activation fail reason.\n \n-//\n \n-//",
+      "revId": "dd07b92fff2e86f5885ccb14253c5f372d148f6d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
