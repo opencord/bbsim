@@ -22,6 +22,30 @@
       },
       "revId": "71d240e9d7aabe12c9a26e4bc0dc1ff3732ca310",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "61f2c997_a057e465",
+        "filename": "go.mod",
+        "patchSetId": 2
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-10-03T21:44:13Z",
+      "side": 1,
+      "message": "This edit was automated courtesy of a tool based edit:\n  go mod edit --replace [...]\n\nWill there be a difference in version update VS replace if the config is maintained by a tool rather than hand editing ?",
+      "parentUuid": "913999a3_c35e8eb3",
+      "range": {
+        "startLine": 27,
+        "startChar": 38,
+        "endLine": 27,
+        "endChar": 44
+      },
+      "revId": "71d240e9d7aabe12c9a26e4bc0dc1ff3732ca310",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
