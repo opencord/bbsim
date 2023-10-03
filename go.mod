@@ -35,3 +35,5 @@ require (
 	gopkg.in/yaml.v2 v2.3.0
 	gotest.tools v2.2.0+incompatible
 )
+
+replace github.com/opencord/voltha-protos/v5 v5.4.6 => github.com/opencord/voltha-protos/v5 v5.4.10
