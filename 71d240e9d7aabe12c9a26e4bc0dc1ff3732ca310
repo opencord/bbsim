@@ -46,6 +46,30 @@
       },
       "revId": "71d240e9d7aabe12c9a26e4bc0dc1ff3732ca310",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e62a96a1_72640335",
+        "filename": "go.mod",
+        "patchSetId": 2
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-10-03T22:11:19Z",
+      "side": 1,
+      "message": "All of the go.{mod,sum} / proto-version edits are being made by the same shell script.\n\n[ODDITIES]\n  o go.sum and vendor/modules.txt produced no delta that required a checkin when all other v-p update patches have.\n?-Why-? might they have been checked in earlier w/o accompanying go.mod edits ?!?\n\n  o Version v5.2.3 was initially in go.mod.  The \"go mod\" tool detected v5.4.6 as a replacement target in the rewrite rule.  Where did go find this version string -- one of the vendor files ?\n\n[TODO]\n  o See if go mod edit can be used w/o the -rewrite switch:\n    - maintain one versioned line per module per Mahir.\n    - will gain benefit of command line tools maintaining syntax and checking for problems.",
+      "parentUuid": "61f2c997_a057e465",
+      "range": {
+        "startLine": 27,
+        "startChar": 38,
+        "endLine": 27,
+        "endChar": 44
+      },
+      "revId": "71d240e9d7aabe12c9a26e4bc0dc1ff3732ca310",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
