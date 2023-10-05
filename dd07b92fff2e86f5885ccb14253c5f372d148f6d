@@ -118,6 +118,24 @@
       "message": "Can you run gofmt -s -w on the modified files ?\nA few deltas are being reported:\n\n% gofmt -s -w vendor/github.com/opencord/voltha-protos/v5/go/openolt/openolt.pb.go\n\n% git diff vendor/github.com/opencord/voltha-protos/v5/go/openolt/openolt.pb.go\n\n-//* activation fail reason.\n+// * activation fail reason.\n \n-//\n \n-//",
       "revId": "dd07b92fff2e86f5885ccb14253c5f372d148f6d",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "69cfa20c_7c1b21e4",
+        "filename": "vendor/github.com/opencord/voltha-protos/v5/go/openolt/openolt.pb.go",
+        "patchSetId": 22
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1000963
+      },
+      "writtenOn": "2023-10-05T10:30:08Z",
+      "side": 1,
+      "message": "when i did gofmt -s -w vendor/github.com/opencord/voltha-protos/v5/go/openolt/openolt.pb.go \nand then git diff i dint see any changes, also the make sca passed which verifies that it is compatible with golang formatiing",
+      "parentUuid": "9b6d1498_3ed12445",
+      "revId": "dd07b92fff2e86f5885ccb14253c5f372d148f6d",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
