@@ -16,6 +16,24 @@
       "message": "needs a rebase for verification to succeed.",
       "revId": "eab38e29aa092ff7fc0d074f6f002dacb24634fb",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e4607779_bb2a20d7",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-10-17T13:33:29Z",
+      "side": 1,
+      "message": "rebase \u0026 resolve merge conflicts to pull in the latest edits.",
+      "parentUuid": "ac7e8171_2758346c",
+      "revId": "eab38e29aa092ff7fc0d074f6f002dacb24634fb",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
