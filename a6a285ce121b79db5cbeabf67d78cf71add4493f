@@ -16,6 +16,24 @@
       "message": "There is a new license file added in this commit, but the commit message does not contain any information why. I think it would be good to explain why this file is added in this commit. In addition to that, there is also a change in the VERSION file, increasing the version from 1.16.0-dev to 1.16.1-dev. This version bump is not mentioned in the commit message and it is also unclear if the increase of the patch level of the version is correct for this kind of change. Is the update of the voltha-protos backward compatible or should the version rather be increased on the minor level?",
       "revId": "a6a285ce121b79db5cbeabf67d78cf71add4493f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7d26f399_5ecefd94",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-10-23T13:49:35Z",
+      "side": 1,
+      "message": "Sources in the vendor/ directory are not maintained directly, \u0027go mod edit\u0027 auto-added the license file (commit msg edit pending).\n\nvoltha-protos - these edits are a release cleanup patch, structures in the repo were updated a while back but not all of the consuming repositories were updated.\n\nThese problems tend to surface and are fixed late during release builds, an agenda item was added in the TST meeting two weeks ago to remind about updating dependencies.\n\nVERSION file update -- explicitly/requiring comments for this file will be overkill imho.  A VERSION file increment is required by most VOLTHA repos before a patch will be accepted.  That implies devs need to comment on something required\n\nAlso the version file is documented on on the website:\n  o https://docs.voltha.org/master/overview/contributing.html?highlight\u003dversion%20file#versioning\n  o Should consolidate this, SemVersion and edits are mentioned in a few places.",
+      "parentUuid": "b821f49e_3b6109a0",
+      "revId": "a6a285ce121b79db5cbeabf67d78cf71add4493f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
