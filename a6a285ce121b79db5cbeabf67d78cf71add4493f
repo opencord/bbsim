@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b821f49e_3b6109a0",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000982
+      },
+      "writtenOn": "2023-10-23T11:05:49Z",
+      "side": 1,
+      "message": "There is a new license file added in this commit, but the commit message does not contain any information why. I think it would be good to explain why this file is added in this commit. In addition to that, there is also a change in the VERSION file, increasing the version from 1.16.0-dev to 1.16.1-dev. This version bump is not mentioned in the commit message and it is also unclear if the increase of the patch level of the version is correct for this kind of change. Is the update of the voltha-protos backward compatible or should the version rather be increased on the minor level?",
+      "revId": "a6a285ce121b79db5cbeabf67d78cf71add4493f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
