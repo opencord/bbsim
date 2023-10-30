@@ -16,6 +16,23 @@
       "message": "Re-add patch attrs cleared by the last commit message edits:\n  +1 from Mahir\n  +1 from Marcos\n\nOnto jenkins job to try and pickup a verify++",
       "revId": "eaf443bac39055d803f3d67191eb4a0249826a17",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "67aa7654_90b962c1",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 8
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2023-10-30T19:47:23Z",
+      "side": 1,
+      "message": "recheck\n\nWe have a +1 verify in the history but it has been a few days so run again pre-merge to verify the patch is in a good state.",
+      "revId": "eaf443bac39055d803f3d67191eb4a0249826a17",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
