@@ -963,6 +963,7 @@ func (o *OltDevice) DeleteOnu(_ context.Context, onu *openolt.Onu) (*openolt.Emp
 			"IntfId": onu.IntfId,
 			"err":    err,
 		}).Error("Can't find PonPort")
+		return nil, err
 	}
 	_onu, err := pon.GetOnuById(onu.OnuId)
 	if err != nil {
@@ -971,6 +972,7 @@ func (o *OltDevice) DeleteOnu(_ context.Context, onu *openolt.Onu) (*openolt.Emp
 			"IntfId": onu.IntfId,
 			"err":    err,
 		}).Error("Can't find Onu")
+		return nil, err
 	}
 
 	if _onu.InternalState.Current() != OnuStateDisabled {
