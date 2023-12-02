@@ -225,8 +225,12 @@ func CreateOLT(options common.GlobalConfig, services []common.ServiceYaml, isMoc
 		}
 
 		// initialize the resource maps for every PON Ports
+		olt.AllocIDsLock.Lock()
 		olt.AllocIDs[uint32(i)] = make(map[uint32]map[uint32]map[int32]map[uint64]bool)
+		olt.AllocIDsLock.Unlock()
+		olt.GemPortIDsLock.Lock()
 		olt.GemPortIDs[uint32(i)] = make(map[uint32]map[uint32]map[int32]map[uint64]bool)
+		olt.GemPortIDsLock.Unlock()
 
 		p := CreatePonPort(&olt, uint32(i), tech)
 
@@ -286,8 +290,12 @@ func (o *OltDevice) InitOlt() {
 
 	for ponId := range o.Pons {
 		// initialize the resource maps for every PON Ports
+		olt.AllocIDsLock.Lock()
 		olt.AllocIDs[uint32(ponId)] = make(map[uint32]map[uint32]map[int32]map[uint64]bool)
+		olt.AllocIDsLock.Unlock()
+		olt.GemPortIDsLock.Lock()
 		olt.GemPortIDs[uint32(ponId)] = make(map[uint32]map[uint32]map[int32]map[uint64]bool)
+		olt.GemPortIDsLock.Unlock()
 	}
 }
 
@@ -920,8 +928,12 @@ func (o *OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*ope
 	pon, _ := o.GetPonById(onu.IntfId)
 
 	// Enable the resource maps for this ONU
+	olt.AllocIDsLock.Lock()
 	olt.AllocIDs[onu.IntfId][onu.OnuId] = make(map[uint32]map[int32]map[uint64]bool)
+	olt.AllocIDsLock.Unlock()
+	olt.GemPortIDsLock.Lock()
 	olt.GemPortIDs[onu.IntfId][onu.OnuId] = make(map[uint32]map[int32]map[uint64]bool)
+	olt.GemPortIDsLock.Unlock()
 
 	_onu, _ := pon.GetOnuBySn(onu.SerialNumber)
 
