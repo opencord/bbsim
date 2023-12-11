@@ -1,3 +1,6 @@
+//go:build tools
+// +build tools
+
 /*
  * Copyright 2018-2023 Open Networking Foundation (ONF) and the ONF Contributors
 
@@ -13,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// +build tools
 
 package tools
 
@@ -21,3 +23,5 @@ import (
 	// protocol buffer compiler plugins
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 )
+
+// [EOF]
