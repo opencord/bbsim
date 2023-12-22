@@ -406,3 +406,4 @@ func Connect(ip string, port string) (openolt.OpenoltClient, *grpc.ClientConn) {
 	}
 	return openolt.NewOpenoltClient(conn), conn
 }
+# [EOF] - delta:force

@@ -101,3 +101,4 @@ func CreateSetRequest(managedEntity *me.ManagedEntity, tid uint16) ([]byte, erro
 	}
 	return HexEncode(pkt)
 }
+# [EOF] - delta:force

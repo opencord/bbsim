@@ -149,3 +149,4 @@ func Test_removeAllocId(t *testing.T) {
 	assert.Contains(t, pon.AllocatedAllocIds, AllocIDKey{1, 1, entityID2})
 	assert.Equal(t, pon.AllocatedAllocIds[AllocIDKey{1, 1, entityID2}].OnuSn, sn2)
 }
+# [EOF] - delta:force

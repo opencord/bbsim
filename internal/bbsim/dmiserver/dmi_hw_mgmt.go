@@ -827,3 +827,4 @@ func (dms *DmiAPIServer) HeartbeatCheck(context.Context, *empty.Empty) (*dmi.Hea
 func (dms *DmiAPIServer) RebootDevice(context.Context, *dmi.RebootDeviceRequest) (*dmi.RebootDeviceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "rpc RebootDevice not implemented")
 }
+# [EOF] - delta:force

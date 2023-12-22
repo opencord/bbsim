@@ -32,3 +32,4 @@ func connect() (pb.BBSimClient, *grpc.ClientConn) {
 	}
 	return pb.NewBBSimClient(conn), conn
 }
+# [EOF] - delta:force

@@ -110,3 +110,4 @@ func CreateTestResult(classID me.ClassID, instID uint16, tid uint16) ([]byte, er
 	}
 	return pkt, nil
 }
+# [EOF] - delta:force

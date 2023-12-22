@@ -70,3 +70,4 @@ func TestHandleNextPacket(t *testing.T) {
 
 	assert.Equal(t, 1, stream.CallCount)
 }
+# [EOF] - delta:force

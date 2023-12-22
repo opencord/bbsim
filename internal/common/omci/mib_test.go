@@ -228,3 +228,4 @@ func TestCreateMibUploadNextResponse(t *testing.T) {
 func isSlice(v interface{}) bool {
 	return reflect.TypeOf(v).Kind() == reflect.Slice
 }
+# [EOF] - delta:force

@@ -93,3 +93,4 @@ func ApiConnect(ip string, port string) (bbsim.BBSimClient, *grpc.ClientConn) {
 	}
 	return bbsim.NewBBSimClient(conn), conn
 }
+# [EOF] - delta:force

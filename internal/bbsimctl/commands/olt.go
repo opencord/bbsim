@@ -389,3 +389,4 @@ func (rt *oltResourcesType) Complete(match string) []flags.Completion {
 	}
 	return list
 }
+# [EOF] - delta:force

@@ -213,3 +213,4 @@ func TestCreateOnugResponse(t *testing.T) {
 	serialNumber := snVendorPart + snNumberPart
 	assert.Equal(t, serialNumber, "BBSM00010101")
 }
+# [EOF] - delta:force

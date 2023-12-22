@@ -67,3 +67,4 @@ func (options *ConfigOptions) Execute(args []string) error {
 	fmt.Printf("\tGitStatus: %s \n", config.GitStatus)
 	return nil
 }
+# [EOF] - delta:force

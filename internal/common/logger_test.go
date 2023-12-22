@@ -58,3 +58,4 @@ func Test_SetLogLevelCaller(t *testing.T) {
 	common.SetLogLevel(log, "debug", false)
 	assert.Equal(t, log.ReportCaller, false)
 }
+# [EOF] - delta:force

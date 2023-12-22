@@ -169,3 +169,4 @@ func (pon *DmiTransceiverPlugOut) Execute(args []string) error {
 	fmt.Println(fmt.Sprintf("[Status: %d] %s", res.StatusCode, res.Message))
 	return nil
 }
+# [EOF] - delta:force

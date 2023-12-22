@@ -127,3 +127,4 @@ func (p *PotsPort) Disable() error {
 	}
 	return p.OperState.Event(potsTxDisable)
 }
+# [EOF] - delta:force

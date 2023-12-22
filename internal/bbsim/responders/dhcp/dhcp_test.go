@@ -131,3 +131,4 @@ func TestUpdateDhcpFailed(t *testing.T) {
 	assert.Equal(t, err.Error(), "event dhcp_failed inappropriate in current state dhcp_ack_received")
 
 }
+# [EOF] - delta:force

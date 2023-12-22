@@ -208,3 +208,4 @@ func StartRestGatewayService(channel chan bool, group *sync.WaitGroup, grpcAddre
 		group.Done()
 	}
 }
+# [EOF] - delta:force

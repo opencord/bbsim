@@ -847,3 +847,4 @@ func Test_Olt_OmciMsgOut(t *testing.T) {
 	assert.Equal(t, len(onu.Channel), 1) // check that one message have been sent
 
 }
+# [EOF] - delta:force

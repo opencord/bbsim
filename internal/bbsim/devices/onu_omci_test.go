@@ -416,3 +416,4 @@ func Test_EndSoftwareDownloadRequestHandling(t *testing.T) {
 	assert.Equal(t, res, true)
 	assert.Equal(t, onu.StandbyImageVersion, "DownloadedImage")
 }
+# [EOF] - delta:force

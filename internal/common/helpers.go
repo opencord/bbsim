@@ -58,3 +58,4 @@ func GetIPAddr(ifname string) (string, error) {
 
 	return ip, nil
 }
+# [EOF] - delta:force

@@ -186,3 +186,4 @@ func TestSadisServer_GetOnuEntryV2_multi_service(t *testing.T) {
 	assert.Equal(t, entry.UniTagList[2].PonSTag, 900)
 	assert.Equal(t, entry.UniTagList[2].TechnologyProfileID, 66)
 }
+# [EOF] - delta:force

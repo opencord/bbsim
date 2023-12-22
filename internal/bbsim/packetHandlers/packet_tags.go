@@ -168,3 +168,4 @@ func GetTagsFromPacket(pkt gopacket.Packet) (uint16, uint16, error) {
 	}
 	return oTag, iTag, nil
 }
+# [EOF] - delta:force

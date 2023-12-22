@@ -357,3 +357,4 @@ func TestService_DHCPRestart(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	assert.Equal(t, "dhcp_discovery_sent", s.DHCPState.Current())
 }
+# [EOF] - delta:force

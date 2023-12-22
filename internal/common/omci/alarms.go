@@ -222,3 +222,4 @@ func CreateGetAllAlarmsNextResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI,
 	}).Trace("omci-get-all-alarms-next-response")
 	return pkt, nil
 }
+# [EOF] - delta:force

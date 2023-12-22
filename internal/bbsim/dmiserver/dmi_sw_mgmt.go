@@ -141,3 +141,4 @@ func (dms *DmiAPIServer) GetStartupConfigurationInfo(ctx context.Context, reques
 		Version: "BBSIM-STARTUP-CONFIG-DUMMY-VERSION",
 	}, nil
 }
+# [EOF] - delta:force

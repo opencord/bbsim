@@ -52,3 +52,4 @@ func TestSetRequest(t *testing.T) {
 	assert.Equal(t, uint8(1), msgObj.Attributes[me.UniG_AdministrativeState])
 
 }
+# [EOF] - delta:force

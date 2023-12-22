@@ -42,3 +42,4 @@ _bbsimctl() {
     return 0
 }
 complete -F _bbsimctl bbsimctl`
+# [EOF] - delta:force

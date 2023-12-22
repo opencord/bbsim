@@ -62,3 +62,4 @@ esac
 # hadolint-Windows-x86_64.exe.sha256
 # Source code (zip)
 # Source code (tar.gz)
+# [EOF] - delta:force

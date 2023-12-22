@@ -37,3 +37,4 @@ var OLTAlarms = map[string]bbsim.AlarmType_Types{
 	OltNniLos: bbsim.AlarmType_LOS,
 	OltPonLos: bbsim.AlarmType_LOS,
 }
+# [EOF] - delta:force

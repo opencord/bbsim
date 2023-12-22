@@ -78,3 +78,4 @@ func CreateCreateResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI, result me
 
 	return pkt, nil
 }
+# [EOF] - delta:force

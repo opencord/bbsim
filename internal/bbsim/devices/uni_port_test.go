@@ -225,3 +225,4 @@ func Test_FindServiceByMacAddress(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, service.HwAddress.String(), mac.String())
 }
+# [EOF] - delta:force

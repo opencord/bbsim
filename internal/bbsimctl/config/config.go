@@ -109,3 +109,4 @@ func ProcessGlobalOptions() {
 		}
 	}
 }
+# [EOF] - delta:force

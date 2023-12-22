@@ -92,3 +92,4 @@ func TestComputeDownloadSectionsCount(t *testing.T) {
 	count := ComputeDownloadSectionsCount(pkt)
 	assert.Equal(t, count, uint32(1058))
 }
+# [EOF] - delta:force

@@ -349,3 +349,4 @@ func (p *PonPort) isAllocIdAllocated(ponID uint32, onuID uint32, entityID uint16
 	}
 	return false, nil
 }
+# [EOF] - delta:force

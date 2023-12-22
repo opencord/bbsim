@@ -33,3 +33,4 @@ func TestCreateIpFromMacAddress(t *testing.T) {
 	ip2 := dhcpServer.createIpFromMacAddress(mac2)
 	assert.Equal(t, "10.0.0.0", ip2.String())
 }
+# [EOF] - delta:force

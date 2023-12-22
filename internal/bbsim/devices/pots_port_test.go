@@ -71,3 +71,4 @@ func Test_Pots_OperationalState(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, PotsStateDown, pots.OperState.Current())
 }
+# [EOF] - delta:force

@@ -36,3 +36,4 @@ func (options *BashOptions) Execute(args []string) error {
 	fmt.Println(completion.Bash)
 	return nil
 }
+# [EOF] - delta:force

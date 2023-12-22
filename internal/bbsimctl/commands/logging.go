@@ -70,3 +70,4 @@ func (options *LoggingOptions) Execute(args []string) error {
 
 	return nil
 }
+# [EOF] - delta:force

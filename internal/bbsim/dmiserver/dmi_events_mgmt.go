@@ -75,3 +75,4 @@ func (dms *DmiAPIServer) UpdateEventsConfiguration(ctx context.Context, req *dmi
 func (dms *DmiAPIServer) StreamEvents(req *empty.Empty, srv dmi.NativeEventsManagementService_StreamEventsServer) error {
 	return status.Errorf(codes.Unimplemented, "rpc StreamEvents not implemented")
 }
+# [EOF] - delta:force

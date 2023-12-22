@@ -233,3 +233,4 @@ func (uniId *UniIdInt) Complete(match string) []flags.Completion {
 
 	return list
 }
+# [EOF] - delta:force

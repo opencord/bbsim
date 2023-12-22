@@ -223,3 +223,4 @@ func TestGetTagsFromPacket(t *testing.T) {
 	assert.Equal(t, uint16(111), oTag)
 	assert.Equal(t, uint16(222), iTag)
 }
+# [EOF] - delta:force

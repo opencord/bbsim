@@ -269,3 +269,4 @@ func Test_Onu_StateMachine_dhcp_states(t *testing.T) {
 		assert.Equal(t, onu.InternalState.Current(), "dhcp_started")
 	}
 }
+# [EOF] - delta:force

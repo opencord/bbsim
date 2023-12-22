@@ -77,3 +77,4 @@ func TestInitializePublisher(t *testing.T) {
 	assert.Equal(t, topic, "Testing-Topic")
 	assert.Equal(t, err, nil)
 }
+# [EOF] - delta:force

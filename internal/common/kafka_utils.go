@@ -95,3 +95,4 @@ func KafkaPublisher(eventChannel chan Event) {
 	}
 
 }
+# [EOF] - delta:force

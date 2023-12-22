@@ -157,3 +157,4 @@ done < <(find . -name ".git" -prune -o -type f \
   -print0 )
 
 exit ${fail_licensecheck}
+# [EOF] - delta:force

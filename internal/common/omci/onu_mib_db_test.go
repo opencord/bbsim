@@ -177,3 +177,4 @@ func Test_GenerateMibDatabase_withUnkownAttrs(t *testing.T) {
 	assert.Equal(t, omci.MibUploadNextResponseType, omciMsg.MessageType)
 	assert.Equal(t, uint16(33066), omciMsg.TransactionID)
 }
+# [EOF] - delta:force

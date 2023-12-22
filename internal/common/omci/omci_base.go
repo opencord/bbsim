@@ -97,3 +97,4 @@ func HexEncode(omciPkt []byte) ([]byte, error) {
 	hex.Encode(dst, omciPkt)
 	return dst, nil
 }
+# [EOF] - delta:force

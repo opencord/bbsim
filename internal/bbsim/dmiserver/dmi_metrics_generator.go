@@ -392,3 +392,4 @@ func StopMetricGenerator() {
 	dmiMG.configuredMetrics = make(map[dmi.MetricNames]MetricTriggerConfig)
 	dmiMG.access.Unlock()
 }
+# [EOF] - delta:force

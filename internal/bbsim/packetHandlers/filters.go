@@ -102,3 +102,4 @@ func GetPktType(pkt gopacket.Packet) (PacketType, error) {
 	}
 	return UNKNOWN, errors.New("unknown-packet-type")
 }
+# [EOF] - delta:force

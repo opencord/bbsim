@@ -142,3 +142,4 @@ func getOltIP() net.IP {
 
 	return localAddr.IP
 }
+# [EOF] - delta:force

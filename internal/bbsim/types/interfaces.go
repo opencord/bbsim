@@ -26,3 +26,4 @@ type Stream interface {
 	Send(*openolt.Indication) error
 	grpc.ServerStream
 }
+# [EOF] - delta:force

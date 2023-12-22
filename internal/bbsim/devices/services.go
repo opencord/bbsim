@@ -692,3 +692,4 @@ func (s *Service) RemoveGroupAddress(addr string) {
 	}
 	delete(s.groupAddresses, addr)
 }
+# [EOF] - delta:force

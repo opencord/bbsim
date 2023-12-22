@@ -72,3 +72,4 @@ func CreateSyncTimeResponse(omciPkt gopacket.Packet, omciMsg *omci.OMCI) ([]byte
 	return pkt, nil
 
 }
+# [EOF] - delta:force

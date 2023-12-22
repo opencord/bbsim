@@ -107,3 +107,4 @@ func (dms *DmiAPIServer) GetMetric(ctx context.Context, req *dmi.GetMetricReques
 func (dms *DmiAPIServer) StreamMetrics(req *empty.Empty, srv dmi.NativeMetricsManagementService_StreamMetricsServer) error {
 	return status.Errorf(codes.Unimplemented, "rpc StreamMetrics not implemented")
 }
+# [EOF] - delta:force
