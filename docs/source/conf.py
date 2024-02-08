@@ -34,7 +34,7 @@
 # -- Project information -----------------------------------------------------
 
 project = u'BBSim'
-copyright = u'2019, Open Networking Foundation'
+Copyright 2019-2024 Open Networking Foundation (ONF) and the ONF Contributors
 author = u'Open Networking Foundation'
 
 # The short X.Y version
