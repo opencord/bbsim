@@ -17,22 +17,21 @@
 # SPDX-FileCopyrightText: 2024 Open Networking Foundation (ONF) and the ONF Contributors
 # SPDX-License-Identifier: Apache-2.0
 # -----------------------------------------------------------------------
-# https://gerrit.opencord.org/plugins/gitiles/onf-make
-# ONF.makefiles.include.version = 1.1
-# -----------------------------------------------------------------------
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
-## if dev-mode: make LOCAL_FIX_PERMS=1 mod-update
 .PHONY: mod-update
 mod-update: mod-tidy mod-vendor
 
 ## -----------------------------------------------------------------------
+## Intent: Invoke the golang mod tidy command
 ## -----------------------------------------------------------------------
 .PHONY: mod-tidy
 mod-tidy :
 	$(call banner-enter,Target $@)
+	$(if $(LOCAL_FIX_PERMS),chmod o+w $(CURDIR))
 	${GO} mod tidy
+	$(if $(LOCAL_FIX_PERMS),chmod o-w $(CURDIR))
 	$(call banner-leave,Target $@)
 
 ## -----------------------------------------------------------------------
@@ -47,14 +46,32 @@ mod-vendor :
 	$(call banner-leave,Target $@)
 
 ## -----------------------------------------------------------------------
+## Intent: Display topic help
+## Usage:
+##   % make help
 ## -----------------------------------------------------------------------
-help ::
-	@echo '  mod-update             mod-tidy & mod-update'
-	@echo '  mod-tidy               go mod tidy'
-	@echo '  mod-vendor             go mod vendor'
-
+help-summary ::
+	@printf '  %-30s %s\n' 'mod-update' \
+	  'Alias for make mod-tidy mod-update (GOLANG)'
   ifdef VERBOSE
-	@echo '    LOCAL_FIX_PERMS=1    Local hack to fix docker uid/gid volume problem'
+	@$(MAKE) --no-print-directory mod-update-help
   endif
+
+## -----------------------------------------------------------------------
+## Intent: Display extended topic help
+## Usage:
+##   % make mod-update-help
+##   % make help VERBOSE=1
+## -----------------------------------------------------------------------
+.PHONY: mod-update-help
+mod-update-help ::
+	@printf '  %-30s %s\n' 'mod-tidy'\
+	  'Invoke go mod tidy'
+	@printf '  %-30s %s\n' 'mod-vendor'\
+	  'Invoke go mod vendor'
+	@echo
+	@echo '[MODIFIER]'
+	@printf '  %-30s %s\n' 'LOCAL_FIX_PERMS=1' \
+	  'Local dev hack to fix docker uid/gid volume problem'
 
 # [EOF]

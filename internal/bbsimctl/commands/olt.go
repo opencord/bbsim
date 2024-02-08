@@ -1,5 +1,5 @@
 /*
- * Portions copyright 2019-present Open Networking Foundation
+ * Portions Copyright 2019-2024 Open Networking Foundation (ONF) and the ONF Contributors
  * Original copyright 2019-present Ciena Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
