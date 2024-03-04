@@ -1,4 +1,4 @@
-# Copyright 2018-2024 Open Networking Foundation (ONF) and the ONF Contributors
+# Copyright 2018-2024 Open Networking Foundation Contributors
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@
 # -- Project information -----------------------------------------------------
 
 project = u'BBSim'
-Copyright 2019-2024 Open Networking Foundation (ONF) and the ONF Contributors
+Copyright 2019-2024 Open Networking Foundation Contributors
 author = u'Open Networking Foundation'
 
 # The short X.Y version
