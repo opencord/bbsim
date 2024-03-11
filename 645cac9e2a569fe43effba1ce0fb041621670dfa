@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6fb12b6b_ff5f5997",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2024-03-11T17:50:07Z",
+      "side": 1,
+      "message": "recheck\n\nValidate JJB upgrade v4",
+      "revId": "645cac9e2a569fe43effba1ce0fb041621670dfa",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
