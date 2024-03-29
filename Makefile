@@ -1,6 +1,6 @@
 # -*- makefile -*-
 # -----------------------------------------------------------------------
-# Copyright 2017-2024 Open Networking Foundation (ONF) and the ONF Contributors
+# Copyright 2017-2024 Open Networking Foundation Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # -----------------------------------------------------------------------
+# SPDX-FileCopyrightText: 2017-2024 Open Networking Foundation Contributors
+# SPDX-License-Identifier: Apache-2.0
+# -----------------------------------------------------------------------
+# Intent: This makefile will build, test & deploy tool bbsim
+# -----------------------------------------------------------------------
 
 $(if $(DEBUG),$(warning ENTER))
 
 .DEFAULT_GOAL   := help
 MAKECMDGOALS    ?= help
 
+##-------------------##
+##---]  GLOBALS  [---##
+##-------------------##
+ifeq ($(USER),joey-disable) # temporary for transition
+
+##--------------------##
+##---]  INCLUDES  [---##
+##--------------------##
+include lf/include.mk
+include $(onf-mk-lib)/release/include.mk
+
+else
 ##-------------------##
 ##---]  GLOBALS  [---##
 ##-------------------##
@@ -35,6 +52,8 @@ TOP ?=$(strip \
 include $(TOP)/config.mk
 include $(TOP)/makefiles/include.mk
 include $(ONF_MAKEDIR)/release/include.mk
+
+endif # USER==
 
 ##--------------------##
 ##---]  INCLUDES  [---##
