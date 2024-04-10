@@ -32,8 +32,8 @@ help ::
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
   ifndef NO-LINT-PYTHON
-    include $(ONF_MAKEDIR)/lint/python/flake8.mk
-    include $(ONF_MAKEDIR)/lint/python/pylint.mk
+    include $(legacy-mk)/lint/python/flake8.mk
+    include $(legacy-mk)/lint/python/pylint.mk
   endif
 
   mk-include--onf-lint-python := true
