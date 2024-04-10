@@ -26,6 +26,7 @@ TOP-docs ?=$(strip \
    )\
 )
 TOP-docs := $(subst /docs/,$(null),$(TOP-docs))
+legacy-mk ?= $(TOP-docs)/makefiles
 
 ##--------------------##
 ##---]  INCLUDES  [---##

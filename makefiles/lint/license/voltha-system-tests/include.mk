@@ -69,7 +69,7 @@ lint-license-new:
 ## Jenkins job checking logic.
 ## -----------------------------------------------------------------------
 lint-license:
-	$(MAKEDIR)/lint/license/license-check.sh
+	$(legacy-mk)/lint/license/license-check.sh
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
