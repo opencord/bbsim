@@ -26,38 +26,35 @@ $(if $(DEBUG),$(warning ENTER))
 ## -----------------------------------------------------------------------
 onf-mk-abs    ?= $(abspath $(lastword $(MAKEFILE_LIST)))
 onf-mk-top    := $(subst /include.mk,$(null),$(onf-mk-abs))
-ONF_MAKEDIR   := $(onf-mk-top)
 
-MAKEDIR ?= $(ONF_MAKEDIR)#                   # Two dirs needed, local and common
+include $(legacy-mk)/consts.mk
+include $(legacy-mk)/help/include.mk       # render target help
+include $(legacy-mk)/utils/include.mk      # dependency-less helper macros
+include $(legacy-mk)/etc/include.mk        # banner macros
 
-include $(ONF_MAKEDIR)/consts.mk
-include $(ONF_MAKEDIR)/help/include.mk       # render target help
-include $(ONF_MAKEDIR)/utils/include.mk      # dependency-less helper macros
-include $(ONF_MAKEDIR)/etc/include.mk        # banner macros
+include $(legacy-mk)/virtualenv.mk#        # lint-{jjb,python} depends on venv
 
-include $(ONF_MAKEDIR)/virtualenv.mk#        # lint-{jjb,python} depends on venv
+include $(legacy-mk)/lint/include.mk
 
-include $(ONF_MAKEDIR)/lint/include.mk
+# include $(legacy-mk)/git-submodules.mk
+# include $(legacy-mk)/gerrit/include.mk
+include $(legacy-mk)/golang/include.mk
 
-# include $(ONF_MAKEDIR)/git-submodules.mk
-# include $(ONF_MAKEDIR)/gerrit/include.mk
-include $(ONF_MAKEDIR)/golang/include.mk
-
-include $(ONF_MAKEDIR)/todo.mk
-include $(ONF_MAKEDIR)/help/variables.mk
+include $(legacy-mk)/todo.mk
+include $(legacy-mk)/help/variables.mk
 
 ##---------------------##
 ##---]  ON_DEMAND  [---##
 ##---------------------##
-$(if $(USE_DOCKER_MK),$(eval $(ONF_MAKEDIR)/docker/include.mk))
+$(if $(USE_DOCKER_MK),$(eval $(legacy-mk)/docker/include.mk))
 
 ##-------------------##
 ##---]  TARGETS  [---##
 ##-------------------##
-include $(ONF_MAKEDIR)/targets/clean.mk
-# include $(ONF_MAKEDIR)/targets/check.mk
-include $(ONF_MAKEDIR)/targets/sterile.mk
-# include $(ONF_MAKEDIR)/targets/test.mk
+include $(legacy-mk)/targets/clean.mk
+# include $(legacy-mk)/targets/check.mk
+include $(legacy-mk)/targets/sterile.mk
+# include $(legacy-mk)/targets/test.mk
 
 $(if $(DEBUG),$(warning LEAVE))
 
