@@ -1,6 +1,6 @@
 # -*- makefile -*-
 # -----------------------------------------------------------------------
-# Copyright 2017-2024 Open Networking Foundation (ONF) and the ONF Contributors
+# Copyright 2017-2024 Open Networking Foundation Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # -----------------------------------------------------------------------
+# SPDX-FileCopyrightText: 2017-2024 Open Networking Foundation Contributors
+# SPDX-License-Identifier: Apache-2.0
+# -----------------------------------------------------------------------
+# Intent: This makefile will build, test & deploy tool bbsim
+# -----------------------------------------------------------------------
 
 $(if $(DEBUG),$(warning ENTER))
 
 .DEFAULT_GOAL   := help
 MAKECMDGOALS    ?= help
 
+##-------------------##
+##---]  GLOBALS  [---##
+##-------------------##
+
+# -----------------------------------------------------------------------
+# 2024-04-10
+# Usage: make USE_LF_MK=1 -or- USER is 'joey'
+# -----------------------------------------------------------------------
+# This makefile flag/conditional is temporary:
+#    repo:onf-make is configured as a git submodule for the repository.
+#    Passing USE_LF_MK will enable on-demand library makefile use.
+#    Default makefile behavior is legacy, use repo:bbsim/makefiles/.
+# -----------------------------------------------------------------------
+$(if $(findstring joey-disabled,$(USER)),\
+   $(eval USE_LF_MK := 1)) # special snowflake
+
+ifdef USE_LF_MK
+
+##--------------------##
+##---]  INCLUDES  [---##
+##--------------------##
+include lf/include.mk
+include $(onf-mk-lib)/release/include.mk
+
+else
 ##-------------------##
 ##---]  GLOBALS  [---##
 ##-------------------##
@@ -33,24 +63,28 @@ TOP ?=$(strip \
 ##---]  INCLUDES  [---##
 ##--------------------##
 include $(TOP)/config.mk
+legacy-mk := $(TOP)/makefiles
 include $(TOP)/makefiles/include.mk
+
 include $(ONF_MAKEDIR)/release/include.mk
+endif # USER==
+
 
 ##--------------------##
 ##---]  INCLUDES  [---##
 ##--------------------##
 help-targets := help-all help HELP
 $(if $(filter $(help-targets),$(MAKECMDGOALS))\
-    ,$(eval include $(MAKEDIR)/help.mk))
+    ,$(eval include $(legacy-mk)/help.mk))
 
 ##-------------------##
 ##---]  GLOBALS  [---##
 ##-------------------##
-VERSION         ?= $(shell cat ./VERSION)
+VERSION     ?= $(shell cat ./VERSION)
 DIFF		?= $(git diff --shortstat 2> /dev/null | tail -n1)
 GIT_STATUS	?= $(shell [ -z "$DIFF" ] && echo "Dirty" || echo "Clean")
 
-include $(MAKEDIR)/tools.mk   # Command macros for DOCKER_*, GO_*
+include $(legacy-mk)/tools.mk   # Command macros for DOCKER_*, GO_*
 
 ## use local vars to shorten paths
 bbsim-tag = ${DOCKER_REGISTRY}${DOCKER_REPOSITORY}bbsim:${DOCKER_TAG}
@@ -70,7 +104,8 @@ build-target-deps += build-bbsim
 build-target-deps += build-bbsimctl
 build-target-deps += build-bbr
 
-.PHONY: build $(build-target-deps)
+# .PHONY: build
+.PHONY: $(build-target-deps)
 build: protos $(build-target-deps)
 
 ## -----------------------------------------------------------------------
@@ -173,7 +208,7 @@ test-unit: clean local-omci-lib-go # @HELP Execute unit tests
 	    chmod o+w $(dir $(results-xml) $(coverage-xml)))
 	${GOCOVER_COBERTURA} < $(coverage-out) > $(coverage-xml)
 	$(if $(LOCAL_FIX_PERMS),\
-	    chmod o-w $(dir $(results-xml) $(coverage-xml)))	
+	    chmod o-w $(dir $(results-xml) $(coverage-xml)))
 
 	$(call banner,Coverage report directory perms:)
 
@@ -386,7 +421,8 @@ clean ::
 ## -----------------------------------------------------------------------
 ## Intent: Helper target used to exercise release script changes
 ## -----------------------------------------------------------------------
-include $(MAKEDIR)/release/onf-publish.mk
+# include $(MAKEDIR)/release/onf-publish.mk
+include $(legacy-mk)/release/onf-publish.mk
 
 $(if $(DEBUG),$(warning LEAVE))
 
