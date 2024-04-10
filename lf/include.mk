@@ -46,7 +46,6 @@ legacy-mk     := $(lf-sbx-root)/makefiles
 ## ------------------------------------------------------
 ## Two distinct vars needed to access library or project
 ## ------------------------------------------------------
-ONF_MAKEDIR ?= $(onf-mk-lib)
 MAKEDIR     ?= $(onf-mk-loc)
 
 # -----------------------------------------------------------------------

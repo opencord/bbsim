@@ -22,8 +22,8 @@ ifndef mk-include--onf-lint-license#       # one-time loader
 $(if $(DEBUG),$(warning ENTER))
 
 $(if $(USE_LINT_LICENSE)\
-  ,$(eval include $(ONF_MAKEDIR)/lint/license/voltha-system-tests/include.mk)\
-  ,$(eval include $(ONF_MAKEDIR)/lint/license/common.mk)\
+  ,$(eval include $(legacy-mk)/lint/license/voltha-system-tests/include.mk)\
+  ,$(eval include $(legacy-mk)/lint/license/common.mk)\
 )
 
   mk-include--onf-lint-license := true
