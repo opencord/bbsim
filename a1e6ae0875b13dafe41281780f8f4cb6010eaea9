@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "73385380_513201f6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2024-04-10T19:46:40Z",
+      "side": 1,
+      "message": "+1 mahir\nmerge in changes as currently unused to make pre-commit script available for interactive use.",
+      "revId": "a1e6ae0875b13dafe41281780f8f4cb6010eaea9",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
