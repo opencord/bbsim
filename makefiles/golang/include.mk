@@ -21,6 +21,6 @@
 # ONF.makefiles.include.version = 1.1
 # -----------------------------------------------------------------------
 
-include $(ONF_MAKEDIR)/golang/mod-update.mk
+include $(legacy-mk)/golang/mod-update.mk
 
 # [EOF]
