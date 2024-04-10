@@ -12,18 +12,18 @@ help ::
 	@echo
 	@echo "[LINT]"
 
-include $(ONF_MAKEDIR)/lint/doc8/include.mk
-include $(ONF_MAKEDIR)/lint/docker/include.mk
-include $(ONF_MAKEDIR)/lint/groovy/include.mk
-include $(ONF_MAKEDIR)/lint/jjb.mk
-include $(ONF_MAKEDIR)/lint/json.mk
-include $(ONF_MAKEDIR)/lint/license/include.mk
-include $(ONF_MAKEDIR)/lint/makefile.mk
-include $(ONF_MAKEDIR)/lint/python/include.mk
-include $(ONF_MAKEDIR)/lint/shell.mk
-include $(ONF_MAKEDIR)/lint/yaml.mk
+include $(legacy-mk)/lint/doc8/include.mk
+include $(legacy-mk)/lint/docker/include.mk
+include $(legacy-mk)/lint/groovy/include.mk
+include $(legacy-mk)/lint/jjb.mk
+include $(legacy-mk)/lint/json.mk
+include $(legacy-mk)/lint/license/include.mk
+include $(legacy-mk)/lint/makefile.mk
+include $(legacy-mk)/lint/python/include.mk
+include $(legacy-mk)/lint/shell.mk
+include $(legacy-mk)/lint/yaml.mk
 
-include $(ONF_MAKEDIR)/lint/help.mk
+include $(legacy-mk)/lint/help.mk
 
 $(if $(DEBUG),$(warning LEAVE))
 
