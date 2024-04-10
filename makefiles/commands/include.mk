@@ -25,7 +25,7 @@ ifndef mk-include--onf-commands
 
 $(if $(DEBUG),$(warning ENTER))
 
-include $(ONF_MAKEDIR)/commands/kail.mk
+include $(legacy-mk)/commands/kail.mk
 
 $(if $(DEBUG),$(warning LEAVE))
 

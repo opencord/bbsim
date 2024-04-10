@@ -36,7 +36,7 @@ lint-doc8-modified : lint-doc8
 
 ## -----------------------------------------------------------------------
 ## -----------------------------------------------------------------------
-include $(MAKEDIR)/lint/doc8/excl.mk
+include $(legacy-mk)/lint/doc8/excl.mk
 
 ifdef lint-doc8-excl
   lint-doc8-excl-args += $(addprefix --ignore-path$(space),$(lint-doc8-excl))

@@ -23,8 +23,8 @@ $(if $(DEBUG),$(warning ENTER))
 ##--------------------##
 ##---]  INCLUDES  [---##
 ##--------------------##
-include $(MAKEDIR)/release/consts.mk
-include $(MAKEDIR)/release/macros.mk
+include $(legacy-mk)/release/consts.mk
+include $(legacy-mk)/release/macros.mk
 
 ## -----------------------------------------------------------------------
 ## Intent: Dispaly a help section for release targets
@@ -37,9 +37,9 @@ help::
 ##--------------------##
 ##---]  INCLUDES  [---##
 ##--------------------##
-include $(MAKEDIR)/release/bbr.mk
-include $(MAKEDIR)/release/bbsim.mk
-include $(MAKEDIR)/release/bbsimctl.mk
+include $(legacy-mk)/release/bbr.mk
+include $(legacy-mk)/release/bbsim.mk
+include $(legacy-mk)/release/bbsimctl.mk
 
 ## -----------------------------------------------------------------------
 ## Intent: Cross-compile binaries for release

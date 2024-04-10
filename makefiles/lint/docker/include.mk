@@ -21,6 +21,6 @@ help::
 	@echo "  lint                       Static code analysis/syntax checking"
 	@echo "    LOCAL_LINT=1             Enable local linting w/o docker & jenkins overhead"
 
-include $(MAKEDIR)/lint/docker/hadolint.mk
+include $(legacy-mk)/lint/docker/hadolint.mk
 
 # [EOF]
