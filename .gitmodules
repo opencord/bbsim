@@ -1,0 +1,3 @@
+[submodule "lf/onf-make"]
+	path = lf/onf-make
+	url = https://gerrit.opencord.org/onf-make
