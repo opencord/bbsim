@@ -1,4 +1,61 @@
-# Copyright 2018-2024 Open Networking Foundation (ONF) and the ONF Contributors
+---
+
+type: google.api.Service
+config_version: 3
+
+http:
+  rules:
+    - selector: bbsim.BBSim.Version
+      get: "/v1/version"
+    - selector: bbsim.BBSim.GetOlt
+      get: "/v1/olt"
+      additional_bindings:
+        - get: "/v1/olt/status"
+    - selector: bbsim.BBSim.RebootOlt
+      post: "/v1/olt/reboot"
+
+    - selector: bbsim.BBSim.GetONUs
+      get: "/v1/olt/onus"
+    - selector: bbsim.BBSim.GetONU
+      get: "/v1/olt/onus/{SerialNumber}"
+
+    - selector: bbsim.BBSim.ShutdownONU
+      delete: "/v1/olt/onus/{SerialNumber}"
+    - selector: bbsim.BBSim.ShutdownONUsOnPON
+      delete: "/v1/olt/port/{PonPortId}/onus"
+    - selector: bbsim.BBSim.ShutdownAllONUs
+      delete: "/v1/olt/onus"
+
+    - selector: bbsim.BBSim.PoweronONU
+      post: "/v1/olt/onus/{SerialNumber}"
+    - selector: bbsim.BBSim.PoweronONUsOnPON
+      post: "/v1/olt/port/{PonPortId}/onus"
+    - selector: bbsim.BBSim.PoweronAllONUs
+      post: "/v1/olt/onus"
+
+    - selector: bbsim.BBSim.GetFlows
+      get: "/v1/olt/onus/{SerialNumber}/flows"
+      additional_bindings:
+        - get: "/v1/olt/flows"
+    - selector: bbsim.BBSim.GetOnuTrafficSchedulers
+      get: "/v1/olt/onus/{SerialNumber}/trafficschedulers"
+
+    - selector: bbsim.BBSim.RestartEapol
+      post: "/v1/olt/onus/{OnuSerialNumber}/eapol"
+    - selector: bbsim.BBSim.RestartDhcp
+      post: "/v1/olt/onus/{OnuSerialNumber}/dhcp"
+    - selector: bbsim.BBSim.ChangeIgmpState
+      post: >
+        "/v1/olt/onus/{OnuSerialNumber}/{UniID}/igmp/{SubActionVal}/{GroupAddress}/{VLAN}"
+
+
+    - selector: bbsim.BBSim.SetOnuAlarmIndication
+      post: "/v1/olt/onus/{SerialNumber}/alarms/{AlarmType}/{Status}"
+    - selector: bbsim.BBSim.SetOltAlarmIndication
+      post: "/v1/olt/ports/{InterfaceType}/{InterfaceID}/alarms/los/{Status}"
+
+# -----------------------------------------------------------------------
+# Copyright 2018-2024 Open Networking Foundation Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,56 +68,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-type: google.api.Service
-config_version: 3
-
-http:
-  rules:
-  - selector: bbsim.BBSim.Version
-    get: "/v1/version"
-  - selector: bbsim.BBSim.GetOlt
-    get: "/v1/olt"
-    additional_bindings:
-      - get: "/v1/olt/status"
-  - selector: bbsim.BBSim.RebootOlt
-    post: "/v1/olt/reboot"
-
-  - selector: bbsim.BBSim.GetONUs
-    get: "/v1/olt/onus"
-  - selector: bbsim.BBSim.GetONU
-    get: "/v1/olt/onus/{SerialNumber}"
-
-  - selector: bbsim.BBSim.ShutdownONU
-    delete: "/v1/olt/onus/{SerialNumber}"
-  - selector: bbsim.BBSim.ShutdownONUsOnPON
-    delete: "/v1/olt/port/{PonPortId}/onus"
-  - selector: bbsim.BBSim.ShutdownAllONUs
-    delete: "/v1/olt/onus"
-
-  - selector: bbsim.BBSim.PoweronONU
-    post: "/v1/olt/onus/{SerialNumber}"
-  - selector: bbsim.BBSim.PoweronONUsOnPON
-    post: "/v1/olt/port/{PonPortId}/onus"
-  - selector: bbsim.BBSim.PoweronAllONUs
-    post: "/v1/olt/onus"
-
-  - selector: bbsim.BBSim.GetFlows
-    get: "/v1/olt/onus/{SerialNumber}/flows"
-    additional_bindings:
-      - get: "/v1/olt/flows"
-  - selector: bbsim.BBSim.GetOnuTrafficSchedulers
-    get: "/v1/olt/onus/{SerialNumber}/trafficschedulers"
-
-  - selector: bbsim.BBSim.RestartEapol
-    post: "/v1/olt/onus/{OnuSerialNumber}/eapol"
-  - selector: bbsim.BBSim.RestartDhcp
-    post: "/v1/olt/onus/{OnuSerialNumber}/dhcp"
-  - selector: bbsim.BBSim.ChangeIgmpState
-    post: "/v1/olt/onus/{OnuSerialNumber}/{UniID}/igmp/{SubActionVal}/{GroupAddress}/{VLAN}"
-
-
-  - selector: bbsim.BBSim.SetOnuAlarmIndication
-    post: "/v1/olt/onus/{SerialNumber}/alarms/{AlarmType}/{Status}"
-  - selector: bbsim.BBSim.SetOltAlarmIndication
-    post: "/v1/olt/ports/{InterfaceType}/{InterfaceID}/alarms/los/{Status}"
+# -----------------------------------------------------------------------
+# SPDX-FileCopyrightText: 2018-2024 Open Networking Foundation Contributors
+# SPDX-License-Identifier: Apache-2.0
+# -----------------------------------------------------------------------

@@ -1,49 +1,72 @@
-# Contains a description of the services that needs to be created for each UNI and the corresponding tagging scheme
+---
+
+# Contains a description of the services that needs to be created for each
+# UNI and the corresponding tagging scheme
 
 # TT
 workflow: tt
 services:
-- name: hsia
-  uni_tag_match: 35
-  c_tag: 900
-  c_tag_allocation: unique
-  s_tag: 900
-  s_tag_allocation: shared
-  tp_id: 64
-- name: voip
-  uni_tag_match: 65
-  c_tag: 444
-  c_tag_allocation: shared
-  s_tag: 333
-  s_tag_allocation: shared
-  needs_dhcp: true
-  tp_id: 65
-  configure_mac_address: true
-  us_pon_c_tag_priority: 7
-  us_pon_s_tag_priority: 7
-  ds_pon_c_tag_priority: 7
-  ds_pon_s_tag_priority: 7
-- name: vod
-  uni_tag_match: 55
-  c_tag: 55
-  c_tag_allocation: shared
-  s_tag: 555
-  s_tag_allocation: shared
-  needs_dhcp: true
-  needs_igmp: true
-  tp_id: 66
-  configure_mac_address: true
-  us_pon_c_tag_priority: 5
-  us_pon_s_tag_priority: 5
-  ds_pon_c_tag_priority: 5
-  ds_pon_s_tag_priority: 5
-# NOTE: the multicast service must be called MC unless you set multicastServiceName to something else in org.opencord.olt.impl.Olt
-- name: MC
-  c_tag: 55
-  c_tag_allocation: shared
-  s_tag: 550
-  s_tag_allocation: shared
-  tp_id: 66
-  ds_pon_c_tag_priority: 5
-  ds_pon_s_tag_priority: 5
-# TODO add mgmt service (same tagging scheme as void/vod), requires DHCP
+  - name: hsia
+    uni_tag_match: 35
+    c_tag: 900
+    c_tag_allocation: unique
+    s_tag: 900
+    s_tag_allocation: shared
+    tp_id: 64
+  - name: voip
+    uni_tag_match: 65
+    c_tag: 444
+    c_tag_allocation: shared
+    s_tag: 333
+    s_tag_allocation: shared
+    needs_dhcp: true
+    tp_id: 65
+    configure_mac_address: true
+    us_pon_c_tag_priority: 7
+    us_pon_s_tag_priority: 7
+    ds_pon_c_tag_priority: 7
+    ds_pon_s_tag_priority: 7
+  - name: vod
+    uni_tag_match: 55
+    c_tag: 55
+    c_tag_allocation: shared
+    s_tag: 555
+    s_tag_allocation: shared
+    needs_dhcp: true
+    needs_igmp: true
+    tp_id: 66
+    configure_mac_address: true
+    us_pon_c_tag_priority: 5
+    us_pon_s_tag_priority: 5
+    ds_pon_c_tag_priority: 5
+    ds_pon_s_tag_priority: 5
+    # NOTE: the multicast service must be called MC unless you set
+    # multicastServiceName to something else in org.opencord.olt.impl.Olt
+  - name: MC
+    c_tag: 55
+    c_tag_allocation: shared
+    s_tag: 550
+    s_tag_allocation: shared
+    tp_id: 66
+    ds_pon_c_tag_priority: 5
+    ds_pon_s_tag_priority: 5
+    # TODO add mgmt service (same tagging scheme as void/vod), requires DHCP
+
+# -----------------------------------------------------------------------
+# Copyright 2020-2024 Open Networking Foundation Contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# -----------------------------------------------------------------------
+# SPDX-FileCopyrightText: 2020-2024 Open Networking Foundation Contributors
+# SPDX-License-Identifier: Apache-2.0
+# -----------------------------------------------------------------------
