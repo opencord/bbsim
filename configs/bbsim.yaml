@@ -42,7 +42,7 @@ olt:
   reboot_delay: 10      # reboot delay in seconds
   # firmware_version: ""
   # device_id: 0a:0a:0a:0a:0a:<id>
-  port_stats_interval: 20 # in seconds
+  port_stats_interval: 20  # in seconds
   # omci_response_rate: 10
 
 # BBR settings
