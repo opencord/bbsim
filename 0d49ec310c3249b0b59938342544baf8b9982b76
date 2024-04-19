@@ -50,6 +50,23 @@
       "message": "recheck\n\nTypo (missing comma) in vars/dotkube.sh fixed earlier.\nRerun with latest sources.",
       "revId": "0d49ec310c3249b0b59938342544baf8b9982b76",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "13cae423_595da132",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2024-04-19T17:45:35Z",
+      "side": 1,
+      "message": "recheck",
+      "revId": "0d49ec310c3249b0b59938342544baf8b9982b76",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
