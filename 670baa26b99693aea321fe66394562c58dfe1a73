@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0a1a8e22_413a564c",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000948
+      },
+      "writtenOn": "2024-04-22T15:57:30Z",
+      "side": 1,
+      "message": "Merging, failure unrelated to this patch.\n\nbbsim ticket opened to capture the behavior\nhttps://jira.opencord.org/browse/VOL-5313",
+      "revId": "670baa26b99693aea321fe66394562c58dfe1a73",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
