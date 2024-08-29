@@ -364,7 +364,7 @@ func (o *OltDevice) RestartOLT() error {
 		}
 	}
 
-	time.Sleep(1 * time.Second) // we need to give the OLT the time to respond to all the pending gRPC request before stopping the server
+	time.Sleep(5 * time.Second) // we need to give the OLT the time to respond to all the pending gRPC request before stopping the server
 	o.StopOltServer()
 
 	// terminate the OLT's processOltMessages go routine
@@ -922,10 +922,12 @@ func (o *OltDevice) FindServiceByMacAddress(mac net.HardwareAddr) (ServiceIf, er
 }
 
 // GRPC Endpoints
-
 func (o *OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*openolt.Empty, error) {
 
-	pon, _ := o.GetPonById(onu.IntfId)
+	pon, err := o.GetPonById(onu.IntfId)
+	if err != nil {
+		return new(openolt.Empty), err
+	}
 
 	// Enable the resource maps for this ONU
 	olt.AllocIDsLock.Lock()

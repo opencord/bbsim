@@ -224,7 +224,6 @@ func SimulateOnuAlarm(req *bbsim.ONUAlarmRequest, onuID uint32, ponPortID uint32
 		Type: types.AlarmIndication,
 		Data: alarmIndication,
 	}
-
 	channel <- msg
 
 	return nil
