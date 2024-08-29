@@ -213,6 +213,15 @@ func BuildOnuAlarmIndication(req *bbsim.ONUAlarmRequest, onuID uint32, ponPortID
 	return alarm, nil
 }
 
+func IsClosed(channel <-chan types.Message) bool {
+	select {
+	case <-channel:
+		return true
+	default:
+	}
+	return false
+}
+
 // SimulateOnuAlarm accept request for Onu alarms and send proper alarmIndication to openolt stream
 func SimulateOnuAlarm(req *bbsim.ONUAlarmRequest, onuID uint32, ponPortID uint32, channel chan types.Message) error {
 	alarmIndication, err := BuildOnuAlarmIndication(req, onuID, ponPortID)
@@ -220,12 +229,15 @@ func SimulateOnuAlarm(req *bbsim.ONUAlarmRequest, onuID uint32, ponPortID uint32
 		return err
 	}
 
+	if IsClosed(channel) {
+		return fmt.Errorf("channel is closed")
+	}
 	msg := types.Message{
 		Type: types.AlarmIndication,
 		Data: alarmIndication,
 	}
-
 	channel <- msg
 
 	return nil
 }
+
