@@ -707,6 +707,17 @@ func (o *Onu) HandleShutdownONU() error {
 func (o *Onu) HandlePowerOnONU() error {
 	intitalState := o.InternalState.Current()
 
+	// Do not send discovery if OLT is in Deleted state
+	oltState := o.PonPort.Olt.InternalState.Current()
+	if oltState == "deleted" {
+		onuLogger.WithFields(log.Fields{
+			"OnuId":  o.ID,
+			"IntfId": o.PonPortID,
+			"OnuSn":  o.Sn(),
+		}).Errorf("Cannot poweron ONU. oltState: %s", oltState)
+		return nil
+	}
+
 	// initialize the ONU
 	if intitalState == OnuStateCreated || intitalState == OnuStateDisabled {
 		if err := o.InternalState.Event(OnuTxInitialize); err != nil {
@@ -1838,7 +1849,15 @@ func (onu *Onu) ReDiscoverOnu(isReboot bool) {
 		"OnuId":  onu.ID,
 		"OnuSn":  onu.Sn(),
 	}).Debug("Send ONU Re-Discovery")
-	if onu.InternalState.Current() != OnuStateDiscovered {
+	// Do not send discovery if OLT is in Deleted state
+	oltState := onu.PonPort.Olt.InternalState.Current()
+	if oltState == "deleted" {
+		onuLogger.WithFields(log.Fields{
+			"IntfId": onu.PonPortID,
+			"OnuId":  onu.ID,
+			"OnuSn":  onu.Sn(),
+		}).Infof("Skip ONU Re-Discovery. oltState=%s", oltState)
+	} else if onu.InternalState.Current() != OnuStateDiscovered {
 		// ONU Re-Discovery
 		if err := onu.InternalState.Event(OnuTxInitialize); err != nil {
 			log.WithFields(log.Fields{
