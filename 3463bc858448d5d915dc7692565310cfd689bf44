@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6ef6a3b3_d68fb282",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000971
+      },
+      "writtenOn": "2024-09-10T16:27:19Z",
+      "side": 1,
+      "message": "\u003e Patch Set 3: Verified+1\n\u003e \n\u003e Build Successful \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_unit-test/1309/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_licensed/1308/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_sanity-test/1301/ : SUCCESS\n\nrecheck",
+      "revId": "3463bc858448d5d915dc7692565310cfd689bf44",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
