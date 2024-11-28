@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a7e0a831_38ca773f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000971
+      },
+      "writtenOn": "2024-11-28T11:02:39Z",
+      "side": 1,
+      "message": "\u003e Patch Set 6: Verified-1\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_sanity-test/1309/ : FAILURE\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_licensed/1315/ : SUCCESS\n\u003e \n\u003e https://jenkins.opencord.org/job/verify_bbsim_unit-test/1316/ : SUCCESS\n\nrecheck",
+      "revId": "8e5fadb7015bb3716576583090ff2c6342c8cacf",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
