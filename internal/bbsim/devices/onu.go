@@ -689,7 +689,10 @@ func (o *Onu) HandleShutdownONU() error {
 
 		return err
 	}
-	o.SendOMCIAlarmNotificationMsg(true, losReq.AlarmType)
+	// During the handleFlowRemove() we are closing the channel
+	if o.InternalState.Current() != OnuStateDisabled {
+		o.SendOMCIAlarmNotificationMsg(true, losReq.AlarmType)
+	}
 	// TODO if it's the last ONU on the PON, then send a PON LOS
 
 	if err := o.InternalState.Event(OnuTxDisable); err != nil {
