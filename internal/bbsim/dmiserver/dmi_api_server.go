@@ -49,6 +49,21 @@ type DmiAPIServer struct {
 	mPublisherCancelFunc context.CancelFunc
 }
 
+// GetDmLogLevel implements dmi.NativeHWManagementServiceServer.
+func (dms *DmiAPIServer) GetDmLogLevel(context.Context, *dmi.GetDmLogLevelRequest) (*dmi.GetDmLogLevelResponse, error) {
+	panic("unimplemented")
+}
+
+// SetDmLogLevel implements dmi.NativeHWManagementServiceServer.
+func (dms *DmiAPIServer) SetDmLogLevel(context.Context, *dmi.SetDmLogLevelRequest) (*dmi.SetDmLogLevelResponse, error) {
+	panic("unimplemented")
+}
+
+// UploadDebugInfo implements dmi.NativeSoftwareManagementServiceServer.
+func (dms *DmiAPIServer) UploadDebugInfo(*dmi.UploadDebugInfoRequest, dmi.NativeSoftwareManagementService_UploadDebugInfoServer) error {
+	panic("unimplemented")
+}
+
 var dmiServ DmiAPIServer
 
 // StartDmiAPIServer starts a new grpc server for the Device Manager Interface
