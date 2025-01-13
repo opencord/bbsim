@@ -1623,7 +1623,7 @@ func (o *OltDevice) GetOnuInfo(context context.Context, packet *openolt.Onu) (*o
 		}).Error("Can't find PonPort")
 		return nil, err
 	}
-	onu, _ := pon.GetOnuById(packet.GetOnuId())
+	onu, err := pon.GetOnuById(packet.GetOnuId())
 	if err != nil {
 		log.WithFields(log.Fields{
 			"OnuId":  packet.GetOnuId(),
