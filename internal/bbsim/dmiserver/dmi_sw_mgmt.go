@@ -119,14 +119,18 @@ func (dms *DmiAPIServer) UpdateStartupConfiguration(request *dmi.ConfigRequest, 
 
 // GetStartupConfigurationInfo API is used to return the 'StartUp' config present on the device
 func (dms *DmiAPIServer) GetStartupConfigurationInfo(ctx context.Context, request *dmi.StartupConfigInfoRequest) (*dmi.StartupConfigInfoResponse, error) {
-	logger.Debugf("GetStartupConfigurationInfo invoked for device %s", request.DeviceUuid.String())
 
 	if request == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "ConfigRequest is nil")
 	}
+	logger.Debugf("GetStartupConfigurationInfo invoked for device %s", request.DeviceUuid.String())
 
 	if request.DeviceUuid == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "DeviceUuid is nil")
+	}
+
+	if dms.uuid == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Server's Uuid is not initialized")
 	}
 
 	if request.DeviceUuid.Uuid != dms.uuid.Uuid {
