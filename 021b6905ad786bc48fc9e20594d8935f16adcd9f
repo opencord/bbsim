@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "38ee9d47_bf4ecd6b",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 688,
+      "author": {
+        "id": 1000537
+      },
+      "writtenOn": "2025-02-18T06:01:22Z",
+      "side": 1,
+      "message": "version file change, and defect with RCA and FIX is missing",
+      "revId": "021b6905ad786bc48fc9e20594d8935f16adcd9f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    }
+  ]
+}
