@@ -16,6 +16,24 @@
       "message": "version file change, and defect with RCA and FIX is missing",
       "revId": "021b6905ad786bc48fc9e20594d8935f16adcd9f",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d6f9b699_35ae3c56",
+        "filename": "internal/bbsim/devices/onu.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 688,
+      "author": {
+        "id": 1000971
+      },
+      "writtenOn": "2025-02-18T08:09:09Z",
+      "side": 1,
+      "message": "updated version file, Added Defect with RCA \u0026 FIX.",
+      "parentUuid": "38ee9d47_bf4ecd6b",
+      "revId": "021b6905ad786bc48fc9e20594d8935f16adcd9f",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
