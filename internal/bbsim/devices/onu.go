@@ -274,6 +274,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 						"IntfId": o.PonPortID,
 						"OnuSn":  o.Sn(),
 					}).Errorf("Cannot change ONU OperState to down: %s", err.Error())
+					return
 				}
 				// send the OnuIndication DOWN event
 				msg := bbsim.Message{
@@ -295,6 +296,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 							"UniId": uni.GetID(),
 							"err":   err,
 						}).Error("failed-to-disable-uni-port")
+						return
 					}
 				}
 
@@ -307,6 +309,7 @@ func CreateONU(olt *OltDevice, pon *PonPort, id uint32, delay time.Duration, nex
 							"UniId": pots.GetID(),
 							"err":   err,
 						}).Error("failed-to-disable-pots-port")
+						return
 					}
 				}
 
