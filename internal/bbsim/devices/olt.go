@@ -952,6 +952,7 @@ func (o *OltDevice) ActivateOnu(context context.Context, onu *openolt.Onu) (*ope
 			"OnuSn":  _onu.Sn(),
 			"OnuId":  _onu.ID,
 		}).Infof("Failed to transition ONU to %s state: %s", OnuStateEnabled, err.Error())
+		return new(openolt.Empty), err
 	}
 
 	// NOTE we need to immediately activate the ONU or the OMCI state machine won't start
@@ -997,6 +998,7 @@ func (o *OltDevice) DeleteOnu(_ context.Context, onu *openolt.Onu) (*openolt.Emp
 				"OnuId":  _onu.ID,
 			}).Infof("Failed to transition ONU to %s state: %s", OnuStateDisabled, err.Error())
 		}
+		return new(openolt.Empty), err
 	}
 
 	// ONU Re-Discovery
@@ -1156,6 +1158,7 @@ func (o *OltDevice) FlowAdd(ctx context.Context, flow *openolt.Flow) (*openolt.E
 				"IntfId": flow.AccessIntfId,
 				"err":    err,
 			}).Error("Can't find PonPort")
+			return nil, err
 		}
 		onu, err := pon.GetOnuById(uint32(flow.OnuId))
 		if err != nil {
@@ -1261,7 +1264,7 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 					"PONs":   olt.Pons,
 					"err":    err,
 				}).Error("PON-port-not-found")
-				return new(openolt.Empty), nil
+				return new(openolt.Empty), err
 			}
 			onu, err := pon.GetOnuById(uint32(storedFlow.OnuId))
 			if err != nil {
@@ -1270,7 +1273,7 @@ func (o *OltDevice) FlowRemove(_ context.Context, flow *openolt.Flow) (*openolt.
 					"IntfId": storedFlow.AccessIntfId,
 					"err":    err,
 				}).Error("ONU-not-found")
-				return new(openolt.Empty), nil
+				return new(openolt.Empty), err
 			}
 			onu.DeleteFlow(flowKey)
 			publishEvent("Flow-remove-received", int32(onu.PonPortID), int32(onu.ID), onu.Sn())
