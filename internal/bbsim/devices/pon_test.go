@@ -125,6 +125,26 @@ func Test_isGemPortAllocated(t *testing.T) {
 	assert.Nil(t, sn_)
 }
 
+func Test_removeOnuIdBySn(t *testing.T) {
+	pon := &PonPort{
+		AllocatedOnuIds: make(map[uint32]*openolt.SerialNumber),
+	}
+
+	// Simulate stale and current ONU-ID entries for the same serial number.
+	pon.storeOnuId(1, sn1)
+	pon.storeOnuId(7, sn1)
+	pon.storeOnuId(2, sn2)
+
+	assert.Equal(t, len(pon.AllocatedOnuIds), 3)
+
+	pon.removeOnuIdBySn(sn1)
+
+	assert.Equal(t, len(pon.AllocatedOnuIds), 1)
+	assert.Nil(t, pon.AllocatedOnuIds[1])
+	assert.Nil(t, pon.AllocatedOnuIds[7])
+	assert.Equal(t, sn2, pon.AllocatedOnuIds[2])
+}
+
 // the allocId is never removed, is always set to either 255 or 65535
 func Test_removeAllocId(t *testing.T) {
 

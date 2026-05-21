@@ -997,11 +997,10 @@ func (o *OltDevice) DeleteOnu(_ context.Context, onu *openolt.Onu) (*openolt.Emp
 				"OnuId":  _onu.ID,
 			}).Infof("Failed to transition ONU to %s state: %s", OnuStateDisabled, err.Error())
 		}
-	}
-
-	// ONU Re-Discovery
-	if o.InternalState.Current() == OltInternalStateEnabled && pon.InternalState.Current() == "enabled" {
-		go _onu.ReDiscoverOnu(false)
+	} else {
+		// If ONU is already disabled, FSM callbacks are not triggered.
+		// Run cleanup explicitly so stale ONU-ID/resource allocations are removed.
+		_onu.cleanupOnuState()
 	}
 
 	return new(openolt.Empty), nil
