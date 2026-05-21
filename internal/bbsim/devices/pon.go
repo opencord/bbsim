@@ -249,6 +249,27 @@ func (p *PonPort) removeOnuId(onuId uint32) {
 	delete(p.AllocatedOnuIds, onuId)
 }
 
+// removeOnuIdBySn removes all ONU IDs mapped to the given serial number.
+// This protects against stale allocations when an ONU has been assigned
+// different IDs over time.
+func (p *PonPort) removeOnuIdBySn(onuSn *openolt.SerialNumber) {
+	p.allocatedOnuIdsLock.Lock()
+	defer p.allocatedOnuIdsLock.Unlock()
+
+	if onuSn == nil {
+		return
+	}
+
+	for onuId, sn := range p.AllocatedOnuIds {
+		if sn == nil {
+			continue
+		}
+		if bytes.Equal(sn.VendorId, onuSn.VendorId) && bytes.Equal(sn.VendorSpecific, onuSn.VendorSpecific) {
+			delete(p.AllocatedOnuIds, onuId)
+		}
+	}
+}
+
 func (p *PonPort) removeAllOnuIds() {
 	p.allocatedOnuIdsLock.Lock()
 	defer p.allocatedOnuIdsLock.Unlock()

@@ -395,6 +395,7 @@ func (o *Onu) logStateChange(src string, dst string) {
 func (o *Onu) cleanupOnuState() {
 	// clean the ONU state
 	o.Flows = []FlowKey{}
+	o.PonPort.removeOnuIdBySn(o.SerialNumber)
 	o.PonPort.removeOnuId(o.ID)
 	o.PonPort.removeAllocIdsForOnuSn(o.SerialNumber)
 	o.PonPort.removeGemPortBySn(o.SerialNumber)
