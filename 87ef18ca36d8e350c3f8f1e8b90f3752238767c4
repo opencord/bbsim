@@ -16,6 +16,24 @@
       "message": "We\u0027re silently removing calling the ReDiscoverOnu function. When the ONU is deleted, it should be rediscovered again. After entering the cleanup state, do the ONUs discovered again? A note on the intended behaviour would be nice.",
       "revId": "87ef18ca36d8e350c3f8f1e8b90f3752238767c4",
       "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5f8e52b6_4e4658c1",
+        "filename": "internal/bbsim/devices/olt.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 1000,
+      "author": {
+        "id": 1001041
+      },
+      "writtenOn": "2026-06-02T10:02:51Z",
+      "side": 1,
+      "message": "Added the behaviour in comment..",
+      "parentUuid": "1ba6eb27_04e88b5d",
+      "revId": "87ef18ca36d8e350c3f8f1e8b90f3752238767c4",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388"
     }
   ]
 }
