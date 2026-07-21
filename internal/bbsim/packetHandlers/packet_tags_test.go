@@ -92,15 +92,15 @@ func TestPushDoubleTag(t *testing.T) {
 
 	sTag, err := packetHandlers.GetVlanTag(taggedPkt)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	singleTagPkt, err := packetHandlers.PopSingleTag(taggedPkt)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	cTag, err := packetHandlers.GetVlanTag(singleTagPkt)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 
 	assert.Equal(t, sTag, uint16(900))

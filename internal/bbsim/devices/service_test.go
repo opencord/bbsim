@@ -295,8 +295,12 @@ func TestService_EAPOLRestart(t *testing.T) {
 	// set to failed if timeout occurs
 	_ = s.EapolState.Event(eapol.EventStartAuth)
 
-	// after a second EAPOL should have failed and restarted
-	time.Sleep(1 * time.Second)
+	// After eapolWaitTime (500ms) the first attempt times out and EAPOL is
+	// restarted. Sample at 750ms, i.e. safely in the middle of the restarted
+	// StartSent window (500ms-1000ms), to avoid racing the timer boundary at
+	// exactly 2*eapolWaitTime where the state transiently passes through
+	// StateAuthStarted.
+	time.Sleep(750 * time.Millisecond)
 	assert.Equal(t, eapol.StateStartSent, s.EapolState.Current())
 }
 

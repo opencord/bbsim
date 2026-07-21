@@ -57,7 +57,7 @@ func (options *ConfigOptions) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(copyrightNotice)
+	fmt.Print(copyrightNotice)
 	fmt.Println(string(b))
 
 	fmt.Println("BBSimCtl details:")

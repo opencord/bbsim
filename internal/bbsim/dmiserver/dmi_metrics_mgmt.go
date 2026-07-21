@@ -19,7 +19,7 @@ package dmiserver
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -104,6 +104,6 @@ func (dms *DmiAPIServer) GetMetric(ctx context.Context, req *dmi.GetMetricReques
 }
 
 // Initiates the server streaming of the metrics
-func (dms *DmiAPIServer) StreamMetrics(req *empty.Empty, srv dmi.NativeMetricsManagementService_StreamMetricsServer) error {
+func (dms *DmiAPIServer) StreamMetrics(req *emptypb.Empty, srv dmi.NativeMetricsManagementService_StreamMetricsServer) error {
 	return status.Errorf(codes.Unimplemented, "rpc StreamMetrics not implemented")
 }

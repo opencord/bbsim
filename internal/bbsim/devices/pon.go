@@ -211,7 +211,7 @@ func (p *PonPort) GetOnuBySn(sn *openolt.SerialNumber) (*Onu, error) {
 			return onu, nil
 		}
 	}
-	return nil, fmt.Errorf("Cannot find Onu with serial number %d in PonPort %d", sn, p.ID)
+	return nil, fmt.Errorf("Cannot find Onu with serial number %v in PonPort %d", sn, p.ID)
 }
 
 func (p *PonPort) GetOnuById(id uint32) (*Onu, error) {

@@ -29,6 +29,7 @@ import (
 	"github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/voltha-protos/v5/go/ext/config"
 
+	commonpb "github.com/opencord/voltha-protos/v5/go/common"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"github.com/opencord/voltha-protos/v5/go/tech_profile"
 	"google.golang.org/grpc"
@@ -152,6 +153,34 @@ func (s *mockClient) GetOnuInfo(context context.Context, in *openolt.Onu, opts .
 }
 
 func (s *mockClient) GetPonInterfaceInfo(context context.Context, in *openolt.Interface, opts ...grpc.CallOption) (*openolt.PonIntfInfo, error) {
+	return nil, errors.New("unimplemented-in-mock-client")
+}
+
+func (s *mockClient) GetAllocIdStatistics(ctx context.Context, in *openolt.OnuPacket, opts ...grpc.CallOption) (*openolt.OnuAllocIdStatistics, error) {
+	return nil, errors.New("unimplemented-in-mock-client")
+}
+
+func (s *mockClient) GetPonPortStatistics(ctx context.Context, in *openolt.Interface, opts ...grpc.CallOption) (*commonpb.PortStatistics, error) {
+	return nil, errors.New("unimplemented-in-mock-client")
+}
+
+func (s *mockClient) GetNniPortStatistics(ctx context.Context, in *openolt.Interface, opts ...grpc.CallOption) (*commonpb.PortStatistics, error) {
+	return nil, errors.New("unimplemented-in-mock-client")
+}
+
+func (s *mockClient) DisableOnu(ctx context.Context, in *openolt.InterfaceOnuSerialNumberOnuId, opts ...grpc.CallOption) (*openolt.Empty, error) {
+	return nil, errors.New("unimplemented-in-mock-client")
+}
+
+func (s *mockClient) EnableOnu(ctx context.Context, in *openolt.InterfaceOnuSerialNumberOnuId, opts ...grpc.CallOption) (*openolt.Empty, error) {
+	return nil, errors.New("unimplemented-in-mock-client")
+}
+
+func (s *mockClient) DisableOnuSerialNumber(ctx context.Context, in *openolt.InterfaceOnuSerialNumber, opts ...grpc.CallOption) (*openolt.Empty, error) {
+	return nil, errors.New("unimplemented-in-mock-client")
+}
+
+func (s *mockClient) EnableOnuSerialNumber(ctx context.Context, in *openolt.InterfaceOnuSerialNumber, opts ...grpc.CallOption) (*openolt.Empty, error) {
 	return nil, errors.New("unimplemented-in-mock-client")
 }
 

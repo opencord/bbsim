@@ -20,11 +20,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/golang/protobuf/ptypes/timestamp"
+	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"github.com/opencord/bbsim/internal/common"
 	dmi "github.com/opencord/device-management-interface/go/dmi"
@@ -182,7 +182,7 @@ func (dms *DmiAPIServer) StartManagingDevice(req *dmi.ModifiableComponent, strea
 	err := stream.Send(response)
 	if err != nil {
 		logger.Errorf("Error while sending response to client %v", err.Error())
-		return status.Errorf(codes.Unknown, err.Error())
+		return status.Error(codes.Unknown, err.Error())
 	}
 
 	return nil
@@ -539,7 +539,7 @@ func (dms *DmiAPIServer) GetPhysicalInventory(req *dmi.PhysicalInventoryRequest,
 		err := stream.Send(msg)
 		if err != nil {
 			logger.Errorf("Error sending response to client, error: %v", err)
-			return status.Errorf(codes.Internal, "Error sending response to client "+err.Error())
+			return status.Error(codes.Internal, "Error sending response to client "+err.Error())
 		}
 		return nil
 	}
@@ -559,7 +559,7 @@ func (dms *DmiAPIServer) GetPhysicalInventory(req *dmi.PhysicalInventoryRequest,
 	response := &dmi.PhysicalInventoryResponse{
 		Status: dmi.Status_OK_STATUS,
 		Inventory: &dmi.Hardware{
-			LastChange: &timestamp.Timestamp{
+			LastChange: &timestamppb.Timestamp{
 				Seconds: 0,
 				Nanos:   0,
 			},
@@ -633,7 +633,7 @@ func sendGetHWComponentResponse(c *dmi.Component, stream dmi.NativeHWManagementS
 	err := stream.Send(response)
 	if err != nil {
 		logger.Errorf("Error sending response to client, error: %v", err)
-		return status.Errorf(codes.Internal, "Error sending response to client "+err.Error())
+		return status.Error(codes.Internal, "Error sending response to client "+err.Error())
 	}
 	return nil
 }
@@ -754,7 +754,7 @@ func (dms *DmiAPIServer) SetMsgBusEndpoint(ctx context.Context, request *dmi.Set
 }
 
 // GetMsgBusEndpoint gets the configured location to which the events and metrics are being shipped
-func (dms *DmiAPIServer) GetMsgBusEndpoint(context.Context, *empty.Empty) (*dmi.GetMsgBusEndpointResponse, error) {
+func (dms *DmiAPIServer) GetMsgBusEndpoint(context.Context, *emptypb.Empty) (*dmi.GetMsgBusEndpointResponse, error) {
 	logger.Debugf("GetMsgBusEndpoint() invoked")
 	if dms.kafkaEndpoint != "" {
 		return &dmi.GetMsgBusEndpointResponse{
@@ -771,7 +771,7 @@ func (dms *DmiAPIServer) GetMsgBusEndpoint(context.Context, *empty.Empty) (*dmi.
 }
 
 // GetManagedDevices returns an object containing a list of devices managed by this entity
-func (dms *DmiAPIServer) GetManagedDevices(context.Context, *empty.Empty) (*dmi.ManagedDevicesResponse, error) {
+func (dms *DmiAPIServer) GetManagedDevices(context.Context, *emptypb.Empty) (*dmi.ManagedDevicesResponse, error) {
 	retResponse := dmi.ManagedDevicesResponse{}
 	//If our uuid is empty, we return empty list; else we fill details and return
 	if dms.root != nil {
@@ -819,7 +819,7 @@ func (dms *DmiAPIServer) GetLoggableEntities(context.Context, *dmi.GetLoggableEn
 }
 
 // Performs the heartbeat check
-func (dms *DmiAPIServer) HeartbeatCheck(context.Context, *empty.Empty) (*dmi.Heartbeat, error) {
+func (dms *DmiAPIServer) HeartbeatCheck(context.Context, *emptypb.Empty) (*dmi.Heartbeat, error) {
 	return nil, status.Errorf(codes.Unimplemented, "rpc HeartbeatCheck not implemented")
 }
 
