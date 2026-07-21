@@ -38,6 +38,7 @@ import (
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/packetHandlers"
 	"github.com/opencord/bbsim/internal/common"
+	commonpb "github.com/opencord/voltha-protos/v5/go/common"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"github.com/opencord/voltha-protos/v5/go/tech_profile"
 	log "github.com/sirupsen/logrus"
@@ -114,6 +115,7 @@ type OltDevice struct {
 	GemPortIDs       map[uint32]map[uint32]map[uint32]map[int32]map[uint64]bool // map[ponPortId]map[OnuId]map[PortNo]map[GemPortIDs]map[FlowId]bool
 	OmciResponseRate uint8
 	signature        uint32
+	openolt.UnimplementedOpenoltServer
 }
 
 var olt OltDevice
@@ -560,7 +562,7 @@ func (o *OltDevice) Enable(stream openolt.Openolt_EnableIndicationServer) error 
 }
 
 func (o *OltDevice) periodicPortStats(ctx context.Context, wg *sync.WaitGroup, stream openolt.Openolt_EnableIndicationServer) {
-	var portStats *openolt.PortStatistics
+	var portStats *commonpb.PortStatistics
 
 loop:
 	for {
@@ -766,7 +768,7 @@ func (o *OltDevice) sendPonIndication(ponPortID uint32) {
 	}).Debug("Sent Indication_IntfOperInd for PON")
 }
 
-func (o *OltDevice) sendPortStatsIndication(stats *openolt.PortStatistics, portID uint32, portType string, stream openolt.Openolt_EnableIndicationServer) {
+func (o *OltDevice) sendPortStatsIndication(stats *commonpb.PortStatistics, portID uint32, portType string, stream openolt.Openolt_EnableIndicationServer) {
 	if o.InternalState.Current() == OltInternalStateEnabled {
 		oltLogger.WithFields(log.Fields{
 			"Type":   portType,
@@ -2042,3 +2044,39 @@ func (o *OltDevice) clearAllResources() {
 		pon.removeAllOnuIds()
 	}
 }
+
+// DisableOnu implements the OpenoltServer interface for disabling an ONU by serial and ID
+func (o *OltDevice) DisableOnu(ctx context.Context, req *openolt.InterfaceOnuSerialNumberOnuId) (*openolt.Empty, error) {
+	return &openolt.Empty{}, nil
+}
+
+// DisableOnuSerialNumber implements the OpenoltServer interface for disabling an ONU by serial only
+func (o *OltDevice) DisableOnuSerialNumber(ctx context.Context, req *openolt.InterfaceOnuSerialNumber) (*openolt.Empty, error) {
+	return &openolt.Empty{}, nil
+}
+
+// EnableOnu implements the OpenoltServer interface for enabling an ONU
+func (o *OltDevice) EnableOnu(ctx context.Context, req *openolt.InterfaceOnuSerialNumberOnuId) (*openolt.Empty, error) {
+	return &openolt.Empty{}, nil
+}
+
+// EnableOnuSerialNumber implements the OpenoltServer interface for enabling an ONU by serial only
+func (o *OltDevice) EnableOnuSerialNumber(ctx context.Context, req *openolt.InterfaceOnuSerialNumber) (*openolt.Empty, error) {
+	return &openolt.Empty{}, nil
+}
+
+// GetAllocIdStatistics implements the OpenoltServer interface
+func (o *OltDevice) GetAllocIdStatistics(ctx context.Context, req *openolt.OnuPacket) (*openolt.OnuAllocIdStatistics, error) {
+	return &openolt.OnuAllocIdStatistics{}, nil
+}
+
+// GetPonPortStatistics implements the OpenoltServer interface
+func (o *OltDevice) GetPonPortStatistics(ctx context.Context, req *openolt.Interface) (*commonpb.PortStatistics, error) {
+	return &commonpb.PortStatistics{}, nil
+}
+
+// GetNniPortStatistics implements the OpenoltServer interface
+func (o *OltDevice) GetNniPortStatistics(ctx context.Context, req *openolt.Interface) (*commonpb.PortStatistics, error) {
+	return &commonpb.PortStatistics{}, nil
+}
+

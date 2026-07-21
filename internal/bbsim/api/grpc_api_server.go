@@ -43,6 +43,7 @@ var (
 )
 
 type BBSimServer struct {
+	bbsim.UnimplementedBBSimServer
 }
 
 func (s BBSimServer) Version(ctx context.Context, req *bbsim.Empty) (*bbsim.VersionNumber, error) {

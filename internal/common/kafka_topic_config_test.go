@@ -19,7 +19,7 @@ package common
 import (
 	"testing"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"gotest.tools/assert"
 )
 
@@ -47,6 +47,42 @@ func (p mockAsyncProducer) Successes() <-chan *sarama.ProducerMessage {
 
 func (p mockAsyncProducer) Errors() <-chan *sarama.ProducerError {
 	return p.errors
+}
+
+func (p mockAsyncProducer) IsTransactional() bool {
+	return false
+}
+
+func (p mockAsyncProducer) TxnStatus() sarama.ProducerTxnStatusFlag {
+	return 0
+}
+
+func (p mockAsyncProducer) BeginTxn() error {
+	return nil
+}
+
+func (p mockAsyncProducer) CommitTxn() error {
+	return nil
+}
+
+func (p mockAsyncProducer) AbortTxn() error {
+	return nil
+}
+
+func (p mockAsyncProducer) AddOffsetsToTxn(offsets map[string][]*sarama.PartitionOffsetMetadata, groupId string) error {
+	return nil
+}
+
+func (p mockAsyncProducer) AddOffsetsToTxnWithGroupMetadata(offsets map[string][]*sarama.PartitionOffsetMetadata, groupMetadata *sarama.ConsumerGroupMetadata) error {
+	return nil
+}
+
+func (p mockAsyncProducer) AddMessageToTxn(msg *sarama.ConsumerMessage, groupId string, metadata *string) error {
+	return nil
+}
+
+func (p mockAsyncProducer) AddMessageToTxnWithGroupMetadata(msg *sarama.ConsumerMessage, groupMetadata *sarama.ConsumerGroupMetadata, metadata *string) error {
+	return nil
 }
 
 type mockSarama struct{}

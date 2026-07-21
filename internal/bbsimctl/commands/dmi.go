@@ -23,7 +23,6 @@ import (
 
 	"github.com/jessevdk/go-flags"
 	"github.com/opencord/bbsim/api/bbsim"
-	pb "github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/internal/bbsimctl/config"
 	"github.com/opencord/cordctl/pkg/format"
 	log "github.com/sirupsen/logrus"
@@ -110,7 +109,7 @@ func (pon *DmiTransceiversList) Execute(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 
-	transceivers, err := client.GetTransceivers(ctx, &pb.DmiEmpty{})
+	transceivers, err := client.GetTransceivers(ctx, &bbsim.DmiEmpty{})
 	if err != nil {
 		log.Errorf("Cannot get transceivers list: %v", err)
 		return err
@@ -134,7 +133,7 @@ func (pon *DmiTransceiverPlugIn) Execute(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 
-	req := pb.TransceiverRequest{
+	req := bbsim.TransceiverRequest{
 		TransceiverId: uint32(pon.Args.TransceiverId),
 	}
 
@@ -156,7 +155,7 @@ func (pon *DmiTransceiverPlugOut) Execute(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GlobalConfig.Grpc.Timeout)
 	defer cancel()
 
-	req := pb.TransceiverRequest{
+	req := bbsim.TransceiverRequest{
 		TransceiverId: uint32(pon.Args.TransceiverId),
 	}
 

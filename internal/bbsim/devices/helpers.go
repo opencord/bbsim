@@ -22,7 +22,7 @@ import (
 
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/common"
-	"github.com/opencord/voltha-protos/v5/go/openolt"
+	commonpb "github.com/opencord/voltha-protos/v5/go/common"
 )
 
 type mode int
@@ -85,14 +85,14 @@ func publishEvent(eventType string, intfID int32, onuID int32, onuSerial string)
 	}
 }
 
-func getPortStats(packetCount uint64, incrementStat bool) (*openolt.PortStatistics, uint64) {
+func getPortStats(packetCount uint64, incrementStat bool) (*commonpb.PortStatistics, uint64) {
 	// increment current packet count by random number
 	if incrementStat {
 		packetCount = packetCount + uint64(rand.Intn(50)+1*10)
 	}
 
 	// fill all other stats based on packet count
-	portStats := &openolt.PortStatistics{
+	portStats := &commonpb.PortStatistics{
 		RxBytes:        packetCount * 64,
 		RxPackets:      packetCount,
 		RxUcastPackets: packetCount * 40 / 100,

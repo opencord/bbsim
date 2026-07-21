@@ -26,7 +26,7 @@ DOCKER_PORTS			?= -p 50070:50070 -p 50060:50060 -p 50071:50071 -p 50072:50072 -p
 TYPE                            ?= minimal
 
 # tool containers
-VOLTHA_TOOLS_VERSION ?= 2.3.1
+VOLTHA_TOOLS_VERSION ?= 3.2.2
 
 docker-run     = docker run --rm --user $$(id -u):$$(id -g)#   # Docker command stem
 docker-run-app = $(docker-run) -v ${CURDIR}:/app#              # w/filesystem mount
