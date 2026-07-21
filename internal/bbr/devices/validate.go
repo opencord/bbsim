@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/opencord/bbsim/api/bbsim"
-	pb "github.com/opencord/bbsim/api/bbsim"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
@@ -36,7 +35,7 @@ func ValidateAndClose(olt *OltMock) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	req := pb.UNIRequest{
+	req := bbsim.UNIRequest{
 		OnuSerialNumber: "",
 		UniID:           "",
 	}

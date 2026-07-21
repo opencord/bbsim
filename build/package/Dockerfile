@@ -15,7 +15,7 @@
 # bbsim dockerfile
 
 # builder parent
-FROM golang:1.13.8-stretch as builder
+FROM golang:1.25-trixie as builder
 
 ENV CGO_ENABLED=1
 
@@ -38,14 +38,14 @@ RUN go build -mod vendor \
       ./cmd/bbsimctl
 
 # runtime parent
-FROM ubuntu:18.04
+FROM ubuntu:24.04
 WORKDIR /app
 COPY --from=builder /app/bbsim /app/bbsim
 COPY --from=builder /app/bbsimctl /usr/bin/bbsimctl
 COPY ./configs/ ./configs/
-RUN chmod a+x /app/bbsim
-RUN chmod a+x /usr/bin/bbsimctl
-RUN bbsimctl completion bash >> "$HOME/.bashrc"
+RUN chmod a+x /app/bbsim && \
+  chmod a+x /usr/bin/bbsimctl && \
+  bbsimctl completion bash >> "$HOME/.bashrc"
 CMD [ "/app/bbsim" ]
 
 # Label image

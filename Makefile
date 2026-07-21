@@ -28,6 +28,9 @@ MAKECMDGOALS    ?= help
 ##-------------------##
 ##---]  GLOBALS  [---##
 ##-------------------##
+GO_CMD := go mod download
+VOLTHA_PROTOS ?= /go/pkg/mod/github.com/opencord/voltha-protos/v5@$(shell go list -m -f '{{.Version}}' github.com/opencord/voltha-protos/v5)
+GOOGLEAPI  ?= /go/pkg/mod/github.com/grpc-ecosystem/grpc-gateway@$(shell go list -m -f '{{.Version}}' github.com/grpc-ecosystem/grpc-gateway)
 
 # -----------------------------------------------------------------------
 # 2024-04-10
@@ -162,8 +165,7 @@ sca:
 	@$(RM) -r $(sca-report-dir)
 	@mkdir -p $(sca-report-dir)
 	@echo "Running static code analysis..."
-	@${GOLANGCI_LINT} run -vv --deadline=6m --out-format junit-xml ./... \
-	  | tee ./sca-report/sca-report.xml
+	@${GOLANGCI_LINT} run -vv --output.json.path=stdout ./... 2>&1 | tee ./sca-report/sca-report.xml
 	@echo ""
 	@echo "Static code analysis OK"
 	$(call begin-leave,Target $@)
@@ -359,7 +361,7 @@ api/openolt/openolt.pb.go: api/openolt/openolt.proto setup_tools
 	@echo $@
 	@${PROTOC} -I. \
       -I${GOOGLEAPI}/third_party/googleapis \
-      --go_out=plugins=grpc:./ --go_opt=paths=source_relative \
+      --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative \
       $<
 
 ## -----------------------------------------------------------------------
@@ -368,7 +370,7 @@ api/bbsim/bbsim_dmi.pb.go: api/bbsim/bbsim_dmi.proto setup_tools
 	@echo $@
 	@${PROTOC} -I. \
       -I${GOOGLEAPI}/third_party/googleapis \
-      --go_out=plugins=grpc:./ --go_opt=paths=source_relative \
+      --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative \
       $<
 
 ## -----------------------------------------------------------------------
@@ -378,7 +380,7 @@ api/bbsim/bbsim.pb.go api/bbsim/bbsim.pb.gw.go: api/bbsim/bbsim.proto api/bbsim/
 	@${PROTOC} -I. \
 	  -I${GOOGLEAPI}/third_party/googleapis \
 	  -I${VOLTHA_PROTOS}/protos/ \
-      --go_out=plugins=grpc:./ --go_opt=paths=source_relative \
+      --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative \
 	  --grpc-gateway_out=logtostderr=true,paths=source_relative,grpc_api_configuration=api/bbsim/bbsim.yaml,allow_delete_body=true:./ \
       $<
 
@@ -390,7 +392,7 @@ api/legacy/bbsim.pb.go api/legacy/bbsim.pb.gw.go: api/legacy/bbsim.proto setup_t
 	  -I${GOOGLEAPI}/third_party/googleapis/ \
 	  -I${GOOGLEAPI}/ \
 	  -I${VOLTHA_PROTOS}/protos/ \
-      --go_out=plugins=grpc:./ \
+      --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative \
 	  --grpc-gateway_out=logtostderr=true,paths=source_relative,allow_delete_body=true:./ \
       $<
 
@@ -401,7 +403,7 @@ docs/swagger/bbsim/bbsim.swagger.json: api/bbsim/bbsim.yaml setup_tools
 	@${PROTOC} -I ./api \
 	  -I${GOOGLEAPI}/ \
 	  -I${VOLTHA_PROTOS}/protos/ \
-	  --swagger_out=logtostderr=true,allow_delete_body=true,disable_default_errors=true,grpc_api_configuration=$<:docs/swagger/ \
+	  --swagger_out=logtostderr=true,simple_operation_ids=true,allow_delete_body=true,disable_default_errors=true,grpc_api_configuration=$<:docs/swagger/ \
 	  api/bbsim/bbsim.proto
 
 ## -----------------------------------------------------------------------
@@ -411,7 +413,7 @@ docs/swagger/leagacy/bbsim.swagger.json: api/legacy/bbsim.proto setup_tools
 	@${PROTOC} -I ./api \
 	  -I${GOOGLEAPI}/ \
 	  -I${VOLTHA_PROTOS}/protos/ \
-	  --swagger_out=logtostderr=true,allow_delete_body=true,disable_default_errors=true:docs/swagger/ \
+	  --swagger_out=logtostderr=true,simple_operation_ids=true,allow_delete_body=true,disable_default_errors=true:docs/swagger/ \
 	  $<
 
 ## -----------------------------------------------------------------------

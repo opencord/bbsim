@@ -37,6 +37,7 @@ var logger = log.WithFields(log.Fields{
 
 // DmiAPIServer has the attributes for the Server handling the Device Management Interface
 type DmiAPIServer struct {
+	bbsim.UnimplementedBBsimDmiServer
 	ipAddress            string
 	uuid                 *dmi.Uuid
 	root                 *dmi.Component
@@ -47,21 +48,6 @@ type DmiAPIServer struct {
 	loggingEndpoint      string
 	loggingProtocol      string
 	mPublisherCancelFunc context.CancelFunc
-}
-
-// GetDmLogLevel implements dmi.NativeHWManagementServiceServer.
-func (dms *DmiAPIServer) GetDmLogLevel(context.Context, *dmi.GetDmLogLevelRequest) (*dmi.GetDmLogLevelResponse, error) {
-	panic("unimplemented")
-}
-
-// SetDmLogLevel implements dmi.NativeHWManagementServiceServer.
-func (dms *DmiAPIServer) SetDmLogLevel(context.Context, *dmi.SetDmLogLevelRequest) (*dmi.SetDmLogLevelResponse, error) {
-	panic("unimplemented")
-}
-
-// UploadDebugInfo implements dmi.NativeSoftwareManagementServiceServer.
-func (dms *DmiAPIServer) UploadDebugInfo(*dmi.UploadDebugInfoRequest, dmi.NativeSoftwareManagementService_UploadDebugInfoServer) error {
-	panic("unimplemented")
 }
 
 var dmiServ DmiAPIServer
