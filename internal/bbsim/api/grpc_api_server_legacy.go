@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/opencord/bbsim/api/legacy"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"google.golang.org/grpc"
@@ -30,6 +30,7 @@ import (
 )
 
 type BBSimLegacyServer struct {
+	legacy.UnimplementedBBSimServiceServer
 }
 
 // Response Constants

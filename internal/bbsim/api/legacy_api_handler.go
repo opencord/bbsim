@@ -20,7 +20,6 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/opencord/bbsim/api/legacy"
 	api "github.com/opencord/bbsim/api/legacy"
 	"github.com/opencord/bbsim/internal/bbsim/devices"
 	"google.golang.org/grpc/codes"
@@ -101,7 +100,7 @@ func (s BBSimLegacyServer) fetchPortDetail(intfID uint32, portType string) (*api
 	case "nni":
 		for _, nni := range olt.Nnis {
 			if nni.ID == intfID {
-				nniPortInfo := &legacy.PortInfo{
+				nniPortInfo := &api.PortInfo{
 					PortType:  "nni",
 					PortId:    uint32(nni.ID),
 					PortState: nni.OperState.Current(),

@@ -28,8 +28,8 @@ import (
 
 	"github.com/opencord/bbsim/internal/bbsim/responders/webserver"
 
-	"github.com/Shopify/sarama"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/IBM/sarama"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/opencord/bbsim/api/bbsim"
 	"github.com/opencord/bbsim/api/legacy"
 	"github.com/opencord/bbsim/internal/bbsim/api"

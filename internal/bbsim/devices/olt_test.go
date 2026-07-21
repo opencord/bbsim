@@ -25,7 +25,6 @@ import (
 
 	"github.com/looplab/fsm"
 	"github.com/opencord/bbsim/internal/bbsim/types"
-	bbsim "github.com/opencord/bbsim/internal/bbsim/types"
 	"github.com/opencord/bbsim/internal/common"
 	"github.com/opencord/voltha-protos/v5/go/openolt"
 	"github.com/stretchr/testify/assert"
@@ -70,7 +69,7 @@ func createMockOlt(numPon int, numOnu int, numUni int, services []ServiceIf) *Ol
 					},
 					fsm.Callbacks{},
 				),
-				Channel: make(chan bbsim.Message, 2048),
+				Channel: make(chan types.Message, 2048),
 			}
 
 			for k := 0; k < numUni; k++ {

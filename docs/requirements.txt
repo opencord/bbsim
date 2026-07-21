@@ -1,5 +1,12 @@
 # -*- makefile -*-
 
+# ----------------------------------------------------------------
+# setuptools>=81 removed pkg_resources and Python 3.12+ no longer
+# ships it; doc8~=0.8.0 imports pkg_resources and requires pbr.
+# ----------------------------------------------------------------
+setuptools<81
+pbr~=7.0
+
 Sphinx~=2.4.4
 actdiag~=2.0.0
 blockdiag~=1.5.4

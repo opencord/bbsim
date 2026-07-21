@@ -114,15 +114,15 @@ func getTestOlt(t *testing.T, ctx context.Context, services []common.ServiceYaml
 	return
 }
 
-func addTestFlow(t *testing.T, ctx context.Context, olt *OltDevice, onu *Onu, flow openolt.Flow) {
+func addTestFlow(t *testing.T, ctx context.Context, olt *OltDevice, onu *Onu, flow *openolt.Flow) {
 	//Check if the flow is correctly added
-	_, err := olt.FlowAdd(ctx, &flow)
+	_, err := olt.FlowAdd(ctx, flow)
 	assert.Nil(t, err)
 }
 
-func removeTestFlow(t *testing.T, ctx context.Context, olt *OltDevice, onu *Onu, flow openolt.Flow) {
+func removeTestFlow(t *testing.T, ctx context.Context, olt *OltDevice, onu *Onu, flow *openolt.Flow) {
 	//Check if the flow is correctly removed
-	_, err := olt.FlowRemove(ctx, &flow)
+	_, err := olt.FlowRemove(ctx, flow)
 	assert.Nil(t, err)
 }
 
@@ -206,8 +206,8 @@ func Test_Flows_FttbTrapRules(t *testing.T) {
 		},
 	}
 
-	for _, f := range flows {
-		addTestFlow(t, ctx, olt, onu, f)
+	for i := range flows {
+		addTestFlow(t, ctx, olt, onu, &flows[i])
 	}
 
 	//Wait a bit for messages on various channels to be processed
@@ -231,7 +231,7 @@ func Test_Flows_FttbTrapRules(t *testing.T) {
 		assert.Fail(t, "Wrong indication type for DHCP request")
 	}
 
-	for _, f := range flows {
-		removeTestFlow(t, ctx, olt, onu, f)
+	for i := range flows {
+		removeTestFlow(t, ctx, olt, onu, &flows[i])
 	}
 }

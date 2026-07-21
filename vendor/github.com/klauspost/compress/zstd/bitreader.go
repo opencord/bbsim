@@ -6,8 +6,11 @@ package zstd
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"math/bits"
+
+	"github.com/klauspost/compress/internal/le"
 )
 
 // bitReader reads a bitstream in reverse.
@@ -15,8 +18,8 @@ import (
 // for aligning the input.
 type bitReader struct {
 	in       []byte
-	off      uint   // next byte to read is at in[off - 1]
 	value    uint64 // Maybe use [16]byte, but shifting is awkward.
+	cursor   int    // offset where next read should end
 	bitsRead uint8
 }
 
@@ -26,16 +29,20 @@ func (b *bitReader) init(in []byte) error {
 		return errors.New("corrupt stream: too short")
 	}
 	b.in = in
-	b.off = uint(len(in))
 	// The highest bit of the last byte indicates where to start
 	v := in[len(in)-1]
 	if v == 0 {
 		return errors.New("corrupt stream, did not find end of stream")
 	}
+	b.cursor = len(in)
 	b.bitsRead = 64
 	b.value = 0
-	b.fill()
-	b.fill()
+	if len(in) >= 8 {
+		b.fillFastStart()
+	} else {
+		b.fill()
+		b.fill()
+	}
 	b.bitsRead += 8 - uint8(highBits(uint32(v)))
 	return nil
 }
@@ -45,16 +52,16 @@ func (b *bitReader) getBits(n uint8) int {
 	if n == 0 /*|| b.bitsRead >= 64 */ {
 		return 0
 	}
-	return b.getBitsFast(n)
+	return int(b.get32BitsFast(n))
 }
 
-// getBitsFast requires that at least one bit is requested every time.
+// get32BitsFast requires that at least one bit is requested every time.
 // There are no checks if the buffer is filled.
-func (b *bitReader) getBitsFast(n uint8) int {
+func (b *bitReader) get32BitsFast(n uint8) uint32 {
 	const regMask = 64 - 1
 	v := uint32((b.value << (b.bitsRead & regMask)) >> ((regMask + 1 - n) & regMask))
 	b.bitsRead += n
-	return int(v)
+	return v
 }
 
 // fillFast() will make sure at least 32 bits are available.
@@ -63,12 +70,16 @@ func (b *bitReader) fillFast() {
 	if b.bitsRead < 32 {
 		return
 	}
-	// Do single re-slice to avoid bounds checks.
-	v := b.in[b.off-4 : b.off]
-	low := (uint32(v[0])) | (uint32(v[1]) << 8) | (uint32(v[2]) << 16) | (uint32(v[3]) << 24)
-	b.value = (b.value << 32) | uint64(low)
+	b.cursor -= 4
+	b.value = (b.value << 32) | uint64(le.Load32(b.in, b.cursor))
 	b.bitsRead -= 32
-	b.off -= 4
+}
+
+// fillFastStart() assumes the bitreader is empty and there is at least 8 bytes to read.
+func (b *bitReader) fillFastStart() {
+	b.cursor -= 8
+	b.value = le.Load64(b.in, b.cursor)
+	b.bitsRead = 0
 }
 
 // fill() will make sure at least 32 bits are available.
@@ -76,24 +87,23 @@ func (b *bitReader) fill() {
 	if b.bitsRead < 32 {
 		return
 	}
-	if b.off >= 4 {
-		v := b.in[b.off-4 : b.off]
-		low := (uint32(v[0])) | (uint32(v[1]) << 8) | (uint32(v[2]) << 16) | (uint32(v[3]) << 24)
-		b.value = (b.value << 32) | uint64(low)
+	if b.cursor >= 4 {
+		b.cursor -= 4
+		b.value = (b.value << 32) | uint64(le.Load32(b.in, b.cursor))
 		b.bitsRead -= 32
-		b.off -= 4
 		return
 	}
-	for b.off > 0 {
-		b.value = (b.value << 8) | uint64(b.in[b.off-1])
-		b.bitsRead -= 8
-		b.off--
+
+	b.bitsRead -= uint8(8 * b.cursor)
+	for b.cursor > 0 {
+		b.cursor -= 1
+		b.value = (b.value << 8) | uint64(b.in[b.cursor])
 	}
 }
 
 // finished returns true if all bits have been read from the bit stream.
 func (b *bitReader) finished() bool {
-	return b.off == 0 && b.bitsRead >= 64
+	return b.cursor == 0 && b.bitsRead >= 64
 }
 
 // overread returns true if more bits have been requested than is on the stream.
@@ -103,13 +113,17 @@ func (b *bitReader) overread() bool {
 
 // remain returns the number of bits remaining.
 func (b *bitReader) remain() uint {
-	return b.off*8 + 64 - uint(b.bitsRead)
+	return 8*uint(b.cursor) + 64 - uint(b.bitsRead)
 }
 
 // close the bitstream and returns an error if out-of-buffer reads occurred.
 func (b *bitReader) close() error {
 	// Release reference.
 	b.in = nil
+	b.cursor = 0
+	if !b.finished() {
+		return fmt.Errorf("%d extra bits on block, should be 0", b.remain())
+	}
 	if b.bitsRead > 64 {
 		return io.ErrUnexpectedEOF
 	}
